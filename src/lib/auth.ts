@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 
@@ -22,5 +23,13 @@ export async function getProfile(): Promise<Profile | null> {
     .eq("id", user.id)
     .maybeSingle();
 
+  return profile;
+}
+
+export async function requireProfile(): Promise<Profile> {
+  const profile = await getProfile();
+  if (!profile) {
+    redirect("/onboarding");
+  }
   return profile;
 }

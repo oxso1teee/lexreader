@@ -1,13 +1,9 @@
-import { redirect } from "next/navigation";
-import { getProfile } from "@/lib/auth";
+import { requireProfile } from "@/lib/auth";
 import Nav from "./nav";
 import { signOut } from "./actions";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const profile = await getProfile();
-  if (!profile) {
-    redirect("/onboarding");
-  }
+  await requireProfile();
 
   return (
     <div className="flex min-h-screen flex-1 flex-col">

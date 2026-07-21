@@ -1,6 +1,6 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/auth";
+import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 import Reader from "./reader";
 
@@ -10,10 +10,7 @@ export default async function ReadPage({
   params: Promise<{ textId: string }>;
 }) {
   const { textId } = await params;
-  const profile = await getProfile();
-  if (!profile) {
-    redirect("/onboarding");
-  }
+  const profile = await requireProfile();
   const supabase = await createClient();
 
   const { data: text } = await supabase

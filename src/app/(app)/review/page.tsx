@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/auth";
+import { requireProfile } from "@/lib/auth";
 import ReviewSession, { type ReviewCard } from "./review-session";
 
 export default async function ReviewPage() {
-  const profile = await getProfile();
+  const profile = await requireProfile();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -14,7 +14,7 @@ export default async function ReviewPage() {
     .lte("due_at", new Date().toISOString())
     .in("vocabulary_items.status", ["new", "learning"])
     .order("due_at", { ascending: true })
-    .limit(Math.max(profile!.daily_word_goal, 20));
+    .limit(Math.max(profile.daily_word_goal, 20));
 
   const cards: ReviewCard[] = (data ?? []).map((row) => {
     const item = row.vocabulary_items as unknown as {

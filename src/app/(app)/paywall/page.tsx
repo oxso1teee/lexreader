@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/auth";
+import { requireProfile } from "@/lib/auth";
 import { getPlan } from "@/lib/subscription";
 import { simulateSubscribe, cancelSimulatedSubscription } from "./actions";
 
@@ -22,9 +22,9 @@ export default async function PaywallPage({
   searchParams: Promise<{ reason?: string }>;
 }) {
   const { reason } = await searchParams;
-  const profile = await getProfile();
+  const profile = await requireProfile();
   const supabase = await createClient();
-  const plan = await getPlan(supabase, profile!.id);
+  const plan = await getPlan(supabase, profile.id);
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 py-8">

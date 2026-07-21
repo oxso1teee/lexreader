@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/auth";
+import { requireProfile } from "@/lib/auth";
 import WordRow from "./word-row";
 
 const TABS = [
@@ -16,13 +16,13 @@ export default async function NotebookPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status } = await searchParams;
-  const profile = await getProfile();
+  const profile = await requireProfile();
   const supabase = await createClient();
 
   let query = supabase
     .from("vocabulary_items")
     .select("id, headword, translation, status, texts(title)")
-    .eq("owner_id", profile!.id)
+    .eq("owner_id", profile.id)
     .order("created_at", { ascending: false });
 
   if (status) {

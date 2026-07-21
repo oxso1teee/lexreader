@@ -1,24 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/auth";
+import { requireProfile } from "@/lib/auth";
 
 export default async function ProgressPage() {
-  const profile = await getProfile();
+  const profile = await requireProfile();
   const supabase = await createClient();
 
   const [{ count: totalWords }, { count: learnedWords }, { data: sessions }] = await Promise.all([
     supabase
       .from("vocabulary_items")
       .select("id", { count: "exact", head: true })
-      .eq("owner_id", profile!.id),
+      .eq("owner_id", profile.id),
     supabase
       .from("vocabulary_items")
       .select("id", { count: "exact", head: true })
-      .eq("owner_id", profile!.id)
+      .eq("owner_id", profile.id)
       .eq("status", "known"),
     supabase
       .from("reading_sessions")
       .select("started_at, ended_at")
-      .eq("owner_id", profile!.id),
+      .eq("owner_id", profile.id),
   ]);
 
   const totalMinutes = (sessions ?? []).reduce((sum, s) => {
@@ -28,8 +28,8 @@ export default async function ProgressPage() {
   }, 0);
 
   const stats = [
-    { label: "Стрик", value: `${profile!.streak_current} 🔥` },
-    { label: "Лучший стрик", value: `${profile!.streak_longest}` },
+    { label: "Стрик", value: `${profile.streak_current} 🔥` },
+    { label: "Лучший стрик", value: `${profile.streak_longest}` },
     { label: "Слов сохранено", value: `${totalWords ?? 0}` },
     { label: "Слов выучено", value: `${learnedWords ?? 0}` },
     { label: "Минут чтения", value: `${totalMinutes}` },

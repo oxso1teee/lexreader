@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/auth";
+import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 
 export default async function LibraryPage() {
-  const profile = await getProfile();
+  const profile = await requireProfile();
   const supabase = await createClient();
 
   const { data: texts } = await supabase
     .from("texts")
     .select("*")
-    .eq("language", profile!.target_language)
-    .or(`owner_id.eq.${profile!.id},owner_id.is.null`)
+    .eq("language", profile.target_language)
+    .or(`owner_id.eq.${profile.id},owner_id.is.null`)
     .order("created_at", { ascending: false });
 
   const rows = (texts ?? []) as TextRow[];
