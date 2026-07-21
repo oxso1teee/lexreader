@@ -21,7 +21,7 @@ export default async function NotebookPage({
 
   let query = supabase
     .from("vocabulary_items")
-    .select("id, headword, translation, status, texts(title)")
+    .select("id, headword, translation, status, photo_url, texts(title)")
     .eq("owner_id", profile.id)
     .order("created_at", { ascending: false });
 
@@ -70,10 +70,12 @@ export default async function NotebookPage({
             <WordRow
               key={item.id}
               id={item.id}
+              ownerId={profile.id}
               headword={item.headword}
               translation={item.translation}
               sourceTitle={(item.texts as unknown as { title: string } | null)?.title ?? null}
               status={item.status}
+              photoUrl={item.photo_url}
             />
           ))}
         </div>

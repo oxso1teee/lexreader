@@ -19,3 +19,13 @@ export async function markKnown(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/notebook");
 }
+
+export async function setPhotoUrl(id: string, photoUrl: string | null) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("vocabulary_items")
+    .update({ photo_url: photoUrl })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/notebook");
+}

@@ -1,0 +1,173 @@
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { reviewWord } from "./actions";
+import type { ReviewCard } from "./review-session";
+import SessionComplete from "./session-complete";
+
+const ROUND_SIZE = 6;
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+interface Round {
+  words: ReviewCard[];
+  translations: ReviewCard[];
+}
+
+function buildRounds(cards: ReviewCard[]): Round[] {
+  const rounds: Round[] = [];
+  for (let i = 0; i < cards.length; i += ROUND_SIZE) {
+    const roundCards = cards.slice(i, i + ROUND_SIZE);
+    rounds.push({ words: shuffle(roundCards), translations: shuffle(roundCards) });
+  }
+  return rounds;
+}
+
+export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
+  // Раунды считаем один раз при монтировании, а не по эффекту на каждую смену раунда.
+  const [rounds] = useState(() => buildRounds(cards));
+  const [roundIndex, setRoundIndex] = useState(0);
+  const [matchedIds, setMatchedIds] = useState<Set<string>>(new Set());
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [selectedTranslation, setSelectedTranslation] = useState<string | null>(null);
+  const [wrongFlash, setWrongFlash] = useState<{ word: string; translation: string } | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const round = rounds[roundIndex];
+  const allDone = roundIndex >= rounds.length;
+  const roundDone = !allDone && matchedIds.size === round.words.length;
+
+  useEffect(() => {
+    if (!wrongFlash) return;
+    const timer = setTimeout(() => {
+      setWrongFlash(null);
+      setSelectedWord(null);
+      setSelectedTranslation(null);
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [wrongFlash]);
+
+  if (allDone) {
+    return <SessionComplete count={cards.length} />;
+  }
+
+  function resolveAttempt(wordId: string, translationId: string) {
+    if (wordId === translationId) {
+      setMatchedIds((s) => new Set(s).add(wordId));
+      startTransition(() => reviewWord(wordId, 2));
+      setSelectedWord(null);
+      setSelectedTranslation(null);
+    } else {
+      setSelectedWord(wordId);
+      setSelectedTranslation(translationId);
+      setWrongFlash({ word: wordId, translation: translationId });
+    }
+  }
+
+  function pickWord(id: string) {
+    if (matchedIds.has(id) || wrongFlash) return;
+    if (selectedTranslation) {
+      resolveAttempt(id, selectedTranslation);
+    } else {
+      setSelectedWord(id);
+    }
+  }
+
+  function pickTranslation(id: string) {
+    if (matchedIds.has(id) || wrongFlash) return;
+    if (selectedWord) {
+      resolveAttempt(selectedWord, id);
+    } else {
+      setSelectedTranslation(id);
+    }
+  }
+
+  function nextRound() {
+    setRoundIndex((i) => i + 1);
+    setMatchedIds(new Set());
+    setSelectedWord(null);
+    setSelectedTranslation(null);
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-8">
+      <p className="mb-4 text-sm text-black/50 dark:text-white/50">
+        Раунд {roundIndex + 1} из {rounds.length} · сопоставь слово и перевод
+      </p>
+
+      <div className="grid flex-1 grid-cols-2 gap-3">
+        <div className="flex flex-col gap-2">
+          {round.words.map((w) => {
+            const matched = matchedIds.has(w.vocabularyItemId);
+            const isSelected = selectedWord === w.vocabularyItemId;
+            const isWrong = wrongFlash?.word === w.vocabularyItemId;
+            return (
+              <button
+                key={w.vocabularyItemId}
+                type="button"
+                disabled={matched || !!wrongFlash}
+                onClick={() => pickWord(w.vocabularyItemId)}
+                className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
+                  matched
+                    ? "border-emerald-600 bg-emerald-50 opacity-50 dark:bg-emerald-950"
+                    : isWrong
+                      ? "border-red-500 bg-red-50 dark:bg-red-950"
+                      : isSelected
+                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                        : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                }`}
+              >
+                {w.headword}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {round.translations.map((t) => {
+            const matched = matchedIds.has(t.vocabularyItemId);
+            const isSelected = selectedTranslation === t.vocabularyItemId;
+            const isWrong = wrongFlash?.translation === t.vocabularyItemId;
+            return (
+              <button
+                key={t.vocabularyItemId}
+                type="button"
+                disabled={matched || !!wrongFlash}
+                onClick={() => pickTranslation(t.vocabularyItemId)}
+                className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
+                  matched
+                    ? "border-emerald-600 bg-emerald-50 opacity-50 dark:bg-emerald-950"
+                    : isWrong
+                      ? "border-red-500 bg-red-50 dark:bg-red-950"
+                      : isSelected
+                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                        : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                }`}
+              >
+                {t.translation}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {roundDone && (
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={nextRound}
+          className="mt-4 rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
+        >
+          Далее
+        </button>
+      )}
+    </div>
+  );
+}

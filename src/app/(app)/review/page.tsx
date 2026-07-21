@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import ReviewSession, { type ReviewCard } from "./review-session";
+import type { ReviewCard } from "./review-session";
+import ReviewModeSwitcher from "./review-mode-switcher";
 
 export default async function ReviewPage() {
   const profile = await requireProfile();
@@ -32,5 +33,5 @@ export default async function ReviewPage() {
     };
   });
 
-  return <ReviewSession cards={cards} />;
+  return <ReviewModeSwitcher cards={cards} />;
 }

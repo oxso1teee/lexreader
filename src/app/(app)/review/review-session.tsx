@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
-import { reviewWord, getCurrentStreak } from "./actions";
+import { useState, useTransition } from "react";
+import { reviewWord } from "./actions";
+import SessionComplete from "./session-complete";
 
 export interface ReviewCard {
   vocabularyItemId: string;
@@ -28,16 +28,9 @@ export default function ReviewSession({ cards: cardsProp }: { cards: ReviewCard[
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [streak, setStreak] = useState<number | null>(null);
 
   const done = index >= cards.length;
   const card = cards[index];
-
-  useEffect(() => {
-    if (done) {
-      getCurrentStreak().then(setStreak);
-    }
-  }, [done]);
 
   function grade(value: 0 | 1 | 2 | 3) {
     startTransition(async () => {
@@ -47,31 +40,8 @@ export default function ReviewSession({ cards: cardsProp }: { cards: ReviewCard[
     });
   }
 
-  if (cards.length === 0) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-2 px-5 text-center">
-        <p className="text-xl font-semibold">Нечего повторять</p>
-        <p className="text-black/60 dark:text-white/60">
-          Все слова повторены на сегодня. Возвращайся завтра или почитай что-нибудь новое.
-        </p>
-      </div>
-    );
-  }
-
   if (done) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-5 text-center">
-        <p className="text-2xl font-semibold">Сессия завершена</p>
-        <p className="text-black/60 dark:text-white/60">Повторено слов: {cards.length}</p>
-        {streak !== null && <p className="text-black/60 dark:text-white/60">Стрик: {streak} 🔥</p>}
-        <Link
-          href="/library"
-          className="mt-4 rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
-        >
-          К библиотеке
-        </Link>
-      </div>
-    );
+    return <SessionComplete count={cards.length} />;
   }
 
   return (

@@ -1,11 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
+import ActivityHeatmap from "./activity-heatmap";
+
+function isoDate(d: Date | string): string {
+  return new Date(d).toISOString().slice(0, 10);
+}
 
 export default async function ProgressPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [{ count: totalWords }, { count: learnedWords }, { data: sessions }] = await Promise.all([
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 91);
+
+  const [
+    { count: totalWords },
+    { count: learnedWords },
+    { data: sessions },
+    { data: recentSessions },
+    { data: recentReviews },
+  ] = await Promise.all([
     supabase
       .from("vocabulary_items")
       .select("id", { count: "exact", head: true })
@@ -19,6 +33,16 @@ export default async function ProgressPage() {
       .from("reading_sessions")
       .select("started_at, ended_at")
       .eq("owner_id", profile.id),
+    supabase
+      .from("reading_sessions")
+      .select("started_at")
+      .eq("owner_id", profile.id)
+      .gte("started_at", cutoff.toISOString()),
+    supabase
+      .from("review_log")
+      .select("reviewed_at, vocabulary_items!inner(owner_id)")
+      .eq("vocabulary_items.owner_id", profile.id)
+      .gte("reviewed_at", cutoff.toISOString()),
   ]);
 
   const totalMinutes = (sessions ?? []).reduce((sum, s) => {
@@ -26,6 +50,16 @@ export default async function ProgressPage() {
     const ms = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
     return sum + Math.max(0, Math.round(ms / 60_000));
   }, 0);
+
+  const activityCounts: Record<string, number> = {};
+  for (const s of recentSessions ?? []) {
+    const key = isoDate(s.started_at);
+    activityCounts[key] = (activityCounts[key] ?? 0) + 1;
+  }
+  for (const r of recentReviews ?? []) {
+    const key = isoDate(r.reviewed_at);
+    activityCounts[key] = (activityCounts[key] ?? 0) + 1;
+  }
 
   const stats = [
     { label: "Стрик", value: `${profile.streak_current} 🔥` },
@@ -48,6 +82,10 @@ export default async function ProgressPage() {
             <p className="text-sm text-black/50 dark:text-white/50">{s.label}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-6 overflow-x-auto rounded-lg border border-black/10 p-4 dark:border-white/15">
+        <ActivityHeatmap counts={activityCounts} />
       </div>
     </div>
   );
