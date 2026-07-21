@@ -150,3 +150,11 @@ create policy "translations_cache: authenticated read" on translations_cache
   for select to authenticated using (true);
 create policy "translations_cache: authenticated write" on translations_cache
   for insert to authenticated with check (true);
+
+-- начиная с этой версии Supabase таблицы не экспонируются в PostgREST
+-- автоматически — нужны явные GRANT в дополнение к RLS.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on
+  profiles, texts, vocabulary_items, srs_state, review_log,
+  reading_sessions, subscriptions, translations_cache
+  to authenticated;

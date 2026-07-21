@@ -12,12 +12,18 @@ export interface TranslationResult {
   sentenceTranslation: string | null;
 }
 
+interface MyMemoryMatch {
+  translation: string;
+  match: number;
+}
+
 interface MyMemoryResponse {
   responseData: { translatedText: string };
   responseStatus: number;
+  matches?: MyMemoryMatch[];
 }
 
-async function myMemoryTranslate(
+export async function translateText(
   text: string,
   sourceLang: string,
   targetLang: string,
@@ -40,7 +46,19 @@ async function myMemoryTranslate(
     throw new Error(`MyMemory translation failed: ${data.responseStatus}`);
   }
 
-  return data.responseData.translatedText;
+  const translation = data.responseData.translatedText;
+
+  // MyMemory иногда возвращает как лучшее совпадение непереведённую запись из
+  // своей памяти переводов (особенно для отдельных слов без контекста).
+  // В этом случае берём лучший реально переведённый вариант из matches.
+  if (translation.trim().toLowerCase() === text.trim().toLowerCase() && data.matches?.length) {
+    const better = data.matches
+      .filter((m) => m.translation.trim().toLowerCase() !== text.trim().toLowerCase())
+      .sort((a, b) => b.match - a.match)[0];
+    if (better) return better.translation;
+  }
+
+  return translation;
 }
 
 export async function translate(
@@ -50,8 +68,8 @@ export async function translate(
   targetLang: string,
 ): Promise<TranslationResult> {
   const [wordTranslation, sentenceTranslation] = await Promise.all([
-    myMemoryTranslate(word, sourceLang, targetLang),
-    sentence ? myMemoryTranslate(sentence, sourceLang, targetLang) : Promise.resolve(null),
+    translateText(word, sourceLang, targetLang),
+    sentence ? translateText(sentence, sourceLang, targetLang) : Promise.resolve(null),
   ]);
 
   return { wordTranslation, sentenceTranslation };
