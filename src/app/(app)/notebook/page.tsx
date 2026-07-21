@@ -33,7 +33,16 @@ export default async function NotebookPage({
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6">
-      <h1 className="mb-4 text-xl font-semibold">Мой словарь</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Мой словарь</h1>
+        <a
+          href="/api/export/vocabulary"
+          download
+          className="text-sm text-black/50 underline hover:text-black dark:text-white/50 dark:hover:text-white"
+        >
+          Экспорт CSV
+        </a>
+      </div>
 
       <div className="mb-4 flex gap-2 overflow-x-auto">
         {TABS.map((tab) => (
