@@ -1,12 +1,12 @@
 "use client";
 
 import { useActionState } from "react";
-import { createText, type CreateTextState } from "../actions";
+import { createTextFromUrl, type CreateTextState } from "../actions";
 import PaywallNotice from "./paywall-notice";
 
-export default function NewTextForm() {
+export default function UrlImportForm() {
   const [state, formAction, pending] = useActionState<CreateTextState, FormData>(
-    createText,
+    createTextFromUrl,
     {},
   );
 
@@ -17,26 +17,22 @@ export default function NewTextForm() {
   return (
     <form action={formAction} className="flex flex-1 flex-col gap-4 px-5 py-6">
       <input
-        type="text"
-        name="title"
+        type="url"
+        name="url"
         required
-        placeholder="Название текста"
+        placeholder="https://example.com/статья"
         className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
       />
-      <textarea
-        name="body"
-        required
-        rows={16}
-        placeholder="Вставь текст на изучаемом языке…"
-        className="w-full flex-1 resize-none rounded-lg border border-black/10 px-4 py-3 text-base leading-7 outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
-      />
+      <p className="text-sm text-black/50 dark:text-white/50">
+        Загрузим страницу и вытащим только текст статьи, без рекламы и меню.
+      </p>
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
       <button
         type="submit"
         disabled={pending}
         className="rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
       >
-        {pending ? "Сохраняем…" : "Добавить в библиотеку"}
+        {pending ? "Загружаем…" : "Импортировать статью"}
       </button>
     </form>
   );

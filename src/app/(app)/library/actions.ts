@@ -1,13 +1,64 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/auth";
+import { JSDOM } from "jsdom";
+import { Readability } from "@mozilla/readability";
+import { createClient, type SupabaseServerClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 import { getPlan, FREE_TEXT_LIMIT } from "@/lib/subscription";
+import { assertPublicUrl } from "@/lib/ssrf-guard";
+import type { TextSourceType } from "@/lib/types";
 
 export interface CreateTextState {
   error?: string;
   paywall?: boolean;
+}
+
+export async function hasFreeTextRoom(
+  supabase: SupabaseServerClient,
+  ownerId: string,
+): Promise<boolean> {
+  const plan = await getPlan(supabase, ownerId);
+  if (plan !== "free") return true;
+
+  const { count } = await supabase
+    .from("texts")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_id", ownerId);
+  return (count ?? 0) < FREE_TEXT_LIMIT;
+}
+
+export async function insertText(
+  supabase: SupabaseServerClient,
+  params: {
+    ownerId: string;
+    title: string;
+    body: string;
+    sourceType: TextSourceType;
+    sourceUrl?: string;
+    language: string;
+  },
+): Promise<{ id: string } | { error: string }> {
+  const wordCount = params.body.split(/\s+/).filter(Boolean).length;
+
+  const { data, error } = await supabase
+    .from("texts")
+    .insert({
+      owner_id: params.ownerId,
+      title: params.title,
+      body: params.body,
+      source_type: params.sourceType,
+      source_url: params.sourceUrl ?? null,
+      language: params.language,
+      word_count: wordCount,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    return { error: error?.message ?? "Не удалось сохранить текст." };
+  }
+  return { id: data.id };
 }
 
 export async function createText(
@@ -21,42 +72,85 @@ export async function createText(
     return { error: "Заполни название и текст." };
   }
 
-  const profile = await getProfile();
-  if (!profile) {
-    return { error: "Не авторизован." };
-  }
-
+  const profile = await requireProfile();
   const supabase = await createClient();
 
-  const plan = await getPlan(supabase, profile.id);
-  if (plan === "free") {
-    const { count } = await supabase
-      .from("texts")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", profile.id);
-    if ((count ?? 0) >= FREE_TEXT_LIMIT) {
-      return { paywall: true };
-    }
+  if (!(await hasFreeTextRoom(supabase, profile.id))) {
+    return { paywall: true };
   }
 
-  const wordCount = body.split(/\s+/).filter(Boolean).length;
+  const result = await insertText(supabase, {
+    ownerId: profile.id,
+    title,
+    body,
+    sourceType: "manual",
+    language: profile.target_language,
+  });
+  if ("error" in result) return { error: result.error };
 
-  const { data, error } = await supabase
-    .from("texts")
-    .insert({
-      owner_id: profile.id,
-      title,
-      body,
-      source_type: "manual",
-      language: profile.target_language,
-      word_count: wordCount,
-    })
-    .select("id")
-    .single();
+  redirect(`/read/${result.id}`);
+}
 
-  if (error || !data) {
-    return { error: error?.message ?? "Не удалось сохранить текст." };
+export async function createTextFromUrl(
+  _prevState: CreateTextState,
+  formData: FormData,
+): Promise<CreateTextState> {
+  const rawUrl = String(formData.get("url") ?? "").trim();
+  if (!rawUrl) {
+    return { error: "Вставь ссылку на статью." };
   }
 
-  redirect(`/read/${data.id}`);
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return { error: "Некорректная ссылка." };
+  }
+
+  try {
+    await assertPublicUrl(url);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Некорректная ссылка." };
+  }
+
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  if (!(await hasFreeTextRoom(supabase, profile.id))) {
+    return { paywall: true };
+  }
+
+  let html: string;
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; LexReaderBot/1.0)" },
+      signal: AbortSignal.timeout(10_000),
+      redirect: "follow",
+    });
+    if (!res.ok) throw new Error(`страница ответила ${res.status}`);
+    html = await res.text();
+  } catch (e) {
+    return {
+      error: `Не удалось загрузить страницу: ${e instanceof Error ? e.message : "ошибка сети"}`,
+    };
+  }
+
+  const dom = new JSDOM(html, { url: url.toString() });
+  const article = new Readability(dom.window.document).parse();
+  const body = article?.textContent?.trim();
+  if (!article || !body) {
+    return { error: "Не удалось извлечь текст статьи со страницы." };
+  }
+
+  const result = await insertText(supabase, {
+    ownerId: profile.id,
+    title: article.title?.trim() || url.hostname,
+    body,
+    sourceType: "article_url",
+    sourceUrl: url.toString(),
+    language: profile.target_language,
+  });
+  if ("error" in result) return { error: result.error };
+
+  redirect(`/read/${result.id}`);
 }

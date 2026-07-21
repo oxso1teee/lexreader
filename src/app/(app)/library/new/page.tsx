@@ -1,7 +1,10 @@
 import Link from "next/link";
-import NewTextForm from "./new-text-form";
+import { requireProfile } from "@/lib/auth";
+import AddTextTabs from "./add-text-tabs";
 
-export default function NewTextPage() {
+export default async function NewTextPage() {
+  const profile = await requireProfile();
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
       <div className="flex items-center gap-3 px-5 pt-6">
@@ -10,7 +13,7 @@ export default function NewTextPage() {
         </Link>
       </div>
       <h1 className="px-5 pt-2 text-xl font-semibold">Добавить текст</h1>
-      <NewTextForm />
+      <AddTextTabs targetLanguage={profile.target_language} />
     </div>
   );
 }
