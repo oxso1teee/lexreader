@@ -51,5 +51,5 @@ export async function completeOnboarding(
     return { error: profileError.message };
   }
 
-  redirect("/library");
+  redirect("/home");
 }

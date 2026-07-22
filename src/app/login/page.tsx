@@ -5,7 +5,7 @@ import LoginForm from "./login-form";
 export default async function LoginPage() {
   const profile = await getProfile();
   if (profile) {
-    redirect("/library");
+    redirect("/home");
   }
 
   return (

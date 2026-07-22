@@ -21,5 +21,5 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
     return { error: "Неверный email или пароль." };
   }
 
-  redirect("/library");
+  redirect("/home");
 }

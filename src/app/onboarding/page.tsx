@@ -5,7 +5,7 @@ import OnboardingWizard from "./onboarding-wizard";
 export default async function OnboardingPage() {
   const profile = await getProfile();
   if (profile) {
-    redirect("/library");
+    redirect("/home");
   }
 
   return <OnboardingWizard />;

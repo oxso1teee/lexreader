@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { savePushSubscription, deletePushSubscription, sendTestPush } from "./actions";
+import { signOut } from "../actions";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -175,6 +176,15 @@ export default function SettingsClient({
           Экспортировать словарь в CSV
         </a>
       </section>
+
+      <form action={signOut}>
+        <button
+          type="submit"
+          className="text-sm text-red-600 underline dark:text-red-400"
+        >
+          Выйти из аккаунта
+        </button>
+      </form>
     </div>
   );
 }

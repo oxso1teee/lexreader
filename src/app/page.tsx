@@ -3,5 +3,5 @@ import { getProfile } from "@/lib/auth";
 
 export default async function Home() {
   const profile = await getProfile();
-  redirect(profile ? "/library" : "/onboarding");
+  redirect(profile ? "/home" : "/onboarding");
 }
