@@ -1,24 +1,62 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import ActivityHeatmap from "./activity-heatmap";
+import PeriodTabs from "./period-tabs";
+import StatCard from "./stat-card";
+import LineChart from "./line-chart";
 
 function isoDate(d: Date | string): string {
   return new Date(d).toISOString().slice(0, 10);
 }
 
-export default async function ProgressPage() {
+function dayLabel(iso: string): string {
+  const [, m, day] = iso.split("-");
+  return `${day}.${m}`;
+}
+
+function buildDayBuckets(days: number): string[] {
+  const out: string[] = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - i);
+    out.push(isoDate(d));
+  }
+  return out;
+}
+
+function computeCutoff(period: string): Date | null {
+  return period === "all" ? null : new Date(Date.now() - Number(period) * 86_400_000);
+}
+
+function computeHeatmapCutoff(): Date {
+  return new Date(Date.now() - 91 * 86_400_000);
+}
+
+export default async function ProgressPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
+  const { period: periodParam } = await searchParams;
+  const period = periodParam ?? "30";
+  const chartDays = period === "all" ? 30 : Number(period);
+
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 91);
+  const cutoff = computeCutoff(period);
+  const heatmapCutoff = computeHeatmapCutoff();
 
   const [
     { count: totalWords },
-    { count: learnedWords },
-    { data: sessions },
-    { data: recentSessions },
-    { data: recentReviews },
+    { count: knownWords },
+    { count: learningWords },
+    sessionsQuery,
+    flashcardsQuery,
+    reviewLogQuery,
+    heatmapSessions,
+    heatmapReviews,
   ] = await Promise.all([
     supabase
       .from("vocabulary_items")
@@ -30,61 +68,111 @@ export default async function ProgressPage() {
       .eq("owner_id", profile.id)
       .eq("status", "known"),
     supabase
-      .from("reading_sessions")
-      .select("started_at, ended_at")
-      .eq("owner_id", profile.id),
+      .from("vocabulary_items")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .neq("status", "known"),
+    (() => {
+      let q = supabase
+        .from("reading_sessions")
+        .select("started_at, words_looked_up")
+        .eq("owner_id", profile.id);
+      if (cutoff) q = q.gte("started_at", cutoff.toISOString());
+      return q;
+    })(),
+    (() => {
+      let q = supabase
+        .from("flashcards")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", profile.id);
+      if (cutoff) q = q.gte("created_at", cutoff.toISOString());
+      return q;
+    })(),
+    (() => {
+      let q = supabase
+        .from("review_log")
+        .select("reviewed_at, flashcards!inner(owner_id)")
+        .eq("flashcards.owner_id", profile.id);
+      if (cutoff) q = q.gte("reviewed_at", cutoff.toISOString());
+      return q;
+    })(),
     supabase
       .from("reading_sessions")
       .select("started_at")
       .eq("owner_id", profile.id)
-      .gte("started_at", cutoff.toISOString()),
+      .gte("started_at", heatmapCutoff.toISOString()),
     supabase
       .from("review_log")
-      .select("reviewed_at, vocabulary_items!inner(owner_id)")
-      .eq("vocabulary_items.owner_id", profile.id)
-      .gte("reviewed_at", cutoff.toISOString()),
+      .select("reviewed_at, flashcards!inner(owner_id)")
+      .eq("flashcards.owner_id", profile.id)
+      .gte("reviewed_at", heatmapCutoff.toISOString()),
   ]);
 
-  const totalMinutes = (sessions ?? []).reduce((sum, s) => {
-    if (!s.started_at || !s.ended_at) return sum;
-    const ms = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
-    return sum + Math.max(0, Math.round(ms / 60_000));
-  }, 0);
+  const sessions = sessionsQuery.data ?? [];
+  const wordsReadTotal = sessions.reduce((s, r) => s + (r.words_looked_up ?? 0), 0);
+  const cardsCreated = flashcardsQuery.count ?? 0;
+  const reviewLogs = reviewLogQuery.data ?? [];
+  const answersGiven = reviewLogs.length;
+
+  const buckets = buildDayBuckets(chartDays);
+  const wordsPerDay = new Map<string, number>();
+  for (const s of sessions) {
+    const key = isoDate(s.started_at);
+    wordsPerDay.set(key, (wordsPerDay.get(key) ?? 0) + (s.words_looked_up ?? 0));
+  }
+  const reviewsPerDay = new Map<string, number>();
+  for (const r of reviewLogs) {
+    const key = isoDate(r.reviewed_at);
+    reviewsPerDay.set(key, (reviewsPerDay.get(key) ?? 0) + 1);
+  }
+
+  const wordsChartPoints = buckets.map((b) => ({ label: dayLabel(b), value: wordsPerDay.get(b) ?? 0 }));
+  const reviewsChartPoints = buckets.map((b) => ({ label: dayLabel(b), value: reviewsPerDay.get(b) ?? 0 }));
 
   const activityCounts: Record<string, number> = {};
-  for (const s of recentSessions ?? []) {
+  for (const s of heatmapSessions.data ?? []) {
     const key = isoDate(s.started_at);
     activityCounts[key] = (activityCounts[key] ?? 0) + 1;
   }
-  for (const r of recentReviews ?? []) {
+  for (const r of heatmapReviews.data ?? []) {
     const key = isoDate(r.reviewed_at);
     activityCounts[key] = (activityCounts[key] ?? 0) + 1;
   }
 
-  const stats = [
-    { label: "Стрик", value: `${profile.streak_current} 🔥` },
-    { label: "Лучший стрик", value: `${profile.streak_longest}` },
-    { label: "Слов сохранено", value: `${totalWords ?? 0}` },
-    { label: "Слов выучено", value: `${learnedWords ?? 0}` },
-    { label: "Минут чтения", value: `${totalMinutes}` },
-  ];
-
   return (
-    <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6">
-      <h1 className="mb-4 text-xl font-semibold">Прогресс</h1>
-      <div className="grid grid-cols-2 gap-3">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="rounded-lg border border-black/10 px-4 py-4 dark:border-white/15"
-          >
-            <p className="text-2xl font-semibold">{s.value}</p>
-            <p className="text-sm text-black/50 dark:text-white/50">{s.label}</p>
-          </div>
-        ))}
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold">📊 Статистика</h1>
+        <span className="rounded-lg border border-black/20 px-2.5 py-1 text-sm font-medium dark:border-white/25">
+          {profile.target_language}
+        </span>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-black/10 p-4 dark:border-white/15">
+      <PeriodTabs current={period} />
+
+      <div>
+        <h2 className="mb-2 font-semibold">Словарный запас</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard value={totalWords ?? 0} label="Слов встречено (всего)" />
+          <StatCard value={learningWords ?? 0} label="Изучаются (ур. 1-3)" color="orange" />
+          <StatCard value={knownWords ?? 0} label="Знаю (ур. 4)" color="green" />
+          <StatCard value={wordsReadTotal} label="Слов прочитано за период" color="purple" />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-2 font-semibold">Карточки</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard value={cardsCreated} label="Карточек создано" color="blue" />
+          <StatCard value={answersGiven} label="Ответов дано" color="red" />
+        </div>
+      </div>
+
+      <LineChart title="Слов прочитано в день" points={wordsChartPoints} color="#a67c52" />
+      <LineChart title="Карточек повторено в день" points={reviewsChartPoints} color="#2563eb" />
+
+      <div className="overflow-x-auto rounded-2xl bg-card p-4 shadow-sm">
+        <h2 className="mb-2 font-semibold">Активность</h2>
         <ActivityHeatmap counts={activityCounts} />
       </div>
     </div>
