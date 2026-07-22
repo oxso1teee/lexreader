@@ -105,34 +105,7 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">📚 Learning Steps</h2>
-        <div className="flex items-center justify-between gap-3">
-          <label htmlFor="learning_steps_minutes" className="text-sm">
-            Learning steps (minutes)
-          </label>
-          <input
-            id="learning_steps_minutes"
-            name="learning_steps_minutes"
-            type="text"
-            defaultValue={settings.learning_steps_minutes}
-            className="w-28 rounded-lg border border-black/20 px-3 py-1.5 text-right outline-none focus:border-black dark:border-white/25 dark:focus:border-white"
-          />
-        </div>
-        <p className="-mt-2 text-xs text-black/40 dark:text-white/40">
-          Separate with commas (e.g., &quot;1, 10&quot;)
-        </p>
-        <div className="flex items-center justify-between gap-3">
-          <label htmlFor="relearning_steps_minutes" className="text-sm">
-            Relearning steps (minutes)
-          </label>
-          <input
-            id="relearning_steps_minutes"
-            name="relearning_steps_minutes"
-            type="text"
-            defaultValue={settings.relearning_steps_minutes}
-            className="w-28 rounded-lg border border-black/20 px-3 py-1.5 text-right outline-none focus:border-black dark:border-white/25 dark:focus:border-white"
-          />
-        </div>
+        <h2 className="font-semibold">📚 Graduation Intervals</h2>
         <NumberField
           name="graduating_interval_days"
           label="Graduating interval (days)"

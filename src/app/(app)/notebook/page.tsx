@@ -36,6 +36,8 @@ export default async function NotebookPage({
       ownerId={profile.id}
       status={status ?? ""}
       targetLanguage={languageName(profile.target_language)}
+      sourceLang={profile.target_language}
+      nativeLang={profile.native_language}
       items={(items ?? []).map((item) => ({
         id: item.id,
         headword: item.headword,

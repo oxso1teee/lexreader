@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
+import { hasFreeFlashcardRoom } from "@/lib/subscription";
 
 export interface AddCardState {
   error?: string;
+  paywall?: boolean;
 }
 
 export async function addFlashcard(
@@ -20,6 +22,10 @@ export async function addFlashcard(
 
   const profile = await requireProfile();
   const supabase = await createClient();
+
+  if (!(await hasFreeFlashcardRoom(supabase, profile.id))) {
+    return { paywall: true };
+  }
 
   const { data: card, error } = await supabase
     .from("flashcards")

@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server";
@@ -8,6 +9,13 @@ import { requireProfile } from "@/lib/auth";
 import { getPlan, FREE_TEXT_LIMIT } from "@/lib/subscription";
 import { assertPublicUrl } from "@/lib/ssrf-guard";
 import type { TextSourceType } from "@/lib/types";
+
+export async function deleteText(textId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("texts").delete().eq("id", textId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/library");
+}
 
 export interface CreateTextState {
   error?: string;
@@ -37,6 +45,7 @@ export async function insertText(
     sourceType: TextSourceType;
     sourceUrl?: string;
     language: string;
+    youtubeVideoId?: string;
   },
 ): Promise<{ id: string } | { error: string }> {
   const wordCount = params.body.split(/\s+/).filter(Boolean).length;
@@ -51,6 +60,7 @@ export async function insertText(
       source_url: params.sourceUrl ?? null,
       language: params.language,
       word_count: wordCount,
+      youtube_video_id: params.youtubeVideoId ?? null,
     })
     .select("id")
     .single();

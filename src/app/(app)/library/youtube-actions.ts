@@ -67,12 +67,30 @@ function decodeEntities(text: string): string {
   });
 }
 
-function parseTimedText(xml: string): string {
-  const matches = [...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)];
-  return matches
-    .map((m) => decodeEntities(m[1].replace(/<[^>]+>/g, "")).trim())
-    .filter(Boolean)
-    .join(" ");
+interface CaptionSegment {
+  startMs: number;
+  endMs: number;
+  body: string;
+}
+
+function parseAttr(attrs: string, name: string): number | null {
+  const m = attrs.match(new RegExp(`${name}="([\\d.]+)"`));
+  return m ? parseFloat(m[1]) : null;
+}
+
+function parseTimedTextSegments(xml: string): CaptionSegment[] {
+  const matches = [...xml.matchAll(/<text\s+([^>]*)>([\s\S]*?)<\/text>/g)];
+  const segments: CaptionSegment[] = [];
+  for (const m of matches) {
+    const start = parseAttr(m[1], "start");
+    if (start === null) continue;
+    const dur = parseAttr(m[1], "dur") ?? 2;
+    const body = decodeEntities(m[2].replace(/<[^>]+>/g, "")).trim();
+    if (!body) continue;
+    const startMs = Math.round(start * 1000);
+    segments.push({ startMs, endMs: startMs + Math.round(dur * 1000), body });
+  }
+  return segments;
 }
 
 export async function createTextFromYoutube(
@@ -143,10 +161,12 @@ export async function createTextFromYoutube(
     };
   }
 
-  const body = parseTimedText(captionXml);
-  if (!body) {
+  const segments = parseTimedTextSegments(captionXml);
+  if (segments.length === 0) {
     return { error: "Не удалось разобрать субтитры этого видео." };
   }
+
+  const body = segments.map((s) => s.body).join(" ");
 
   const result = await insertText(supabase, {
     ownerId: profile.id,
@@ -155,8 +175,20 @@ export async function createTextFromYoutube(
     sourceType: "youtube",
     sourceUrl: `https://www.youtube.com/watch?v=${videoId}`,
     language: profile.target_language,
+    youtubeVideoId: videoId,
   });
   if ("error" in result) return { error: result.error };
 
-  redirect(`/read/${result.id}`);
+  const { error: segmentsError } = await supabase.from("caption_segments").insert(
+    segments.map((s, i) => ({
+      text_id: result.id,
+      start_ms: s.startMs,
+      end_ms: s.endMs,
+      body: s.body,
+      segment_index: i,
+    })),
+  );
+  if (segmentsError) return { error: segmentsError.message };
+
+  redirect(`/watch/${result.id}`);
 }

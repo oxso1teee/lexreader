@@ -4,13 +4,13 @@ self.addEventListener("push", (event) => {
   const options = {
     body: data.body || "Пора повторить слова",
     icon: "/icon.png",
-    data: { url: data.url || "/review" },
+    data: { url: data.url || "/brain/all/review" },
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/review";
+  const url = event.notification.data?.url || "/brain/all/review";
   event.waitUntil(clients.openWindow(url));
 });

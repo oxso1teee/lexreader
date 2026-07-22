@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
-import { upsertWord, setWordLevel, addPhraseToDefaultDeck, finishReading } from "./actions";
+import {
+  upsertWord,
+  setWordLevel,
+  addPhraseToDefaultDeck,
+  finishReading,
+  updateTextProgress,
+} from "./actions";
 
 interface WordLevelInfo {
   id: string;
@@ -62,6 +68,7 @@ export default function Reader({
   targetLang,
   wordLevels,
   stats,
+  initialPageIndex = 0,
 }: {
   textId: string;
   title: string;
@@ -70,13 +77,16 @@ export default function Reader({
   targetLang: string;
   wordLevels: Record<string, WordLevelInfo>;
   stats: Stats;
+  initialPageIndex?: number;
 }) {
   const router = useRouter();
   const sentences = useMemo(() => splitIntoSentences(body), [body]);
   const pages = useMemo(() => paginate(sentences), [sentences]);
 
   const [levels, setLevels] = useState(wordLevels);
-  const [pageIndex, setPageIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState(() =>
+    Math.min(Math.max(initialPageIndex, 0), pages.length - 1),
+  );
   const [popup, setPopup] = useState<Popup | null>(null);
   const [wordsLookedUp, setWordsLookedUp] = useState(0);
   const [finishing, setFinishing] = useState(false);
@@ -85,6 +95,7 @@ export default function Reader({
   const [selection, setSelection] = useState<{ si: number; start: number; end: number } | null>(
     null,
   );
+  const [boundaryHint, setBoundaryHint] = useState(false);
   const pressRef = useRef<{ timer: ReturnType<typeof setTimeout>; fired: boolean; si: number } | null>(
     null,
   );
@@ -93,6 +104,10 @@ export default function Reader({
   useEffect(() => {
     startedAt.current = Date.now();
   }, []);
+
+  useEffect(() => {
+    updateTextProgress({ textId, pageIndex, pageCount: pages.length }).catch(() => {});
+  }, [textId, pageIndex, pages.length]);
 
   const [pageStart, pageEnd] = pages[pageIndex];
 
@@ -224,7 +239,11 @@ export default function Reader({
 
   async function handleAddPhrase() {
     if (!popup?.wordTranslation) return;
-    await addPhraseToDefaultDeck(popup.text, popup.wordTranslation);
+    const result = await addPhraseToDefaultDeck(popup.text, popup.wordTranslation);
+    if (!result.ok) {
+      setPopup({ ...popup, paywall: result.paywall, error: result.paywall ? undefined : result.error });
+      return;
+    }
     setPopup({ ...popup, saved: true });
   }
 
@@ -248,6 +267,7 @@ export default function Reader({
   }
 
   function onPointerDownWord(si: number, ti: number) {
+    setBoundaryHint(false);
     const timer = setTimeout(() => {
       if (pressRef.current) {
         pressRef.current.fired = true;
@@ -258,14 +278,19 @@ export default function Reader({
   }
 
   function onPointerEnterWord(si: number, ti: number) {
-    if (pressRef.current?.fired && pressRef.current.si === si) {
+    if (!pressRef.current?.fired) return;
+    if (pressRef.current.si === si) {
+      setBoundaryHint(false);
       setSelection((sel) => (sel && sel.si === si ? { ...sel, end: ti } : sel));
+    } else {
+      setBoundaryHint(true);
     }
   }
 
   function onPointerUpWord(si: number, ti: number, tokenText: string, sentence: string) {
     const press = pressRef.current;
     if (press) clearTimeout(press.timer);
+    setBoundaryHint(false);
 
     if (press?.fired) {
       setSelection((sel) => {
@@ -392,7 +417,7 @@ export default function Reader({
                           ? `${levelColor}33`
                           : undefined,
                     }}
-                    className="rounded px-0.5 transition-colors hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                    className="touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
                   >
                     {tok.text}
                   </button>
@@ -402,6 +427,14 @@ export default function Reader({
           );
         })}
       </article>
+
+      {boundaryHint && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-20 z-20 flex justify-center px-5">
+          <div className="rounded-full bg-black/80 px-4 py-2 text-xs text-white dark:bg-white/90 dark:text-black">
+            Фразу можно выделить только в пределах одного предложения
+          </div>
+        </div>
+      )}
 
       <footer className="sticky bottom-0 flex items-center justify-between border-t border-black/10 bg-background/95 px-5 py-3 backdrop-blur dark:border-white/10">
         <button
@@ -461,8 +494,13 @@ export default function Reader({
                   <p className="text-black/50 dark:text-white/50">Переводим…</p>
                 ) : popup.paywall ? (
                   <p className="text-black/60 dark:text-white/60">
-                    Бесплатный лимит слов на сегодня исчерпан.{" "}
-                    <Link href="/pricing?reason=words" className="text-caramel underline">
+                    {popup.isPhrase
+                      ? "Бесплатный лимит карточек в Мозге исчерпан."
+                      : "Бесплатный лимит слов на сегодня исчерпан."}{" "}
+                    <Link
+                      href={`/pricing?reason=${popup.isPhrase ? "cards" : "words"}`}
+                      className="text-caramel underline"
+                    >
                       Смотреть Premium
                     </Link>
                   </p>

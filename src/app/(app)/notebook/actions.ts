@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { KNOWN_LEVEL } from "@/lib/word-level";
+import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 
 export async function deleteWord(id: string) {
   const supabase = await createClient();
@@ -14,7 +16,7 @@ export async function markKnown(id: string) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("vocabulary_items")
-    .update({ status: "known" })
+    .update({ status: "known", level: KNOWN_LEVEL })
     .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/notebook");
@@ -28,4 +30,32 @@ export async function setPhotoUrl(id: string, photoUrl: string | null) {
     .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/notebook");
+}
+
+export async function addManualWord(input: {
+  headword: string;
+  translation: string;
+  note?: string;
+}): Promise<UpsertWordResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Не авторизован." };
+
+  const headword = input.headword.trim();
+  const translation = input.translation.trim();
+  if (!headword || !translation) {
+    return { ok: false, error: "Заполни слово и перевод." };
+  }
+
+  const result = await saveVocabularyItem(supabase, user.id, {
+    textId: null,
+    headword,
+    translation,
+    contextSentence: input.note?.trim() || null,
+    contextTranslation: null,
+  });
+  if (result.ok) revalidatePath("/notebook");
+  return result;
 }

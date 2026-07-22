@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { createDeck, type DeckFormState } from "./actions";
+import { FREE_DECK_LIMIT } from "@/lib/subscription";
 
 export default function NewDeckModal() {
   const [open, setOpen] = useState(false);
@@ -31,6 +33,14 @@ export default function NewDeckModal() {
                 className="w-full rounded-lg border border-black/20 px-4 py-2.5 outline-none focus:border-black dark:border-white/25 dark:focus:border-white"
               />
               {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+              {state.paywall && (
+                <p className="text-sm text-black/60 dark:text-white/60">
+                  На бесплатном тарифе можно создать до {FREE_DECK_LIMIT} колод.{" "}
+                  <Link href="/pricing?reason=decks" className="text-caramel underline">
+                    Смотреть Premium
+                  </Link>
+                </p>
+              )}
               <div className="mt-1 flex gap-2">
                 <button
                   type="button"

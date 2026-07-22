@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createWorker } from "tesseract.js";
 import { importFlashcards } from "./actions";
+import { FREE_FLASHCARD_LIMIT } from "@/lib/subscription";
 
 interface ParsedCard {
   front: string;
@@ -106,7 +107,11 @@ export default function ImportModal({ decks, defaultDeckId }: { decks: Deck[]; d
     const res = await importFlashcards(deckId, cards);
     setBusy(false);
     if (!res.ok) {
-      setError(res.error ?? "Не удалось импортировать.");
+      setError(
+        res.paywall
+          ? `На бесплатном тарифе можно держать до ${FREE_FLASHCARD_LIMIT} карточек — оформи Premium, чтобы импортировать больше.`
+          : (res.error ?? "Не удалось импортировать."),
+      );
       return;
     }
     setResult(`Импортировано карточек: ${res.count}`);

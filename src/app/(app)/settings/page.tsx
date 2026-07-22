@@ -1,7 +1,6 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getPlan } from "@/lib/subscription";
-import { languageName } from "@/lib/languages";
 import SettingsClient from "./settings-client";
 
 export default async function SettingsPage() {
@@ -20,8 +19,8 @@ export default async function SettingsPage() {
     <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6">
       <h1 className="mb-4 text-xl font-semibold">Настройки</h1>
       <SettingsClient
-        targetLanguage={languageName(profile.target_language)}
-        nativeLanguage={languageName(profile.native_language)}
+        targetLanguage={profile.target_language}
+        nativeLanguage={profile.native_language}
         level={profile.level}
         dailyWordGoal={profile.daily_word_goal}
         plan={plan}

@@ -24,10 +24,18 @@ export default async function ReadPage({
     notFound();
   }
 
-  const { data: savedWords } = await supabase
-    .from("vocabulary_items")
-    .select("id, headword, level, seen_count")
-    .eq("owner_id", profile.id);
+  const [{ data: savedWords }, { data: progress }] = await Promise.all([
+    supabase
+      .from("vocabulary_items")
+      .select("id, headword, level, seen_count")
+      .eq("owner_id", profile.id),
+    supabase
+      .from("text_progress")
+      .select("last_page_index")
+      .eq("owner_id", profile.id)
+      .eq("text_id", textId)
+      .maybeSingle(),
+  ]);
 
   const wordLevels: Record<string, { id: string; level: number; seenCount: number }> = {};
   for (const w of savedWords ?? []) {
@@ -62,6 +70,7 @@ export default async function ReadPage({
       sourceLang={text.language}
       targetLang={profile.native_language}
       wordLevels={wordLevels}
+      initialPageIndex={progress?.last_page_index ?? 0}
       stats={{
         unique: uniqueTokens.size,
         new: statsNew,

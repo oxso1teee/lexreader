@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { addFlashcard, type AddCardState } from "./actions";
+import { FREE_FLASHCARD_LIMIT } from "@/lib/subscription";
 
 export default function AddCardForm({ deckId }: { deckId: string }) {
   const action = addFlashcard.bind(null, deckId);
@@ -29,6 +31,14 @@ export default function AddCardForm({ deckId }: { deckId: string }) {
         className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
       />
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.paywall && (
+        <p className="text-sm text-black/60 dark:text-white/60">
+          На бесплатном тарифе можно держать до {FREE_FLASHCARD_LIMIT} карточек.{" "}
+          <Link href="/pricing?reason=cards" className="text-caramel underline">
+            Смотреть Premium
+          </Link>
+        </p>
+      )}
       <button
         type="submit"
         disabled={pending}

@@ -28,8 +28,6 @@ export async function updateSrsSettings(
       easy_bonus: num("easy_bonus"),
       interval_modifier: num("interval_modifier"),
       max_interval_days: num("max_interval_days"),
-      learning_steps_minutes: String(formData.get("learning_steps_minutes") ?? "1,10"),
-      relearning_steps_minutes: String(formData.get("relearning_steps_minutes") ?? "10"),
       graduating_interval_days: num("graduating_interval_days"),
       easy_interval_days: num("easy_interval_days"),
       show_timer: formData.get("show_timer") === "on",

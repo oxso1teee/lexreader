@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
+import { hasFreeDeckRoom, hasFreeFlashcardRoom } from "@/lib/subscription";
 
 export interface DeckFormState {
   error?: string;
+  paywall?: boolean;
 }
 
 export async function createDeck(
@@ -18,6 +20,10 @@ export async function createDeck(
 
   const profile = await requireProfile();
   const supabase = await createClient();
+
+  if (!(await hasFreeDeckRoom(supabase, profile.id))) {
+    return { paywall: true };
+  }
 
   const { data, error } = await supabase
     .from("decks")
@@ -57,6 +63,10 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
       notes: c.notes?.trim() || null,
     }));
   if (rows.length === 0) return { ok: false, error: "Нет карточек для импорта." };
+
+  if (!(await hasFreeFlashcardRoom(supabase, profile.id, rows.length))) {
+    return { ok: false, paywall: true };
+  }
 
   const { data: inserted, error } = await supabase.from("flashcards").insert(rows).select("id");
   if (error) return { ok: false, error: error.message };

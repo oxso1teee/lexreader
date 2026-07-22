@@ -1,8 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
-import { savePushSubscription, deletePushSubscription, sendTestPush } from "./actions";
+import { LANGUAGES } from "@/lib/languages";
+import { LEVELS, DAILY_GOALS } from "@/lib/onboarding-options";
+import {
+  savePushSubscription,
+  deletePushSubscription,
+  sendTestPush,
+  updateProfile,
+  type UpdateProfileState,
+} from "./actions";
 import { signOut } from "../actions";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
@@ -96,16 +104,12 @@ export default function SettingsClient({
     <div className="flex flex-col gap-6">
       <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
         <h2 className="mb-2 font-medium">Профиль</h2>
-        <dl className="grid grid-cols-2 gap-y-1 text-sm">
-          <dt className="text-black/50 dark:text-white/50">Изучаю</dt>
-          <dd>{targetLanguage}</dd>
-          <dt className="text-black/50 dark:text-white/50">Родной язык</dt>
-          <dd>{nativeLanguage}</dd>
-          <dt className="text-black/50 dark:text-white/50">Уровень</dt>
-          <dd>{level ?? "—"}</dd>
-          <dt className="text-black/50 dark:text-white/50">Цель в день</dt>
-          <dd>{dailyWordGoal} слов</dd>
-        </dl>
+        <ProfileForm
+          targetLanguage={targetLanguage}
+          nativeLanguage={nativeLanguage}
+          level={level}
+          dailyWordGoal={dailyWordGoal}
+        />
       </section>
 
       <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
@@ -186,5 +190,127 @@ export default function SettingsClient({
         </button>
       </form>
     </div>
+  );
+}
+
+function ProfileForm({
+  targetLanguage,
+  nativeLanguage,
+  level,
+  dailyWordGoal,
+}: {
+  targetLanguage: string;
+  nativeLanguage: string;
+  level: string | null;
+  dailyWordGoal: number;
+}) {
+  const [state, formAction, pending] = useActionState<UpdateProfileState, FormData>(
+    updateProfile,
+    {},
+  );
+  const [target, setTarget] = useState(targetLanguage);
+  const [native, setNative] = useState(nativeLanguage);
+  const [lvl, setLvl] = useState(level ?? "beginner");
+  const [goal, setGoal] = useState(dailyWordGoal);
+
+  const languageChanged = target !== targetLanguage;
+
+  return (
+    <form action={formAction} className="flex flex-col gap-4">
+      <input type="hidden" name="target_language" value={target} />
+      <input type="hidden" name="native_language" value={native} />
+      <input type="hidden" name="level" value={lvl} />
+      <input type="hidden" name="daily_word_goal" value={goal} />
+
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-black/50 dark:text-white/50">Изучаю</span>
+        <select
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          className="rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm dark:border-white/15"
+        >
+          {LANGUAGES.filter((l) => l.code !== native).map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-black/50 dark:text-white/50">Родной язык</span>
+        <select
+          value={native}
+          onChange={(e) => setNative(e.target.value)}
+          className="rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm dark:border-white/15"
+        >
+          {LANGUAGES.filter((l) => l.code !== target).map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {languageChanged && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          Тексты и слова для текущего языка останутся в базе, но пропадут из библиотеки, пока не
+          переключишься обратно.
+        </p>
+      )}
+
+      <div>
+        <p className="mb-1 text-sm text-black/50 dark:text-white/50">Уровень</p>
+        <div className="grid grid-cols-3 gap-1.5">
+          {LEVELS.map((l) => (
+            <button
+              key={l.value}
+              type="button"
+              onClick={() => setLvl(l.value)}
+              className={`rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${
+                lvl === l.value
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  : "border-black/10 dark:border-white/15"
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-1 text-sm text-black/50 dark:text-white/50">Цель в день</p>
+        <div className="grid grid-cols-4 gap-1.5">
+          {DAILY_GOALS.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setGoal(g)}
+              className={`rounded-lg border py-2 text-sm font-medium transition-colors ${
+                goal === g
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  : "border-black/10 dark:border-white/15"
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.saved && (
+        <p className="text-sm text-emerald-600 dark:text-emerald-400">Сохранено ✓</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={pending}
+        className="self-start rounded-full bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+      >
+        {pending ? "…" : "Сохранить"}
+      </button>
+    </form>
   );
 }

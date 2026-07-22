@@ -5,6 +5,7 @@ import Link from "next/link";
 import WordRow from "./word-row";
 import EmptyState from "./empty-state";
 import PracticeSession, { type PracticeWord } from "./practice-session";
+import AddWordModal from "./add-word-modal";
 
 const STATUS_TABS = [
   { value: "", label: "Все" },
@@ -28,12 +29,16 @@ export default function NotebookClient({
   allWords,
   status,
   targetLanguage,
+  sourceLang,
+  nativeLang,
 }: {
   ownerId: string;
   items: WordItem[];
   allWords: PracticeWord[];
   status: string;
   targetLanguage: string;
+  sourceLang: string;
+  nativeLang: string;
 }) {
   const [mode, setMode] = useState<"read" | "practice">("read");
   const [query, setQuery] = useState("");
@@ -53,21 +58,24 @@ export default function NotebookClient({
           <h1 className="text-xl font-bold">✏️ Тетрадь</h1>
           <p className="text-sm text-black/50 dark:text-white/50">{targetLanguage}</p>
         </div>
-        <div className="flex overflow-hidden rounded-full border border-black/15 dark:border-white/20">
-          {(["read", "practice"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                mode === m
-                  ? "bg-caramel text-white"
-                  : "text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white"
-              }`}
-            >
-              {m === "read" ? "Чтение" : "Повтор"}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex overflow-hidden rounded-full border border-black/15 dark:border-white/20">
+            {(["read", "practice"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                  mode === m
+                    ? "bg-caramel text-white"
+                    : "text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white"
+                }`}
+              >
+                {m === "read" ? "Чтение" : "Повтор"}
+              </button>
+            ))}
+          </div>
+          <AddWordModal sourceLang={sourceLang} targetLang={nativeLang} />
         </div>
       </div>
 

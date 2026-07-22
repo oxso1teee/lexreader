@@ -3,15 +3,8 @@
 import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
 import { LANGUAGES } from "@/lib/languages";
+import { LEVELS, DAILY_GOALS } from "@/lib/onboarding-options";
 import { completeOnboarding, type OnboardingState } from "./actions";
-
-const LEVELS = [
-  { value: "beginner", label: "Начинающий" },
-  { value: "intermediate", label: "Средний" },
-  { value: "advanced", label: "Продвинутый" },
-];
-
-const DAILY_GOALS = [5, 10, 20, 30];
 
 const STEP_COUNT = 6;
 

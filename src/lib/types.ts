@@ -22,6 +22,7 @@ export interface TextRow {
   language: string;
   level_tag: string | null;
   word_count: number | null;
+  youtube_video_id: string | null;
   created_at: string;
 }
 
