@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
+import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
 import Reader from "./reader";
 
 export default async function ReadPage({
@@ -25,10 +26,33 @@ export default async function ReadPage({
 
   const { data: savedWords } = await supabase
     .from("vocabulary_items")
-    .select("headword")
+    .select("id, headword, level, seen_count")
     .eq("owner_id", profile.id);
 
-  const initialSavedHeadwords = (savedWords ?? []).map((w) => w.headword.toLowerCase());
+  const wordLevels: Record<string, { id: string; level: number; seenCount: number }> = {};
+  for (const w of savedWords ?? []) {
+    wordLevels[w.headword.toLowerCase()] = { id: w.id, level: w.level, seenCount: w.seen_count };
+  }
+
+  const uniqueTokens = new Set<string>();
+  for (const sentence of splitIntoSentences(text.body)) {
+    for (const tok of tokenizeSentence(sentence)) {
+      if (tok.isWord) uniqueTokens.add(tok.text.toLowerCase());
+    }
+  }
+
+  let statsNew = 0;
+  let statsLearning = 0;
+  let statsFamiliar = 0;
+  let statsKnown = 0;
+  for (const word of uniqueTokens) {
+    const saved = wordLevels[word];
+    if (!saved) continue;
+    if (saved.level >= 4) statsKnown++;
+    else if (saved.level === 3) statsFamiliar++;
+    else if (saved.level >= 1) statsLearning++;
+    else statsNew++;
+  }
 
   return (
     <Reader
@@ -37,7 +61,14 @@ export default async function ReadPage({
       body={text.body}
       sourceLang={text.language}
       targetLang={profile.native_language}
-      initialSavedHeadwords={initialSavedHeadwords}
+      wordLevels={wordLevels}
+      stats={{
+        unique: uniqueTokens.size,
+        new: statsNew,
+        learning: statsLearning,
+        familiar: statsFamiliar,
+        known: statsKnown,
+      }}
     />
   );
 }

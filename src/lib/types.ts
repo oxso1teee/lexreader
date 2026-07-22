@@ -37,8 +37,18 @@ export interface VocabularyItem {
   context_translation: string | null;
   photo_url: string | null;
   status: VocabularyStatus;
+  level: number;
+  seen_count: number;
   created_at: string;
 }
+
+export const WORD_LEVELS = [
+  { level: 0, label: "New", color: "#ea580c" },
+  { level: 1, label: "Видел раньше", color: "#f97316" },
+  { level: 2, label: "Знакомое", color: "#fb923c" },
+  { level: 3, label: "Знаю значение", color: "#fdba74" },
+  { level: 4, label: "Овладел", color: "#a1a1aa" },
+] as const;
 
 export interface SrsStateRow {
   flashcard_id: string;
