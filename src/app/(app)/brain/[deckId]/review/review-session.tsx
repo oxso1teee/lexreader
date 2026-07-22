@@ -5,11 +5,10 @@ import { reviewWord } from "./actions";
 import SessionComplete from "./session-complete";
 
 export interface ReviewCard {
-  vocabularyItemId: string;
-  headword: string;
-  translation: string;
-  contextSentence: string | null;
-  contextTranslation: string | null;
+  flashcardId: string;
+  front: string;
+  back: string;
+  notes: string | null;
 }
 
 const GRADES: { value: 0 | 1 | 2 | 3; label: string; className: string }[] = [
@@ -34,7 +33,7 @@ export default function ReviewSession({ cards: cardsProp }: { cards: ReviewCard[
 
   function grade(value: 0 | 1 | 2 | 3) {
     startTransition(async () => {
-      await reviewWord(card.vocabularyItemId, value);
+      await reviewWord(card.flashcardId, value);
       setRevealed(false);
       setIndex((i) => i + 1);
     });
@@ -51,17 +50,15 @@ export default function ReviewSession({ cards: cardsProp }: { cards: ReviewCard[
       </p>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-        <p className="text-2xl font-semibold">{card.translation}</p>
+        <p className="text-2xl font-semibold">{card.back}</p>
 
         {revealed && (
           <div className="flex flex-col gap-1">
             <p className="text-xl font-medium text-black/80 dark:text-white/80">
-              {card.headword}
+              {card.front}
             </p>
-            {card.contextSentence && (
-              <p className="max-w-sm text-sm text-black/50 dark:text-white/50">
-                {card.contextSentence}
-              </p>
+            {card.notes && (
+              <p className="max-w-sm text-sm text-black/50 dark:text-white/50">{card.notes}</p>
             )}
           </div>
         )}

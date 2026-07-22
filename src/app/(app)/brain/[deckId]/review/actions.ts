@@ -3,21 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { touchStreak } from "@/lib/streak";
-import { reviewSrsState, isLearned } from "@/lib/srs";
+import { reviewSrsState } from "@/lib/srs";
+import { getSrsParams } from "@/lib/srs-settings";
 
-export async function reviewWord(vocabularyItemId: string, grade: 0 | 1 | 2 | 3) {
+export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
-  const { data: current, error: fetchError } = await supabase
-    .from("srs_state")
-    .select("ease_factor, interval_days, repetitions")
-    .eq("vocabulary_item_id", vocabularyItemId)
-    .single();
-  if (fetchError || !current) throw new Error(fetchError?.message ?? "Слово не найдено");
+  const [{ data: current, error: fetchError }, params] = await Promise.all([
+    supabase
+      .from("srs_state")
+      .select("ease_factor, interval_days, repetitions")
+      .eq("flashcard_id", flashcardId)
+      .single(),
+    getSrsParams(supabase, user.id),
+  ]);
+  if (fetchError || !current) throw new Error(fetchError?.message ?? "Карточка не найдена");
 
   const next = reviewSrsState(
     {
@@ -26,6 +30,7 @@ export async function reviewWord(vocabularyItemId: string, grade: 0 | 1 | 2 | 3)
       repetitions: current.repetitions,
     },
     grade,
+    params,
   );
 
   const now = new Date();
@@ -40,23 +45,16 @@ export async function reviewWord(vocabularyItemId: string, grade: 0 | 1 | 2 | 3)
       due_at: dueAt.toISOString(),
       last_reviewed_at: now.toISOString(),
     })
-    .eq("vocabulary_item_id", vocabularyItemId);
+    .eq("flashcard_id", flashcardId);
   if (updateError) throw new Error(updateError.message);
 
   const { error: logError } = await supabase
     .from("review_log")
-    .insert({ vocabulary_item_id: vocabularyItemId, grade });
+    .insert({ flashcard_id: flashcardId, grade });
   if (logError) throw new Error(logError.message);
 
-  const newStatus = isLearned(next) ? "known" : next.repetitions >= 1 ? "learning" : "new";
-  await supabase
-    .from("vocabulary_items")
-    .update({ status: newStatus })
-    .eq("id", vocabularyItemId)
-    .neq("status", "known");
-
   await touchStreak(supabase, user.id);
-  revalidatePath("/notebook");
+  revalidatePath("/brain");
   revalidatePath("/progress");
 }
 

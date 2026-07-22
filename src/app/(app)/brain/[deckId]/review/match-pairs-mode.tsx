@@ -105,15 +105,15 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
       <div className="grid flex-1 grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">
           {round.words.map((w) => {
-            const matched = matchedIds.has(w.vocabularyItemId);
-            const isSelected = selectedWord === w.vocabularyItemId;
-            const isWrong = wrongFlash?.word === w.vocabularyItemId;
+            const matched = matchedIds.has(w.flashcardId);
+            const isSelected = selectedWord === w.flashcardId;
+            const isWrong = wrongFlash?.word === w.flashcardId;
             return (
               <button
-                key={w.vocabularyItemId}
+                key={w.flashcardId}
                 type="button"
                 disabled={matched || !!wrongFlash}
-                onClick={() => pickWord(w.vocabularyItemId)}
+                onClick={() => pickWord(w.flashcardId)}
                 className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
                   matched
                     ? "border-emerald-600 bg-emerald-50 opacity-50 dark:bg-emerald-950"
@@ -124,7 +124,7 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
                         : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
                 }`}
               >
-                {w.headword}
+                {w.front}
               </button>
             );
           })}
@@ -132,15 +132,15 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
 
         <div className="flex flex-col gap-2">
           {round.translations.map((t) => {
-            const matched = matchedIds.has(t.vocabularyItemId);
-            const isSelected = selectedTranslation === t.vocabularyItemId;
-            const isWrong = wrongFlash?.translation === t.vocabularyItemId;
+            const matched = matchedIds.has(t.flashcardId);
+            const isSelected = selectedTranslation === t.flashcardId;
+            const isWrong = wrongFlash?.translation === t.flashcardId;
             return (
               <button
-                key={t.vocabularyItemId}
+                key={t.flashcardId}
                 type="button"
                 disabled={matched || !!wrongFlash}
-                onClick={() => pickTranslation(t.vocabularyItemId)}
+                onClick={() => pickTranslation(t.flashcardId)}
                 className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
                   matched
                     ? "border-emerald-600 bg-emerald-50 opacity-50 dark:bg-emerald-950"
@@ -151,7 +151,7 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
                         : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
                 }`}
               >
-                {t.translation}
+                {t.back}
               </button>
             );
           })}

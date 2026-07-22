@@ -38,24 +38,15 @@ export async function saveWord(input: {
     }
   }
 
-  const { data: item, error } = await supabase
-    .from("vocabulary_items")
-    .insert({
-      owner_id: user.id,
-      source_text_id: input.textId,
-      headword: input.headword,
-      translation: input.translation,
-      context_sentence: input.contextSentence,
-      context_translation: input.contextTranslation,
-    })
-    .select("id")
-    .single();
-  if (error || !item) return { ok: false, error: error?.message ?? "Не удалось сохранить слово" };
-
-  const { error: srsError } = await supabase
-    .from("srs_state")
-    .insert({ vocabulary_item_id: item.id });
-  if (srsError) return { ok: false, error: srsError.message };
+  const { error } = await supabase.from("vocabulary_items").insert({
+    owner_id: user.id,
+    source_text_id: input.textId,
+    headword: input.headword,
+    translation: input.translation,
+    context_sentence: input.contextSentence,
+    context_translation: input.contextTranslation,
+  });
+  if (error) return { ok: false, error: error.message };
 
   revalidatePath("/notebook");
   return { ok: true };

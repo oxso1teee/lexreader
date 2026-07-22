@@ -17,12 +17,12 @@ function shuffle<T>(arr: T[]): T[] {
 function buildOptions(cards: ReviewCard[]): string[][] {
   return cards.map((card) => {
     const distractorPool = cards.filter(
-      (c) => c.vocabularyItemId !== card.vocabularyItemId && c.translation !== card.translation,
+      (c) => c.flashcardId !== card.flashcardId && c.back !== card.back,
     );
     const distractors = shuffle(distractorPool)
       .slice(0, 3)
-      .map((c) => c.translation);
-    return shuffle([card.translation, ...distractors]);
+      .map((c) => c.back);
+    return shuffle([card.back, ...distractors]);
   });
 }
 
@@ -45,8 +45,8 @@ export default function MultipleChoiceMode({ cards }: { cards: ReviewCard[] }) {
   function choose(option: string) {
     if (selected) return;
     setSelected(option);
-    const grade = option === card.translation ? 2 : 0;
-    startTransition(() => reviewWord(card.vocabularyItemId, grade));
+    const grade = option === card.back ? 2 : 0;
+    startTransition(() => reviewWord(card.flashcardId, grade));
   }
 
   function next() {
@@ -61,12 +61,12 @@ export default function MultipleChoiceMode({ cards }: { cards: ReviewCard[] }) {
       </p>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-        <p className="text-2xl font-semibold">{card.headword}</p>
+        <p className="text-2xl font-semibold">{card.front}</p>
       </div>
 
       <div className="flex flex-col gap-2">
         {options.map((opt) => {
-          const isCorrect = opt === card.translation;
+          const isCorrect = opt === card.back;
           const showState = selected !== null;
           const stateClass = !showState
             ? "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"

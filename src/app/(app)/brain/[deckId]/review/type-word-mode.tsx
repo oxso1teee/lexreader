@@ -28,9 +28,9 @@ export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
       return;
     }
 
-    const isCorrect = value.trim().toLowerCase() === card.headword.trim().toLowerCase();
+    const isCorrect = value.trim().toLowerCase() === card.front.trim().toLowerCase();
     setResult(isCorrect ? "correct" : "wrong");
-    startTransition(() => reviewWord(card.vocabularyItemId, isCorrect ? 2 : 0));
+    startTransition(() => reviewWord(card.flashcardId, isCorrect ? 2 : 0));
   }
 
   return (
@@ -43,7 +43,7 @@ export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
       </p>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-        <p className="text-2xl font-semibold">{card.translation}</p>
+        <p className="text-2xl font-semibold">{card.back}</p>
         {result && (
           <p
             className={
@@ -52,7 +52,7 @@ export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
                 : "text-red-600 dark:text-red-400"
             }
           >
-            {result === "correct" ? "Верно!" : `Правильный ответ: ${card.headword}`}
+            {result === "correct" ? "Верно!" : `Правильный ответ: ${card.front}`}
           </p>
         )}
       </div>

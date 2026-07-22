@@ -1,0 +1,78 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
+
+export interface DeckFormState {
+  error?: string;
+}
+
+export async function createDeck(
+  _prevState: DeckFormState,
+  formData: FormData,
+): Promise<DeckFormState> {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: "Введи название колоды." };
+
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("decks")
+    .insert({ owner_id: profile.id, name })
+    .select("id")
+    .single();
+  if (error || !data) return { error: error?.message ?? "Не удалось создать колоду." };
+
+  revalidatePath("/brain");
+  redirect(`/brain/${data.id}`);
+}
+
+export async function deleteDeck(deckId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("decks").delete().eq("id", deckId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/brain");
+}
+
+interface ImportCard {
+  front: string;
+  back: string;
+  notes?: string;
+}
+
+export async function importFlashcards(deckId: string, cards: ImportCard[]) {
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  const rows = cards
+    .filter((c) => c.front.trim() && c.back.trim())
+    .map((c) => ({
+      deck_id: deckId,
+      owner_id: profile.id,
+      front: c.front.trim(),
+      back: c.back.trim(),
+      notes: c.notes?.trim() || null,
+    }));
+  if (rows.length === 0) return { ok: false, error: "Нет карточек для импорта." };
+
+  const { data: inserted, error } = await supabase.from("flashcards").insert(rows).select("id");
+  if (error) return { ok: false, error: error.message };
+
+  const settings = await supabase
+    .from("srs_settings")
+    .select("starting_ease")
+    .eq("owner_id", profile.id)
+    .maybeSingle();
+  const startingEase = settings.data?.starting_ease ?? 2.5;
+
+  await supabase.from("srs_state").insert(
+    (inserted ?? []).map((c) => ({ flashcard_id: c.id, ease_factor: startingEase })),
+  );
+
+  revalidatePath(`/brain/${deckId}`);
+  revalidatePath("/brain");
+  return { ok: true, count: rows.length };
+}

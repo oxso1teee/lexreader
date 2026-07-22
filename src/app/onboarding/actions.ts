@@ -51,5 +51,9 @@ export async function completeOnboarding(
     return { error: profileError.message };
   }
 
+  await supabase
+    .from("decks")
+    .insert({ owner_id: signUpData.user.id, name: "Main Deck", is_default: true });
+
   redirect("/home");
 }
