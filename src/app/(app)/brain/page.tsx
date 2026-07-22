@@ -61,7 +61,7 @@ export default async function BrainPage() {
 
       <div className="flex gap-2">
         <NewDeckModal />
-        <ImportModal decks={deckOptions} />
+        <ImportModal decks={deckOptions} targetLanguage={profile.target_language} />
         <Link
           href="/brain/settings"
           className="rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"

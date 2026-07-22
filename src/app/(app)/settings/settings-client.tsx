@@ -12,6 +12,7 @@ import {
   type UpdateProfileState,
 } from "./actions";
 import { signOut } from "../actions";
+import { deleteAccount, type DeleteAccountState } from "./delete-account-actions";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -172,13 +173,22 @@ export default function SettingsClient({
 
       <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
         <h2 className="mb-2 font-medium">Данные</h2>
-        <a
-          href="/api/export/vocabulary"
-          download
-          className="text-sm text-black underline dark:text-white"
-        >
-          Экспортировать словарь в CSV
-        </a>
+        <div className="flex flex-col gap-2">
+          <a
+            href="/api/export/vocabulary"
+            download
+            className="text-sm text-black underline dark:text-white"
+          >
+            Экспортировать словарь в CSV
+          </a>
+          <a
+            href="/api/export/data"
+            download
+            className="text-sm text-black underline dark:text-white"
+          >
+            Скачать все мои данные (JSON)
+          </a>
+        </div>
       </section>
 
       <form action={signOut}>
@@ -189,6 +199,17 @@ export default function SettingsClient({
           Выйти из аккаунта
         </button>
       </form>
+
+      <DeleteAccountSection />
+
+      <div className="flex gap-4 text-xs text-black/40 dark:text-white/40">
+        <Link href="/terms" className="underline">
+          Условия использования
+        </Link>
+        <Link href="/privacy" className="underline">
+          Конфиденциальность
+        </Link>
+      </div>
     </div>
   );
 }
@@ -312,5 +333,63 @@ function ProfileForm({
         {pending ? "…" : "Сохранить"}
       </button>
     </form>
+  );
+}
+
+function DeleteAccountSection() {
+  const [open, setOpen] = useState(false);
+  const [confirmation, setConfirmation] = useState("");
+  const [state, formAction, pending] = useActionState<DeleteAccountState, FormData>(
+    deleteAccount,
+    {},
+  );
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-sm text-red-600 underline dark:text-red-400"
+      >
+        Удалить аккаунт
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-red-200 p-4 dark:border-red-900">
+      <h2 className="mb-2 font-medium text-red-600 dark:text-red-400">Удалить аккаунт</h2>
+      <p className="mb-3 text-sm text-black/60 dark:text-white/60">
+        Это необратимо удалит твой аккаунт и все данные: тексты, слова, карточки, прогресс. Если
+        есть активная подписка, она будет отменена. Чтобы подтвердить, введи «УДАЛИТЬ».
+      </p>
+      <form action={formAction} className="flex flex-col gap-2">
+        <input
+          type="text"
+          name="confirmation"
+          value={confirmation}
+          onChange={(e) => setConfirmation(e.target.value)}
+          placeholder="УДАЛИТЬ"
+          className="w-full rounded-lg border border-red-200 px-3 py-2 text-sm outline-none focus:border-red-400 dark:border-red-900 dark:focus:border-red-700"
+        />
+        {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium dark:border-white/15"
+          >
+            Отмена
+          </button>
+          <button
+            type="submit"
+            disabled={pending || confirmation !== "УДАЛИТЬ"}
+            className="flex-1 rounded-full bg-red-600 py-2 text-sm font-medium text-white disabled:opacity-40"
+          >
+            {pending ? "…" : "Удалить аккаунт навсегда"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

@@ -348,7 +348,7 @@ export default function Reader({
           type="button"
           onClick={handleFinish}
           disabled={finishing}
-          aria-label="Закрыть"
+          aria-label="Завершить чтение"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-red-400 text-red-500 disabled:opacity-50"
         >
           ✕
@@ -565,7 +565,7 @@ export default function Reader({
                       style={{
                         backgroundColor: popup.level === l.level ? l.color : `${l.color}33`,
                       }}
-                      className="rounded-lg py-1.5 text-sm font-medium"
+                      className="flex min-h-11 items-center justify-center rounded-lg text-sm font-medium"
                     >
                       {l.level}
                     </button>
@@ -581,7 +581,7 @@ export default function Reader({
                     type="button"
                     onClick={handleAddPhrase}
                     disabled={popup.saved}
-                    className="rounded-lg bg-caramel px-2 py-2 text-xs font-medium text-white disabled:opacity-60"
+                    className="flex min-h-11 items-center justify-center rounded-lg bg-caramel px-2 text-center text-xs font-medium text-white disabled:opacity-60"
                   >
                     {popup.saved ? "Добавлено ✓" : "+ В карточки"}
                   </button>
@@ -589,7 +589,7 @@ export default function Reader({
                   <button
                     type="button"
                     onClick={() => handleSetLevel(4)}
-                    className="rounded-lg px-2 py-2 text-xs font-medium text-white"
+                    className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-medium text-white"
                     style={{ backgroundColor: popup.level === 4 ? "#16a34a" : "#a67c52" }}
                   >
                     {popup.level === 4 ? "Добавлено ✓" : "Знаю это слово ⭐"}
@@ -597,19 +597,19 @@ export default function Reader({
                 )}
                 <Link
                   href="/pricing"
-                  className="flex items-center justify-center rounded-lg border border-black/10 px-2 py-2 text-center text-xs font-medium dark:border-white/15"
+                  className="flex min-h-11 items-center justify-center rounded-lg border border-black/10 px-2 text-center text-xs font-medium dark:border-white/15"
                 >
                   💬 В контексте ⭐
                 </Link>
                 <Link
                   href="/pricing"
-                  className="flex items-center justify-center rounded-lg border border-black/10 px-2 py-2 text-center text-xs font-medium dark:border-white/15"
+                  className="flex min-h-11 items-center justify-center rounded-lg border border-black/10 px-2 text-center text-xs font-medium dark:border-white/15"
                 >
                   📖 Подробно ⭐
                 </Link>
                 <Link
                   href="/pricing"
-                  className="flex items-center justify-center rounded-lg border border-black/10 px-2 py-2 text-center text-xs font-medium dark:border-white/15"
+                  className="flex min-h-11 items-center justify-center rounded-lg border border-black/10 px-2 text-center text-xs font-medium dark:border-white/15"
                 >
                   ✏️ Грамматика ⭐
                 </Link>

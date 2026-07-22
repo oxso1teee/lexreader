@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { deleteWord, markKnown, setPhotoUrl } from "./actions";
+import { validateImageFile } from "@/lib/file-validation";
 
 export default function WordRow({
   id,
@@ -23,8 +24,15 @@ export default function WordRow({
 }) {
   const [isPending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   async function handlePhotoChange(file: File) {
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setPhotoError(validationError);
+      return;
+    }
+    setPhotoError(null);
     setUploading(true);
     try {
       const supabase = createClient();
@@ -72,6 +80,7 @@ export default function WordRow({
             {translation}
             {sourceTitle ? ` · ${sourceTitle}` : ""}
           </p>
+          {photoError && <p className="text-xs text-red-600 dark:text-red-400">{photoError}</p>}
         </div>
       </div>
       <div className="flex shrink-0 gap-2">

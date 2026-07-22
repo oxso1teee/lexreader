@@ -3,7 +3,103 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 import type { Plan } from "@/lib/subscription";
+import { getStripeClient, isStripeConfigured, STRIPE_PRICE_IDS } from "@/lib/stripe";
+
+function siteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+}
+
+export interface CheckoutState {
+  error?: string;
+}
+
+// Реальная оплата через Stripe Checkout — требует, чтобы владелец продукта
+// сам завёл Stripe-аккаунт, создал два recurring Price (месяц/год) и задал
+// STRIPE_SECRET_KEY/STRIPE_PRICE_MONTHLY/STRIPE_PRICE_YEARLY. Без этого
+// показываем понятную ошибку, а не падаем — см. isStripeConfigured().
+export async function createCheckoutSession(
+  plan: Extract<Plan, "premium_monthly" | "premium_yearly">,
+): Promise<CheckoutState> {
+  if (!isStripeConfigured()) {
+    return { error: "Оплата ещё не настроена — обратись к администратору." };
+  }
+
+  const priceId = STRIPE_PRICE_IDS[plan];
+  if (!priceId) {
+    return { error: "Тарифный план временно недоступен." };
+  }
+
+  const profile = await requireProfile();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return { error: "Не авторизован." };
+
+  const stripe = getStripeClient();
+
+  const { data: existing } = await supabase
+    .from("subscriptions")
+    .select("stripe_customer_id")
+    .eq("owner_id", profile.id)
+    .maybeSingle();
+
+  let customerId = existing?.stripe_customer_id ?? null;
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email,
+      metadata: { owner_id: profile.id },
+    });
+    customerId = customer.id;
+    await supabase
+      .from("subscriptions")
+      .upsert({ owner_id: profile.id, stripe_customer_id: customerId }, { onConflict: "owner_id" });
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "subscription",
+    customer: customerId,
+    client_reference_id: profile.id,
+    line_items: [{ price: priceId, quantity: 1 }],
+    allow_promotion_codes: true,
+    success_url: `${siteUrl()}/library?checkout=success`,
+    cancel_url: `${siteUrl()}/pricing?checkout=cancelled`,
+  });
+
+  if (!session.url) return { error: "Не удалось создать сессию оплаты." };
+  redirect(session.url);
+}
+
+// Redirect в Stripe Customer Portal — управление способом оплаты, отмена,
+// история счетов. Требует настроенного Customer Portal в Stripe Dashboard.
+export async function createBillingPortalSession(): Promise<CheckoutState> {
+  if (!isStripeConfigured()) {
+    return { error: "Оплата ещё не настроена — обратись к администратору." };
+  }
+
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("stripe_customer_id")
+    .eq("owner_id", profile.id)
+    .maybeSingle();
+
+  if (!data?.stripe_customer_id) {
+    return { error: "Активной подписки не найдено." };
+  }
+
+  const stripe = getStripeClient();
+  const session = await stripe.billingPortal.sessions.create({
+    customer: data.stripe_customer_id,
+    return_url: `${siteUrl()}/pricing`,
+  });
+
+  redirect(session.url);
+}
 
 // Локальная заглушка для тестирования лимитов без реальной оплаты.
 // Настоящая оплата подписки идёт через RevenueCat + Apple StoreKit / Google

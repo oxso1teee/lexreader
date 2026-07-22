@@ -65,7 +65,7 @@ export default function NotebookClient({
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
-                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex min-h-11 items-center px-3 text-sm font-medium transition-colors ${
                   mode === m
                     ? "bg-caramel text-white"
                     : "text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white"
@@ -104,7 +104,7 @@ export default function NotebookClient({
               <Link
                 key={tab.value}
                 href={tab.value ? `/notebook?status=${tab.value}` : "/notebook"}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex min-h-11 shrink-0 items-center rounded-full border px-3 text-sm font-medium transition-colors ${
                   status === tab.value
                     ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
                     : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"

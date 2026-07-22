@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { createWorker } from "tesseract.js";
 import { createText, type CreateTextState } from "../actions";
 import { TESSERACT_LANG } from "@/lib/ocr-lang-map";
+import { validateImageFile } from "@/lib/file-validation";
 import PaywallNotice from "./paywall-notice";
 
 export default function PhotoImportForm({ targetLanguage }: { targetLanguage: string }) {
@@ -18,6 +19,13 @@ export default function PhotoImportForm({ targetLanguage }: { targetLanguage: st
   const [title, setTitle] = useState("");
 
   async function handleFile(file: File) {
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setOcrError(validationError);
+      setStatus("error");
+      return;
+    }
+
     setStatus("working");
     setProgress(0);
     setOcrError(null);
@@ -35,7 +43,16 @@ export default function PhotoImportForm({ targetLanguage }: { targetLanguage: st
       } = await worker.recognize(file);
       await worker.terminate();
 
-      setText(recognized.trim());
+      const trimmed = recognized.trim();
+      if (!trimmed) {
+        setOcrError(
+          "Не нашли текст на этом фото. Проверь, что фото чёткое, хорошо освещено и текст на нём читаем.",
+        );
+        setStatus("error");
+        return;
+      }
+
+      setText(trimmed);
       setTitle(file.name.replace(/\.[^.]+$/, ""));
       setStatus("idle");
     } catch (e) {

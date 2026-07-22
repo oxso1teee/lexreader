@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { hasFreeTextRoom, insertText, type CreateTextState } from "./actions";
+import { log } from "@/lib/log";
 
 // Официальный YouTube Data API v3 требует OAuth для скачивания субтитров
 // чужого видео (раздел 7 ТЗ) — неподъёмно для MVP. Вместо этого парсим
@@ -127,6 +128,7 @@ export async function createTextFromYoutube(
     if (!res.ok) throw new Error(`видео ответило ${res.status}`);
     watchHtml = await res.text();
   } catch (e) {
+    log.import({ kind: "youtube", outcome: "error", reason: "watch_page_fetch_failed" });
     return {
       error: `Не удалось загрузить видео: ${e instanceof Error ? e.message : "ошибка сети"}`,
     };
@@ -137,6 +139,7 @@ export async function createTextFromYoutube(
 
   const tracks = findCaptionTracks(watchHtml);
   if (tracks.length === 0) {
+    log.import({ kind: "youtube", outcome: "error", reason: "no_captions" });
     return { error: "У этого видео нет открытых субтитров — импорт доступен только для видео с субтитрами." };
   }
 
@@ -149,12 +152,14 @@ export async function createTextFromYoutube(
     if (!res.ok) throw new Error(`субтитры ответили ${res.status}`);
     captionXml = await res.text();
   } catch (e) {
+    log.import({ kind: "youtube", outcome: "error", reason: "caption_fetch_failed" });
     return {
       error: `Не удалось загрузить субтитры: ${e instanceof Error ? e.message : "ошибка сети"}`,
     };
   }
 
   if (!captionXml.trim()) {
+    log.import({ kind: "youtube", outcome: "error", reason: "empty_caption_response" });
     return {
       error:
         "YouTube не отдал субтитры для этого видео с текущего сервера (иногда временно ограничивает доступ ботам). Попробуй другое видео или повтори позже.",
@@ -163,6 +168,7 @@ export async function createTextFromYoutube(
 
   const segments = parseTimedTextSegments(captionXml);
   if (segments.length === 0) {
+    log.import({ kind: "youtube", outcome: "error", reason: "parse_failed" });
     return { error: "Не удалось разобрать субтитры этого видео." };
   }
 
@@ -177,7 +183,10 @@ export async function createTextFromYoutube(
     language: profile.target_language,
     youtubeVideoId: videoId,
   });
-  if ("error" in result) return { error: result.error };
+  if ("error" in result) {
+    log.import({ kind: "youtube", outcome: "error", reason: "insert_failed" });
+    return { error: result.error };
+  }
 
   const { error: segmentsError } = await supabase.from("caption_segments").insert(
     segments.map((s, i) => ({
@@ -188,7 +197,11 @@ export async function createTextFromYoutube(
       segment_index: i,
     })),
   );
-  if (segmentsError) return { error: segmentsError.message };
+  if (segmentsError) {
+    log.import({ kind: "youtube", outcome: "error", reason: "segments_insert_failed" });
+    return { error: segmentsError.message };
+  }
 
+  log.import({ kind: "youtube", outcome: "success" });
   redirect(`/watch/${result.id}`);
 }

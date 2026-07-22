@@ -362,7 +362,7 @@ export default function WatchPlayer({
                       style={{
                         backgroundColor: popup.level === l.level ? l.color : `${l.color}33`,
                       }}
-                      className="rounded-lg py-1.5 text-sm font-medium"
+                      className="flex min-h-11 items-center justify-center rounded-lg text-sm font-medium"
                     >
                       {l.level}
                     </button>

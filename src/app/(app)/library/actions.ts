@@ -9,6 +9,7 @@ import { requireProfile } from "@/lib/auth";
 import { getPlan, FREE_TEXT_LIMIT } from "@/lib/subscription";
 import { assertPublicUrl } from "@/lib/ssrf-guard";
 import type { TextSourceType } from "@/lib/types";
+import { log } from "@/lib/log";
 
 export async function deleteText(textId: string) {
   const supabase = await createClient();
@@ -140,6 +141,7 @@ export async function createTextFromUrl(
     if (!res.ok) throw new Error(`страница ответила ${res.status}`);
     html = await res.text();
   } catch (e) {
+    log.import({ kind: "url", outcome: "error", reason: "fetch_failed" });
     return {
       error: `Не удалось загрузить страницу: ${e instanceof Error ? e.message : "ошибка сети"}`,
     };
@@ -149,6 +151,7 @@ export async function createTextFromUrl(
   const article = new Readability(dom.window.document).parse();
   const body = article?.textContent?.trim();
   if (!article || !body) {
+    log.import({ kind: "url", outcome: "error", reason: "extraction_failed" });
     return { error: "Не удалось извлечь текст статьи со страницы." };
   }
 
@@ -160,7 +163,11 @@ export async function createTextFromUrl(
     sourceUrl: url.toString(),
     language: profile.target_language,
   });
-  if ("error" in result) return { error: result.error };
+  if ("error" in result) {
+    log.import({ kind: "url", outcome: "error", reason: "insert_failed" });
+    return { error: result.error };
+  }
 
+  log.import({ kind: "url", outcome: "success" });
   redirect(`/read/${result.id}`);
 }

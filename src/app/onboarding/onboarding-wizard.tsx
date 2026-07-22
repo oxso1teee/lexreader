@@ -206,6 +206,17 @@ export default function OnboardingWizard() {
           >
             {pending ? "Создаём…" : "Создать аккаунт и начать"}
           </button>
+          <p className="text-center text-xs text-black/40 dark:text-white/40">
+            Создавая аккаунт, ты соглашаешься с{" "}
+            <Link href="/terms" className="underline">
+              условиями использования
+            </Link>{" "}
+            и{" "}
+            <Link href="/privacy" className="underline">
+              политикой конфиденциальности
+            </Link>
+            .
+          </p>
         </form>
       )}
 

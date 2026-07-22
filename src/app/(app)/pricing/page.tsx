@@ -2,7 +2,17 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getPlan } from "@/lib/subscription";
+import { isStripeConfigured } from "@/lib/stripe";
 import { simulateSubscribe, cancelSimulatedSubscription } from "./actions";
+import CheckoutButton from "./checkout-button";
+import BillingPortalButton from "./billing-portal-button";
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  return `${day}.${month}.${d.getFullYear()}`;
+}
 
 const REASONS: Record<string, string> = {
   texts: "Ты держишь максимум текстов на бесплатном тарифе.",
@@ -29,6 +39,13 @@ export default async function PricingPage({
   const profile = await requireProfile();
   const supabase = await createClient();
   const plan = await getPlan(supabase, profile.id);
+  const stripeReady = isStripeConfigured();
+
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status, current_period_end, stripe_customer_id")
+    .eq("owner_id", profile.id)
+    .maybeSingle();
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
@@ -50,14 +67,30 @@ export default async function PricingPage({
           <p className="font-medium">
             У тебя активна подписка: {plan === "premium_yearly" ? "годовая" : "месячная"}
           </p>
-          <form action={cancelSimulatedSubscription} className="mt-3">
-            <button
-              type="submit"
-              className="text-sm text-black/50 underline hover:text-black dark:text-white/50 dark:hover:text-white"
-            >
-              Отменить (тестовый режим)
-            </button>
-          </form>
+          {subscription?.status === "past_due" && (
+            <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
+              Последнее списание не прошло — обнови способ оплаты, доступ сохранится ещё
+              некоторое время.
+            </p>
+          )}
+          {subscription?.current_period_end && (
+            <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+              {subscription.status === "past_due" ? "Доступ до" : "Продление"}:{" "}
+              {formatDate(subscription.current_period_end)}
+            </p>
+          )}
+          {subscription?.stripe_customer_id ? (
+            <BillingPortalButton />
+          ) : (
+            <form action={cancelSimulatedSubscription} className="mt-3">
+              <button
+                type="submit"
+                className="text-sm text-black/50 underline hover:text-black dark:text-white/50 dark:hover:text-white"
+              >
+                Отменить (тестовый режим)
+              </button>
+            </form>
+          )}
         </div>
       ) : (
         <>
@@ -78,14 +111,24 @@ export default async function PricingPage({
                 </li>
               ))}
             </ul>
-            <form action={simulateSubscribe.bind(null, "premium_monthly")} className="mt-4">
-              <button
-                type="submit"
-                className="w-full rounded-full border-2 border-caramel py-3 font-semibold text-caramel"
-              >
-                Начать
-              </button>
-            </form>
+            {stripeReady ? (
+              <div className="mt-4">
+                <CheckoutButton
+                  plan="premium_monthly"
+                  label="Начать"
+                  className="w-full rounded-full border-2 border-caramel py-3 font-semibold text-caramel"
+                />
+              </div>
+            ) : (
+              <form action={simulateSubscribe.bind(null, "premium_monthly")} className="mt-4">
+                <button
+                  type="submit"
+                  className="w-full rounded-full border-2 border-caramel py-3 font-semibold text-caramel"
+                >
+                  Начать
+                </button>
+              </form>
+            )}
           </div>
 
           <div className="relative rounded-2xl border-2 border-caramel bg-card p-5 shadow-sm">
@@ -111,21 +154,41 @@ export default async function PricingPage({
                 </li>
               ))}
             </ul>
-            <form action={simulateSubscribe.bind(null, "premium_yearly")} className="mt-4">
-              <button
-                type="submit"
-                className="w-full rounded-full bg-caramel py-3 font-semibold text-white"
-              >
-                Начать
-              </button>
-            </form>
+            {stripeReady ? (
+              <div className="mt-4">
+                <CheckoutButton
+                  plan="premium_yearly"
+                  label="Начать"
+                  className="w-full rounded-full bg-caramel py-3 font-semibold text-white"
+                />
+              </div>
+            ) : (
+              <form action={simulateSubscribe.bind(null, "premium_yearly")} className="mt-4">
+                <button
+                  type="submit"
+                  className="w-full rounded-full bg-caramel py-3 font-semibold text-white"
+                >
+                  Начать
+                </button>
+              </form>
+            )}
           </div>
 
           <p className="text-xs text-black/40 dark:text-white/40">
-            Это тестовая кнопка локальной разработки — она не проводит реальную оплату, а просто
-            помечает подписку активной в базе. Настоящая оплата подключается позже через
-            RevenueCat + App Store / Google Play, когда будут готовы аккаунты разработчика в этих
-            сервисах.
+            {stripeReady
+              ? "Оплата через Stripe Checkout — карта не сохраняется в LexReader, всё проходит на стороне Stripe."
+              : "Это тестовая кнопка локальной разработки — она не проводит реальную оплату, а просто помечает подписку активной в базе. Настоящая оплата подключается через Stripe, когда будут заданы STRIPE_SECRET_KEY/STRIPE_PRICE_MONTHLY/STRIPE_PRICE_YEARLY."}
+          </p>
+          <p className="text-xs text-black/40 dark:text-white/40">
+            Оформляя подписку, ты соглашаешься с{" "}
+            <Link href="/terms" className="underline">
+              условиями использования
+            </Link>{" "}
+            и{" "}
+            <Link href="/privacy" className="underline">
+              политикой конфиденциальности
+            </Link>
+            .
           </p>
         </>
       )}

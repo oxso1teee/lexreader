@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { login, type LoginState } from "./actions";
 
 export default function LoginForm() {
@@ -30,6 +31,9 @@ export default function LoginForm() {
       >
         {pending ? "Входим…" : "Войти"}
       </button>
+      <Link href="/reset-password" className="text-center text-sm text-black/50 underline dark:text-white/50">
+        Забыл пароль?
+      </Link>
     </form>
   );
 }

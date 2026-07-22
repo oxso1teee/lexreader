@@ -4,6 +4,8 @@ import { useState } from "react";
 import { createWorker } from "tesseract.js";
 import { importFlashcards } from "./actions";
 import { FREE_FLASHCARD_LIMIT } from "@/lib/subscription";
+import { TESSERACT_LANG } from "@/lib/ocr-lang-map";
+import { validateImageFile } from "@/lib/file-validation";
 
 interface ParsedCard {
   front: string;
@@ -52,7 +54,15 @@ function splitOcrLine(line: string): ParsedCard {
   return { front: line.trim(), back: "" };
 }
 
-export default function ImportModal({ decks, defaultDeckId }: { decks: Deck[]; defaultDeckId?: string }) {
+export default function ImportModal({
+  decks,
+  defaultDeckId,
+  targetLanguage,
+}: {
+  decks: Deck[];
+  defaultDeckId?: string;
+  targetLanguage: string;
+}) {
   const [open, setOpen] = useState(false);
   const [deckId, setDeckId] = useState(defaultDeckId ?? decks[0]?.id ?? "");
   const [cards, setCards] = useState<ParsedCard[]>([]);
@@ -70,7 +80,12 @@ export default function ImportModal({ decks, defaultDeckId }: { decks: Deck[]; d
     setBusy(true);
     setError(null);
     try {
-      setCards(await parseFile(file));
+      const parsed = await parseFile(file);
+      if (parsed.length === 0) {
+        setError("В файле не нашлось ни одной карточки — проверь формат (front,back,notes).");
+        return;
+      }
+      setCards(parsed);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось прочитать файл.");
     } finally {
@@ -79,10 +94,17 @@ export default function ImportModal({ decks, defaultDeckId }: { decks: Deck[]; d
   }
 
   async function handlePhoto(file: File) {
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {
-      const worker = await createWorker("eng");
+      const lang = TESSERACT_LANG[targetLanguage] ?? "eng";
+      const worker = await createWorker(lang);
       const {
         data: { text },
       } = await worker.recognize(file);
@@ -92,6 +114,13 @@ export default function ImportModal({ decks, defaultDeckId }: { decks: Deck[]; d
         .split(/\r?\n/)
         .filter((l) => l.trim())
         .map(splitOcrLine);
+
+      if (parsed.length === 0) {
+        setError(
+          "Не нашли текст на этом фото. Проверь, что фото чёткое, хорошо освещено и текст на нём читаем.",
+        );
+        return;
+      }
       setCards(parsed);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось распознать фото.");
