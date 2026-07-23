@@ -1,20 +1,31 @@
 import type { NextConfig } from "next";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const isDev = process.env.NODE_ENV !== "production";
 
 // P0-SEC-06 release-readiness промта: базовый набор security-заголовков.
-// ws:/wss: в connect-src нужны Turbopack HMR в dev-режиме — в проде это не
-// используется, но next.config.ts общий для обоих режимов.
+// P0-АУДИТ 2.3/2.4: cdn.jsdelivr.net нужен tesseract.js (воркер/wasm-ядро/
+// файлы языка распознавания — грузятся оттуда по умолчанию, см.
+// node_modules/tesseract.js/src/worker/browser/defaultOptions.js), иначе
+// фото-OCR-импорт молча ломается по CSP. www.youtube.com в script-src
+// нужен для бутстрапа YouTube IFrame Player API (watch-player.tsx) — без
+// него Watch Mode не грузит видео вообще (frame-src тут не помогает,
+// блокируется ещё до создания iframe).
+// ws:/wss: нужны только Turbopack HMR в dev — в проде их разрешать незачем
+// (иначе XSS-пейлоад мог бы открыть WebSocket на любой хост).
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.youtube.com",
+  "worker-src 'self' blob: https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ws: wss: ${supabaseUrl} https://api.mymemory.translated.net`,
+  `connect-src 'self'${isDev ? " ws: wss:" : ""} ${supabaseUrl} https://api.mymemory.translated.net https://cdn.jsdelivr.net`,
   "frame-src https://www.youtube.com",
   "frame-ancestors 'none'",
-].join("; ");
+]
+  .filter(Boolean)
+  .join("; ");
 
 const nextConfig: NextConfig = {
   // Next.js 16: dev-ресурсы (HMR websocket, бутстрап гидратации) по
@@ -32,6 +43,7 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Content-Security-Policy", value: csp },
         ],
       },

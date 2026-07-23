@@ -288,7 +288,7 @@ function ProfileForm({
               key={l.value}
               type="button"
               onClick={() => setLvl(l.value)}
-              className={`rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${
+              className={`flex min-h-11 items-center justify-center rounded-lg border px-2 text-xs font-medium transition-colors ${
                 lvl === l.value
                   ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
                   : "border-black/10 dark:border-white/15"
@@ -308,7 +308,7 @@ function ProfileForm({
               key={g}
               type="button"
               onClick={() => setGoal(g)}
-              className={`rounded-lg border py-2 text-sm font-medium transition-colors ${
+              className={`flex min-h-11 items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
                 goal === g
                   ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
                   : "border-black/10 dark:border-white/15"
@@ -377,14 +377,14 @@ function DeleteAccountSection() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium dark:border-white/15"
+            className="flex min-h-11 items-center justify-center rounded-full border border-black/10 px-4 text-sm font-medium dark:border-white/15"
           >
             Отмена
           </button>
           <button
             type="submit"
             disabled={pending || confirmation !== "УДАЛИТЬ"}
-            className="flex-1 rounded-full bg-red-600 py-2 text-sm font-medium text-white disabled:opacity-40"
+            className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-red-600 text-sm font-medium text-white disabled:opacity-40"
           >
             {pending ? "…" : "Удалить аккаунт навсегда"}
           </button>

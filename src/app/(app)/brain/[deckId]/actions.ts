@@ -32,7 +32,7 @@ export async function addFlashcard(
     .insert({ deck_id: deckId, owner_id: profile.id, front, back, notes: notes || null })
     .select("id")
     .single();
-  if (error || !card) return { error: error?.message ?? "Не удалось добавить карточку." };
+  if (error || !card) return { error: "Не удалось добавить карточку. Попробуй ещё раз." };
 
   const { data: settings } = await supabase
     .from("srs_settings")
@@ -51,6 +51,6 @@ export async function addFlashcard(
 export async function deleteFlashcard(deckId: string, cardId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("flashcards").delete().eq("id", cardId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Не удалось удалить карточку.");
   revalidatePath(`/brain/${deckId}`);
 }

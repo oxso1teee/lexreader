@@ -6,6 +6,7 @@ import { importFlashcards } from "./actions";
 import { FREE_FLASHCARD_LIMIT } from "@/lib/subscription";
 import { TESSERACT_LANG } from "@/lib/ocr-lang-map";
 import { validateImageFile } from "@/lib/file-validation";
+import { log } from "@/lib/log";
 
 interface ParsedCard {
   front: string;
@@ -16,6 +17,37 @@ interface ParsedCard {
 interface Deck {
   id: string;
   name: string;
+}
+
+// P0-АУДИТ (раздел 4): раньше просто .split(",") — перевод с запятой внутри
+// (частый случай для фраз/идиом, особенно в кавычках "hello, how are you")
+// сдвигал колонки. Минимальный парсер с поддержкой кавычек, без зависимости.
+function parseCsvLine(line: string): string[] {
+  const cells: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        cur += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ",") {
+      cells.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  cells.push(cur);
+  return cells;
 }
 
 async function parseFile(file: File): Promise<ParsedCard[]> {
@@ -34,7 +66,7 @@ async function parseFile(file: File): Promise<ParsedCard[]> {
   }
 
   const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  const rows = lines.map((l) => l.split(","));
+  const rows = lines.map(parseCsvLine);
   const startIdx = rows[0]?.[0]?.trim().toLowerCase() === "front" ? 1 : 0;
   return rows.slice(startIdx).map((r) => ({
     front: (r[0] ?? "").trim(),
@@ -67,6 +99,7 @@ export default function ImportModal({
   const [deckId, setDeckId] = useState(defaultDeckId ?? decks[0]?.id ?? "");
   const [cards, setCards] = useState<ParsedCard[]>([]);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
 
@@ -82,12 +115,17 @@ export default function ImportModal({
     try {
       const parsed = await parseFile(file);
       if (parsed.length === 0) {
+        log.import({ kind: "csv_json", outcome: "error", reason: "no_rows_parsed" });
         setError("В файле не нашлось ни одной карточки — проверь формат (front,back,notes).");
         return;
       }
+      log.import({ kind: "csv_json", outcome: "success" });
       setCards(parsed);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось прочитать файл.");
+    } catch {
+      // P0-АУДИТ 3.14/3.21: не показываем сырую ошибку парсера (может быть
+      // английским текстом вроде SyntaxError) — только лог для отладки.
+      log.import({ kind: "csv_json", outcome: "error", reason: "parse_exception" });
+      setError("Не удалось прочитать файл — проверь, что это корректный CSV или JSON.");
     } finally {
       setBusy(false);
     }
@@ -101,10 +139,15 @@ export default function ImportModal({
     }
 
     setBusy(true);
+    setProgress(0);
     setError(null);
     try {
       const lang = TESSERACT_LANG[targetLanguage] ?? "eng";
-      const worker = await createWorker(lang);
+      const worker = await createWorker(lang, undefined, {
+        logger: (m) => {
+          if (m.status === "recognizing text") setProgress(Math.round(m.progress * 100));
+        },
+      });
       const {
         data: { text },
       } = await worker.recognize(file);
@@ -116,14 +159,17 @@ export default function ImportModal({
         .map(splitOcrLine);
 
       if (parsed.length === 0) {
+        log.import({ kind: "photo_cards", outcome: "error", reason: "empty_ocr_result" });
         setError(
           "Не нашли текст на этом фото. Проверь, что фото чёткое, хорошо освещено и текст на нём читаем.",
         );
         return;
       }
+      log.import({ kind: "photo_cards", outcome: "success" });
       setCards(parsed);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось распознать фото.");
+    } catch {
+      log.import({ kind: "photo_cards", outcome: "error", reason: "ocr_exception" });
+      setError("Не удалось распознать фото. Попробуй другое фото.");
     } finally {
       setBusy(false);
     }
@@ -203,7 +249,7 @@ export default function ImportModal({
                   <button
                     type="button"
                     onClick={() => setCards((cs) => cs.filter((_, j) => j !== i))}
-                    className="text-red-500"
+                    className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-red-500"
                     aria-label="Удалить"
                   >
                     ✕
@@ -276,7 +322,11 @@ export default function ImportModal({
               CSV/JSON: формат front,back,notes • Фото: OCR распознаёт строки, раздели слово и перевод
               через « - » или запятую
             </p>
-            {busy && <p className="text-center text-sm text-black/50 dark:text-white/50">Обрабатываем…</p>}
+            {busy && (
+              <p className="text-center text-sm text-black/50 dark:text-white/50">
+                {progress > 0 ? `Распознаём текст… ${progress}%` : "Обрабатываем…"}
+              </p>
+            )}
             {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
             <button
               type="button"

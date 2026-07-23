@@ -7,14 +7,14 @@ import { Readability } from "@mozilla/readability";
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getPlan, FREE_TEXT_LIMIT } from "@/lib/subscription";
-import { assertPublicUrl } from "@/lib/ssrf-guard";
+import { assertPublicUrl, fetchPublicUrl } from "@/lib/ssrf-guard";
 import type { TextSourceType } from "@/lib/types";
 import { log } from "@/lib/log";
 
 export async function deleteText(textId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("texts").delete().eq("id", textId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Не удалось удалить текст.");
   revalidatePath("/library");
 }
 
@@ -67,7 +67,7 @@ export async function insertText(
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Не удалось сохранить текст." };
+    return { error: "Не удалось сохранить текст. Попробуй ещё раз." };
   }
   return { id: data.id };
 }
@@ -81,6 +81,12 @@ export async function createText(
 
   if (!title || !body) {
     return { error: "Заполни название и текст." };
+  }
+  // P0-АУДИТ (раздел 5): не было верхней границы на длину вставляемого
+  // текста — read/[textId]/page.tsx пересчитывает статистику по всему телу
+  // текста на каждую загрузку страницы.
+  if (body.length > 200_000) {
+    return { error: "Текст слишком длинный (максимум 200 000 символов)." };
   }
 
   const profile = await requireProfile();
@@ -133,18 +139,15 @@ export async function createTextFromUrl(
 
   let html: string;
   try {
-    const res = await fetch(url.toString(), {
+    const res = await fetchPublicUrl(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; LexReaderBot/1.0)" },
       signal: AbortSignal.timeout(10_000),
-      redirect: "follow",
     });
     if (!res.ok) throw new Error(`страница ответила ${res.status}`);
     html = await res.text();
-  } catch (e) {
+  } catch {
     log.import({ kind: "url", outcome: "error", reason: "fetch_failed" });
-    return {
-      error: `Не удалось загрузить страницу: ${e instanceof Error ? e.message : "ошибка сети"}`,
-    };
+    return { error: "Не удалось загрузить страницу. Проверь ссылку и попробуй ещё раз." };
   }
 
   const dom = new JSDOM(html, { url: url.toString() });

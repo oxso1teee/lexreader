@@ -42,6 +42,21 @@ export default function MultipleChoiceMode({ cards }: { cards: ReviewCard[] }) {
     return <SessionComplete count={cards.length} />;
   }
 
+  // P0-АУДИТ (раздел 4): при малом числе карточек в сессии (частый случай в
+  // первый день) неоткуда брать неправильные варианты — "квиз" из одной
+  // кнопки ничего не проверяет. Честно предлагаем другой режим вместо этого.
+  if (options.length < 2) {
+    return (
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-2 px-5 text-center">
+        <p className="text-xl font-semibold">Пока маловато карточек</p>
+        <p className="text-black/60 dark:text-white/60">
+          Для режима &laquo;Выбор&raquo; нужно больше карточек, чтобы было из чего выбирать.
+          Попробуй режим &laquo;Карточки&raquo; или добавь ещё слов.
+        </p>
+      </div>
+    );
+  }
+
   function choose(option: string) {
     if (selected) return;
     setSelected(option);

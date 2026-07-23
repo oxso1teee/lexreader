@@ -56,3 +56,28 @@ export async function assertPublicUrl(url: URL): Promise<void> {
     }
   }
 }
+
+const MAX_REDIRECTS = 5;
+
+// P0-АУДИТ 3.4: assertPublicUrl() раньше проверяла только исходную ссылку,
+// а fetch(..., { redirect: "follow" }) дальше сам следовал за 3xx-редиректами
+// без повторной проверки — сайт мог ответить 302 на internal/metadata-адрес
+// и обойти защиту полностью. Здесь редиректы обрабатываются вручную, каждый
+// следующий адрес заново проходит ту же проверку публичного IP.
+export async function fetchPublicUrl(
+  initialUrl: URL,
+  init: { headers: Record<string, string>; signal: AbortSignal },
+): Promise<Response> {
+  let url = initialUrl;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    await assertPublicUrl(url);
+    const res = await fetch(url.toString(), { ...init, redirect: "manual" });
+
+    if (res.status >= 300 && res.status < 400 && res.headers.get("location")) {
+      url = new URL(res.headers.get("location")!, url);
+      continue;
+    }
+    return res;
+  }
+  throw new Error("Слишком много редиректов по этой ссылке.");
+}

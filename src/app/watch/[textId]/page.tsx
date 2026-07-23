@@ -32,7 +32,8 @@ export default async function WatchPage({
     supabase
       .from("vocabulary_items")
       .select("id, headword, level, seen_count")
-      .eq("owner_id", profile.id),
+      .eq("owner_id", profile.id)
+      .eq("language", text.language),
   ]);
 
   const wordLevels: Record<string, { id: string; level: number; seenCount: number }> = {};

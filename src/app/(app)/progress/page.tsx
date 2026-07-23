@@ -58,20 +58,29 @@ export default async function ProgressPage({
     heatmapSessions,
     heatmapReviews,
   ] = await Promise.all([
-    supabase
-      .from("vocabulary_items")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", profile.id),
+    // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
+    // языком — иначе после смены языка в цифры попадали бы чужие слова.
     supabase
       .from("vocabulary_items")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", profile.id)
+      .eq("language", profile.target_language),
+    supabase
+      .from("vocabulary_items")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language)
       .eq("status", "known"),
+    // P0-АУДИТ (раздел 4): раньше .neq("status", "known") включал и
+    // status='new' (level 0, ни разу не пройденное слово) — завышало
+    // "Изучаются (ур. 1-3)". Теперь фильтруем строго по уровню 1-3.
     supabase
       .from("vocabulary_items")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", profile.id)
-      .neq("status", "known"),
+      .eq("language", profile.target_language)
+      .gte("level", 1)
+      .lte("level", 3),
     (() => {
       let q = supabase
         .from("reading_sessions")

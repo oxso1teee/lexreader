@@ -15,10 +15,25 @@ const MODES = [
 
 type Mode = (typeof MODES)[number]["value"];
 
-export default function ReviewModeSwitcher({ cards: cardsProp }: { cards: ReviewCard[] }) {
+export default function ReviewModeSwitcher({
+  cards: cardsProp,
+  studyDirection,
+}: {
+  cards: ReviewCard[];
+  studyDirection: "front_back" | "back_front";
+}) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
-  const [cards] = useState(cardsProp);
+  //
+  // P0-АУДИТ 3.12: настройка "направление изучения" раньше сохранялась, но
+  // ни на что не влияла — ни один из 4 режимов её не читал. Меняем местами
+  // front/back один раз здесь, до раздачи по режимам — так все 4 режима
+  // автоматически уважают направление без отдельных правок в каждом.
+  const [cards] = useState(() =>
+    studyDirection === "back_front"
+      ? cardsProp.map((c) => ({ ...c, front: c.back, back: c.front }))
+      : cardsProp,
+  );
   const [mode, setMode] = useState<Mode>("cards");
 
   if (cards.length === 0) {
@@ -40,7 +55,7 @@ export default function ReviewModeSwitcher({ cards: cardsProp }: { cards: Review
             key={m.value}
             type="button"
             onClick={() => setMode(m.value)}
-            className={`-mb-px border-b-2 px-1 py-2 text-sm font-medium transition-colors ${
+            className={`-mb-px flex min-h-11 items-center border-b-2 px-2 text-sm font-medium transition-colors ${
               mode === m.value
                 ? "border-black text-black dark:border-white dark:text-white"
                 : "border-transparent text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"

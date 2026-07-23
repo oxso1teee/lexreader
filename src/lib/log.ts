@@ -41,4 +41,10 @@ export const log = {
   }) {
     emit("info", "subscription", fields);
   },
+  // Ловится в error.tsx/global-error.tsx (P0-АУДИТ 2.5) — в клиентском
+  // error boundary это уходит в консоль браузера, не на сервер, но хотя бы
+  // не теряется молча и попадёт в скриншот/консоль при обращении в поддержку.
+  error(fields: { kind: string; message: string; digest?: string }) {
+    emit("error", "error_boundary", fields);
+  },
 };

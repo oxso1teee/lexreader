@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
+import { log } from "@/lib/log";
 import {
   upsertWord,
   setWordLevel,
@@ -90,6 +91,7 @@ export default function Reader({
   const [popup, setPopup] = useState<Popup | null>(null);
   const [wordsLookedUp, setWordsLookedUp] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
   const [manualTranslation, setManualTranslation] = useState("");
 
   const [selection, setSelection] = useState<{ si: number; start: number; end: number } | null>(
@@ -106,7 +108,12 @@ export default function Reader({
   }, []);
 
   useEffect(() => {
-    updateTextProgress({ textId, pageIndex, pageCount: pages.length }).catch(() => {});
+    updateTextProgress({ textId, pageIndex, pageCount: pages.length }).catch((e) => {
+      // P0-АУДИТ 3.18: не показываем это как ошибку пользователю (фоновое
+      // сохранение позиции страницы не критично для самого чтения), но
+      // больше не теряем это молча — попадёт хотя бы в консоль браузера.
+      log.error({ kind: "text_progress_save", message: e instanceof Error ? e.message : "unknown" });
+    });
   }, [textId, pageIndex, pages.length]);
 
   const [pageStart, pageEnd] = pages[pageIndex];
@@ -257,12 +264,17 @@ export default function Reader({
 
   async function handleFinish() {
     setFinishing(true);
+    setFinishError(null);
     const elapsed = Date.now() - (startedAt.current ?? Date.now());
     const minutes = Math.max(1, Math.round(elapsed / 60_000));
     try {
       await finishReading({ textId, minutes, wordsLookedUp });
-    } finally {
       router.push("/library");
+    } catch {
+      // P0-АУДИТ 3.18: раньше редирект на /library происходил ВСЕГДА даже
+      // при сбое сохранения сессии/стрика — ошибка была полностью невидима.
+      setFinishing(false);
+      setFinishError("Не удалось сохранить сессию чтения. Попробуй ещё раз.");
     }
   }
 
@@ -358,23 +370,23 @@ export default function Reader({
       <div className="mx-auto grid w-full max-w-2xl grid-cols-5 gap-2 px-5 pt-4 text-center text-sm">
         <div>
           <p className="font-bold">{stats.unique}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">UNIQUE</p>
+          <p className="text-xs text-black/40 dark:text-white/40">ВСЕГО</p>
         </div>
         <div>
           <p className="font-bold text-accent-orange">{stats.new}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">NEW</p>
+          <p className="text-xs text-black/40 dark:text-white/40">НОВЫЕ</p>
         </div>
         <div>
           <p className="font-bold text-orange-400">{stats.learning}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">LEARNING</p>
+          <p className="text-xs text-black/40 dark:text-white/40">УЧУ</p>
         </div>
         <div>
           <p className="font-bold text-orange-300">{stats.familiar}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">FAMILIAR</p>
+          <p className="text-xs text-black/40 dark:text-white/40">ЗНАКОМЫЕ</p>
         </div>
         <div>
           <p className="font-bold text-accent-green">{stats.known}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">KNOWN</p>
+          <p className="text-xs text-black/40 dark:text-white/40">ЗНАЮ</p>
         </div>
       </div>
 
@@ -388,7 +400,7 @@ export default function Reader({
             {l.label}
           </span>
         ))}
-        <span className="ml-auto italic">Long-press to select phrase</span>
+        <span className="ml-auto italic">Удерживай, чтобы выделить фразу</span>
       </div>
 
       <article className="mx-auto w-full max-w-2xl flex-1 px-5 py-6 text-lg leading-8">
@@ -436,6 +448,11 @@ export default function Reader({
         </div>
       )}
 
+      {finishError && (
+        <div className="px-5 pb-1 text-center text-sm text-red-600 dark:text-red-400">
+          {finishError}
+        </div>
+      )}
       <footer className="sticky bottom-0 flex items-center justify-between border-t border-black/10 bg-background/95 px-5 py-3 backdrop-blur dark:border-white/10">
         <button
           type="button"
@@ -443,7 +460,7 @@ export default function Reader({
           onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
           className="text-sm font-medium text-caramel disabled:opacity-30"
         >
-          ← Previous
+          ← Назад
         </button>
         <span className="text-sm text-black/50 dark:text-white/50">
           {pageIndex + 1} / {pages.length}
@@ -454,14 +471,14 @@ export default function Reader({
             onClick={() => setPageIndex((i) => Math.min(pages.length - 1, i + 1))}
             className="text-sm font-medium text-caramel"
           >
-            Next →
+            Далее →
           </button>
         ) : (
           <button
             type="button"
             disabled={finishing}
             onClick={handleFinish}
-            className="rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-medium text-emerald-800 disabled:opacity-50 dark:bg-emerald-900 dark:text-emerald-200"
+            className="flex min-h-11 items-center justify-center rounded-full bg-emerald-100 px-4 text-sm font-medium text-emerald-800 disabled:opacity-50 dark:bg-emerald-900 dark:text-emerald-200"
           >
             {finishing ? "…" : "Завершить ✓"}
           </button>
@@ -521,7 +538,7 @@ export default function Reader({
                         disabled={!manualTranslation.trim()}
                         className="shrink-0 text-sm font-medium text-caramel disabled:opacity-40"
                       >
-                        + Add translation
+                        + Добавить перевод
                       </button>
                     </div>
                   </div>
@@ -535,7 +552,7 @@ export default function Reader({
                     )}
                     {!popup.isPhrase && popup.level !== undefined && (
                       <p className="mt-1 text-sm text-black/50 dark:text-white/50">
-                        {WORD_LEVELS[popup.level].label} · Seen {popup.seenCount}×
+                        {WORD_LEVELS[popup.level].label} · Видел {popup.seenCount}×
                       </p>
                     )}
                   </>
@@ -590,7 +607,7 @@ export default function Reader({
                     type="button"
                     onClick={() => handleSetLevel(4)}
                     className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-medium text-white"
-                    style={{ backgroundColor: popup.level === 4 ? "#16a34a" : "#a67c52" }}
+                    style={{ backgroundColor: popup.level === 4 ? WORD_LEVELS[4].color : "#a67c52" }}
                   >
                     {popup.level === 4 ? "Добавлено ✓" : "Знаю это слово ⭐"}
                   </button>

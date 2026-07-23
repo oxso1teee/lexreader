@@ -35,6 +35,18 @@ export default async function DeckReviewPage({
   const supabase = await createClient();
   const settings = await getSrsSettings(supabase, profile.id);
   const now = new Date().toISOString();
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+
+  // P0-АУДИТ 3.11: раньше new_cards_per_day ограничивал очередь только в
+  // рамках одного открытия этой страницы — повторное открытие снова выдавало
+  // полную порцию. Вычитаем уже показанные сегодня новые карточки.
+  const { count: alreadyIntroducedToday } = await supabase
+    .from("srs_state")
+    .select("flashcard_id, flashcards!inner(owner_id)", { count: "exact", head: true })
+    .eq("flashcards.owner_id", profile.id)
+    .gte("first_reviewed_at", todayStart.toISOString());
+  const remainingNewCards = Math.max(0, settings.new_cards_per_day - (alreadyIntroducedToday ?? 0));
 
   let reviewQuery = supabase
     .from("srs_state")
@@ -52,7 +64,7 @@ export default async function DeckReviewPage({
     .eq("repetitions", 0)
     .lte("due_at", now)
     .order("due_at", { ascending: true })
-    .limit(settings.new_cards_per_day);
+    .limit(remainingNewCards);
 
   if (deckId !== "all") {
     reviewQuery = reviewQuery.eq("flashcards.deck_id", deckId);
@@ -65,5 +77,5 @@ export default async function DeckReviewPage({
   // карточках), затем новые — раздел 6.2 роадмапа: два независимых лимита.
   const cards: ReviewCard[] = [...toCards(reviewRows), ...toCards(newRows)];
 
-  return <ReviewModeSwitcher cards={cards} />;
+  return <ReviewModeSwitcher cards={cards} studyDirection={settings.study_direction} />;
 }

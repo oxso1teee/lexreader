@@ -94,6 +94,16 @@ export default async function PricingPage({
         </div>
       ) : (
         <>
+          {!stripeReady && (
+            <div className="rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+              <p className="font-semibold">🎁 Бета-тестирование: Premium сейчас бесплатно</p>
+              <p className="mt-1">
+                Оплата ещё не подключена — нажатие «Начать» ниже даст полный доступ без списания
+                денег. Цены на карточках — то, что будет после запуска настоящей оплаты, сейчас
+                они не действуют.
+              </p>
+            </div>
+          )}
           <div className="rounded-2xl bg-card p-5 shadow-sm">
             <h2 className="text-lg font-bold">LexReader Premium — Ежемесячно</h2>
             <p className="text-sm text-black/60 dark:text-white/60">

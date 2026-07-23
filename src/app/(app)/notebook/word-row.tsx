@@ -47,6 +47,10 @@ export default function WordRow({
         data: { publicUrl },
       } = supabase.storage.from("word-photos").getPublicUrl(path);
       await setPhotoUrl(id, publicUrl);
+    } catch {
+      // P0-АУДИТ 3.17: раньше сбой загрузки был полностью тихим — спиннер
+      // просто пропадал, без единого сообщения пользователю.
+      setPhotoError("Не удалось загрузить фото. Попробуй ещё раз.");
     } finally {
       setUploading(false);
     }
@@ -55,7 +59,10 @@ export default function WordRow({
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-4 py-3 dark:border-white/15">
       <div className="flex min-w-0 items-center gap-3">
-        <label className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-black/15 text-black/30 hover:border-black/30 dark:border-white/20 dark:text-white/30 dark:hover:border-white/40">
+        <label
+          aria-label="Добавить фото к слову"
+          className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-black/15 text-black/30 hover:border-black/30 dark:border-white/20 dark:text-white/30 dark:hover:border-white/40"
+        >
           {photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photoUrl} alt="" className="h-full w-full object-cover" />
@@ -89,7 +96,7 @@ export default function WordRow({
             type="button"
             disabled={isPending}
             onClick={() => startTransition(() => markKnown(id))}
-            className="rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium hover:border-black/30 disabled:opacity-40 dark:border-white/15 dark:hover:border-white/40"
+            className="flex min-h-11 items-center justify-center rounded-full border border-black/10 px-3 text-xs font-medium hover:border-black/30 disabled:opacity-40 dark:border-white/15 dark:hover:border-white/40"
           >
             Уже знаю
           </button>
@@ -98,7 +105,7 @@ export default function WordRow({
           type="button"
           disabled={isPending}
           onClick={() => startTransition(() => deleteWord(id))}
-          className="rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium text-red-600 hover:border-red-300 disabled:opacity-40 dark:border-white/15 dark:text-red-400 dark:hover:border-red-800"
+          className="flex min-h-11 items-center justify-center rounded-full border border-black/10 px-3 text-xs font-medium text-red-600 hover:border-red-300 disabled:opacity-40 dark:border-white/15 dark:text-red-400 dark:hover:border-red-800"
         >
           Удалить
         </button>

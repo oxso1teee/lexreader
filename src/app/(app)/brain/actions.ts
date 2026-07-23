@@ -30,7 +30,7 @@ export async function createDeck(
     .insert({ owner_id: profile.id, name })
     .select("id")
     .single();
-  if (error || !data) return { error: error?.message ?? "Не удалось создать колоду." };
+  if (error || !data) return { error: "Не удалось создать колоду. Попробуй ещё раз." };
 
   revalidatePath("/brain");
   redirect(`/brain/${data.id}`);
@@ -39,7 +39,7 @@ export async function createDeck(
 export async function deleteDeck(deckId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("decks").delete().eq("id", deckId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Не удалось удалить колоду.");
   revalidatePath("/brain");
 }
 
@@ -52,6 +52,14 @@ interface ImportCard {
 export async function importFlashcards(deckId: string, cards: ImportCard[]) {
   const profile = await requireProfile();
   const supabase = await createClient();
+
+  const { data: deck } = await supabase
+    .from("decks")
+    .select("id")
+    .eq("id", deckId)
+    .eq("owner_id", profile.id)
+    .maybeSingle();
+  if (!deck) return { ok: false, error: "Колода не найдена." };
 
   const rows = cards
     .filter((c) => c.front.trim() && c.back.trim())
@@ -69,7 +77,7 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
   }
 
   const { data: inserted, error } = await supabase.from("flashcards").insert(rows).select("id");
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: "Не удалось импортировать карточки. Попробуй ещё раз." };
 
   const settings = await supabase
     .from("srs_settings")

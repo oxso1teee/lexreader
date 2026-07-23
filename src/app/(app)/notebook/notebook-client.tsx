@@ -116,7 +116,7 @@ export default function NotebookClient({
           </div>
 
           {filteredItems.length === 0 ? (
-            <EmptyState />
+            <EmptyState filtered={Boolean(query.trim()) || Boolean(status)} />
           ) : (
             <div className="flex flex-col gap-2">
               {filteredItems.map((item) => (

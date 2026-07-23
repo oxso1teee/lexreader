@@ -17,6 +17,13 @@ function todayStartUtc(): string {
   ).toISOString();
 }
 
+// P0-АУДИТ (раздел 5): .ilike() трактует % и _ как wildcard-символы — без
+// экранирования слово вроде "50%" могло бы случайно совпасть с несвязанной
+// записью.
+function escapeIlike(s: string): string {
+  return s.replace(/[%_]/g, (c) => `\\${c}`);
+}
+
 export async function saveVocabularyItem(
   supabase: SupabaseServerClient,
   userId: string,
@@ -26,13 +33,18 @@ export async function saveVocabularyItem(
     translation: string;
     contextSentence: string | null;
     contextTranslation: string | null;
+    language: string;
   },
 ): Promise<UpsertWordResult> {
+  // P0-АУДИТ 3.9: дедуп и апдейт теперь тоже скопированы по языку — иначе
+  // слово с одинаковым написанием в двух изучаемых языках "склеивалось" бы
+  // в одну запись.
   const { data: existing } = await supabase
     .from("vocabulary_items")
     .select("id, level, seen_count")
     .eq("owner_id", userId)
-    .ilike("headword", input.headword)
+    .eq("language", input.language)
+    .ilike("headword", escapeIlike(input.headword))
     .maybeSingle();
 
   if (existing) {
@@ -65,10 +77,11 @@ export async function saveVocabularyItem(
       translation: input.translation,
       context_sentence: input.contextSentence,
       context_translation: input.contextTranslation,
+      language: input.language,
     })
     .select("id, level, seen_count")
     .single();
-  if (error || !created) return { ok: false, error: error?.message ?? "Не удалось сохранить слово." };
+  if (error || !created) return { ok: false, error: "Не удалось сохранить слово. Попробуй ещё раз." };
 
   return { ok: true, id: created.id, level: created.level, seenCount: created.seen_count };
 }

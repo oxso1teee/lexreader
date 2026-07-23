@@ -26,7 +26,7 @@ export default function CardRow({
         type="button"
         disabled={isPending}
         onClick={() => startTransition(() => deleteFlashcard(deckId, id))}
-        className="shrink-0 text-red-500 disabled:opacity-40"
+        className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-red-500 disabled:opacity-40"
         aria-label="Удалить карточку"
       >
         ✕

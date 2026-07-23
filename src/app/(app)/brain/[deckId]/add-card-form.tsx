@@ -42,7 +42,7 @@ export default function AddCardForm({ deckId }: { deckId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-full bg-caramel px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+        className="flex min-h-11 items-center justify-center self-start rounded-full bg-caramel px-4 text-sm font-medium text-white disabled:opacity-50"
       >
         {pending ? "…" : "+ Добавить карточку"}
       </button>

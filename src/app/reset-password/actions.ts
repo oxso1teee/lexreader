@@ -2,14 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { isAuthAttemptAllowed, logAuthAttempt } from "@/lib/auth-rate-limit";
+import { siteUrl } from "@/lib/site-url";
 
 export interface ResetRequestState {
   submitted?: boolean;
   error?: string;
-}
-
-function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
 
 export async function requestPasswordReset(

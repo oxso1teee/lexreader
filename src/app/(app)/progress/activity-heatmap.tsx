@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 const DAYS = 91; // 13 недель
 
 function isoDate(d: Date): string {
@@ -12,6 +16,8 @@ function levelClass(count: number): string {
 }
 
 export default function ActivityHeatmap({ counts }: { counts: Record<string, number> }) {
+  const [selected, setSelected] = useState<{ key: string; count: number } | null>(null);
+
   const now = new Date();
   // isoDate ниже режет через toISOString (UTC) — якорим "сегодня" тоже в UTC,
   // иначе на сервере не в UTC-таймзоне последняя клетка сдвигается на день назад.
@@ -35,14 +41,23 @@ export default function ActivityHeatmap({ counts }: { counts: Record<string, num
         }}
       >
         {days.map((day) => (
-          <div
+          <button
             key={day.key}
+            type="button"
             title={`${day.key}: ${day.count}`}
+            aria-label={`${day.key}: ${day.count} действий`}
+            onClick={() => setSelected(day)}
             className={`h-3 w-3 rounded-sm ${levelClass(day.count)}`}
           />
         ))}
       </div>
-      <p className="mt-2 text-xs text-black/40 dark:text-white/40">Активность за последние 13 недель</p>
+      <p className="mt-2 text-xs text-black/40 dark:text-white/40">
+        {/* P0-АУДИТ (раздел 5): title недоступен на тач-устройствах — тап по
+            клетке показывает то же самое здесь. */}
+        {selected
+          ? `${selected.key}: ${selected.count} действий`
+          : "Активность за последние 13 недель — нажми на клетку для деталей"}
+      </p>
     </div>
   );
 }

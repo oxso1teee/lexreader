@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import DeckCard from "./deck-card";
+import DeckList from "./deck-list";
 import NewDeckModal from "./new-deck-modal";
 import ImportModal from "./import-modal";
 
@@ -70,23 +70,14 @@ export default async function BrainPage() {
         </Link>
       </div>
 
-      <input
-        type="text"
-        placeholder="Поиск колод..."
-        className="w-full rounded-lg border border-black/15 bg-card px-4 py-2.5 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+      <DeckList
+        decks={(decks ?? []).map((d) => ({
+          id: d.id,
+          name: d.name,
+          isDefault: d.is_default,
+          cardCount: countByDeck.get(d.id) ?? 0,
+        }))}
       />
-
-      <div className="flex flex-col gap-2">
-        {(decks ?? []).map((d) => (
-          <DeckCard
-            key={d.id}
-            id={d.id}
-            name={d.name}
-            isDefault={d.is_default}
-            cardCount={countByDeck.get(d.id) ?? 0}
-          />
-        ))}
-      </div>
     </div>
   );
 }

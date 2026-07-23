@@ -20,12 +20,22 @@ export async function upsertWord(input: {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Не авторизован." };
 
+  // P0-АУДИТ 3.9: язык слова берём из самого текста-источника (не доверяем
+  // клиенту) — иначе слово может "склеиться" с одноимённым в другом языке.
+  const { data: text } = await supabase
+    .from("texts")
+    .select("language")
+    .eq("id", input.textId)
+    .maybeSingle();
+  if (!text) return { ok: false, error: "Текст не найден." };
+
   const result = await saveVocabularyItem(supabase, user.id, {
     textId: input.textId,
     headword: input.headword,
     translation: input.translation,
     contextSentence: input.contextSentence,
     contextTranslation: input.contextTranslation,
+    language: text.language,
   });
   if (result.ok) revalidatePath("/notebook");
   return result;
@@ -37,7 +47,7 @@ export async function setWordLevel(vocabularyItemId: string, level: 0 | 1 | 2 | 
     .from("vocabulary_items")
     .update({ level, status: statusFromLevel(level) })
     .eq("id", vocabularyItemId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Не удалось сохранить уровень слова.");
   revalidatePath("/notebook");
 }
 
@@ -71,7 +81,7 @@ export async function addPhraseToDefaultDeck(front: string, back: string): Promi
     .insert({ deck_id: deck.id, owner_id: user.id, front, back })
     .select("id")
     .single();
-  if (error || !card) return { ok: false, error: error?.message ?? "Не удалось добавить карточку." };
+  if (error || !card) return { ok: false, error: "Не удалось добавить карточку. Попробуй ещё раз." };
 
   const { data: settings } = await supabase
     .from("srs_settings")
@@ -96,7 +106,7 @@ export async function finishReading(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) throw new Error("Не авторизован.");
 
   const endedAt = new Date();
   const startedAt = new Date(endedAt.getTime() - input.minutes * 60_000);
@@ -108,7 +118,7 @@ export async function finishReading(input: {
     ended_at: endedAt.toISOString(),
     words_looked_up: input.wordsLookedUp,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Не удалось сохранить сессию чтения.");
 
   await touchStreak(supabase, user.id);
   revalidatePath("/progress");
@@ -123,7 +133,7 @@ export async function updateTextProgress(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) throw new Error("Не авторизован.");
 
   const percentRead = Math.round(((input.pageIndex + 1) / input.pageCount) * 100);
 
@@ -137,7 +147,7 @@ export async function updateTextProgress(input: {
     },
     { onConflict: "owner_id,text_id" },
   );
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Не удалось сохранить прогресс чтения.");
 
   revalidatePath("/library");
 }

@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
 
 export const TEST_EMAIL = "test@example.com";
 export const TEST_PASSWORD = "newtestpass456";
@@ -12,4 +13,20 @@ export async function login(page: Page, email = TEST_EMAIL, password = TEST_PASS
   // следующий page.goto() может улететь раньше, чем auth-cookie реально
   // закоммитится, и словить неавторизованный редирект на /onboarding.
   await page.waitForURL(/\/home$/);
+}
+
+// Быстрый, надёжный способ вернуть TEST_PASSWORD напрямую через service_role
+// (без повторного похода через email/Mailpit) — используется в finally
+// тестов, которые сами меняют пароль, чтобы сбой в середине теста не
+// оставлял общий фикстур сломанным для всех остальных тестов набора.
+export async function restoreTestPassword() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+  );
+  const { data } = await supabase.auth.admin.listUsers();
+  const user = data?.users.find((u) => u.email === TEST_EMAIL);
+  if (user) {
+    await supabase.auth.admin.updateUserById(user.id, { password: TEST_PASSWORD });
+  }
 }

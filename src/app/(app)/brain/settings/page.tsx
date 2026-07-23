@@ -13,9 +13,9 @@ export default async function StudySettingsPage() {
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <div className="flex items-center gap-3">
         <Link href="/brain" className="text-caramel">
-          ← Back
+          ← Назад
         </Link>
-        <h1 className="text-xl font-bold">Study Settings</h1>
+        <h1 className="text-xl font-bold">Настройки повторения</h1>
       </div>
       <SettingsForm settings={settings} />
     </div>

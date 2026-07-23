@@ -28,7 +28,8 @@ export default async function ReadPage({
     supabase
       .from("vocabulary_items")
       .select("id, headword, level, seen_count")
-      .eq("owner_id", profile.id),
+      .eq("owner_id", profile.id)
+      .eq("language", text.language),
     supabase
       .from("text_progress")
       .select("last_page_index")

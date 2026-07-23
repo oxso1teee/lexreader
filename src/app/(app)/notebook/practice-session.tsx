@@ -50,7 +50,7 @@ export default function PracticeSession({ words }: { words: PracticeWord[] }) {
         <button
           type="button"
           onClick={reset}
-          className="rounded-full border border-black/15 px-3 py-1 text-xs font-medium dark:border-white/20"
+          className="flex min-h-11 items-center justify-center rounded-full border border-black/15 px-3 text-xs font-medium dark:border-white/20"
         >
           Сброс
         </button>

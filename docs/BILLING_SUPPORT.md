@@ -26,7 +26,21 @@
 
 Пока `STRIPE_SECRET_KEY` не задан, `/pricing` автоматически показывает локальную тестовую кнопку
 (`simulateSubscribe`) вместо реального Stripe Checkout — это не баг, а намеренный fallback для
-разработки без реального аккаунта (см. `isStripeConfigured()` в `src/lib/stripe.ts`).
+разработки без реального аккаунта (см. `isStripeConfigured()` в `src/lib/stripe.ts`). Сама функция
+теперь не работает вовсе, если `isStripeConfigured()` вернёт true (P0-АУДИТ 2.2), так что после
+активации реальной оплаты она автоматически перестаёт быть достижимой.
+
+**Важно перед реальным запуском**: если кто-то успел воспользоваться `simulateSubscribe` во время
+беты (бесплатный тестовый Premium), после подключения настоящего Stripe эти строки в
+`subscriptions` останутся активными до истечения своего `current_period_end` (30/365 дней от
+момента активации), никак не помеченные как "ненастоящие", кроме отсутствия `stripe_customer_id`.
+Разовая проверка перед запуском для реальных пользователей:
+```sql
+select owner_id, plan, current_period_end from subscriptions
+where status = 'active' and stripe_customer_id is null;
+```
+Реши: оставить (бесплатный подарок первым тестерам) или обнулить вручную (`update subscriptions
+set status = 'canceled' where stripe_customer_id is null`).
 
 ## Промокоды
 

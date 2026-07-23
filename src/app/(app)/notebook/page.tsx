@@ -12,10 +12,13 @@ export default async function NotebookPage({
   const profile = await requireProfile();
   const supabase = await createClient();
 
+  // P0-АУДИТ 3.9: Тетрадь фильтруется по текущему изучаемому языку — иначе
+  // слова разных языков (после смены языка в Настройках) видны вперемешку.
   let query = supabase
     .from("vocabulary_items")
     .select("id, headword, translation, status, photo_url, texts(title)")
     .eq("owner_id", profile.id)
+    .eq("language", profile.target_language)
     .order("created_at", { ascending: false });
 
   if (status) {
@@ -28,6 +31,7 @@ export default async function NotebookPage({
       .from("vocabulary_items")
       .select("id, headword, translation")
       .eq("owner_id", profile.id)
+      .eq("language", profile.target_language)
       .order("created_at", { ascending: false }),
   ]);
 

@@ -26,7 +26,7 @@ export default function AddTextTabs({ targetLanguage }: { targetLanguage: string
             key={m.value}
             type="button"
             onClick={() => setMode(m.value)}
-            className={`-mb-px border-b-2 px-1 py-2 text-sm font-medium transition-colors ${
+            className={`-mb-px flex min-h-11 items-center border-b-2 px-2 text-sm font-medium transition-colors ${
               mode === m.value
                 ? "border-black text-black dark:border-white dark:text-white"
                 : "border-transparent text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"

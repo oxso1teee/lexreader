@@ -11,7 +11,7 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) throw new Error("Не авторизован.");
 
   const [{ data: current, error: fetchError }, params] = await Promise.all([
     supabase
@@ -21,7 +21,7 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
       .single(),
     getSrsParams(supabase, user.id),
   ]);
-  if (fetchError || !current) throw new Error(fetchError?.message ?? "Карточка не найдена");
+  if (fetchError || !current) throw new Error("Карточка не найдена.");
 
   const next = reviewSrsState(
     {
@@ -35,6 +35,10 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
 
   const now = new Date();
   const dueAt = new Date(now.getTime() + next.intervalDays * 86_400_000);
+  // P0-АУДИТ 3.11: фиксируем момент, когда карточка перестала быть "новой" —
+  // используется для настоящего дневного лимита новых карточек (см.
+  // brain/[deckId]/review/page.tsx).
+  const wasNew = current.repetitions === 0;
 
   const { error: updateError } = await supabase
     .from("srs_state")
@@ -44,14 +48,15 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
       repetitions: next.repetitions,
       due_at: dueAt.toISOString(),
       last_reviewed_at: now.toISOString(),
+      ...(wasNew ? { first_reviewed_at: now.toISOString() } : {}),
     })
     .eq("flashcard_id", flashcardId);
-  if (updateError) throw new Error(updateError.message);
+  if (updateError) throw new Error("Не удалось сохранить ответ.");
 
   const { error: logError } = await supabase
     .from("review_log")
     .insert({ flashcard_id: flashcardId, grade });
-  if (logError) throw new Error(logError.message);
+  if (logError) throw new Error("Не удалось сохранить ответ.");
 
   await touchStreak(supabase, user.id);
   revalidatePath("/brain");

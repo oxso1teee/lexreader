@@ -44,7 +44,7 @@ export interface VocabularyItem {
 }
 
 export const WORD_LEVELS = [
-  { level: 0, label: "New", color: "#ea580c" },
+  { level: 0, label: "Новое", color: "#ea580c" },
   { level: 1, label: "Видел раньше", color: "#f97316" },
   { level: 2, label: "Знакомое", color: "#fb923c" },
   { level: 3, label: "Знаю значение", color: "#fdba74" },

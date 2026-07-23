@@ -5,6 +5,7 @@ import { createWorker } from "tesseract.js";
 import { createText, type CreateTextState } from "../actions";
 import { TESSERACT_LANG } from "@/lib/ocr-lang-map";
 import { validateImageFile } from "@/lib/file-validation";
+import { log } from "@/lib/log";
 import PaywallNotice from "./paywall-notice";
 
 export default function PhotoImportForm({ targetLanguage }: { targetLanguage: string }) {
@@ -45,6 +46,7 @@ export default function PhotoImportForm({ targetLanguage }: { targetLanguage: st
 
       const trimmed = recognized.trim();
       if (!trimmed) {
+        log.import({ kind: "photo_text", outcome: "error", reason: "empty_ocr_result" });
         setOcrError(
           "Не нашли текст на этом фото. Проверь, что фото чёткое, хорошо освещено и текст на нём читаем.",
         );
@@ -55,8 +57,11 @@ export default function PhotoImportForm({ targetLanguage }: { targetLanguage: st
       setText(trimmed);
       setTitle(file.name.replace(/\.[^.]+$/, ""));
       setStatus("idle");
-    } catch (e) {
-      setOcrError(e instanceof Error ? e.message : "Не удалось распознать текст на фото.");
+    } catch {
+      // P0-АУДИТ 3.21: раньше сбой OCR был виден только в UI, без единого
+      // следа — теперь хотя бы попадает в консоль (log.import, kind photo_text).
+      log.import({ kind: "photo_text", outcome: "error", reason: "ocr_exception" });
+      setOcrError("Не удалось распознать текст на фото. Попробуй другое фото.");
       setStatus("error");
     }
   }

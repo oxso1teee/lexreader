@@ -89,21 +89,47 @@ export default function WatchPlayer({
   const [levels, setLevels] = useState(wordLevels);
   const [popup, setPopup] = useState<Popup | null>(null);
   const [manualTranslation, setManualTranslation] = useState("");
+  const [playerError, setPlayerError] = useState(false);
 
+  // P0-АУДИТ 3.19: раньше не было ни onerror, ни таймаута — если скрипт
+  // YouTube API блокировался (adblock/файрвол/CSP), видео-блок оставался
+  // чёрным навсегда без единого объяснения пользователю.
   useEffect(() => {
+    let cancelled = false;
     function createPlayer() {
-      if (!window.YT) return;
+      if (!window.YT || cancelled) return;
       playerRef.current = new window.YT.Player("yt-player", { videoId });
     }
 
     if (window.YT?.Player) {
       createPlayer();
-    } else {
-      const tag = document.createElement("script");
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      if (!cancelled && !window.YT?.Player) setPlayerError(true);
+    }, 10_000);
+
+    // P0-АУДИТ (раздел 5): раньше тег вставлялся заново при каждом монтировании
+    // компонента, даже если предыдущий уже грузится — теперь переиспользуем.
+    let tag = document.querySelector<HTMLScriptElement>('script[src="https://www.youtube.com/iframe_api"]');
+    if (!tag) {
+      tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       document.body.appendChild(tag);
-      window.onYouTubeIframeAPIReady = createPlayer;
     }
+    tag.onerror = () => {
+      if (!cancelled) setPlayerError(true);
+    };
+    window.onYouTubeIframeAPIReady = () => {
+      clearTimeout(timeout);
+      createPlayer();
+    };
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [videoId]);
 
   useEffect(() => {
@@ -242,8 +268,15 @@ export default function WatchPlayer({
         <h1 className="min-w-0 flex-1 truncate text-base font-medium">{title}</h1>
       </header>
 
-      <div className="h-[40dvh] w-full shrink-0 bg-black">
-        <div id="yt-player" className="h-full w-full" />
+      <div className="flex h-[40dvh] w-full shrink-0 items-center justify-center bg-black">
+        {playerError ? (
+          <p className="px-6 text-center text-sm text-white/70">
+            Не удалось загрузить видеоплеер YouTube. Проверь соединение или отключи блокировщик
+            рекламы для этого сайта — субтитры ниже всё равно доступны для чтения.
+          </p>
+        ) : (
+          <div id="yt-player" className="h-full w-full" />
+        )}
       </div>
 
       {segments.length === 0 ? (
@@ -260,6 +293,14 @@ export default function WatchPlayer({
                 key={seg.id}
                 ref={isActive ? activeSegRef : undefined}
                 onClick={() => handleSeek(seg.startMs)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSeek(seg.startMs);
+                  }
+                }}
                 className={`mb-2 cursor-pointer rounded-lg px-3 py-2 transition-colors ${
                   isActive
                     ? "bg-caramel/10 text-lg font-medium"
@@ -323,7 +364,7 @@ export default function WatchPlayer({
                         disabled={!manualTranslation.trim()}
                         className="shrink-0 text-sm font-medium text-caramel disabled:opacity-40"
                       >
-                        + Add translation
+                        + Добавить перевод
                       </button>
                     </div>
                   </div>
@@ -332,7 +373,7 @@ export default function WatchPlayer({
                     <p className="text-black/80 dark:text-white/80">{popup.wordTranslation}</p>
                     {popup.level !== undefined && (
                       <p className="mt-1 text-sm text-black/50 dark:text-white/50">
-                        {WORD_LEVELS[popup.level].label} · Seen {popup.seenCount}×
+                        {WORD_LEVELS[popup.level].label} · Видел {popup.seenCount}×
                       </p>
                     )}
                   </>

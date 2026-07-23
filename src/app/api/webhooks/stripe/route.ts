@@ -9,6 +9,14 @@ import { log } from "@/lib/log";
 // Требует STRIPE_WEBHOOK_SECRET из Stripe Dashboard → Webhooks (владелец
 // аккаунта настраивает endpoint на /api/webhooks/stripe после деплоя).
 
+// P0-АУДИТ 3.7: раньше везде жёстко писали status: "active", игнорируя
+// реальный статус подписки в Stripe (incomplete/trialing/unpaid и т.п.).
+function mapStripeStatus(status: Stripe.Subscription.Status): "active" | "past_due" | "canceled" {
+  if (status === "active" || status === "trialing") return "active";
+  if (status === "past_due" || status === "unpaid") return "past_due";
+  return "canceled";
+}
+
 export async function POST(request: Request) {
   if (!isStripeConfigured() || !process.env.STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
@@ -48,7 +56,7 @@ export async function POST(request: Request) {
         {
           owner_id: ownerId,
           plan,
-          status: "active",
+          status: mapStripeStatus(subscription.status),
           provider: "stripe",
           stripe_customer_id: subscription.customer as string,
           stripe_subscription_id: subscription.id,
@@ -57,6 +65,25 @@ export async function POST(request: Request) {
         { onConflict: "owner_id" },
       );
       log.subscription({ kind: "checkout_completed", ownerId, plan });
+      break;
+    }
+
+    // P0-АУДИТ 3.6: смена плана через Customer Portal (месяц↔год, отложенная
+    // отмена) шлёт именно это событие — раньше оно молча игнорировалось, и
+    // план в базе оставался неверным до следующего invoice.paid.
+    case "customer.subscription.updated": {
+      const subscription = event.data.object as Stripe.Subscription;
+      const plan = planFromPriceId(subscription.items.data[0]?.price.id);
+
+      await supabase
+        .from("subscriptions")
+        .update({
+          status: mapStripeStatus(subscription.status),
+          ...(plan ? { plan } : {}),
+          current_period_end: new Date(subscription.items.data[0].current_period_end * 1000).toISOString(),
+        })
+        .eq("stripe_customer_id", subscription.customer as string);
+      log.subscription({ kind: "invoice_paid", plan: plan ?? undefined });
       break;
     }
 
@@ -71,7 +98,7 @@ export async function POST(request: Request) {
       await supabase
         .from("subscriptions")
         .update({
-          status: "active",
+          status: mapStripeStatus(subscription.status),
           ...(plan ? { plan } : {}),
           current_period_end: new Date(subscription.items.data[0].current_period_end * 1000).toISOString(),
         })

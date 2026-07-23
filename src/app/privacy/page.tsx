@@ -32,7 +32,8 @@ export default function PrivacyPage() {
       <h2 className="mt-2 text-lg font-semibold">2. Кто обрабатывает данные (подрядчики)</h2>
       <ul className="list-disc pl-5">
         <li>
-          <strong>Supabase</strong> — база данных, аутентификация, хранилище фото.
+          <strong>Supabase</strong> — база данных, аутентификация, хранилище фото. Данные хранятся
+          на серверах в регионе ЕС (Франкфурт, eu-central-1).
         </li>
         <li>
           <strong>MyMemory (translated.net)</strong> — переводимое слово/фраза и контекстное
@@ -84,8 +85,11 @@ export default function PrivacyPage() {
 
       <h2 className="mt-2 text-lg font-semibold">7. Контакты</h2>
       <p>
-        Вопросы по обработке данных: <span className="font-mono">support@lexreader.example</span>{" "}
-        (заменить на реальный контакт перед запуском).
+        Вопросы по обработке данных:{" "}
+        <a href="mailto:puchkov889@gmail.com" className="font-mono text-caramel underline">
+          puchkov889@gmail.com
+        </a>
+        .
       </p>
     </div>
   );

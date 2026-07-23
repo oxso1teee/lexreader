@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendPush, type PushSubscriptionRow } from "@/lib/push";
+import { log } from "@/lib/log";
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -18,14 +19,24 @@ async function sendToAll(
       const statusCode = (e as { statusCode?: number })?.statusCode;
       if (statusCode === 404 || statusCode === 410) {
         await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+      } else {
+        // P0-АУДИТ: раньше любая другая ошибка (не 404/410) молча
+        // проглатывалась — неотличимо от успеха в логах.
+        log.error({
+          kind: "push_send",
+          message: e instanceof Error ? e.message : "unknown",
+        });
       }
     }
   }
 }
 
 export async function GET(request: Request) {
+  // P0-АУДИТ: раньше при отсутствующей CRON_SECRET сравнение превращалось в
+  // authHeader !== "Bearer undefined" — предсказуемую строку, которую можно
+  // подобрать. Теперь при отсутствующем секрете эндпоинт всегда отклоняет.
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

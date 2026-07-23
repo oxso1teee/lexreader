@@ -3,13 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { requireProfile } from "@/lib/auth";
 import type { Plan } from "@/lib/subscription";
 import { getStripeClient, isStripeConfigured, STRIPE_PRICE_IDS } from "@/lib/stripe";
-
-function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-}
+import { siteUrl } from "@/lib/site-url";
 
 export interface CheckoutState {
   error?: string;
@@ -40,36 +38,48 @@ export async function createCheckoutSession(
 
   const stripe = getStripeClient();
 
-  const { data: existing } = await supabase
-    .from("subscriptions")
-    .select("stripe_customer_id")
-    .eq("owner_id", profile.id)
-    .maybeSingle();
-
-  let customerId = existing?.stripe_customer_id ?? null;
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      metadata: { owner_id: profile.id },
-    });
-    customerId = customer.id;
-    await supabase
+  // P0-АУДИТ (раздел 4): вызовы Stripe API ничем не были защищены — сбой
+  // (сетевой, временная недоступность Stripe) падал необработанным
+  // исключением вместо понятной ошибки на странице (для этого и есть
+  // CheckoutState.error). redirect() — вне try, у него своя throw-механика.
+  let checkoutUrl: string | null;
+  try {
+    const { data: existing } = await supabase
       .from("subscriptions")
-      .upsert({ owner_id: profile.id, stripe_customer_id: customerId }, { onConflict: "owner_id" });
+      .select("stripe_customer_id")
+      .eq("owner_id", profile.id)
+      .maybeSingle();
+
+    let customerId = existing?.stripe_customer_id ?? null;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { owner_id: profile.id },
+      });
+      customerId = customer.id;
+      // Запись в subscriptions разрешена только service_role (P0-АУДИТ 2.1) —
+      // обычный RLS-клиент теперь не может писать в эту таблицу вообще.
+      await createServiceClient()
+        .from("subscriptions")
+        .upsert({ owner_id: profile.id, stripe_customer_id: customerId }, { onConflict: "owner_id" });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      client_reference_id: profile.id,
+      line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
+      success_url: `${siteUrl()}/library?checkout=success`,
+      cancel_url: `${siteUrl()}/pricing?checkout=cancelled`,
+    });
+    checkoutUrl = session.url;
+  } catch {
+    return { error: "Не удалось создать сессию оплаты. Попробуй ещё раз." };
   }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    customer: customerId,
-    client_reference_id: profile.id,
-    line_items: [{ price: priceId, quantity: 1 }],
-    allow_promotion_codes: true,
-    success_url: `${siteUrl()}/library?checkout=success`,
-    cancel_url: `${siteUrl()}/pricing?checkout=cancelled`,
-  });
-
-  if (!session.url) return { error: "Не удалось создать сессию оплаты." };
-  redirect(session.url);
+  if (!checkoutUrl) return { error: "Не удалось создать сессию оплаты." };
+  redirect(checkoutUrl);
 }
 
 // Redirect в Stripe Customer Portal — управление способом оплаты, отмена,
@@ -92,13 +102,19 @@ export async function createBillingPortalSession(): Promise<CheckoutState> {
     return { error: "Активной подписки не найдено." };
   }
 
-  const stripe = getStripeClient();
-  const session = await stripe.billingPortal.sessions.create({
-    customer: data.stripe_customer_id,
-    return_url: `${siteUrl()}/pricing`,
-  });
+  let portalUrl: string;
+  try {
+    const stripe = getStripeClient();
+    const session = await stripe.billingPortal.sessions.create({
+      customer: data.stripe_customer_id,
+      return_url: `${siteUrl()}/pricing`,
+    });
+    portalUrl = session.url;
+  } catch {
+    return { error: "Не удалось открыть управление подпиской. Попробуй ещё раз." };
+  }
 
-  redirect(session.url);
+  redirect(portalUrl);
 }
 
 // Локальная заглушка для тестирования лимитов без реальной оплаты.
@@ -107,22 +123,32 @@ export async function createBillingPortalSession(): Promise<CheckoutState> {
 // (Apple Developer Program, Google Play Console, RevenueCat), которые может
 // завести только сам пользователь. Здесь их нет и не будет — эта кнопка
 // только пишет статус подписки в БД для локальной разработки.
+//
+// P0-АУДИТ 2.2: раньше эта функция не проверяла isStripeConfigured() и была
+// вызываемой напрямую (Server Action — отдельная конечная точка) даже когда
+// в интерфейсе показывалась кнопка настоящей оплаты. Плюс писала через
+// RLS-клиент — после сужения RLS (2.1) это и не сработало бы. Теперь: явно
+// не работает при настоящем Stripe, и пишет через service_role.
 export async function simulateSubscribe(plan: Extract<Plan, "premium_monthly" | "premium_yearly">) {
+  if (isStripeConfigured()) return;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.from("subscriptions").upsert({
-    owner_id: user.id,
-    plan,
-    status: "active",
-    provider: "stripe",
-    current_period_end: new Date(
-      Date.now() + (plan === "premium_yearly" ? 365 : 30) * 86_400_000,
-    ).toISOString(),
-  });
+  await createServiceClient()
+    .from("subscriptions")
+    .upsert({
+      owner_id: user.id,
+      plan,
+      status: "active",
+      provider: "stripe",
+      current_period_end: new Date(
+        Date.now() + (plan === "premium_yearly" ? 365 : 30) * 86_400_000,
+      ).toISOString(),
+    });
 
   revalidatePath("/library");
   revalidatePath("/paywall");
@@ -130,12 +156,17 @@ export async function simulateSubscribe(plan: Extract<Plan, "premium_monthly" | 
 }
 
 export async function cancelSimulatedSubscription() {
+  if (isStripeConfigured()) return;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.from("subscriptions").update({ status: "canceled" }).eq("owner_id", user.id);
+  await createServiceClient()
+    .from("subscriptions")
+    .update({ status: "canceled" })
+    .eq("owner_id", user.id);
   revalidatePath("/paywall");
 }

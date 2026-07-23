@@ -199,13 +199,22 @@ export default function OnboardingWizard() {
             <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
           )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="mt-2 rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
-          >
-            {pending ? "Создаём…" : "Создать аккаунт и начать"}
-          </button>
+          <div className="mt-2 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setStep(4)}
+              className="rounded-full border border-black/10 px-5 py-3 font-medium transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+            >
+              Назад
+            </button>
+            <button
+              type="submit"
+              disabled={pending}
+              className="flex-1 rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
+            >
+              {pending ? "Создаём…" : "Создать аккаунт и начать"}
+            </button>
+          </div>
           <p className="text-center text-xs text-black/40 dark:text-white/40">
             Создавая аккаунт, ты соглашаешься с{" "}
             <Link href="/terms" className="underline">

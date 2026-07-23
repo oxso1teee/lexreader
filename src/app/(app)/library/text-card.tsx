@@ -68,7 +68,7 @@ export default function TextCard({
         <Link
           href={`/watch/${id}`}
           aria-label="Смотреть с субтитрами"
-          className="shrink-0 rounded-full border border-black/10 px-3 py-2.5 text-sm font-medium dark:border-white/15"
+          className="flex min-h-11 shrink-0 items-center justify-center rounded-full border border-black/10 px-3 text-sm font-medium dark:border-white/15"
         >
           📺 Смотреть
         </Link>
@@ -79,7 +79,7 @@ export default function TextCard({
           disabled={isPending}
           onClick={() => startTransition(() => deleteText(id))}
           aria-label="Удалить текст"
-          className="shrink-0 rounded-full border border-black/10 px-2.5 py-2.5 text-red-500 disabled:opacity-40 dark:border-white/15"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-red-500 disabled:opacity-40 dark:border-white/15"
         >
           ✕
         </button>

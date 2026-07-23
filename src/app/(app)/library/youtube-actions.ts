@@ -127,11 +127,9 @@ export async function createTextFromYoutube(
     });
     if (!res.ok) throw new Error(`видео ответило ${res.status}`);
     watchHtml = await res.text();
-  } catch (e) {
+  } catch {
     log.import({ kind: "youtube", outcome: "error", reason: "watch_page_fetch_failed" });
-    return {
-      error: `Не удалось загрузить видео: ${e instanceof Error ? e.message : "ошибка сети"}`,
-    };
+    return { error: "Не удалось загрузить видео. Проверь ссылку и попробуй ещё раз." };
   }
 
   const titleMatch = watchHtml.match(/<meta name="title" content="([^"]*)"/);
@@ -151,11 +149,9 @@ export async function createTextFromYoutube(
     const res = await fetch(preferred.baseUrl, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) throw new Error(`субтитры ответили ${res.status}`);
     captionXml = await res.text();
-  } catch (e) {
+  } catch {
     log.import({ kind: "youtube", outcome: "error", reason: "caption_fetch_failed" });
-    return {
-      error: `Не удалось загрузить субтитры: ${e instanceof Error ? e.message : "ошибка сети"}`,
-    };
+    return { error: "Не удалось загрузить субтитры. Попробуй ещё раз." };
   }
 
   if (!captionXml.trim()) {
@@ -199,7 +195,10 @@ export async function createTextFromYoutube(
   );
   if (segmentsError) {
     log.import({ kind: "youtube", outcome: "error", reason: "segments_insert_failed" });
-    return { error: segmentsError.message };
+    // P0-АУДИТ 3.13: без этого текст оставался "осиротевшим" — уже занимал
+    // место в FREE_TEXT_LIMIT, но никогда не показывал субтитры в /watch.
+    await supabase.from("texts").delete().eq("id", result.id);
+    return { error: "Не удалось сохранить субтитры этого видео. Попробуй ещё раз." };
   }
 
   log.import({ kind: "youtube", outcome: "success" });

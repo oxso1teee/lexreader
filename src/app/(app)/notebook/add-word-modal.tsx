@@ -78,7 +78,7 @@ export default function AddWordModal({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Добавить слово вручную"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-caramel text-lg font-medium text-white"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-caramel text-lg font-medium text-white"
       >
         +
       </button>

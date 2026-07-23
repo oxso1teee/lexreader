@@ -2,6 +2,13 @@ import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import AddTextTabs from "./add-text-tabs";
 
+// P0-АУДИТ (раздел 4): импорт по URL/YouTube делает до двух последовательных
+// внешних запросов по 10 сек каждый — без явного maxDuration был риск
+// упереться в лимит выполнения функции на Vercel раньше, чем сработает наш
+// собственный AbortSignal.timeout, и получить generic 504 вместо понятной
+// ошибки.
+export const maxDuration = 30;
+
 export default async function NewTextPage() {
   const profile = await requireProfile();
 
