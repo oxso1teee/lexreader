@@ -25,6 +25,11 @@ export default function WordRow({
   const [isPending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  // Найдено при повторном аудите: бакет word-photos был публично читаемым —
+  // теперь приватный, показываем фото через подписанный URL (короткий срок
+  // жизни), а не постоянный публичный. Локальный override для мгновенного
+  // отображения сразу после загрузки, пока страница не перезапросит данные.
+  const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
 
   async function handlePhotoChange(file: File) {
     const validationError = validateImageFile(file);
@@ -43,10 +48,13 @@ export default function WordRow({
         .upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("word-photos").getPublicUrl(path);
-      await setPhotoUrl(id, publicUrl);
+      const { data: signed } = await supabase.storage
+        .from("word-photos")
+        .createSignedUrl(path, 3600);
+      if (signed?.signedUrl) setLocalPhotoUrl(signed.signedUrl);
+
+      // В базе храним путь, а не URL — подписанные URL истекают, путь нет.
+      await setPhotoUrl(id, path);
     } catch {
       // P0-АУДИТ 3.17: раньше сбой загрузки был полностью тихим — спиннер
       // просто пропадал, без единого сообщения пользователю.
@@ -63,9 +71,9 @@ export default function WordRow({
           aria-label="Добавить фото к слову"
           className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-black/15 text-black/30 hover:border-black/30 dark:border-white/20 dark:text-white/30 dark:hover:border-white/40"
         >
-          {photoUrl ? (
+          {localPhotoUrl || photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+            <img src={localPhotoUrl ?? photoUrl!} alt="" className="h-full w-full object-cover" />
           ) : uploading ? (
             <span className="text-xs">…</span>
           ) : (

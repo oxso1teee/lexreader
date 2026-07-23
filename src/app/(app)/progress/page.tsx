@@ -33,6 +33,18 @@ function computeHeatmapCutoff(): Date {
   return new Date(Date.now() - 91 * 86_400_000);
 }
 
+// Найдено при повторном аудите: для периода "Всё время" chartDays было
+// жёстко захардкожено в 30 — график тихо считал только последний месяц,
+// хотя карточки статистики выше (wordsReadTotal и т.п.) честно суммируют
+// ВСЮ историю без cutoff — два числа для одной и той же метрики на одном
+// экране расходились на порядок. Растягиваем график на фактическую историю
+// (от самой ранней активности), с разумным потолком.
+function computeAllTimeChartDays(earliestTimes: number[]): number {
+  if (earliestTimes.length === 0) return 30;
+  const daysSinceEarliest = Math.ceil((Date.now() - Math.min(...earliestTimes)) / 86_400_000) + 1;
+  return Math.min(365, Math.max(30, daysSinceEarliest));
+}
+
 export default async function ProgressPage({
   searchParams,
 }: {
@@ -123,7 +135,15 @@ export default async function ProgressPage({
   const reviewLogs = reviewLogQuery.data ?? [];
   const answersGiven = reviewLogs.length;
 
-  const buckets = buildDayBuckets(chartDays);
+  const effectiveChartDays =
+    period === "all"
+      ? computeAllTimeChartDays([
+          ...sessions.map((s) => new Date(s.started_at).getTime()),
+          ...reviewLogs.map((r) => new Date(r.reviewed_at).getTime()),
+        ])
+      : chartDays;
+
+  const buckets = buildDayBuckets(effectiveChartDays);
   const wordsPerDay = new Map<string, number>();
   for (const s of sessions) {
     const key = isoDate(s.started_at);

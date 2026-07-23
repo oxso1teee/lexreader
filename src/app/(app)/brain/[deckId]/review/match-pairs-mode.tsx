@@ -39,6 +39,11 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
   const [selectedTranslation, setSelectedTranslation] = useState<string | null>(null);
   const [wrongFlash, setWrongFlash] = useState<{ word: string; translation: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  // Найдено при повторном аудите: неверные попытки вообще не влияли на SRS
+  // (не грейдились никак), а итоговое совпадение всегда шло с оценкой 2
+  // ("Помню") — даже после нескольких ошибок подряд. Отмечаем участвовавшие
+  // в ошибочной попытке карточки и снижаем итоговую оценку для них.
+  const [struggledIds, setStruggledIds] = useState<Set<string>>(new Set());
 
   const round = rounds[roundIndex];
   const allDone = roundIndex >= rounds.length;
@@ -61,10 +66,12 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
   function resolveAttempt(wordId: string, translationId: string) {
     if (wordId === translationId) {
       setMatchedIds((s) => new Set(s).add(wordId));
-      startTransition(() => reviewWord(wordId, 2));
+      const grade = struggledIds.has(wordId) ? 0 : 2;
+      startTransition(() => reviewWord(wordId, grade));
       setSelectedWord(null);
       setSelectedTranslation(null);
     } else {
+      setStruggledIds((s) => new Set(s).add(wordId).add(translationId));
       setSelectedWord(wordId);
       setSelectedTranslation(translationId);
       setWrongFlash({ word: wordId, translation: translationId });

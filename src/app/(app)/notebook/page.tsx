@@ -35,6 +35,23 @@ export default async function NotebookPage({
       .order("created_at", { ascending: false }),
   ]);
 
+  // Найдено при повторном аудите RLS: бакет word-photos был публично
+  // читаемым (любой мог перечислить и скачать чужие фото) — теперь
+  // приватный, photo_url в базе хранит путь, а не URL, отдаём на клиент
+  // подписанный URL с ограниченным сроком жизни.
+  const itemsWithPhotos = items ?? [];
+  const signedUrls = new Map<string, string>();
+  await Promise.all(
+    itemsWithPhotos
+      .filter((item) => item.photo_url)
+      .map(async (item) => {
+        const { data } = await supabase.storage
+          .from("word-photos")
+          .createSignedUrl(item.photo_url!, 3600);
+        if (data?.signedUrl) signedUrls.set(item.id, data.signedUrl);
+      }),
+  );
+
   return (
     <NotebookClient
       ownerId={profile.id}
@@ -42,12 +59,12 @@ export default async function NotebookPage({
       targetLanguage={languageName(profile.target_language)}
       sourceLang={profile.target_language}
       nativeLang={profile.native_language}
-      items={(items ?? []).map((item) => ({
+      items={itemsWithPhotos.map((item) => ({
         id: item.id,
         headword: item.headword,
         translation: item.translation,
         status: item.status,
-        photo_url: item.photo_url,
+        photo_url: signedUrls.get(item.id) ?? null,
         sourceTitle: (item.texts as unknown as { title: string } | null)?.title ?? null,
       }))}
       allWords={allWords ?? []}

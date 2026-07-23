@@ -16,7 +16,7 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const [{ data: current, error: fetchError }, params] = await Promise.all([
     supabase
       .from("srs_state")
-      .select("ease_factor, interval_days, repetitions")
+      .select("ease_factor, interval_days, repetitions, first_reviewed_at")
       .eq("flashcard_id", flashcardId)
       .single(),
     getSrsParams(supabase, user.id),
@@ -35,10 +35,17 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
 
   const now = new Date();
   const dueAt = new Date(now.getTime() + next.intervalDays * 86_400_000);
-  // P0-АУДИТ 3.11: фиксируем момент, когда карточка перестала быть "новой" —
-  // используется для настоящего дневного лимита новых карточек (см.
-  // brain/[deckId]/review/page.tsx).
-  const wasNew = current.repetitions === 0;
+  // P0-АУДИТ 3.11 (испр. после повторной проверки): раньше "новизна"
+  // определялась через repetitions === 0 — но SM-2 сбрасывает repetitions
+  // обратно в 0 при оценке "Не помню" даже для давно изученной карточки
+  // (src/lib/srs.ts). Это заставляло забытую-и-пересданную карточку снова
+  // попадать в пул "новых" и (при успешном повторном ответе) молча
+  // перезаписывать первоначальный first_reviewed_at на сегодня — то есть
+  // настоящие новые карточки пользователя незаметно "съедались" чужими
+  // забытыми карточками. first_reviewed_at пишем один раз и никогда не
+  // трогаем повторно — используем именно его (а не repetitions) как признак
+  // "карточка ещё ни разу не была пройдена".
+  const wasNew = current.first_reviewed_at === null;
 
   const { error: updateError } = await supabase
     .from("srs_state")

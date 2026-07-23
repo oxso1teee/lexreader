@@ -14,22 +14,40 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function buildOptions(cards: ReviewCard[]): string[][] {
+// P0-АУДИТ 3.12 (испр.): answerOf() определяет, какая сторона карточки
+// сейчас считается "ответом" — с учётом направления изучения, а не всегда
+// card.back (единственный режим, который уже был согласован с
+// направлением, но не переиспользовал общую функцию).
+function answerOf(card: ReviewCard, studyDirection: "front_back" | "back_front"): string {
+  return studyDirection === "back_front" ? card.front : card.back;
+}
+function questionOf(card: ReviewCard, studyDirection: "front_back" | "back_front"): string {
+  return studyDirection === "back_front" ? card.back : card.front;
+}
+
+function buildOptions(cards: ReviewCard[], studyDirection: "front_back" | "back_front"): string[][] {
   return cards.map((card) => {
+    const answer = answerOf(card, studyDirection);
     const distractorPool = cards.filter(
-      (c) => c.flashcardId !== card.flashcardId && c.back !== card.back,
+      (c) => c.flashcardId !== card.flashcardId && answerOf(c, studyDirection) !== answer,
     );
     const distractors = shuffle(distractorPool)
       .slice(0, 3)
-      .map((c) => c.back);
-    return shuffle([card.back, ...distractors]);
+      .map((c) => answerOf(c, studyDirection));
+    return shuffle([answer, ...distractors]);
   });
 }
 
-export default function MultipleChoiceMode({ cards }: { cards: ReviewCard[] }) {
+export default function MultipleChoiceMode({
+  cards,
+  studyDirection,
+}: {
+  cards: ReviewCard[];
+  studyDirection: "front_back" | "back_front";
+}) {
   // Варианты для всех карточек считаем один раз при монтировании — стабильны
   // на всю сессию, без пересчёта по эффекту при смене index.
-  const [allOptions] = useState(() => buildOptions(cards));
+  const [allOptions] = useState(() => buildOptions(cards, studyDirection));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -60,7 +78,7 @@ export default function MultipleChoiceMode({ cards }: { cards: ReviewCard[] }) {
   function choose(option: string) {
     if (selected) return;
     setSelected(option);
-    const grade = option === card.back ? 2 : 0;
+    const grade = option === answerOf(card, studyDirection) ? 2 : 0;
     startTransition(() => reviewWord(card.flashcardId, grade));
   }
 
@@ -76,12 +94,12 @@ export default function MultipleChoiceMode({ cards }: { cards: ReviewCard[] }) {
       </p>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-        <p className="text-2xl font-semibold">{card.front}</p>
+        <p className="text-2xl font-semibold">{questionOf(card, studyDirection)}</p>
       </div>
 
       <div className="flex flex-col gap-2">
         {options.map((opt) => {
-          const isCorrect = opt === card.back;
+          const isCorrect = opt === answerOf(card, studyDirection);
           const showState = selected !== null;
           const stateClass = !showState
             ? "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"

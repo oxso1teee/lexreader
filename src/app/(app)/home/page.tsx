@@ -1,4 +1,6 @@
+import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
+import { getPlan } from "@/lib/subscription";
 import LanguageBanner from "./language-banner";
 import PremiumCard from "./premium-card";
 import WelcomeCard from "./welcome-card";
@@ -6,11 +8,15 @@ import InfoCard from "./info-card";
 
 export default async function HomePage() {
   const profile = await requireProfile();
+  const supabase = await createClient();
+  // Найдено при повторном аудите: карточка "Выберите ваш план" показывалась
+  // и уже оплатившим Premium — выглядит так, будто оплата не сработала.
+  const plan = await getPlan(supabase, profile.id);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 py-4">
       <LanguageBanner targetLanguage={profile.target_language} />
-      <PremiumCard />
+      {plan === "free" && <PremiumCard />}
       <WelcomeCard />
 
       <InfoCard

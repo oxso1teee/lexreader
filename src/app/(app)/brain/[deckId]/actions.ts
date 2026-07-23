@@ -23,6 +23,18 @@ export async function addFlashcard(
   const profile = await requireProfile();
   const supabase = await createClient();
 
+  // Найдено при повторном аудите: deckId брался из формы без проверки
+  // владения — importFlashcards() в brain/actions.ts уже делал эту
+  // проверку правильно, здесь её не было (несогласованность одного и того
+  // же класса проверки между двумя похожими действиями).
+  const { data: deck } = await supabase
+    .from("decks")
+    .select("id")
+    .eq("id", deckId)
+    .eq("owner_id", profile.id)
+    .maybeSingle();
+  if (!deck) return { error: "Колода не найдена." };
+
   if (!(await hasFreeFlashcardRoom(supabase, profile.id))) {
     return { paywall: true };
   }

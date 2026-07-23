@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 const HEADER = [
   "headword",
   "translation",
+  "language",
   "context_sentence",
   "context_translation",
   "status",
@@ -29,7 +30,7 @@ export async function GET() {
   const { data: items } = await supabase
     .from("vocabulary_items")
     .select(
-      "headword, translation, context_sentence, context_translation, status, created_at, texts(title)",
+      "headword, translation, language, context_sentence, context_translation, status, created_at, texts(title)",
     )
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true });
@@ -39,6 +40,7 @@ export async function GET() {
     return [
       item.headword,
       item.translation,
+      item.language,
       item.context_sentence ?? "",
       item.context_translation ?? "",
       item.status,

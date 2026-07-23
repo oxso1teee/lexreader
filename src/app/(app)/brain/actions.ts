@@ -38,6 +38,22 @@ export async function createDeck(
 
 export async function deleteDeck(deckId: string) {
   const supabase = await createClient();
+
+  // Найдено при живой проверке: удаление главной колоды (is_default=true)
+  // ломает addPhraseToDefaultDeck (read/[textId]/actions.ts) — она ищет
+  // колоду с is_default=true, и без неё "добавить слово из читалки в
+  // карточку" перестаёт работать насовсем (в UI нет способа назначить
+  // другую колоду главной). Проверка в UI (deck-card.tsx) уже не даёт
+  // нажать кнопку, но дублируем на сервере на случай прямого вызова.
+  const { data: deck } = await supabase
+    .from("decks")
+    .select("is_default")
+    .eq("id", deckId)
+    .maybeSingle();
+  if (deck?.is_default) {
+    throw new Error("Нельзя удалить главную колоду.");
+  }
+
   const { error } = await supabase.from("decks").delete().eq("id", deckId);
   if (error) throw new Error("Не удалось удалить колоду.");
   revalidatePath("/brain");

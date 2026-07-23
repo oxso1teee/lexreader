@@ -47,15 +47,22 @@ export default function DeckCard({
         </div>
         <span className="text-black/30 dark:text-white/30">›</span>
       </Link>
-      <button
-        type="button"
-        disabled={isPending}
-        onClick={handleDelete}
-        aria-label="Удалить колоду"
-        className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-red-500 disabled:opacity-40 dark:border-white/15"
-      >
-        ✕
-      </button>
+      {/* Найдено при живой проверке: удаление колоды "Главная" ломает
+          addPhraseToDefaultDeck (сохранение слова из читалки в карточку) —
+          он ищет колоду с is_default=true, а после удаления её не остаётся
+          и UI не даёт назначить другую колоду главной. Просто не даём
+          удалить эту конкретную колоду. */}
+      {!isDefault && (
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={handleDelete}
+          aria-label="Удалить колоду"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-red-500 disabled:opacity-40 dark:border-white/15"
+        >
+          ✕
+        </button>
+      )}
     </div>
   );
 }

@@ -24,17 +24,18 @@ export default function ReviewModeSwitcher({
 }) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
-  //
-  // P0-АУДИТ 3.12: настройка "направление изучения" раньше сохранялась, но
-  // ни на что не влияла — ни один из 4 режимов её не читал. Меняем местами
-  // front/back один раз здесь, до раздачи по режимам — так все 4 режима
-  // автоматически уважают направление без отдельных правок в каждом.
-  const [cards] = useState(() =>
-    studyDirection === "back_front"
-      ? cardsProp.map((c) => ({ ...c, front: c.back, back: c.front }))
-      : cardsProp,
-  );
+  const [cards] = useState(cardsProp);
   const [mode, setMode] = useState<Mode>("cards");
+
+  // P0-АУДИТ 3.12 (испр. после повторной проверки): первая версия этого
+  // фикса меняла местами front/back один раз здесь, предполагая, что все 4
+  // режима одинаково трактуют "front = вопрос, back = ответ". Это неверно:
+  // MultipleChoiceMode действительно показывает front как вопрос, а
+  // ReviewSession/TypeWordMode ВСЕГДА жёстко показывали back как вопрос
+  // (независимо от направления) — баг, существовавший ДО этого фикса. Свап
+  // данных превращал несогласованность в противоположную несогласованность
+  // вместо исправления. Теперь каждый режим получает studyDirection явно и
+  // сам решает, что показывать вопросом, а что ответом.
 
   if (cards.length === 0) {
     return (
@@ -66,9 +67,15 @@ export default function ReviewModeSwitcher({
         ))}
       </div>
 
-      {mode === "cards" && <ReviewSession key="cards" cards={cards} />}
-      {mode === "choice" && <MultipleChoiceMode key="choice" cards={cards} />}
-      {mode === "type" && <TypeWordMode key="type" cards={cards} />}
+      {mode === "cards" && (
+        <ReviewSession key="cards" cards={cards} studyDirection={studyDirection} />
+      )}
+      {mode === "choice" && (
+        <MultipleChoiceMode key="choice" cards={cards} studyDirection={studyDirection} />
+      )}
+      {mode === "type" && (
+        <TypeWordMode key="type" cards={cards} studyDirection={studyDirection} />
+      )}
       {mode === "match" && <MatchPairsMode key="match" cards={cards} />}
     </div>
   );

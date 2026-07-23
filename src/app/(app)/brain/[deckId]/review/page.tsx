@@ -48,11 +48,17 @@ export default async function DeckReviewPage({
     .gte("first_reviewed_at", todayStart.toISOString());
   const remainingNewCards = Math.max(0, settings.new_cards_per_day - (alreadyIntroducedToday ?? 0));
 
+  // P0-АУДИТ 3.11 (испр.): раньше границу "новая / на повторение" проводили
+  // по repetitions (0 = новая) — но лапнувшая (забытая) карточка тоже имеет
+  // repetitions=0, из-за чего она конкурировала с настоящими новыми
+  // карточками за дневной лимит remainingNewCards вместо того, чтобы просто
+  // считаться повторением. Граница теперь по first_reviewed_at: "новая" —
+  // только та, что вообще ни разу не была показана.
   let reviewQuery = supabase
     .from("srs_state")
     .select(SELECT)
     .eq("flashcards.owner_id", profile.id)
-    .gt("repetitions", 0)
+    .not("first_reviewed_at", "is", null)
     .lte("due_at", now)
     .order("due_at", { ascending: true })
     .limit(settings.max_reviews_per_day);
@@ -61,7 +67,7 @@ export default async function DeckReviewPage({
     .from("srs_state")
     .select(SELECT)
     .eq("flashcards.owner_id", profile.id)
-    .eq("repetitions", 0)
+    .is("first_reviewed_at", null)
     .lte("due_at", now)
     .order("due_at", { ascending: true })
     .limit(remainingNewCards);

@@ -5,7 +5,13 @@ import { reviewWord } from "./actions";
 import type { ReviewCard } from "./review-session";
 import SessionComplete from "./session-complete";
 
-export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
+export default function TypeWordMode({
+  cards,
+  studyDirection,
+}: {
+  cards: ReviewCard[];
+  studyDirection: "front_back" | "back_front";
+}) {
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState("");
   const [result, setResult] = useState<"correct" | "wrong" | null>(null);
@@ -13,6 +19,11 @@ export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
 
   const done = index >= cards.length;
   const card = cards[index];
+  // P0-АУДИТ 3.12 (испр.): было жёстко "вопрос = back, ответ = front" —
+  // при направлении по умолчанию показывало перевод и просило напечатать
+  // слово, хотя "Слово → Перевод" подразумевает обратное.
+  const question = studyDirection === "back_front" ? card?.back : card?.front;
+  const answer = studyDirection === "back_front" ? card?.front : card?.back;
 
   if (done) {
     return <SessionComplete count={cards.length} />;
@@ -28,7 +39,7 @@ export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
       return;
     }
 
-    const isCorrect = value.trim().toLowerCase() === card.front.trim().toLowerCase();
+    const isCorrect = value.trim().toLowerCase() === answer.trim().toLowerCase();
     setResult(isCorrect ? "correct" : "wrong");
     startTransition(() => reviewWord(card.flashcardId, isCorrect ? 2 : 0));
   }
@@ -43,7 +54,7 @@ export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
       </p>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-        <p className="text-2xl font-semibold">{card.back}</p>
+        <p className="text-2xl font-semibold">{question}</p>
         {result && (
           <p
             className={
@@ -52,7 +63,7 @@ export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
                 : "text-red-600 dark:text-red-400"
             }
           >
-            {result === "correct" ? "Верно!" : `Правильный ответ: ${card.front}`}
+            {result === "correct" ? "Верно!" : `Правильный ответ: ${answer}`}
           </p>
         )}
       </div>
@@ -63,7 +74,9 @@ export default function TypeWordMode({ cards }: { cards: ReviewCard[] }) {
         onChange={(e) => setValue(e.target.value)}
         disabled={!!result}
         autoFocus
-        placeholder="Напиши слово на изучаемом языке"
+        placeholder={
+          studyDirection === "back_front" ? "Напиши слово на изучаемом языке" : "Напиши перевод"
+        }
         className="mb-4 w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 disabled:opacity-60 dark:border-white/15 dark:focus:border-white/40"
       />
 
