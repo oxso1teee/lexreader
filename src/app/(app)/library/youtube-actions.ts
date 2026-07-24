@@ -122,6 +122,12 @@ export async function createTextFromYoutube(
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
         "Accept-Language": "en-US,en;q=0.9",
+        // Найдено при повторном аудите: без этого куки YouTube отдаёт вместо
+        // страницы видео интерстишл "cookie consent" запросам с IP серверов
+        // облачных провайдеров (Vercel и т.п.) — captionTracks в HTML
+        // отсутствует вообще, импорт всегда падал с "нет открытых субтитров"
+        // даже для видео, у которых они точно есть.
+        Cookie: "CONSENT=YES+cb",
       },
       signal: AbortSignal.timeout(10_000),
     });
