@@ -74,7 +74,12 @@ export async function completeOnboarding(
 
   const { error: deckError } = await supabase
     .from("decks")
-    .insert({ owner_id: signUpData.user.id, name: "Основная колода", is_default: true });
+    .insert({
+      owner_id: signUpData.user.id,
+      name: "Основная колода",
+      is_default: true,
+      language: targetLanguage,
+    });
   if (deckError) {
     log.error({ kind: "onboarding_default_deck", message: deckError.message });
   }

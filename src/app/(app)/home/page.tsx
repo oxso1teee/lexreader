@@ -17,7 +17,7 @@ export default async function HomePage() {
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 py-4">
       <LanguageBanner targetLanguage={profile.target_language} />
       {plan === "free" && <PremiumCard />}
-      <WelcomeCard />
+      <WelcomeCard createdAt={profile.created_at} />
 
       <InfoCard
         variant="fact"

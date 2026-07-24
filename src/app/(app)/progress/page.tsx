@@ -101,19 +101,24 @@ export default async function ProgressPage({
       if (cutoff) q = q.gte("started_at", cutoff.toISOString());
       return q;
     })(),
+    // Найдено при повторном аудите: у flashcards появилась колонка language
+    // (см. миграцию 0018) — счётчики Мозга теперь тоже ограничены текущим
+    // target_language, как и счётчики словаря выше.
     (() => {
       let q = supabase
         .from("flashcards")
         .select("id", { count: "exact", head: true })
-        .eq("owner_id", profile.id);
+        .eq("owner_id", profile.id)
+        .eq("language", profile.target_language);
       if (cutoff) q = q.gte("created_at", cutoff.toISOString());
       return q;
     })(),
     (() => {
       let q = supabase
         .from("review_log")
-        .select("reviewed_at, flashcards!inner(owner_id)")
-        .eq("flashcards.owner_id", profile.id);
+        .select("reviewed_at, flashcards!inner(owner_id, language)")
+        .eq("flashcards.owner_id", profile.id)
+        .eq("flashcards.language", profile.target_language);
       if (cutoff) q = q.gte("reviewed_at", cutoff.toISOString());
       return q;
     })(),
@@ -124,8 +129,9 @@ export default async function ProgressPage({
       .gte("started_at", heatmapCutoff.toISOString()),
     supabase
       .from("review_log")
-      .select("reviewed_at, flashcards!inner(owner_id)")
+      .select("reviewed_at, flashcards!inner(owner_id, language)")
       .eq("flashcards.owner_id", profile.id)
+      .eq("flashcards.language", profile.target_language)
       .gte("reviewed_at", heatmapCutoff.toISOString()),
   ]);
 
@@ -183,8 +189,12 @@ export default async function ProgressPage({
         <h2 className="mb-2 font-semibold">Словарный запас</h2>
         <div className="grid grid-cols-2 gap-3">
           <StatCard value={totalWords ?? 0} label="Слов встречено (всего)" />
-          <StatCard value={learningWords ?? 0} label="Изучаются (ур. 1-3)" color="orange" />
-          <StatCard value={knownWords ?? 0} label="Знаю (ур. 4)" color="green" />
+          {/* Найдено при повторном аудите: эти карточки — кумулятивное
+              состояние словаря, не зависят от вкладки периода выше (в отличие
+              от "за период" ниже) — явно помечаем "всего", чтобы не выглядело
+              багом на одном экране с показателем, который период учитывает. */}
+          <StatCard value={learningWords ?? 0} label="Изучаются всего (ур. 1-3)" color="orange" />
+          <StatCard value={knownWords ?? 0} label="Знаю всего (ур. 4)" color="green" />
           <StatCard value={wordsReadTotal} label="Слов прочитано за период" color="purple" />
         </div>
       </div>

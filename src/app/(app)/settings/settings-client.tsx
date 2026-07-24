@@ -6,7 +6,7 @@ import { LANGUAGES } from "@/lib/languages";
 import { LEVELS, DAILY_GOALS } from "@/lib/onboarding-options";
 import {
   savePushSubscription,
-  deletePushSubscription,
+  deleteAllPushSubscriptions,
   sendTestPush,
   updateProfile,
   type UpdateProfileState,
@@ -81,10 +81,12 @@ export default function SettingsClient({
     setPushBusy(true);
     setPushError(null);
     try {
+      // Единственный тумблер в UI означает "отключить везде" — удаляем все
+      // подписки владельца на сервере, а не только текущего устройства.
+      await deleteAllPushSubscriptions();
       const registration = await navigator.serviceWorker.getRegistration();
       const subscription = await registration?.pushManager.getSubscription();
       if (subscription) {
-        await deletePushSubscription(subscription.endpoint);
         await subscription.unsubscribe();
       }
       setPushEnabled(false);

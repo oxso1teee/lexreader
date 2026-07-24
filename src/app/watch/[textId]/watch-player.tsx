@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
-import { upsertWord, setWordLevel } from "@/app/read/[textId]/actions";
+import { log } from "@/lib/log";
+import { upsertWord, setWordLevel, finishReading, updateTextProgress } from "@/app/read/[textId]/actions";
 
 interface YTPlayerInstance {
   getCurrentTime(): number;
@@ -83,6 +85,7 @@ export default function WatchPlayer({
   targetLang: string;
   wordLevels: Record<string, WordLevelInfo>;
 }) {
+  const router = useRouter();
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const activeSegRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -90,6 +93,39 @@ export default function WatchPlayer({
   const [popup, setPopup] = useState<Popup | null>(null);
   const [manualTranslation, setManualTranslation] = useState("");
   const [playerError, setPlayerError] = useState(false);
+  const [wordsLookedUp, setWordsLookedUp] = useState(0);
+  const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
+
+  // Найдено при повторном аудите: Watch Mode вообще не писал в
+  // reading_sessions/text_progress/streak — просмотр видео не давал ничего
+  // ни статистике, ни прогресс-бару в Библиотеке, ни стрику. Заводим ту же
+  // механику, что уже работает в текстовом ридере (reader.tsx).
+  const startedAt = useRef<number | null>(null);
+  useEffect(() => {
+    startedAt.current = Date.now();
+  }, []);
+
+  useEffect(() => {
+    if (segments.length === 0) return;
+    updateTextProgress({ textId, pageIndex: activeIndex, pageCount: segments.length }).catch((e) => {
+      log.error({ kind: "text_progress_save", message: e instanceof Error ? e.message : "unknown" });
+    });
+  }, [textId, activeIndex, segments.length]);
+
+  async function handleFinish() {
+    setFinishing(true);
+    setFinishError(null);
+    const elapsed = Date.now() - (startedAt.current ?? Date.now());
+    const minutes = Math.max(1, Math.round(elapsed / 60_000));
+    try {
+      await finishReading({ textId, minutes, wordsLookedUp });
+      router.push("/library");
+    } catch {
+      setFinishing(false);
+      setFinishError("Не удалось сохранить сессию чтения. Попробуй ещё раз.");
+    }
+  }
 
   // P0-АУДИТ 3.19: раньше не было ни onerror, ни таймаута — если скрипт
   // YouTube API блокировался (adblock/файрвол/CSP), видео-блок оставался
@@ -153,6 +189,7 @@ export default function WatchPlayer({
   async function handleWordTap(text: string, sentence: string) {
     setPopup({ text, sentence, loading: true });
     setManualTranslation("");
+    setWordsLookedUp((n) => n + 1);
 
     try {
       const res = await fetch("/api/translate", {
@@ -265,8 +302,24 @@ export default function WatchPlayer({
         <Link href="/library" className="shrink-0 text-sm font-medium text-caramel">
           ← Библиотека
         </Link>
-        <h1 className="min-w-0 flex-1 truncate text-base font-medium">{title}</h1>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-base font-medium">{title}</h1>
+          <p className="text-xs text-black/40 dark:text-white/40">{wordsLookedUp}w</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleFinish}
+          disabled={finishing}
+          aria-label="Завершить просмотр"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-red-400 text-red-500 disabled:opacity-50"
+        >
+          ✕
+        </button>
       </header>
+
+      {finishError && (
+        <div className="px-4 pt-2 text-center text-sm text-red-600 dark:text-red-400">{finishError}</div>
+      )}
 
       <div className="flex h-[40dvh] w-full shrink-0 items-center justify-center bg-black">
         {playerError ? (

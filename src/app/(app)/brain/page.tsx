@@ -9,18 +9,28 @@ export default async function BrainPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
+  // Найдено при повторном аудите: у decks/flashcards не было колонки language
+  // — при смене изучаемого языка Мозг показывал колоды и карточки всех
+  // языков вперемешку. Теперь список и счётчик "к повторению" ограничены
+  // текущим target_language, как и остальные части приложения.
   const [{ data: decks }, { data: flashcards }, { count: dueCount }] = await Promise.all([
     supabase
       .from("decks")
       .select("id, name, is_default")
       .eq("owner_id", profile.id)
+      .eq("language", profile.target_language)
       .order("is_default", { ascending: false })
       .order("created_at", { ascending: true }),
-    supabase.from("flashcards").select("id, deck_id").eq("owner_id", profile.id),
+    supabase
+      .from("flashcards")
+      .select("id, deck_id")
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language),
     supabase
       .from("srs_state")
-      .select("flashcard_id, flashcards!inner(owner_id)", { count: "exact", head: true })
+      .select("flashcard_id, flashcards!inner(owner_id, language)", { count: "exact", head: true })
       .eq("flashcards.owner_id", profile.id)
+      .eq("flashcards.language", profile.target_language)
       .lte("due_at", new Date().toISOString()),
   ]);
 

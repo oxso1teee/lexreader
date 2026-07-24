@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { touchStreak } from "@/lib/streak";
 import { statusFromLevel } from "@/lib/word-level";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
-import { hasFreeFlashcardRoom } from "@/lib/subscription";
+import { hasFreeFlashcardRoom, hasFreeDeckRoom } from "@/lib/subscription";
 
 export async function upsertWord(input: {
   textId: string;
@@ -64,21 +64,52 @@ export async function addPhraseToDefaultDeck(front: string, back: string): Promi
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Не авторизован." };
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("target_language")
+    .eq("id", user.id)
+    .single();
+  if (!profile) return { ok: false, error: "Профиль не найден." };
+
   if (!(await hasFreeFlashcardRoom(supabase, user.id))) {
     return { ok: false, paywall: true };
   }
 
-  const { data: deck } = await supabase
+  // Найдено при повторном аудите: у колод появилась колонка language (см.
+  // миграцию 0018) — "главная" колода теперь одна на язык. Если пользователь
+  // переключил target_language и ещё не открывал Мозг для нового языка, для
+  // него ещё нет главной колоды — создаём её здесь же, а не показываем ошибку.
+  let { data: deck } = await supabase
     .from("decks")
     .select("id")
     .eq("owner_id", user.id)
     .eq("is_default", true)
+    .eq("language", profile.target_language)
     .maybeSingle();
-  if (!deck) return { ok: false, error: "Основная колода не найдена." };
+
+  if (!deck) {
+    if (!(await hasFreeDeckRoom(supabase, user.id))) {
+      return { ok: false, paywall: true };
+    }
+    const { data: createdDeck, error: createError } = await supabase
+      .from("decks")
+      .insert({
+        owner_id: user.id,
+        name: "Основная колода",
+        is_default: true,
+        language: profile.target_language,
+      })
+      .select("id")
+      .single();
+    if (createError || !createdDeck) {
+      return { ok: false, error: "Не удалось создать основную колоду." };
+    }
+    deck = createdDeck;
+  }
 
   const { data: card, error } = await supabase
     .from("flashcards")
-    .insert({ deck_id: deck.id, owner_id: user.id, front, back })
+    .insert({ deck_id: deck.id, owner_id: user.id, front, back, language: profile.target_language })
     .select("id")
     .single();
   if (error || !card) return { ok: false, error: "Не удалось добавить карточку. Попробуй ещё раз." };
@@ -136,6 +167,21 @@ export async function updateTextProgress(input: {
   if (!user) throw new Error("Не авторизован.");
 
   const percentRead = Math.round(((input.pageIndex + 1) / input.pageCount) * 100);
+
+  // Найдено при повторном аудите: гонка при чтении в двух вкладках — старая
+  // вкладка (или зависший таймер автосохранения) могла прислать более ранний
+  // pageIndex уже после того, как другая вкладка продвинулась дальше, и
+  // молча откатить сохранённый прогресс назад. Не регрессируем: пишем,
+  // только если новый индекс не меньше уже сохранённого.
+  const { data: existing } = await supabase
+    .from("text_progress")
+    .select("last_page_index")
+    .eq("owner_id", user.id)
+    .eq("text_id", input.textId)
+    .maybeSingle();
+  if (existing && input.pageIndex < existing.last_page_index) {
+    return;
+  }
 
   const { error } = await supabase.from("text_progress").upsert(
     {

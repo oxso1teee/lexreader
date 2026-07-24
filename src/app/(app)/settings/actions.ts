@@ -71,9 +71,21 @@ export async function savePushSubscription(sub: SubscriptionInput) {
   if (error) throw new Error(error.message);
 }
 
-export async function deletePushSubscription(endpoint: string) {
+// Найдено при повторном аудите: кнопка "Отключить уведомления" удаляла
+// только подписку ТЕКУЩЕГО устройства (registration.pushManager.getSubscription()
+// на этом браузере). Если пользователь включил пуш на телефоне, а открыл
+// настройки на ноутбуке (который сам никогда не подписывался), нажатие
+// "Отключить" на ноутбуке ничего не удаляло в БД, но UI всё равно показывал
+// "отключено" — телефон продолжал получать напоминания. Единственный тумблер
+// в UI подразумевает "отключить везде" — удаляем все подписки владельца.
+export async function deleteAllPushSubscriptions() {
   const supabase = await createClient();
-  const { error } = await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Не авторизован");
+
+  const { error } = await supabase.from("push_subscriptions").delete().eq("owner_id", user.id);
   if (error) throw new Error(error.message);
 }
 

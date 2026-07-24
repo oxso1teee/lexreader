@@ -27,7 +27,7 @@ export async function createDeck(
 
   const { data, error } = await supabase
     .from("decks")
-    .insert({ owner_id: profile.id, name })
+    .insert({ owner_id: profile.id, name, language: profile.target_language })
     .select("id")
     .single();
   if (error || !data) return { error: "Не удалось создать колоду. Попробуй ещё раз." };
@@ -71,7 +71,7 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
 
   const { data: deck } = await supabase
     .from("decks")
-    .select("id")
+    .select("id, language")
     .eq("id", deckId)
     .eq("owner_id", profile.id)
     .maybeSingle();
@@ -85,6 +85,7 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
       front: c.front.trim(),
       back: c.back.trim(),
       notes: c.notes?.trim() || null,
+      language: deck.language,
     }));
   if (rows.length === 0) return { ok: false, error: "Нет карточек для импорта." };
 

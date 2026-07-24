@@ -15,7 +15,13 @@ const MODES = [
 
 type Mode = (typeof MODES)[number]["value"];
 
-export default function AddTextTabs({ targetLanguage }: { targetLanguage: string }) {
+export default function AddTextTabs({
+  targetLanguage,
+  canAddText,
+}: {
+  targetLanguage: string;
+  canAddText: boolean;
+}) {
   const [mode, setMode] = useState<Mode>("text");
 
   return (
@@ -40,7 +46,7 @@ export default function AddTextTabs({ targetLanguage }: { targetLanguage: string
       {mode === "text" && <NewTextForm />}
       {mode === "url" && <UrlImportForm />}
       {mode === "youtube" && <YoutubeImportForm />}
-      {mode === "photo" && <PhotoImportForm targetLanguage={targetLanguage} />}
+      {mode === "photo" && <PhotoImportForm targetLanguage={targetLanguage} canAddText={canAddText} />}
     </div>
   );
 }

@@ -43,8 +43,9 @@ export default async function DeckReviewPage({
   // полную порцию. Вычитаем уже показанные сегодня новые карточки.
   const { count: alreadyIntroducedToday } = await supabase
     .from("srs_state")
-    .select("flashcard_id, flashcards!inner(owner_id)", { count: "exact", head: true })
+    .select("flashcard_id, flashcards!inner(owner_id, language)", { count: "exact", head: true })
     .eq("flashcards.owner_id", profile.id)
+    .eq("flashcards.language", profile.target_language)
     .gte("first_reviewed_at", todayStart.toISOString());
   const remainingNewCards = Math.max(0, settings.new_cards_per_day - (alreadyIntroducedToday ?? 0));
 
@@ -54,10 +55,15 @@ export default async function DeckReviewPage({
   // карточками за дневной лимит remainingNewCards вместо того, чтобы просто
   // считаться повторением. Граница теперь по first_reviewed_at: "новая" —
   // только та, что вообще ни разу не была показана.
+  // Найдено при повторном аудите: у flashcards не было колонки language —
+  // очередь повторения "все колоды" (deckId === "all") подмешивала карточки
+  // всех изучаемых языков сразу. Теперь очередь всегда ограничена текущим
+  // target_language.
   let reviewQuery = supabase
     .from("srs_state")
     .select(SELECT)
     .eq("flashcards.owner_id", profile.id)
+    .eq("flashcards.language", profile.target_language)
     .not("first_reviewed_at", "is", null)
     .lte("due_at", now)
     .order("due_at", { ascending: true })
@@ -67,6 +73,7 @@ export default async function DeckReviewPage({
     .from("srs_state")
     .select(SELECT)
     .eq("flashcards.owner_id", profile.id)
+    .eq("flashcards.language", profile.target_language)
     .is("first_reviewed_at", null)
     .lte("due_at", now)
     .order("due_at", { ascending: true })

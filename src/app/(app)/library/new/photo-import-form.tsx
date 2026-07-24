@@ -8,7 +8,13 @@ import { validateImageFile } from "@/lib/file-validation";
 import { log } from "@/lib/log";
 import PaywallNotice from "./paywall-notice";
 
-export default function PhotoImportForm({ targetLanguage }: { targetLanguage: string }) {
+export default function PhotoImportForm({
+  targetLanguage,
+  canAddText,
+}: {
+  targetLanguage: string;
+  canAddText: boolean;
+}) {
   const [state, formAction, pending] = useActionState<CreateTextState, FormData>(
     createText,
     {},
@@ -66,7 +72,11 @@ export default function PhotoImportForm({ targetLanguage }: { targetLanguage: st
     }
   }
 
-  if (state.paywall) {
+  // Найдено при повторном аудите: лимит текстов раньше проверялся только на
+  // сервере при сабмите — уже ПОСЛЕ того, как пользователь ждал долгое
+  // клиентское OCR-распознавание и вручную правил результат. Проверяем
+  // заранее, до того как разрешить сфотографировать/выбрать файл вообще.
+  if (!canAddText && !text) {
     return <PaywallNotice />;
   }
 
@@ -118,6 +128,17 @@ export default function PhotoImportForm({ targetLanguage }: { targetLanguage: st
         Распознавание не идеально — проверь текст перед сохранением.
       </p>
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.paywall && (
+        // Не теряем распознанный и отредактированный текст при отказе —
+        // раньше здесь весь экран подменялся на PaywallNotice.
+        <p className="text-sm text-black/60 dark:text-white/60">
+          Лимит бесплатного тарифа по текстам исчерпан.{" "}
+          <a href="/paywall?reason=texts" className="text-caramel underline">
+            Смотреть Premium
+          </a>
+          . Текст ниже сохранён — можно оформить Premium и сохранить его после.
+        </p>
+      )}
       <div className="flex gap-3">
         <button
           type="button"

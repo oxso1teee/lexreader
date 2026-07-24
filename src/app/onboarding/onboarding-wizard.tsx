@@ -35,22 +35,28 @@ function LanguagePicker({
         onChange={(e) => setQuery(e.target.value)}
         className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
       />
-      <div className="grid max-h-72 grid-cols-2 gap-2 overflow-y-auto">
-        {filtered.map((l) => (
-          <button
-            key={l.code}
-            type="button"
-            onClick={() => onChange(l.code)}
-            className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
-              value === l.code
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
-            }`}
-          >
-            {l.name}
-          </button>
-        ))}
-      </div>
+      {filtered.length === 0 ? (
+        <p className="py-4 text-center text-sm text-black/50 dark:text-white/50">
+          Ничего не найдено — попробуй другой запрос.
+        </p>
+      ) : (
+        <div className="grid max-h-72 grid-cols-2 gap-2 overflow-y-auto">
+          {filtered.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              onClick={() => onChange(l.code)}
+              className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
+                value === l.code
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+              }`}
+            >
+              {l.name}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -106,7 +112,19 @@ export default function OnboardingWizard() {
       {step === 1 && (
         <div className="flex flex-1 flex-col gap-4">
           <h2 className="text-xl font-semibold">Какой язык учишь?</h2>
-          <LanguagePicker value={targetLanguage} onChange={setTargetLanguage} />
+          <LanguagePicker
+            value={targetLanguage}
+            onChange={(code) => {
+              setTargetLanguage(code);
+              // Найдено при повторном аудите: Step 2 (родной язык) уже
+              // исключает targetLanguage из списка, но если пользователь
+              // вернётся на Step 1 и сменит целевой язык на тот, что уже
+              // выбран как родной, коллизия обнаруживалась только на
+              // финальном сабмите (Step 5) без автоперехода назад. Сбрасываем
+              // родной язык сразу же, чтобы коллизия была невозможна.
+              if (code === nativeLanguage) setNativeLanguage("");
+            }}
+          />
         </div>
       )}
 

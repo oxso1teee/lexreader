@@ -24,7 +24,7 @@ export default async function DeckPage({
 
   const { data: cards } = await supabase
     .from("flashcards")
-    .select("id, front, back")
+    .select("id, front, back, notes")
     .eq("deck_id", deckId)
     .order("created_at", { ascending: false });
 
@@ -53,7 +53,14 @@ export default async function DeckPage({
       ) : (
         <div className="flex flex-col gap-2">
           {cards.map((c) => (
-            <CardRow key={c.id} deckId={deckId} id={c.id} front={c.front} back={c.back} />
+            <CardRow
+              key={c.id}
+              deckId={deckId}
+              id={c.id}
+              front={c.front}
+              back={c.back}
+              notes={c.notes}
+            />
           ))}
         </div>
       )}

@@ -29,7 +29,7 @@ export async function addFlashcard(
   // же класса проверки между двумя похожими действиями).
   const { data: deck } = await supabase
     .from("decks")
-    .select("id")
+    .select("id, language")
     .eq("id", deckId)
     .eq("owner_id", profile.id)
     .maybeSingle();
@@ -41,7 +41,14 @@ export async function addFlashcard(
 
   const { data: card, error } = await supabase
     .from("flashcards")
-    .insert({ deck_id: deckId, owner_id: profile.id, front, back, notes: notes || null })
+    .insert({
+      deck_id: deckId,
+      owner_id: profile.id,
+      front,
+      back,
+      notes: notes || null,
+      language: deck.language,
+    })
     .select("id")
     .single();
   if (error || !card) return { error: "Не удалось добавить карточку. Попробуй ещё раз." };
@@ -65,4 +72,33 @@ export async function deleteFlashcard(deckId: string, cardId: string) {
   const { error } = await supabase.from("flashcards").delete().eq("id", cardId);
   if (error) throw new Error("Не удалось удалить карточку.");
   revalidatePath(`/brain/${deckId}`);
+}
+
+export interface UpdateCardState {
+  error?: string;
+}
+
+export async function updateFlashcard(
+  deckId: string,
+  cardId: string,
+  _prevState: UpdateCardState,
+  formData: FormData,
+): Promise<UpdateCardState> {
+  const front = String(formData.get("front") ?? "").trim();
+  const back = String(formData.get("back") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+  if (!front || !back) return { error: "Заполни обе стороны карточки." };
+
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("flashcards")
+    .update({ front, back, notes: notes || null })
+    .eq("id", cardId)
+    .eq("owner_id", profile.id);
+  if (error) return { error: "Не удалось сохранить карточку. Попробуй ещё раз." };
+
+  revalidatePath(`/brain/${deckId}`);
+  return {};
 }
