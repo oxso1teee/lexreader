@@ -8,8 +8,9 @@ import AddTextTabs from "./add-text-tabs";
 // внешних запросов по 10 сек каждый — без явного maxDuration был риск
 // упереться в лимит выполнения функции на Vercel раньше, чем сработает наш
 // собственный AbortSignal.timeout, и получить generic 504 вместо понятной
-// ошибки.
-export const maxDuration = 30;
+// ошибки. Поднято до 45: запрос страницы видео YouTube через ScraperAPI
+// (см. youtube-actions.ts) сам по себе может занимать до 20 сек.
+export const maxDuration = 45;
 
 export default async function NewTextPage() {
   const profile = await requireProfile();

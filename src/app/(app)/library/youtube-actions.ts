@@ -12,6 +12,31 @@ import { log } from "@/lib/log";
 // неофициальный способ, может сломаться при изменениях вёрстки YouTube,
 // работает только для видео с открытыми субтитрами.
 
+// Найдено при повторном аудите: YouTube отдаёт страницу просмотра БЕЗ
+// captionTracks (хотя сама страница грузится нормально) запросам с IP
+// серверов облачных провайдеров (Vercel и т.п.) — это IP-репутационная
+// антибот-проверка, не лечится никакими заголовками/куки (проверено на
+// нескольких открытых библиотеках с той же техникой). Если задан
+// SCRAPERAPI_KEY, прогоняем именно этот запрос через ScraperAPI (ротация
+// не-датацентровых IP) — без ключа тихо откатываемся на прямой fetch, как
+// было раньше, просто с тем же шансом наткнуться на блокировку.
+async function fetchWatchPage(targetUrl: string): Promise<Response> {
+  const apiKey = process.env.SCRAPERAPI_KEY;
+  if (apiKey) {
+    const proxied = `https://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}`;
+    return fetch(proxied, { signal: AbortSignal.timeout(20_000) });
+  }
+  return fetch(targetUrl, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9",
+      Cookie: "CONSENT=YES+cb",
+    },
+    signal: AbortSignal.timeout(10_000),
+  });
+}
+
 function extractVideoId(rawUrl: string): string | null {
   let url: URL;
   try {
@@ -117,20 +142,7 @@ export async function createTextFromYoutube(
 
   let watchHtml: string;
   try {
-    const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9",
-        // Найдено при повторном аудите: без этого куки YouTube отдаёт вместо
-        // страницы видео интерстишл "cookie consent" запросам с IP серверов
-        // облачных провайдеров (Vercel и т.п.) — captionTracks в HTML
-        // отсутствует вообще, импорт всегда падал с "нет открытых субтитров"
-        // даже для видео, у которых они точно есть.
-        Cookie: "CONSENT=YES+cb",
-      },
-      signal: AbortSignal.timeout(10_000),
-    });
+    const res = await fetchWatchPage(`https://www.youtube.com/watch?v=${videoId}`);
     if (!res.ok) throw new Error(`видео ответило ${res.status}`);
     watchHtml = await res.text();
   } catch {

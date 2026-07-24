@@ -112,26 +112,49 @@ export async function createText(
 // разбивают одну статью/главу на несколько страниц ("следующая глава" внизу)
 // — раньше импортировался только текст той страницы, на которую вставили
 // ссылку. rel="next" — стандартный, явный сигнал сайта "вот продолжение
-// этого же материала" (в отличие от угадывания по тексту ссылки, где
-// "следующая" может вести на СОВСЕМ другую статью) — на нём и строим обход.
+// этого же материала", проверяем его первым (низкий риск ложного срабатывания).
+const NEXT_LINK_TEXT_PATTERN =
+  /^(next( chapter| page)?|»|→|>>|continue reading|следующ(ая|ая глава|ая страница))$/i;
+
 function findNextPageUrl(document: Document, baseUrl: URL): URL | null {
-  const href =
+  const relHref =
     document.querySelector('link[rel="next"]')?.getAttribute("href") ??
     document.querySelector('a[rel="next"]')?.getAttribute("href");
-  if (!href) return null;
-  try {
-    return new URL(href, baseUrl);
-  } catch {
-    return null;
+  if (relHref) {
+    try {
+      return new URL(relHref, baseUrl);
+    } catch {
+      /* falls through to text-based поиск ниже */
+    }
   }
+
+  // Многие книжные/фанфик-сайты вообще не проставляют rel="next" — обычная
+  // ссылка "Next Chapter"/"Следующая глава" без этого атрибута. Это менее
+  // надёжный сигнал (теоретически может увести на другую статью), но без
+  // него импорт таких сайтов всегда останавливался бы на первой странице.
+  for (const a of document.querySelectorAll("a[href]")) {
+    const text = a.textContent?.trim().toLowerCase() ?? "";
+    if (NEXT_LINK_TEXT_PATTERN.test(text)) {
+      const href = a.getAttribute("href");
+      if (!href) continue;
+      try {
+        return new URL(href, baseUrl);
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  return null;
 }
 
 const MAX_PAGINATED_PAGES = 50;
 const MAX_ARTICLE_BODY_LENGTH = 200_000;
-// Оставляем запас под 30-секундный maxDuration страницы (library/new/page.tsx):
+// Оставляем запас под 45-секундный maxDuration страницы (library/new/page.tsx,
+// поднят вместе с этим фиксом ради ScraperAPI-запроса в youtube-actions.ts):
 // на последнюю обработанную страницу уже потрачено время, следующий фетч
-// (до 10 сек) не должен вывалиться за лимit вместе с записью в БД и редиректом.
-const PAGINATION_TIME_BUDGET_MS = 20_000;
+// (до 10 сек) не должен вывалиться за лимит вместе с записью в БД и редиректом.
+const PAGINATION_TIME_BUDGET_MS = 30_000;
 
 export async function createTextFromUrl(
   _prevState: CreateTextState,
