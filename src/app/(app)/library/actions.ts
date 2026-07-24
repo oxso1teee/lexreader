@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { JSDOM } from "jsdom";
+import { parseHTML } from "linkedom";
 import { Readability } from "@mozilla/readability";
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -150,8 +150,14 @@ export async function createTextFromUrl(
     return { error: "Не удалось загрузить страницу. Проверь ссылку и попробуй ещё раз." };
   }
 
-  const dom = new JSDOM(html, { url: url.toString() });
-  const article = new Readability(dom.window.document).parse();
+  // Найдено при повторном аудите: jsdom тянет транзитивные ESM-only пакеты
+  // (html-encoding-sniffer -> @exodus/bytes, cssstyle -> @asamuzakjp/css-color
+  // -> @csstools/css-calc), которые падают с ERR_REQUIRE_ESM в проде — Next.js
+  // грузит jsdom как "external" через нативный require(). linkedom — лёгкая
+  // DOM-реализация без CSS-движка и без этой цепочки зависимостей, достаточная
+  // для Readability (нам нужен только article.textContent, без CSS/картинок).
+  const { document } = parseHTML(html);
+  const article = new Readability(document as unknown as Document).parse();
   const body = article?.textContent?.trim();
   if (!article || !body) {
     log.import({ kind: "url", outcome: "error", reason: "extraction_failed" });
