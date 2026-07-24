@@ -108,6 +108,31 @@ export async function createText(
   redirect(`/read/${result.id}`);
 }
 
+// Найдено при повторном аудите: некоторые сайты (особенно книги/фанфики)
+// разбивают одну статью/главу на несколько страниц ("следующая глава" внизу)
+// — раньше импортировался только текст той страницы, на которую вставили
+// ссылку. rel="next" — стандартный, явный сигнал сайта "вот продолжение
+// этого же материала" (в отличие от угадывания по тексту ссылки, где
+// "следующая" может вести на СОВСЕМ другую статью) — на нём и строим обход.
+function findNextPageUrl(document: Document, baseUrl: URL): URL | null {
+  const href =
+    document.querySelector('link[rel="next"]')?.getAttribute("href") ??
+    document.querySelector('a[rel="next"]')?.getAttribute("href");
+  if (!href) return null;
+  try {
+    return new URL(href, baseUrl);
+  } catch {
+    return null;
+  }
+}
+
+const MAX_PAGINATED_PAGES = 50;
+const MAX_ARTICLE_BODY_LENGTH = 200_000;
+// Оставляем запас под 30-секундный maxDuration страницы (library/new/page.tsx):
+// на последнюю обработанную страницу уже потрачено время, следующий фетч
+// (до 10 сек) не должен вывалиться за лимit вместе с записью в БД и редиректом.
+const PAGINATION_TIME_BUDGET_MS = 20_000;
+
 export async function createTextFromUrl(
   _prevState: CreateTextState,
   formData: FormData,
@@ -137,36 +162,65 @@ export async function createTextFromUrl(
     return { paywall: true };
   }
 
-  let html: string;
-  try {
-    const res = await fetchPublicUrl(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; LexReaderBot/1.0)" },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) throw new Error(`страница ответила ${res.status}`);
-    html = await res.text();
-  } catch {
-    log.import({ kind: "url", outcome: "error", reason: "fetch_failed" });
-    return { error: "Не удалось загрузить страницу. Проверь ссылку и попробуй ещё раз." };
+  const startedAt = Date.now();
+  const visited = new Set<string>();
+  const bodyParts: string[] = [];
+  let title: string | null = null;
+  let currentUrl: URL | null = url;
+  let pageCount = 0;
+
+  while (currentUrl && pageCount < MAX_PAGINATED_PAGES && !visited.has(currentUrl.toString())) {
+    visited.add(currentUrl.toString());
+
+    let html: string;
+    try {
+      const res = await fetchPublicUrl(currentUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; LexReaderBot/1.0)" },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) throw new Error(`страница ответила ${res.status}`);
+      html = await res.text();
+    } catch {
+      if (pageCount === 0) {
+        log.import({ kind: "url", outcome: "error", reason: "fetch_failed" });
+        return { error: "Не удалось загрузить страницу. Проверь ссылку и попробуй ещё раз." };
+      }
+      break; // уже что-то собрали — отдаём собранное, а не всё роняем
+    }
+
+    // Найдено при повторном аудите: jsdom тянет транзитивные ESM-only пакеты
+    // (html-encoding-sniffer -> @exodus/bytes, cssstyle -> @asamuzakjp/css-color
+    // -> @csstools/css-calc), которые падают с ERR_REQUIRE_ESM в проде — Next.js
+    // грузит jsdom как "external" через нативный require(). linkedom — лёгкая
+    // DOM-реализация без CSS-движка и без этой цепочки зависимостей, достаточная
+    // для Readability (нам нужен только article.textContent, без CSS/картинок).
+    const { document } = parseHTML(html);
+    const article = new Readability(document as unknown as Document).parse();
+    const pageBody = article?.textContent?.trim();
+    if (!article || !pageBody) {
+      if (pageCount === 0) {
+        log.import({ kind: "url", outcome: "error", reason: "extraction_failed" });
+        return { error: "Не удалось извлечь текст статьи со страницы." };
+      }
+      break;
+    }
+
+    if (!title) title = article.title?.trim() || currentUrl.hostname;
+    bodyParts.push(pageBody);
+    pageCount++;
+
+    const combinedLength = bodyParts.reduce((n, p) => n + p.length, 0);
+    if (combinedLength >= MAX_ARTICLE_BODY_LENGTH) break;
+    if (Date.now() - startedAt >= PAGINATION_TIME_BUDGET_MS) break;
+
+    currentUrl = findNextPageUrl(document, currentUrl);
   }
 
-  // Найдено при повторном аудите: jsdom тянет транзитивные ESM-only пакеты
-  // (html-encoding-sniffer -> @exodus/bytes, cssstyle -> @asamuzakjp/css-color
-  // -> @csstools/css-calc), которые падают с ERR_REQUIRE_ESM в проде — Next.js
-  // грузит jsdom как "external" через нативный require(). linkedom — лёгкая
-  // DOM-реализация без CSS-движка и без этой цепочки зависимостей, достаточная
-  // для Readability (нам нужен только article.textContent, без CSS/картинок).
-  const { document } = parseHTML(html);
-  const article = new Readability(document as unknown as Document).parse();
-  const body = article?.textContent?.trim();
-  if (!article || !body) {
-    log.import({ kind: "url", outcome: "error", reason: "extraction_failed" });
-    return { error: "Не удалось извлечь текст статьи со страницы." };
-  }
+  const body = bodyParts.join("\n\n").trim().slice(0, MAX_ARTICLE_BODY_LENGTH);
 
   const result = await insertText(supabase, {
     ownerId: profile.id,
-    title: article.title?.trim() || url.hostname,
+    title: title ?? url.hostname,
     body,
     sourceType: "article_url",
     sourceUrl: url.toString(),
