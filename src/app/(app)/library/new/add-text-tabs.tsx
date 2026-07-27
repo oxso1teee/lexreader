@@ -45,7 +45,7 @@ export default function AddTextTabs({
 
       {mode === "text" && <NewTextForm />}
       {mode === "url" && <UrlImportForm />}
-      {mode === "youtube" && <YoutubeImportForm />}
+      {mode === "youtube" && <YoutubeImportForm targetLanguage={targetLanguage} />}
       {mode === "photo" && <PhotoImportForm targetLanguage={targetLanguage} canAddText={canAddText} />}
     </div>
   );

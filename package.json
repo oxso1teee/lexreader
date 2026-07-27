@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:extension": "node --test browser-extension/youtube-transcript.test.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {
