@@ -43,7 +43,10 @@ interface Popup {
   saved?: boolean;
 }
 
-const WORDS_PER_PAGE = 140;
+// A page should feel like a reading screen, not a short excerpt floating in an
+// otherwise empty viewport. This keeps enough context on desktop while still
+// remaining comfortable to scan on smaller screens.
+const WORDS_PER_PAGE = 260;
 
 function paginate(sentences: string[]): [number, number][] {
   const pages: [number, number][] = [];
@@ -337,73 +340,99 @@ export default function Reader({
   }
 
   const currentPageText = sentences.slice(pageStart, pageEnd).join(" ");
+  const readingProgress = Math.round(((pageIndex + 1) / pages.length) * 100);
 
   return (
-    <div className="relative flex flex-1 flex-col">
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-black/10 bg-background/95 px-4 py-3 backdrop-blur dark:border-white/10">
-        <Link href="/library" className="shrink-0 text-sm font-medium text-caramel">
-          ← Библиотека
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-medium">{title}</h1>
-          <p className="text-xs text-black/40 dark:text-white/40">{wordsLookedUp}w</p>
+    <div className="relative flex min-h-screen flex-1 flex-col bg-[#f7f4ee] dark:bg-background">
+      <header className="sticky top-0 z-10 border-b border-black/[0.07] bg-[#f7f4ee]/95 backdrop-blur-xl dark:border-white/10 dark:bg-background/95">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
+          <Link
+            href="/library"
+            className="flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-medium text-caramel transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+          >
+            <span aria-hidden="true">←</span>
+            <span className="hidden sm:inline">Библиотека</span>
+          </Link>
+          <div className="min-w-0 flex-1 text-center">
+            <h1 className="truncate text-base font-semibold tracking-[-0.01em] sm:text-lg">{title}</h1>
+            <p className="mt-0.5 text-xs text-black/40 dark:text-white/40">
+              Страница {pageIndex + 1} из {pages.length} · просмотрено слов: {wordsLookedUp}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleSpeak(currentPageText)}
+              aria-label="Озвучить страницу"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-caramel shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5 6.5 9H3v6h3.5L11 19V5Z" />
+                <path strokeLinecap="round" d="M15 9.5a4 4 0 0 1 0 5M18 7a7 7 0 0 1 0 10" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={handleFinish}
+              disabled={finishing}
+              aria-label="Завершить чтение"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-black/50 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-500 disabled:opacity-50 dark:border-white/15 dark:bg-white/10 dark:text-white/60"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
+                <path strokeLinecap="round" d="m7 7 10 10M17 7 7 17" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => handleSpeak(currentPageText)}
-          aria-label="Озвучить страницу"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white"
-        >
-          🎤
-        </button>
-        <button
-          type="button"
-          onClick={handleFinish}
-          disabled={finishing}
-          aria-label="Завершить чтение"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-red-400 text-red-500 disabled:opacity-50"
-        >
-          ✕
-        </button>
+        <div className="h-0.5 bg-black/[0.04] dark:bg-white/[0.05]">
+          <div
+            className="h-full bg-caramel transition-[width] duration-300"
+            style={{ width: `${readingProgress}%` }}
+          />
+        </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-2xl grid-cols-5 gap-2 px-5 pt-4 text-center text-sm">
-        <div>
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-5 sm:px-6 sm:py-7">
+      <section
+        aria-label="Статистика текста"
+        className="grid grid-cols-5 divide-x divide-black/[0.06] rounded-2xl border border-black/[0.06] bg-white/55 px-2 py-3 text-center text-sm shadow-[0_8px_30px_rgba(80,60,35,0.04)] dark:divide-white/10 dark:border-white/10 dark:bg-white/[0.04] sm:px-5"
+      >
+        <div className="px-1">
           <p className="font-bold">{stats.unique}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">ВСЕГО</p>
+          <p className="mt-0.5 text-[10px] uppercase tracking-wide text-black/40 dark:text-white/40 sm:text-xs">Всего</p>
         </div>
-        <div>
+        <div className="px-1">
           <p className="font-bold text-accent-orange">{stats.new}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">НОВЫЕ</p>
+          <p className="mt-0.5 text-[10px] uppercase tracking-wide text-black/40 dark:text-white/40 sm:text-xs">Новые</p>
         </div>
-        <div>
+        <div className="px-1">
           <p className="font-bold text-orange-400">{stats.learning}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">УЧУ</p>
+          <p className="mt-0.5 text-[10px] uppercase tracking-wide text-black/40 dark:text-white/40 sm:text-xs">Учу</p>
         </div>
-        <div>
+        <div className="px-1">
           <p className="font-bold text-orange-300">{stats.familiar}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">ЗНАКОМЫЕ</p>
+          <p className="mt-0.5 text-[10px] uppercase tracking-wide text-black/40 dark:text-white/40 sm:text-xs">Знакомые</p>
         </div>
-        <div>
+        <div className="px-1">
           <p className="font-bold text-accent-green">{stats.known}</p>
-          <p className="text-xs text-black/40 dark:text-white/40">ЗНАЮ</p>
+          <p className="mt-0.5 text-[10px] uppercase tracking-wide text-black/40 dark:text-white/40 sm:text-xs">Знаю</p>
         </div>
-      </div>
+      </section>
 
-      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center gap-3 px-5 pt-2 text-xs text-black/50 dark:text-white/50">
-        {WORD_LEVELS.map((l) => (
-          <span key={l.level} className="flex items-center gap-1">
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: l.color }}
-            />
-            {l.label}
-          </span>
-        ))}
-        <span className="ml-auto italic">Удерживай, чтобы выделить фразу</span>
-      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 pb-4 pt-3 text-[11px] text-black/45 dark:text-white/45 sm:text-xs">
+          {WORD_LEVELS.map((l) => (
+            <span key={l.level} className="flex items-center gap-1.5">
+              <span
+                className="h-2 w-2 rounded-full ring-2 ring-white/70 dark:ring-black/20"
+                style={{ backgroundColor: l.color }}
+              />
+              {l.label}
+            </span>
+          ))}
+          <span className="basis-full italic sm:ml-auto sm:basis-auto">Зажми слово и протяни, чтобы выделить фразу</span>
+        </div>
 
-      <article className="mx-auto w-full max-w-2xl flex-1 px-5 py-6 text-lg leading-8">
+      <article className="mx-auto w-full max-w-[820px] flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 text-[18px] leading-[1.9] tracking-[-0.006em] shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8 sm:text-[19px] sm:leading-[1.95]">
         {sentences.slice(pageStart, pageEnd).map((sentence, localIdx) => {
           const si = pageStart + localIdx;
           return (
@@ -439,6 +468,7 @@ export default function Reader({
           );
         })}
       </article>
+      </main>
 
       {boundaryHint && (
         <div className="pointer-events-none fixed inset-x-0 bottom-20 z-20 flex justify-center px-5">
@@ -453,23 +483,24 @@ export default function Reader({
           {finishError}
         </div>
       )}
-      <footer className="sticky bottom-0 flex items-center justify-between border-t border-black/10 bg-background/95 px-5 py-3 backdrop-blur dark:border-white/10">
+      <footer className="sticky bottom-0 z-10 border-t border-black/[0.07] bg-[#f7f4ee]/95 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-background/95">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
         <button
           type="button"
           disabled={pageIndex === 0}
           onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
-          className="text-sm font-medium text-caramel disabled:opacity-30"
+          className="flex min-h-11 min-w-24 items-center justify-center rounded-full px-4 text-sm font-medium text-caramel transition-colors hover:bg-black/[0.04] disabled:opacity-30 dark:hover:bg-white/[0.06]"
         >
           ← Назад
         </button>
-        <span className="text-sm text-black/50 dark:text-white/50">
-          {pageIndex + 1} / {pages.length}
+        <span className="rounded-full bg-black/[0.04] px-3 py-1.5 text-xs font-medium text-black/45 dark:bg-white/[0.07] dark:text-white/50">
+          {readingProgress}%
         </span>
         {pageIndex < pages.length - 1 ? (
           <button
             type="button"
             onClick={() => setPageIndex((i) => Math.min(pages.length - 1, i + 1))}
-            className="text-sm font-medium text-caramel"
+            className="flex min-h-11 min-w-24 items-center justify-center rounded-full bg-caramel px-4 text-sm font-medium text-white shadow-sm transition hover:bg-caramel-light"
           >
             Далее →
           </button>
@@ -483,6 +514,7 @@ export default function Reader({
             {finishing ? "…" : "Завершить ✓"}
           </button>
         )}
+        </div>
       </footer>
 
       {popup && (
