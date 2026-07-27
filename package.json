@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:import": "node --experimental-strip-types --test src/lib/import-cards.test.ts",
     "test:extension": "node --test browser-extension/youtube-transcript.test.mjs",
     "test:e2e": "playwright test"
   },

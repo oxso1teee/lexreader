@@ -7,6 +7,7 @@ import { FREE_FLASHCARD_LIMIT } from "@/lib/subscription";
 import { TESSERACT_LANG } from "@/lib/ocr-lang-map";
 import { validateImageFile } from "@/lib/file-validation";
 import { log } from "@/lib/log";
+import { parseImportCards } from "@/lib/import-cards";
 
 interface ParsedCard {
   front: string;
@@ -19,60 +20,12 @@ interface Deck {
   name: string;
 }
 
-// P0-АУДИТ (раздел 4): раньше просто .split(",") — перевод с запятой внутри
-// (частый случай для фраз/идиом, особенно в кавычках "hello, how are you")
-// сдвигал колонки. Минимальный парсер с поддержкой кавычек, без зависимости.
-function parseCsvLine(line: string): string[] {
-  const cells: string[] = [];
-  let cur = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"' && line[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else if (ch === '"') {
-        inQuotes = false;
-      } else {
-        cur += ch;
-      }
-    } else if (ch === '"') {
-      inQuotes = true;
-    } else if (ch === ",") {
-      cells.push(cur);
-      cur = "";
-    } else {
-      cur += ch;
-    }
-  }
-  cells.push(cur);
-  return cells;
-}
-
 async function parseFile(file: File): Promise<ParsedCard[]> {
-  const text = await file.text();
-
-  if (file.name.toLowerCase().endsWith(".json")) {
-    const data = JSON.parse(text);
-    if (!Array.isArray(data)) {
-      throw new Error("JSON должен быть массивом объектов {front, back, notes}");
-    }
-    return data.map((d) => ({
-      front: String(d.front ?? ""),
-      back: String(d.back ?? ""),
-      notes: d.notes ? String(d.notes) : undefined,
-    }));
+  if (file.size > 2_000_000) {
+    throw new Error("Файл слишком большой — максимум 2 МБ.");
   }
-
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  const rows = lines.map(parseCsvLine);
-  const startIdx = rows[0]?.[0]?.trim().toLowerCase() === "front" ? 1 : 0;
-  return rows.slice(startIdx).map((r) => ({
-    front: (r[0] ?? "").trim(),
-    back: (r[1] ?? "").trim(),
-    notes: (r[2] ?? "").trim() || undefined,
-  }));
+  const text = await file.text();
+  return parseImportCards(file.name, text);
 }
 
 function splitOcrLine(line: string): ParsedCard {
@@ -121,11 +74,13 @@ export default function ImportModal({
       }
       log.import({ kind: "csv_json", outcome: "success" });
       setCards(parsed);
-    } catch {
-      // P0-АУДИТ 3.14/3.21: не показываем сырую ошибку парсера (может быть
-      // английским текстом вроде SyntaxError) — только лог для отладки.
+    } catch (cause) {
       log.import({ kind: "csv_json", outcome: "error", reason: "parse_exception" });
-      setError("Не удалось прочитать файл — проверь, что это корректный CSV или JSON.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Не удалось прочитать файл — проверь формат и содержимое.",
+      );
     } finally {
       setBusy(false);
     }
@@ -295,10 +250,10 @@ export default function ImportModal({
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium">1. Выберите источник</p>
             <label className="cursor-pointer rounded-lg border border-black/20 px-4 py-3 text-center dark:border-white/25">
-              📁 Выбрать CSV или JSON файл
+              📁 Выбрать файл с карточками
               <input
                 type="file"
-                accept=".csv,.json"
+                accept=".csv,.tsv,.txt,.json"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -319,9 +274,23 @@ export default function ImportModal({
               />
             </label>
             <p className="text-center text-xs text-black/40 dark:text-white/40">
-              CSV/JSON: формат front,back,notes • Фото: OCR распознаёт строки, раздели слово и перевод
-              через « - » или запятую
+              CSV/TSV/TXT/JSON • Обязательны фраза и перевод • HTML-страницы не поддерживаются
             </p>
+            <details className="rounded-lg bg-black/5 px-3 py-2 text-xs dark:bg-white/5">
+              <summary className="cursor-pointer font-medium">Поддерживаемые форматы и примеры</summary>
+              <div className="mt-2 space-y-2 text-black/60 dark:text-white/60">
+                <p>
+                  CSV: <code>phrase,translation,notes</code>
+                </p>
+                <p>
+                  TSV/TXT: <code>Good morning.&#9;Доброе утро.</code>
+                </p>
+                <p>
+                  JSON: <code>{`[{"front":"Good morning.","back":"Доброе утро."}]`}</code>
+                </p>
+                <p>Также понимаются названия колонок front/back и разделитель «;».</p>
+              </div>
+            </details>
             {busy && (
               <p className="text-center text-sm text-black/50 dark:text-white/50">
                 {progress > 0 ? `Распознаём текст… ${progress}%` : "Обрабатываем…"}
