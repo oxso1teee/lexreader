@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { hasFreeTextRoom } from "../actions";
+import { hasFreeTextRoom, getCollections } from "../actions";
 import AddTextTabs from "./add-text-tabs";
 
 // P0-АУДИТ (раздел 4): импорт по URL/YouTube делает до двух последовательных
@@ -15,7 +15,10 @@ export const maxDuration = 45;
 export default async function NewTextPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
-  const canAddText = await hasFreeTextRoom(supabase, profile.id);
+  const [canAddText, collections] = await Promise.all([
+    hasFreeTextRoom(supabase, profile.id),
+    getCollections(supabase, profile.id, profile.target_language),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
@@ -25,7 +28,11 @@ export default async function NewTextPage() {
         </Link>
       </div>
       <h1 className="px-5 pt-2 text-xl font-semibold">Добавить текст</h1>
-      <AddTextTabs targetLanguage={profile.target_language} canAddText={canAddText} />
+      <AddTextTabs
+        targetLanguage={profile.target_language}
+        canAddText={canAddText}
+        collections={collections}
+      />
     </div>
   );
 }

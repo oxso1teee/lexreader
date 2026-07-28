@@ -4,6 +4,38 @@ import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
 import LineChart from "./line-chart";
+import HardestWords, { type HardestWord } from "./hardest-words";
+
+// Ниже скольки попыток слово не попадает в рейтинг "сложных" — одна
+// случайная "Не помню" в начале иначе даёт 0% точности и лезет в топ
+// раньше слов, которые реально трудны на длинной дистанции.
+const MIN_ATTEMPTS_FOR_ACCURACY = 3;
+const HARDEST_WORDS_LIMIT = 8;
+
+function computeHardestWords(
+  logs: { flashcard_id: string; grade: number; flashcards: unknown }[],
+): HardestWord[] {
+  const byCard = new Map<string, { front: string; back: string; total: number; success: number }>();
+  for (const row of logs) {
+    const card = row.flashcards as unknown as { front: string; back: string } | null;
+    if (!card) continue;
+    const existing = byCard.get(row.flashcard_id) ?? {
+      front: card.front,
+      back: card.back,
+      total: 0,
+      success: 0,
+    };
+    existing.total += 1;
+    if (row.grade >= 2) existing.success += 1;
+    byCard.set(row.flashcard_id, existing);
+  }
+
+  return [...byCard.entries()]
+    .filter(([, v]) => v.total >= MIN_ATTEMPTS_FOR_ACCURACY)
+    .map(([id, v]) => ({ id, front: v.front, back: v.back, accuracy: v.success / v.total, total: v.total }))
+    .sort((a, b) => a.accuracy - b.accuracy)
+    .slice(0, HARDEST_WORDS_LIMIT);
+}
 
 function isoDate(d: Date | string): string {
   return new Date(d).toISOString().slice(0, 10);
@@ -69,6 +101,7 @@ export default async function ProgressPage({
     reviewLogQuery,
     heatmapSessions,
     heatmapReviews,
+    accuracyLogQuery,
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -133,6 +166,13 @@ export default async function ProgressPage({
       .eq("flashcards.owner_id", profile.id)
       .eq("flashcards.language", profile.target_language)
       .gte("reviewed_at", heatmapCutoff.toISOString()),
+    // "Сложные слова" — точность слова накопительная за всё время, не
+    // зависит от вкладки периода (как и "Изучаются всего"/"Знаю всего" выше).
+    supabase
+      .from("review_log")
+      .select("flashcard_id, grade, flashcards!inner(front, back, owner_id, language)")
+      .eq("flashcards.owner_id", profile.id)
+      .eq("flashcards.language", profile.target_language),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -163,6 +203,8 @@ export default async function ProgressPage({
 
   const wordsChartPoints = buckets.map((b) => ({ label: dayLabel(b), value: wordsPerDay.get(b) ?? 0 }));
   const reviewsChartPoints = buckets.map((b) => ({ label: dayLabel(b), value: reviewsPerDay.get(b) ?? 0 }));
+
+  const hardestWords = computeHardestWords(accuracyLogQuery.data ?? []);
 
   const activityCounts: Record<string, number> = {};
   for (const s of heatmapSessions.data ?? []) {
@@ -209,6 +251,8 @@ export default async function ProgressPage({
 
       <LineChart title="Слов прочитано в день" points={wordsChartPoints} color="#a67c52" />
       <LineChart title="Карточек повторено в день" points={reviewsChartPoints} color="#2563eb" />
+
+      <HardestWords words={hardestWords} />
 
       <div className="overflow-x-auto rounded-2xl bg-card p-4 shadow-sm">
         <h2 className="mb-2 font-semibold">Активность</h2>

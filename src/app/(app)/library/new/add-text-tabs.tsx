@@ -5,6 +5,7 @@ import NewTextForm from "./new-text-form";
 import UrlImportForm from "./url-import-form";
 import YoutubeImportForm from "./youtube-import-form";
 import PhotoImportForm from "./photo-import-form";
+import type { CollectionOption } from "./collection-picker";
 
 const MODES = [
   { value: "text", label: "Текст" },
@@ -18,9 +19,11 @@ type Mode = (typeof MODES)[number]["value"];
 export default function AddTextTabs({
   targetLanguage,
   canAddText,
+  collections,
 }: {
   targetLanguage: string;
   canAddText: boolean;
+  collections: CollectionOption[];
 }) {
   const [mode, setMode] = useState<Mode>("text");
 
@@ -43,10 +46,18 @@ export default function AddTextTabs({
         ))}
       </div>
 
-      {mode === "text" && <NewTextForm />}
-      {mode === "url" && <UrlImportForm />}
-      {mode === "youtube" && <YoutubeImportForm targetLanguage={targetLanguage} />}
-      {mode === "photo" && <PhotoImportForm targetLanguage={targetLanguage} canAddText={canAddText} />}
+      {mode === "text" && <NewTextForm collections={collections} />}
+      {mode === "url" && <UrlImportForm collections={collections} />}
+      {mode === "youtube" && (
+        <YoutubeImportForm targetLanguage={targetLanguage} collections={collections} />
+      )}
+      {mode === "photo" && (
+        <PhotoImportForm
+          targetLanguage={targetLanguage}
+          canAddText={canAddText}
+          collections={collections}
+        />
+      )}
     </div>
   );
 }

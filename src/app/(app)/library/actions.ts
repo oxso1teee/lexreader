@@ -47,6 +47,8 @@ export async function insertText(
     sourceUrl?: string;
     language: string;
     youtubeVideoId?: string;
+    collectionId?: string | null;
+    collectionOrder?: number | null;
   },
 ): Promise<{ id: string } | { error: string }> {
   const wordCount = params.body.split(/\s+/).filter(Boolean).length;
@@ -62,6 +64,8 @@ export async function insertText(
       language: params.language,
       word_count: wordCount,
       youtube_video_id: params.youtubeVideoId ?? null,
+      collection_id: params.collectionId ?? null,
+      collection_order: params.collectionOrder ?? null,
     })
     .select("id")
     .single();
@@ -70,6 +74,83 @@ export async function insertText(
     return { error: "Не удалось сохранить текст. Попробуй ещё раз." };
   }
   return { id: data.id };
+}
+
+// Идея из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.1): вместо
+// хрупкого автосклеивания всех страниц сайта пользователь сам группирует
+// главы книги/серии под одной коллекцией — работает для ЛЮБОГО источника
+// импорта (текст/ссылка/YouTube/фото), не упирается в антибот/JS-сайты.
+export async function getCollections(
+  supabase: SupabaseServerClient,
+  ownerId: string,
+  language: string,
+): Promise<{ id: string; title: string }[]> {
+  const { data } = await supabase
+    .from("collections")
+    .select("id, title")
+    .eq("owner_id", ownerId)
+    .eq("language", language)
+    .order("created_at", { ascending: false });
+  return data ?? [];
+}
+
+export async function resolveCollectionId(
+  supabase: SupabaseServerClient,
+  ownerId: string,
+  language: string,
+  formData: FormData,
+): Promise<{ id: string | null } | { error: string }> {
+  const newTitle = String(formData.get("new_collection_title") ?? "").trim();
+  if (newTitle) {
+    const { data, error } = await supabase
+      .from("collections")
+      .insert({ owner_id: ownerId, title: newTitle, language })
+      .select("id")
+      .single();
+    if (error || !data) return { error: "Не удалось создать коллекцию." };
+    return { id: data.id };
+  }
+
+  const existingId = String(formData.get("collection_id") ?? "").trim();
+  if (existingId) {
+    const { data } = await supabase
+      .from("collections")
+      .select("id")
+      .eq("id", existingId)
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+    if (!data) return { error: "Коллекция не найдена." };
+    return { id: data.id };
+  }
+
+  return { id: null };
+}
+
+export async function nextCollectionOrder(
+  supabase: SupabaseServerClient,
+  collectionId: string,
+): Promise<number> {
+  const { count } = await supabase
+    .from("texts")
+    .select("id", { count: "exact", head: true })
+    .eq("collection_id", collectionId);
+  return (count ?? 0) + 1;
+}
+
+// Общий шаг для всех форм импорта (текст/ссылка/YouTube/фото) — читает
+// collection_id/new_collection_title из той же FormData, что и остальные
+// поля формы, и возвращает готовые id+order для insertText().
+export async function resolveCollectionAssignment(
+  supabase: SupabaseServerClient,
+  ownerId: string,
+  language: string,
+  formData: FormData,
+): Promise<{ collectionId: string | null; collectionOrder: number | null } | { error: string }> {
+  const resolved = await resolveCollectionId(supabase, ownerId, language, formData);
+  if ("error" in resolved) return resolved;
+  if (!resolved.id) return { collectionId: null, collectionOrder: null };
+  const order = await nextCollectionOrder(supabase, resolved.id);
+  return { collectionId: resolved.id, collectionOrder: order };
 }
 
 export async function createText(
@@ -96,12 +177,17 @@ export async function createText(
     return { paywall: true };
   }
 
+  const collection = await resolveCollectionAssignment(supabase, profile.id, profile.target_language, formData);
+  if ("error" in collection) return { error: collection.error };
+
   const result = await insertText(supabase, {
     ownerId: profile.id,
     title,
     body,
     sourceType: "manual",
     language: profile.target_language,
+    collectionId: collection.collectionId,
+    collectionOrder: collection.collectionOrder,
   });
   if ("error" in result) return { error: result.error };
 
@@ -241,6 +327,12 @@ export async function createTextFromUrl(
 
   const body = bodyParts.join("\n\n").trim().slice(0, MAX_ARTICLE_BODY_LENGTH);
 
+  const collection = await resolveCollectionAssignment(supabase, profile.id, profile.target_language, formData);
+  if ("error" in collection) {
+    log.import({ kind: "url", outcome: "error", reason: "insert_failed" });
+    return { error: collection.error };
+  }
+
   const result = await insertText(supabase, {
     ownerId: profile.id,
     title: title ?? url.hostname,
@@ -248,6 +340,8 @@ export async function createTextFromUrl(
     sourceType: "article_url",
     sourceUrl: url.toString(),
     language: profile.target_language,
+    collectionId: collection.collectionId,
+    collectionOrder: collection.collectionOrder,
   });
   if ("error" in result) {
     log.import({ kind: "url", outcome: "error", reason: "insert_failed" });

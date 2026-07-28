@@ -3,8 +3,9 @@
 import { useActionState } from "react";
 import { createTextFromUrl, type CreateTextState } from "../actions";
 import PaywallNotice from "./paywall-notice";
+import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
-export default function UrlImportForm() {
+export default function UrlImportForm({ collections }: { collections: CollectionOption[] }) {
   const [state, formAction, pending] = useActionState<CreateTextState, FormData>(
     createTextFromUrl,
     {},
@@ -26,6 +27,7 @@ export default function UrlImportForm() {
       <p className="text-sm text-black/50 dark:text-white/50">
         Загрузим страницу и вытащим только текст статьи, без рекламы и меню.
       </p>
+      <CollectionPicker collections={collections} />
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
       <button
         type="submit"

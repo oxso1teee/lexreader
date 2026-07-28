@@ -7,13 +7,16 @@ import { TESSERACT_LANG } from "@/lib/ocr-lang-map";
 import { validateImageFile } from "@/lib/file-validation";
 import { log } from "@/lib/log";
 import PaywallNotice from "./paywall-notice";
+import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
 export default function PhotoImportForm({
   targetLanguage,
   canAddText,
+  collections,
 }: {
   targetLanguage: string;
   canAddText: boolean;
+  collections: CollectionOption[];
 }) {
   const [state, formAction, pending] = useActionState<CreateTextState, FormData>(
     createText,
@@ -127,6 +130,7 @@ export default function PhotoImportForm({
       <p className="text-xs text-black/40 dark:text-white/40">
         Распознавание не идеально — проверь текст перед сохранением.
       </p>
+      <CollectionPicker collections={collections} />
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
       {state.paywall && (
         // Не теряем распознанный и отредактированный текст при отказе —

@@ -9,6 +9,7 @@ import {
   type YoutubeImportState,
 } from "../youtube-actions";
 import PaywallNotice from "./paywall-notice";
+import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
 type BridgeStatus = "checking" | "ready" | "missing";
 
@@ -70,7 +71,13 @@ function requestTranscriptFromBridge(
   });
 }
 
-export default function YoutubeImportForm({ targetLanguage }: { targetLanguage: string }) {
+export default function YoutubeImportForm({
+  targetLanguage,
+  collections,
+}: {
+  targetLanguage: string;
+  collections: CollectionOption[];
+}) {
   const router = useRouter();
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>("checking");
 
@@ -110,7 +117,7 @@ export default function YoutubeImportForm({ targetLanguage }: { targetLanguage: 
       const url = String(formData.get("url") ?? "").trim();
       try {
         const transcript = await requestTranscriptFromBridge(url, targetLanguage);
-        const result = await saveBrowserYoutubeTranscript(transcript);
+        const result = await saveBrowserYoutubeTranscript(transcript, formData);
         if (result.redirectTo) {
           router.push(result.redirectTo);
         }
@@ -171,6 +178,7 @@ export default function YoutubeImportForm({ targetLanguage }: { targetLanguage: 
           </>
         )}
       </p>
+      <CollectionPicker collections={collections} />
       {state.error && (
         <p className="text-sm text-red-600 dark:text-red-400" aria-live="polite">
           {state.error}

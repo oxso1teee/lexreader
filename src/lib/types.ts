@@ -23,6 +23,16 @@ export interface TextRow {
   level_tag: string | null;
   word_count: number | null;
   youtube_video_id: string | null;
+  collection_id: string | null;
+  collection_order: number | null;
+  created_at: string;
+}
+
+export interface Collection {
+  id: string;
+  owner_id: string;
+  title: string;
+  language: string;
   created_at: string;
 }
 

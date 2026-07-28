@@ -3,8 +3,9 @@
 import { useActionState } from "react";
 import { createText, type CreateTextState } from "../actions";
 import PaywallNotice from "./paywall-notice";
+import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
-export default function NewTextForm() {
+export default function NewTextForm({ collections }: { collections: CollectionOption[] }) {
   const [state, formAction, pending] = useActionState<CreateTextState, FormData>(
     createText,
     {},
@@ -30,6 +31,7 @@ export default function NewTextForm() {
         placeholder="Вставь текст на изучаемом языке…"
         className="w-full flex-1 resize-none rounded-lg border border-black/10 px-4 py-3 text-base leading-7 outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
       />
+      <CollectionPicker collections={collections} />
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
       <button
         type="submit"

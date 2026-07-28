@@ -3,12 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 import TextCard from "./text-card";
+import CollectionCard from "./collection-card";
 
 export default async function LibraryPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [{ data: texts }, { data: progressRows }] = await Promise.all([
+  const [{ data: texts }, { data: progressRows }, { data: collectionRows }] = await Promise.all([
     supabase
       .from("texts")
       .select("*")
@@ -19,6 +20,11 @@ export default async function LibraryPage() {
       .from("text_progress")
       .select("text_id, percent_read, last_read_at")
       .eq("owner_id", profile.id),
+    supabase
+      .from("collections")
+      .select("id, title")
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language),
   ]);
 
   const progressByTextId = new Map(
@@ -29,18 +35,70 @@ export default async function LibraryPage() {
   const own = rows.filter((t) => t.owner_id !== null);
   const system = rows.filter((t) => t.owner_id === null);
 
+  // Идея из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.1): тексты
+  // одной коллекции показываем одной карточкой (агрегированный прогресс),
+  // а не раскиданными по всему списку — раскрывается на отдельной странице.
+  const ownWithoutCollection = own.filter((t) => !t.collection_id);
+  const collectionsWithTexts = (collectionRows ?? [])
+    .map((c) => {
+      const textsInCollection = own.filter((t) => t.collection_id === c.id);
+      if (textsInCollection.length === 0) return null;
+      const percents = textsInCollection.map((t) => progressByTextId.get(t.id)?.percentRead ?? 0);
+      const avgPercentRead = Math.round(percents.reduce((s, p) => s + p, 0) / percents.length);
+      const lastReadAt = textsInCollection
+        .map((t) => progressByTextId.get(t.id)?.lastReadAt)
+        .filter((d): d is string => Boolean(d))
+        .sort()
+        .at(-1);
+      return { id: c.id, title: c.title, textCount: textsInCollection.length, avgPercentRead, lastReadAt: lastReadAt ?? null };
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null);
+
   return (
     <div className="relative flex flex-1 flex-col">
       <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6">
         <h1 className="mb-4 text-xl font-semibold">Библиотека</h1>
 
-        <Section
-          title="Мои тексты"
-          texts={own}
-          empty="Пока пусто — добавь свой первый текст."
-          canDelete
-          progressByTextId={progressByTextId}
-        />
+        <section className="mb-6">
+          <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
+            Мои тексты
+          </h2>
+          {collectionsWithTexts.length === 0 && ownWithoutCollection.length === 0 ? (
+            <p className="text-sm text-black/50 dark:text-white/50">
+              Пока пусто — добавь свой первый текст.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {collectionsWithTexts.map((c) => (
+                <CollectionCard
+                  key={c.id}
+                  id={c.id}
+                  title={c.title}
+                  textCount={c.textCount}
+                  avgPercentRead={c.avgPercentRead}
+                  lastReadAt={c.lastReadAt}
+                />
+              ))}
+              {ownWithoutCollection.map((t) => {
+                const progress = progressByTextId.get(t.id);
+                return (
+                  <TextCard
+                    key={t.id}
+                    id={t.id}
+                    title={t.title}
+                    wordCount={t.word_count}
+                    levelTag={t.level_tag}
+                    canDelete
+                    percentRead={progress?.percentRead ?? 0}
+                    lastReadAt={progress?.lastReadAt ?? null}
+                    youtubeVideoId={t.youtube_video_id}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
+
         {system.length > 0 && (
           <Section
             title="Библиотека приложения"

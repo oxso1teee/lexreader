@@ -3,7 +3,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { hasFreeTextRoom, insertText, type CreateTextState } from "./actions";
+import {
+  hasFreeTextRoom,
+  insertText,
+  resolveCollectionAssignment,
+  type CreateTextState,
+} from "./actions";
 import { log } from "@/lib/log";
 
 // Официальный YouTube Data API v3 требует OAuth для скачивания субтитров
@@ -212,6 +217,8 @@ async function persistYoutubeTranscript(params: {
   videoId: string;
   title: string;
   segments: CaptionSegment[];
+  collectionId?: string | null;
+  collectionOrder?: number | null;
 }): Promise<{ id: string } | { error: string }> {
   const body = params.segments.map((segment) => segment.body).join(" ");
   const result = await insertText(params.supabase, {
@@ -222,6 +229,8 @@ async function persistYoutubeTranscript(params: {
     sourceUrl: `https://www.youtube.com/watch?v=${params.videoId}`,
     language: params.profile.target_language,
     youtubeVideoId: params.videoId,
+    collectionId: params.collectionId,
+    collectionOrder: params.collectionOrder,
   });
   if ("error" in result) {
     log.import({ kind: "youtube", outcome: "error", reason: "insert_failed" });
@@ -248,6 +257,7 @@ async function persistYoutubeTranscript(params: {
 
 export async function saveBrowserYoutubeTranscript(
   input: unknown,
+  formData?: FormData,
 ): Promise<YoutubeImportState> {
   const validated = validateBrowserTranscript(input);
   if ("error" in validated) {
@@ -261,12 +271,19 @@ export async function saveBrowserYoutubeTranscript(
     return { paywall: true };
   }
 
+  const collection = formData
+    ? await resolveCollectionAssignment(supabase, profile.id, profile.target_language, formData)
+    : { collectionId: null, collectionOrder: null };
+  if ("error" in collection) return { error: collection.error };
+
   const saved = await persistYoutubeTranscript({
     profile,
     supabase,
     videoId: validated.transcript.videoId,
     title: validated.transcript.title,
     segments: validated.transcript.segments,
+    collectionId: collection.collectionId,
+    collectionOrder: collection.collectionOrder,
   });
   if ("error" in saved) return { error: saved.error };
 
@@ -341,7 +358,21 @@ export async function createTextFromYoutube(
     return { error: "Не удалось разобрать субтитры этого видео." };
   }
 
-  const saved = await persistYoutubeTranscript({ profile, supabase, videoId, title, segments });
+  const collection = await resolveCollectionAssignment(supabase, profile.id, profile.target_language, formData);
+  if ("error" in collection) {
+    log.import({ kind: "youtube", outcome: "error", reason: "insert_failed" });
+    return { error: collection.error };
+  }
+
+  const saved = await persistYoutubeTranscript({
+    profile,
+    supabase,
+    videoId,
+    title,
+    segments,
+    collectionId: collection.collectionId,
+    collectionOrder: collection.collectionOrder,
+  });
   if ("error" in saved) return { error: saved.error };
 
   log.import({ kind: "youtube", outcome: "success" });
