@@ -44,7 +44,11 @@ export default async function DeckPage({
         </Link>
       </div>
 
-      <AddCardForm deckId={deckId} />
+      <AddCardForm
+        deckId={deckId}
+        targetLanguage={profile.target_language}
+        nativeLanguage={profile.native_language}
+      />
 
       {!cards || cards.length === 0 ? (
         <p className="text-sm text-black/50 dark:text-white/50">
