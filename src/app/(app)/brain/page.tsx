@@ -4,6 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import DeckList from "./deck-list";
 import NewDeckModal from "./new-deck-modal";
 import ImportModal from "./import-modal";
+import StarterDeckCard from "./starter-deck-card";
+import { STARTER_DECKS } from "@/lib/starter-decks";
+
+// Перевод слов стартовых колод (lib/starter-decks.ts) считается на лету
+// через MyMemory при нажатии "+ Добавить" — партиями, но всё равно сетевой
+// round-trip на ~60 слов, отсюда тот же запас времени, что и у импорта по
+// URL/YouTube в library/new/page.tsx.
+export const maxDuration = 45;
 
 export default async function BrainPage() {
   const profile = await requireProfile();
@@ -16,7 +24,7 @@ export default async function BrainPage() {
   const [{ data: decks }, { data: flashcards }, { count: dueCount }] = await Promise.all([
     supabase
       .from("decks")
-      .select("id, name, is_default")
+      .select("id, name, is_default, is_starter")
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language)
       .order("is_default", { ascending: false })
@@ -40,6 +48,9 @@ export default async function BrainPage() {
   }
 
   const deckOptions = (decks ?? []).map((d) => ({ id: d.id, name: d.name }));
+  const addedStarterTitles = new Set(
+    (decks ?? []).filter((d) => d.is_starter).map((d) => d.name),
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
@@ -79,6 +90,24 @@ export default async function BrainPage() {
           ⚙️ Настройки
         </Link>
       </div>
+
+      {profile.target_language === "en" && (
+        <div className="rounded-2xl bg-card p-4 shadow-sm">
+          <h2 className="mb-1 font-semibold">Стартовые колоды</h2>
+          <p className="mb-3 text-xs text-black/40 dark:text-white/40">
+            Готовые наборы частых слов по уровням — не расходуют лимит бесплатного тарифа
+          </p>
+          <div className="flex flex-col gap-2">
+            {Object.values(STARTER_DECKS).map((def) => (
+              <StarterDeckCard
+                key={def.level}
+                def={def}
+                alreadyAdded={addedStarterTitles.has(def.title)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <DeckList
         decks={(decks ?? []).map((d) => ({

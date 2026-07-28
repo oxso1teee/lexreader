@@ -48,7 +48,8 @@ export async function hasFreeDeckRoom(
   const { count } = await supabase
     .from("decks")
     .select("id", { count: "exact", head: true })
-    .eq("owner_id", ownerId);
+    .eq("owner_id", ownerId)
+    .eq("is_starter", false);
   return (count ?? 0) < FREE_DECK_LIMIT;
 }
 
@@ -63,6 +64,7 @@ export async function hasFreeFlashcardRoom(
   const { count } = await supabase
     .from("flashcards")
     .select("id", { count: "exact", head: true })
-    .eq("owner_id", ownerId);
+    .eq("owner_id", ownerId)
+    .eq("is_starter", false);
   return (count ?? 0) + additional <= FREE_FLASHCARD_LIMIT;
 }
