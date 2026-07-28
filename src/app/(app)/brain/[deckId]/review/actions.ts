@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 import { touchStreak } from "@/lib/streak";
 import { reviewSrsState } from "@/lib/srs";
 import { getSrsParams } from "@/lib/srs-settings";
+import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 
 export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const supabase = await createClient();
@@ -68,6 +70,25 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   await touchStreak(supabase, user.id);
   revalidatePath("/brain");
   revalidatePath("/progress");
+}
+
+// Из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, "Дополнительно
+// найдено"): карточка из Мозга может оказаться слишком простой для полного
+// интервального повторения — переносим её в лёгкий режим практики (Тетрадь),
+// не удаляя слово целиком.
+export async function sendCardToNotebook(front: string, back: string): Promise<UpsertWordResult> {
+  const supabase = await createClient();
+  const profile = await requireProfile();
+  const result = await saveVocabularyItem(supabase, profile.id, {
+    textId: null,
+    headword: front,
+    translation: back,
+    contextSentence: null,
+    contextTranslation: null,
+    language: profile.target_language,
+  });
+  if (result.ok) revalidatePath("/notebook");
+  return result;
 }
 
 export async function getCurrentStreak(): Promise<number> {

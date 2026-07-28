@@ -1,26 +1,41 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getSrsSettings } from "@/lib/srs-settings";
+import type { SrsParams } from "@/lib/srs";
 import type { ReviewCard } from "./review-session";
 import ReviewModeSwitcher from "./review-mode-switcher";
 
-const SELECT = "flashcard_id, due_at, repetitions, flashcards!inner(id, front, back, notes, deck_id, owner_id)";
+const SELECT =
+  "flashcard_id, due_at, repetitions, ease_factor, interval_days, flashcards!inner(id, front, back, notes, deck_id, owner_id)";
 
 interface SrsStateRow {
   flashcard_id: string;
   due_at: string;
   repetitions: number;
-  flashcards: { front: string; back: string; notes: string | null } | { front: string; back: string; notes: string | null }[];
+  ease_factor: number;
+  interval_days: number;
+  flashcards:
+    | { front: string; back: string; notes: string | null; deck_id: string }
+    | { front: string; back: string; notes: string | null; deck_id: string }[];
 }
 
 function toCards(rows: SrsStateRow[] | null): ReviewCard[] {
   return (rows ?? []).map((row) => {
-    const card = row.flashcards as unknown as { front: string; back: string; notes: string | null };
+    const card = row.flashcards as unknown as {
+      front: string;
+      back: string;
+      notes: string | null;
+      deck_id: string;
+    };
     return {
       flashcardId: row.flashcard_id,
+      deckId: card.deck_id,
       front: card.front,
       back: card.back,
       notes: card.notes,
+      easeFactor: row.ease_factor,
+      intervalDays: row.interval_days,
+      repetitions: row.repetitions,
     };
   });
 }
@@ -90,5 +105,15 @@ export default async function DeckReviewPage({
   // карточках), затем новые — раздел 6.2 роадмапа: два независимых лимита.
   const cards: ReviewCard[] = [...toCards(reviewRows), ...toCards(newRows)];
 
-  return <ReviewModeSwitcher cards={cards} studyDirection={settings.study_direction} />;
+  const srsParams: SrsParams = {
+    easyBonus: settings.easy_bonus,
+    intervalModifier: settings.interval_modifier,
+    maxIntervalDays: settings.max_interval_days,
+    graduatingIntervalDays: settings.graduating_interval_days,
+    easyIntervalDays: settings.easy_interval_days,
+  };
+
+  return (
+    <ReviewModeSwitcher cards={cards} studyDirection={settings.study_direction} srsParams={srsParams} />
+  );
 }

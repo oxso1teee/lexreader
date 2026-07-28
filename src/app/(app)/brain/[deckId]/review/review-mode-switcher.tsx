@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { SrsParams } from "@/lib/srs";
 import ReviewSession, { type ReviewCard } from "./review-session";
 import MultipleChoiceMode from "./multiple-choice-mode";
 import TypeWordMode from "./type-word-mode";
@@ -18,14 +19,20 @@ type Mode = (typeof MODES)[number]["value"];
 export default function ReviewModeSwitcher({
   cards: cardsProp,
   studyDirection,
+  srsParams,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
+  srsParams: SrsParams;
 }) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
   const [cards] = useState(cardsProp);
   const [mode, setMode] = useState<Mode>("cards");
+  // Идея из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.5): быстрый
+  // переключатель направления прямо на экране повторения, отдельно от
+  // постоянной настройки в Study Settings — действует только на эту сессию.
+  const [direction, setDirection] = useState(studyDirection);
 
   // P0-АУДИТ 3.12 (испр. после повторной проверки): первая версия этого
   // фикса меняла местами front/back один раз здесь, предполагая, что все 4
@@ -50,31 +57,44 @@ export default function ReviewModeSwitcher({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex justify-center gap-2 border-b border-black/10 px-5 pt-3 dark:border-white/10">
-        {MODES.map((m) => (
-          <button
-            key={m.value}
-            type="button"
-            onClick={() => setMode(m.value)}
-            className={`-mb-px flex min-h-11 items-center border-b-2 px-2 text-sm font-medium transition-colors ${
-              mode === m.value
-                ? "border-black text-black dark:border-white dark:text-white"
-                : "border-transparent text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
+      <div className="flex items-center justify-between gap-2 border-b border-black/10 px-5 pt-3 dark:border-white/10">
+        <div className="flex gap-2">
+          {MODES.map((m) => (
+            <button
+              key={m.value}
+              type="button"
+              onClick={() => setMode(m.value)}
+              className={`-mb-px flex min-h-11 items-center border-b-2 px-2 text-sm font-medium transition-colors ${
+                mode === m.value
+                  ? "border-black text-black dark:border-white dark:text-white"
+                  : "border-transparent text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            setDirection((d) => (d === "front_back" ? "back_front" : "front_back"))
+          }
+          aria-label="Поменять направление изучения"
+          title="Поменять направление изучения (только для этой сессии)"
+          className="mb-2 flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-black/10 px-3 text-xs font-medium text-black/60 hover:border-black/30 hover:text-black dark:border-white/15 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
+        >
+          ⇄ {direction === "front_back" ? "Слово → Перевод" : "Перевод → Слово"}
+        </button>
       </div>
 
       {mode === "cards" && (
-        <ReviewSession key="cards" cards={cards} studyDirection={studyDirection} />
+        <ReviewSession key="cards" cards={cards} studyDirection={direction} srsParams={srsParams} />
       )}
       {mode === "choice" && (
-        <MultipleChoiceMode key="choice" cards={cards} studyDirection={studyDirection} />
+        <MultipleChoiceMode key="choice" cards={cards} studyDirection={direction} />
       )}
       {mode === "type" && (
-        <TypeWordMode key="type" cards={cards} studyDirection={studyDirection} />
+        <TypeWordMode key="type" cards={cards} studyDirection={direction} />
       )}
       {mode === "match" && <MatchPairsMode key="match" cards={cards} />}
     </div>
