@@ -5,6 +5,7 @@ import NewTextForm from "./new-text-form";
 import UrlImportForm from "./url-import-form";
 import YoutubeImportForm from "./youtube-import-form";
 import PhotoImportForm from "./photo-import-form";
+import PdfImportForm from "./pdf-import-form";
 import type { CollectionOption } from "./collection-picker";
 
 const MODES = [
@@ -12,6 +13,7 @@ const MODES = [
   { value: "url", label: "Ссылка" },
   { value: "youtube", label: "YouTube" },
   { value: "photo", label: "Фото" },
+  { value: "pdf", label: "PDF" },
 ] as const;
 
 type Mode = (typeof MODES)[number]["value"];
@@ -53,6 +55,13 @@ export default function AddTextTabs({
       )}
       {mode === "photo" && (
         <PhotoImportForm
+          targetLanguage={targetLanguage}
+          canAddText={canAddText}
+          collections={collections}
+        />
+      )}
+      {mode === "pdf" && (
+        <PdfImportForm
           targetLanguage={targetLanguage}
           canAddText={canAddText}
           collections={collections}

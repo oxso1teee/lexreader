@@ -28,7 +28,7 @@ export const log = {
     emit(fields.outcome === "error" ? "error" : "info", "translation", fields);
   },
   import(fields: {
-    kind: "url" | "youtube" | "photo_text" | "photo_cards" | "csv_json";
+    kind: "url" | "youtube" | "photo_text" | "photo_cards" | "csv_json" | "pdf_text";
     outcome: "success" | "error";
     reason?: string;
   }) {
