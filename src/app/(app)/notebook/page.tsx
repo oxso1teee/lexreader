@@ -16,7 +16,7 @@ export default async function NotebookPage({
   // слова разных языков (после смены языка в Настройках) видны вперемешку.
   let query = supabase
     .from("vocabulary_items")
-    .select("id, headword, translation, status, photo_url, texts(title)")
+    .select("id, headword, translation, status, photo_url, is_favorite, texts(title)")
     .eq("owner_id", profile.id)
     .eq("language", profile.target_language)
     .order("created_at", { ascending: false });
@@ -65,9 +65,11 @@ export default async function NotebookPage({
         translation: item.translation,
         status: item.status,
         photo_url: signedUrls.get(item.id) ?? null,
+        is_favorite: item.is_favorite,
         sourceTitle: (item.texts as unknown as { title: string } | null)?.title ?? null,
       }))}
       allWords={allWords ?? []}
+      totalCount={allWords?.length ?? 0}
     />
   );
 }

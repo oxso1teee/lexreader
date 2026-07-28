@@ -20,6 +20,7 @@ interface WordItem {
   translation: string;
   status: string;
   photo_url: string | null;
+  is_favorite: boolean;
   sourceTitle: string | null;
 }
 
@@ -31,6 +32,7 @@ export default function NotebookClient({
   targetLanguage,
   sourceLang,
   nativeLang,
+  totalCount,
 }: {
   ownerId: string;
   items: WordItem[];
@@ -39,24 +41,29 @@ export default function NotebookClient({
   targetLanguage: string;
   sourceLang: string;
   nativeLang: string;
+  totalCount: number;
 }) {
   const [mode, setMode] = useState<"read" | "practice">("read");
   const [query, setQuery] = useState("");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
-      (i) => i.headword.toLowerCase().includes(q) || i.translation.toLowerCase().includes(q),
-    );
-  }, [items, query]);
+    return items.filter((i) => {
+      if (favoritesOnly && !i.is_favorite) return false;
+      if (!q) return true;
+      return i.headword.toLowerCase().includes(q) || i.translation.toLowerCase().includes(q);
+    });
+  }, [items, query, favoritesOnly]);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-5 py-6">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">✏️ Тетрадь</h1>
-          <p className="text-sm text-black/50 dark:text-white/50">{targetLanguage}</p>
+          <p className="text-sm text-black/50 dark:text-white/50">
+            {targetLanguage} · {totalCount} слов
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex overflow-hidden rounded-full border border-black/15 dark:border-white/20">
@@ -100,6 +107,17 @@ export default function NotebookClient({
           >
             Экспорт CSV
           </a>
+          <button
+            type="button"
+            onClick={() => setFavoritesOnly((v) => !v)}
+            className={`flex min-h-9 items-center gap-1 rounded-full border px-3 text-sm font-medium transition-colors ${
+              favoritesOnly
+                ? "border-yellow-500 text-yellow-600 dark:text-yellow-400"
+                : "border-black/15 text-black/50 hover:border-black/30 dark:border-white/20 dark:text-white/50 dark:hover:border-white/40"
+            }`}
+          >
+            {favoritesOnly ? "★" : "☆"} Избранное
+          </button>
         </div>
 
         <div className="mb-4 flex gap-2 overflow-x-auto">
@@ -119,7 +137,7 @@ export default function NotebookClient({
         </div>
 
         {filteredItems.length === 0 ? (
-          <EmptyState filtered={Boolean(query.trim()) || Boolean(status)} />
+          <EmptyState filtered={Boolean(query.trim()) || Boolean(status) || favoritesOnly} />
         ) : (
           <div className="flex flex-col gap-2">
             {filteredItems.map((item) => (
@@ -132,6 +150,7 @@ export default function NotebookClient({
                 sourceTitle={item.sourceTitle}
                 status={item.status}
                 photoUrl={item.photo_url}
+                isFavorite={item.is_favorite}
               />
             ))}
           </div>

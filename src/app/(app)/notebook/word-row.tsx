@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { deleteWord, markKnown, setPhotoUrl } from "./actions";
+import { deleteWord, markKnown, setPhotoUrl, toggleFavorite } from "./actions";
 import { validateImageFile } from "@/lib/file-validation";
 
 export default function WordRow({
@@ -13,6 +13,7 @@ export default function WordRow({
   sourceTitle,
   status,
   photoUrl,
+  isFavorite,
 }: {
   id: string;
   ownerId: string;
@@ -21,10 +22,15 @@ export default function WordRow({
   sourceTitle: string | null;
   status: string;
   photoUrl: string | null;
+  isFavorite: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  // Мгновенный отклик на тап по звёздочке — не ждём revalidatePath, чтобы
+  // список слов не мигал при переключении одного флага.
+  const [favoriteOverride, setFavoriteOverride] = useState<boolean | null>(null);
+  const favorite = favoriteOverride ?? isFavorite;
   // Найдено при повторном аудите: бакет word-photos был публично читаемым —
   // теперь приватный, показываем фото через подписанный URL (короткий срок
   // жизни), а не постоянный публичный. Локальный override для мгновенного
@@ -64,6 +70,12 @@ export default function WordRow({
     }
   }
 
+  function handleToggleFavorite() {
+    const next = !favorite;
+    setFavoriteOverride(next);
+    startTransition(() => toggleFavorite(id, next));
+  }
+
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-4 py-3 dark:border-white/15">
       <div className="flex min-w-0 items-center gap-3">
@@ -90,7 +102,17 @@ export default function WordRow({
           />
         </label>
         <div className="min-w-0">
-          <p className="font-medium">{headword}</p>
+          <p className="flex items-center gap-1.5 font-medium">
+            <button
+              type="button"
+              onClick={handleToggleFavorite}
+              aria-label={favorite ? "Убрать из избранного" : "Добавить в избранное"}
+              className={`shrink-0 ${favorite ? "text-yellow-500" : "text-black/20 hover:text-black/40 dark:text-white/20 dark:hover:text-white/40"}`}
+            >
+              {favorite ? "★" : "☆"}
+            </button>
+            <span className="truncate">{headword}</span>
+          </p>
           <p className="truncate text-sm text-black/50 dark:text-white/50">
             {translation}
             {sourceTitle ? ` · ${sourceTitle}` : ""}
