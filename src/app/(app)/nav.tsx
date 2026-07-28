@@ -7,8 +7,9 @@ const ITEMS = [
   { href: "/home", label: "Главная", icon: "🏠" },
   { href: "/library", label: "Читать/Слушать", icon: "📖" },
   { href: "/brain", label: "Мозг", icon: "🧠" },
-  { href: "/progress", label: "Статистика", icon: "📊" },
   { href: "/notebook", label: "Тетрадь", icon: "✏️" },
+  { href: "/progress", label: "Статистика", icon: "📊" },
+  { href: "/settings", label: "Настройки", icon: "⚙️" },
 ];
 
 export default function Nav() {
