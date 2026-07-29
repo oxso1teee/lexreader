@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
+import { hashString, coverGradient, coverEmoji } from "@/lib/text-cover";
 import TextCard from "./text-card";
 import CollectionCard from "./collection-card";
 
@@ -33,7 +34,14 @@ export default async function LibraryPage() {
 
   const rows = (texts ?? []) as TextRow[];
   const own = rows.filter((t) => t.owner_id !== null);
-  const system = rows.filter((t) => t.owner_id === null);
+  const allSystem = rows.filter((t) => t.owner_id === null);
+
+  // "Текст дня" — детерминированный выбор по дате, без крона: один и тот же
+  // текст весь день, следующий день выбирает другой (docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 4.3).
+  const today = new Date().toISOString().slice(0, 10);
+  const featured =
+    allSystem.length > 0 ? allSystem[hashString(today) % allSystem.length] : null;
+  const system = featured ? allSystem.filter((t) => t.id !== featured.id) : allSystem;
 
   // Идея из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.1): тексты
   // одной коллекции показываем одной карточкой (агрегированный прогресс),
@@ -99,6 +107,27 @@ export default async function LibraryPage() {
           )}
         </section>
 
+        {featured && (
+          <section className="mb-6">
+            <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
+              Текст дня
+            </h2>
+            <Link
+              href={`/read/${featured.id}`}
+              className="block rounded-xl p-4 text-white shadow-sm transition-opacity hover:opacity-90"
+              style={{
+                background: `linear-gradient(135deg, ${coverGradient(featured.title)[0]}, ${coverGradient(featured.title)[1]})`,
+              }}
+            >
+              <p className="text-xs font-medium uppercase tracking-wide text-white/70">
+                {coverEmoji(featured.title)} {featured.level_tag ?? ""}
+              </p>
+              <p className="mt-1 text-lg font-semibold">{featured.title}</p>
+              <p className="text-sm text-white/80">{featured.word_count ?? "?"} слов</p>
+            </Link>
+          </section>
+        )}
+
         {system.length > 0 && (
           <Section
             title="Библиотека приложения"
@@ -106,6 +135,7 @@ export default async function LibraryPage() {
             empty=""
             canDelete={false}
             progressByTextId={progressByTextId}
+            isSystem
           />
         )}
       </div>
@@ -127,12 +157,14 @@ function Section({
   empty,
   canDelete,
   progressByTextId,
+  isSystem = false,
 }: {
   title: string;
   texts: TextRow[];
   empty: string;
   canDelete: boolean;
   progressByTextId: Map<string, { percentRead: number; lastReadAt: string | null }>;
+  isSystem?: boolean;
 }) {
   return (
     <section className="mb-6">
@@ -156,6 +188,7 @@ function Section({
                 percentRead={progress?.percentRead ?? 0}
                 lastReadAt={progress?.lastReadAt ?? null}
                 youtubeVideoId={t.youtube_video_id}
+                isSystem={isSystem}
               />
             );
           })}

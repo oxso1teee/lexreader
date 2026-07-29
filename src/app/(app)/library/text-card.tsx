@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTransition } from "react";
 import { deleteText } from "./actions";
+import { coverGradient, coverEmoji } from "@/lib/text-cover";
 
 const WORDS_PER_MINUTE = 200;
 
@@ -22,6 +23,7 @@ export default function TextCard({
   percentRead,
   lastReadAt,
   youtubeVideoId,
+  isSystem = false,
 }: {
   id: string;
   title: string;
@@ -31,16 +33,27 @@ export default function TextCard({
   percentRead: number;
   lastReadAt: string | null;
   youtubeVideoId: string | null;
+  isSystem?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const estimatedMinutes = wordCount ? Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE)) : null;
+  const [gradientA, gradientB] = isSystem ? coverGradient(title) : [null, null];
 
   return (
     <div className="flex items-center gap-2">
       <Link
         href={`/read/${id}`}
-        className="min-w-0 flex-1 rounded-lg border border-black/10 px-4 py-3 transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-black/10 px-4 py-3 transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
       >
+        {isSystem && (
+          <span
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl"
+            style={{ background: `linear-gradient(135deg, ${gradientA}, ${gradientB})` }}
+          >
+            {coverEmoji(title)}
+          </span>
+        )}
+        <span className="min-w-0 flex-1">
         <p className="truncate font-medium">
           {youtubeVideoId && "📺 "}
           {title}
@@ -63,6 +76,7 @@ export default function TextCard({
             />
           </div>
         )}
+        </span>
       </Link>
       {youtubeVideoId && (
         <Link
