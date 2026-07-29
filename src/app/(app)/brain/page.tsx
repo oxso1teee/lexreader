@@ -6,6 +6,7 @@ import NewDeckModal from "./new-deck-modal";
 import ImportModal from "./import-modal";
 import StarterDeckCard from "./starter-deck-card";
 import { STARTER_DECKS } from "@/lib/starter-decks";
+import { getDueCount } from "@/lib/brain-stats";
 
 // Перевод слов стартовых колод (lib/starter-decks.ts) считается на лету
 // через MyMemory при нажатии "+ Добавить" — партиями, но всё равно сетевой
@@ -21,7 +22,7 @@ export default async function BrainPage() {
   // — при смене изучаемого языка Мозг показывал колоды и карточки всех
   // языков вперемешку. Теперь список и счётчик "к повторению" ограничены
   // текущим target_language, как и остальные части приложения.
-  const [{ data: decks }, { data: flashcards }, { count: dueCount }] = await Promise.all([
+  const [{ data: decks }, { data: flashcards }, dueCount] = await Promise.all([
     supabase
       .from("decks")
       .select("id, name, is_default, is_starter")
@@ -34,12 +35,7 @@ export default async function BrainPage() {
       .select("id, deck_id")
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language),
-    supabase
-      .from("srs_state")
-      .select("flashcard_id, flashcards!inner(owner_id, language)", { count: "exact", head: true })
-      .eq("flashcards.owner_id", profile.id)
-      .eq("flashcards.language", profile.target_language)
-      .lte("due_at", new Date().toISOString()),
+    getDueCount(supabase, profile.id, profile.target_language),
   ]);
 
   const countByDeck = new Map<string, number>();

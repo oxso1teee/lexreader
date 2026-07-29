@@ -1,0 +1,610 @@
+<style>
+  :root {
+    --paper: #ece0c4;
+    --card: #fbf6ea;
+    --card-2: #f4ead4;
+    --ink: #241c14;
+    --ink-soft: #55493a;
+    --line: rgba(36,28,20,0.14);
+    --brick: #a8451f;
+    --brick-strong: #8a3819;
+    --teal: #1f5750;
+    --gold: #9c7526;
+    --frame: #241c14;
+    --shadow: rgba(36,28,20,0.28);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1a1510; --card: #241d16; --card-2: #2c231a; --ink: #f1e6d2; --ink-soft: #c9bba2;
+      --line: rgba(241,230,210,0.14); --brick: #e08658; --brick-strong: #f0a377; --teal: #6fc2b6;
+      --gold: #d9b465; --frame: #0f0c09; --shadow: rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1a1510; --card: #241d16; --card-2: #2c231a; --ink: #f1e6d2; --ink-soft: #c9bba2;
+    --line: rgba(241,230,210,0.14); --brick: #e08658; --brick-strong: #f0a377; --teal: #6fc2b6;
+    --gold: #d9b465; --frame: #0f0c09; --shadow: rgba(0,0,0,0.5);
+  }
+  :root[data-theme="light"] {
+    --paper: #ece0c4; --card: #fbf6ea; --card-2: #f4ead4; --ink: #241c14; --ink-soft: #55493a;
+    --line: rgba(36,28,20,0.14); --brick: #a8451f; --brick-strong: #8a3819; --teal: #1f5750;
+    --gold: #9c7526; --frame: #241c14; --shadow: rgba(36,28,20,0.28);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+  h1, h2, h3 { text-wrap: balance; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+  p { margin: 0; }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--brick); font-weight: 600;
+  }
+  .eyebrow.teal { color: var(--teal); }
+
+  .hero { padding: 88px 0 56px; border-bottom: 1px solid var(--line); }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-title, .hero-sub, .hero-meta { animation: riseIn 0.7s ease-out both; }
+    .hero-sub { animation-delay: 0.08s; } .hero-meta { animation-delay: 0.16s; }
+  }
+  .hero-title { font-size: clamp(32px, 5vw, 54px); line-height: 1.08; max-width: 17ch; margin-top: 18px; }
+  .hero-title em { font-style: normal; color: var(--brick); }
+  .hero-sub { margin-top: 22px; max-width: 58ch; font-size: 18px; color: var(--ink-soft); }
+  .hero-note {
+    margin-top: 20px; display: inline-flex; gap: 10px; align-items: flex-start;
+    padding: 12px 16px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--line);
+    font-size: 13.5px; color: var(--ink-soft); max-width: 62ch;
+  }
+  .hero-meta { margin-top: 28px; display: flex; gap: 28px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); }
+  .hero-meta b { color: var(--ink); font-weight: 700; }
+
+  .diagnosis { padding: 56px 0; border-bottom: 1px solid var(--line); }
+  .diagnosis-head h2 { font-size: 22px; margin-top: 8px; }
+  .diagnosis-grid {
+    margin-top: 28px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  }
+  .diagnosis-card { background: var(--card); padding: 22px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .diagnosis-card .tag { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: 0.08em; color: var(--brick); text-transform: uppercase; }
+  .diagnosis-card h3 { font-size: 15.5px; }
+  .diagnosis-card p { font-size: 13.5px; color: var(--ink-soft); }
+
+  .pillar { padding: 72px 0; border-bottom: 1px solid var(--line); }
+  .pillar-grid { margin-top: 26px; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; }
+  .pillar.reverse .pillar-grid { grid-template-columns: 0.95fr 1.05fr; }
+  .pillar.reverse .pillar-text { order: 2; } .pillar.reverse .pillar-visual { order: 1; }
+  .pillar-text h2 { font-size: 29px; margin-top: 10px; max-width: 19ch; }
+  .pillar-text p.lede { margin-top: 16px; font-size: 15.5px; color: var(--ink-soft); max-width: 47ch; }
+  .pillar-tags { margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { font-size: 12px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); }
+  .chip.impact-high { border-color: var(--brick); color: var(--brick); }
+  .chip.impact-mid { border-color: var(--teal); color: var(--teal); }
+  .pillar-visual { display: flex; justify-content: center; }
+
+  .phone {
+    --app-bg: #f5f1ea; --app-card: #ffffff; --app-fg: #1a1a1a; --app-fg-soft: rgba(26,26,26,0.55); --app-accent: #a67c52;
+    width: 292px; border-radius: 40px; border: 9px solid var(--frame); background: var(--frame);
+    box-shadow: 0 26px 60px -18px var(--shadow), 0 4px 14px rgba(0,0,0,0.12);
+  }
+  .phone__notch { height: 22px; display: flex; align-items: center; justify-content: center; }
+  .phone__notch::before { content: ""; width: 84px; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.16); }
+  .phone__screen {
+    background: var(--app-bg); color: var(--app-fg); border-radius: 28px; min-height: 520px;
+    padding: 18px 16px 22px; display: flex; flex-direction: column; gap: 12px; font-size: 13px; overflow: hidden;
+  }
+  .phone__screen h4 { font-size: 15px; font-weight: 700; margin: 0; }
+  .app-card { background: var(--app-card); border-radius: 14px; padding: 12px 13px; }
+  .app-muted { color: var(--app-fg-soft); font-size: 12px; }
+  .app-pill {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 9px;
+    border-radius: 999px; background: rgba(166,124,82,0.14); color: var(--app-accent); font-weight: 600;
+  }
+  .app-btn { background: var(--app-fg); color: var(--app-bg); border-radius: 999px; padding: 9px 14px; font-size: 12.5px; font-weight: 600; text-align: center; }
+  .app-btn.ghost { background: transparent; color: var(--app-fg); border: 1px solid rgba(26,26,26,0.18); }
+  .app-row { display: flex; gap: 8px; }
+  .app-col { display: flex; flex-direction: column; gap: 8px; }
+  .app-progress { height: 6px; border-radius: 999px; background: rgba(26,26,26,0.09); overflow: hidden; }
+  .app-progress > span { display: block; height: 100%; background: var(--app-accent); border-radius: 999px; }
+  .app-avatar { width: 26px; height: 26px; border-radius: 999px; background: var(--app-accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .caption { margin-top: 14px; font-size: 12px; color: var(--ink-soft); text-align: center; max-width: 292px; }
+  .visual-stack { display: flex; flex-direction: column; align-items: center; }
+
+  /* book cover grid for the library pillar */
+  .cover-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .cover {
+    border-radius: 10px; padding: 10px; color: #fff; min-height: 84px;
+    display: flex; flex-direction: column; justify-content: space-between; font-weight: 700; font-size: 12px;
+  }
+  .cover .lvl { align-self: flex-start; font-size: 9.5px; font-weight: 700; background: rgba(255,255,255,0.25); padding: 2px 7px; border-radius: 999px; }
+  .cover .ttl { font-size: 12.5px; line-height: 1.25; }
+
+  /* card-flip illustration */
+  .flip-card { position: relative; height: 120px; }
+  .flip-card .back {
+    position: absolute; inset: 0; background: var(--app-accent); border-radius: 14px;
+    transform: perspective(600px) rotateY(28deg); opacity: 0.35;
+  }
+  .flip-card .front {
+    position: absolute; inset: 0; background: var(--app-card); border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12); transform: perspective(600px) rotateY(-6deg);
+  }
+
+  /* badges row */
+  .badge-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge {
+    width: 54px; height: 54px; border-radius: 14px; background: var(--app-card);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .badge.locked { opacity: 0.32; filter: grayscale(1); }
+
+  /* before/after empty state comparison */
+  .compare { display: flex; gap: 14px; }
+  .compare-col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .compare-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--app-fg-soft); font-weight: 700; }
+  .compare-box {
+    background: var(--app-card); border-radius: 14px; padding: 20px 14px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 10px; min-height: 150px; justify-content: center;
+  }
+
+  /* notification stack */
+  .notif { background: rgba(255,255,255,0.9); border-radius: 14px; padding: 11px 13px; display: flex; gap: 10px; align-items: flex-start; }
+  .notif .icon { width: 30px; height: 30px; border-radius: 8px; background: var(--app-accent); flex-shrink: 0; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .notif .title { font-weight: 700; font-size: 12.5px; }
+  .notif .body { font-size: 12px; color: var(--app-fg-soft); margin-top: 2px; }
+  .notif .time { font-size: 10.5px; color: var(--app-fg-soft); margin-left: auto; flex-shrink: 0; }
+
+  .lite-mock { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; width: 100%; max-width: 360px; }
+
+  .quickwins { padding: 60px 0; border-bottom: 1px solid var(--line); }
+  .quickwins h2 { font-size: 22px; margin-top: 8px; }
+  .qw-grid { margin-top: 26px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .qw-item { display: flex; gap: 12px; padding: 16px 18px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .qw-num { font-family: ui-monospace, monospace; font-size: 12px; color: var(--teal); font-weight: 700; flex-shrink: 0; }
+  .qw-item p { font-size: 13.5px; }
+
+  .roadmap { padding: 64px 0; border-bottom: 1px solid var(--line); }
+  .roadmap h2 { font-size: 22px; margin-top: 8px; }
+  .roadmap-sub { margin-top: 10px; color: var(--ink-soft); font-size: 14px; max-width: 62ch; }
+  .phase-board { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .phase { border-radius: 16px; border: 1px solid var(--line); background: var(--card); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .phase-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .phase-head h3 { font-size: 15px; }
+  .phase-head .when { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-soft); }
+  .phase-list { display: flex; flex-direction: column; gap: 8px; }
+  .phase-list .item { font-size: 13px; padding: 8px 10px; border-radius: 8px; background: var(--card-2); }
+  .phase.now { border-top: 3px solid var(--brick); }
+  .phase.next { border-top: 3px solid var(--gold); }
+  .phase.later { border-top: 3px solid var(--teal); }
+
+  .cta { padding: 72px 0 96px; }
+  .cta-box { background: var(--ink); color: var(--paper); border-radius: 22px; padding: 44px 40px; display: flex; flex-direction: column; gap: 16px; }
+  .cta-box h2 { font-size: 26px; color: var(--paper); max-width: 22ch; }
+  .cta-box p { color: rgba(236,224,196,0.78); max-width: 58ch; font-size: 15px; }
+  .cta-box .signature { margin-top: 8px; font-size: 13px; color: rgba(236,224,196,0.6); }
+
+  @media (max-width: 860px) {
+    .diagnosis-grid { grid-template-columns: repeat(2, 1fr); }
+    .pillar-grid, .pillar.reverse .pillar-grid { grid-template-columns: 1fr; gap: 32px; }
+    .pillar.reverse .pillar-text, .pillar.reverse .pillar-visual { order: initial; }
+    .qw-grid { grid-template-columns: 1fr; } .phase-board { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .diagnosis-grid { grid-template-columns: 1fr; } .wrap { padding: 0 18px; }
+    .phone { width: 100%; max-width: 292px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow" style="margin:0;">ЧЕРНОВИК ДЛЯ ОБСУЖДЕНИЯ · ЧАСТЬ 2</p>
+    <h1 class="hero-title">Не новые подсистемы — <em>жизнь в том, что уже есть.</em></h1>
+    <p class="hero-sub">Без ИИ-собеседников и переписок. Только то, что делает уже существующие экраны — Главную, Библиотеку, Мозг, Тетрадь — живыми: есть что почитать с первой минуты, повторение ощущается как игра, а не домашка, и есть за что зацепиться, кроме одного счётчика дней.</p>
+    <div class="hero-note">
+      Здесь нет ИИ-чатов, разговоров и подобного — по твоей правке. Всё ниже делается силами того, что уже есть: контент, анимации, мелкая механика, вёрстка.
+    </div>
+    <div class="hero-meta">
+      <span><b>7</b> направлений</span>
+      <span><b>0</b> новых ИИ-фич</span>
+      <span><b>3</b> фазы дорожной карты</span>
+    </div>
+  </header>
+
+  <section class="diagnosis">
+    <div class="diagnosis-head">
+      <p class="eyebrow">Почему сейчас скучно</p>
+      <h2>Четыре момента, где человек теряет интерес</h2>
+    </div>
+    <div class="diagnosis-grid">
+      <div class="diagnosis-card">
+        <span class="tag">Первая минута</span>
+        <h3>Нет быстрой победы</h3>
+        <p>После онбординга — пустой экран. Ни одного «вау, это же работает», за которое можно зацепиться.</p>
+      </div>
+      <div class="diagnosis-card">
+        <span class="tag">Библиотека</span>
+        <h3>Читать почти нечего</h3>
+        <p>Пара системных текстов — и всё. Человек открывает раздел, видит пустоту и закрывает приложение.</p>
+      </div>
+      <div class="diagnosis-card">
+        <span class="tag">Повторение</span>
+        <h3>Ощущается как домашка</h3>
+        <p>Плоские карточки, без единого «щёлк» удовольствия от правильного ответа — как в тренажёре для клерка.</p>
+      </div>
+      <div class="diagnosis-card">
+        <span class="tag">Мотивация</span>
+        <h3>Одна ошибка — и всё сгорело</h3>
+        <p>Пропустил день — стрик обнулился, и возвращаться уже не так хочется. Подстраховки нет никакой.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: FIRST 5 MINUTES -->
+  <section class="pillar">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow">Первые 5 минут</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Полный цикл — прямо в онбординге</h2>
+          <p class="lede">Сейчас после выбора языка человек попадает в пустое приложение и должен сам понять, что делать. Вместо этого — сразу дать пройти весь цикл: выбрать короткий текст из готовых, сохранить 2-3 слова тапом, тут же повторить одну карточку. Пять минут — и видно, зачем всё это.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <div class="app-pill" style="align-self:flex-start;">Шаг 2 из 3</div>
+                <h4>🎉 Ты сохранил 3 слова!</h4>
+                <div class="app-row" style="gap:6px;">
+                  <span class="app-pill">coffee</span><span class="app-pill">morning</span><span class="app-pill">walk</span>
+                </div>
+                <div class="app-card">
+                  <div class="app-muted" style="margin-bottom:6px;">Повтори прямо сейчас</div>
+                  <div style="font-size:20px; font-weight:700; text-align:center; padding:10px 0;">coffee</div>
+                </div>
+                <div style="flex:1;"></div>
+                <div class="app-btn">Показать перевод</div>
+                <p class="app-muted" style="text-align:center;">Ты только что прошёл весь путь — от текста до первой карточки</p>
+              </div>
+            </div>
+            <p class="caption">Онбординг заканчивается не пустым экраном, а первой маленькой победой.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: LIBRARY CONTENT -->
+  <section class="pillar reverse">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow teal">Библиотека</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Контента должно быть много и по-разному интересно</h2>
+          <p class="lede">Пара системных текстов — это не библиотека. Нужна настоящая подборка коротких историй, диалогов и заметок на разные темы и уровни — с обложками, чтобы раздел выглядел как полка, а не список файлов. Плюс «текст дня» — то, что открывается первым.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Средняя сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>Библиотека</h4>
+                <div class="app-card" style="background:linear-gradient(135deg,#a67c52,#c99a68); color:#fff;">
+                  <div class="app-pill" style="background:rgba(255,255,255,0.25); color:#fff;">Текст дня</div>
+                  <div style="font-weight:700; margin-top:6px;">Странный сосед</div>
+                  <div style="font-size:11.5px; opacity:0.85;">Рассказ · A2 · 5 мин</div>
+                </div>
+                <div class="cover-grid">
+                  <div class="cover" style="background:linear-gradient(160deg,#2f5d50,#1f3f37);">
+                    <span class="lvl">A1</span><span class="ttl">Утро в кофейне</span>
+                  </div>
+                  <div class="cover" style="background:linear-gradient(160deg,#a8451f,#7a3016);">
+                    <span class="lvl">B1</span><span class="ttl">Побег из города</span>
+                  </div>
+                  <div class="cover" style="background:linear-gradient(160deg,#9c7526,#6f5518);">
+                    <span class="lvl">A2</span><span class="ttl">Письмо другу</span>
+                  </div>
+                  <div class="cover" style="background:linear-gradient(160deg,#4a4a6a,#2e2e46);">
+                    <span class="lvl">B2</span><span class="ttl">Загадка старого дома</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="caption">Обложки — просто градиент по названию, картинки не нужны, а полка уже не выглядит пустой.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: HOME DASHBOARD -->
+  <section class="pillar">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow">Главная</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Главная должна отвечать на вопрос «что сейчас», а не рассказывать факты</h2>
+          <p class="lede">Сейчас на Главной — статичная лента фактов про заучивание. Вместо неё — приборная панель: сколько повторить, что дочитать, дневная цель одним кольцом прогресса. Все данные уже есть внутри приложения — это пересборка существующего, а не новая инфраструктура.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>Привет 👋</h4>
+                <div class="app-card" style="display:flex; align-items:center; gap:14px;">
+                  <svg width="56" height="56" viewBox="0 0 56 56">
+                    <circle cx="28" cy="28" r="24" fill="none" stroke="rgba(26,26,26,0.1)" stroke-width="6"/>
+                    <circle cx="28" cy="28" r="24" fill="none" stroke="#a67c52" stroke-width="6" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="42" transform="rotate(-90 28 28)"/>
+                  </svg>
+                  <div><div style="font-weight:700;">32 / 50 слов</div><div class="app-muted">дневная цель</div></div>
+                </div>
+                <div class="app-card app-row" style="justify-content:space-between;">
+                  <span>🔥 12 дней</span><span>📇 8 к повтору</span><span>＋5 новых</span>
+                </div>
+                <div class="app-card">
+                  <div class="app-muted" style="margin-bottom:6px;">Продолжить чтение</div>
+                  <div style="font-weight:600;">Странный сосед — стр. 3</div>
+                  <div class="app-progress" style="margin-top:6px;"><span style="width:64%;"></span></div>
+                </div>
+                <div class="app-btn">Начать повторение</div>
+              </div>
+            </div>
+            <p class="caption">Одна секунда — и понятно, что сегодня делать, вместо чтения фактов про Эббингауза.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: PRACTICE FEELS LIKE PLAY -->
+  <section class="pillar reverse">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow teal">Мозг и Тетрадь</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Повторение — игра, а не домашнее задание</h2>
+          <p class="lede">Карточка сегодня просто мгновенно меняется на следующую — ни отклика, ни ощущения прогресса. Добавить: анимацию переворота карты, вспышку при верном ответе, личный рекорд сессии («сегодня 18 из твоих лучших 32») и свайпы вместо кнопок в Тетради — мелкая механика, которая превращает рутину в приятное действие.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>Карточка 5 из 20</h4>
+                <div class="flip-card">
+                  <div class="back"></div>
+                  <div class="front">friend</div>
+                </div>
+                <div class="app-card" style="background:rgba(47,122,61,0.14); text-align:center; font-weight:700; color:#2f7a3d;">
+                  ✓ Верно! +1 к серии
+                </div>
+                <div class="app-card">
+                  <div class="app-muted">Личный рекорд сессии</div>
+                  <div style="font-weight:700; margin-top:2px;">Сегодня 18 · рекорд 32</div>
+                  <div class="app-progress" style="margin-top:6px;"><span style="width:56%;"></span></div>
+                </div>
+                <div style="flex:1;"></div>
+                <p class="app-muted" style="text-align:center;">Свайп вправо — знаю, влево — повторить</p>
+              </div>
+            </div>
+            <p class="caption">Переворот карты + мгновенный отклик + личный рекорд вместо тихого перелистывания.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: SOLO ACHIEVEMENTS & STREAK FREEZE -->
+  <section class="pillar">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow">Достижения</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Больше одной переменной мотивации — без других игроков</h2>
+          <p class="lede">Сейчас есть только стрик, и он же — самое хрупкое место: один пропущенный день обнуляет всё. Добавить бейджи за конкретные достижения (первая дочитанная книга, 100 слов, идеальная сессия), мини-квесты на неделю и «заморозку» стрика — раз в неделю пропуск не считается срывом. Всё это работает соло, без лиг и других игроков.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>Достижения</h4>
+                <div class="badge-row">
+                  <div class="badge">🔥</div><div class="badge">💯</div><div class="badge">📖</div>
+                  <div class="badge locked">⚡</div><div class="badge locked">🏆</div>
+                </div>
+                <div class="app-card">
+                  <div class="app-muted" style="margin-bottom:4px;">Квест недели</div>
+                  <div style="font-weight:600;">Добавь 20 новых слов</div>
+                  <div class="app-progress" style="margin-top:6px;"><span style="width:60%;"></span></div>
+                  <div class="app-muted" style="margin-top:4px;">12 / 20</div>
+                </div>
+                <div class="app-card app-row" style="align-items:center; gap:10px;">
+                  <span style="font-size:18px;">❄️</span>
+                  <div>
+                    <div style="font-weight:600;">Заморозка стрика доступна</div>
+                    <div class="app-muted">Пропуск дня на этой неделе не обнулит серию</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="caption">Бейджи, квест недели и заморозка стрика — три новые переменные вместо одной.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: VISUAL CHARACTER -->
+  <section class="pillar reverse">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow teal">Внешний вид</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Пустой экран — это не «пусто», это первое впечатление</h2>
+          <p class="lede">Пустые состояния сейчас — просто серый текст «пока пусто». Это первое, что видит новый человек в разделе. Заменить на дружелюбную иллюстрацию и тёплую формулировку — мелочь, но именно из таких мелочей складывается «живое» или «мёртвое» приложение.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-mid">Средний эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>Пустое состояние</h4>
+                <div class="compare">
+                  <div class="compare-col">
+                    <span class="compare-label" style="text-align:center;">Сейчас</span>
+                    <div class="compare-box">
+                      <span class="app-muted">Пока пусто — добавь свой первый текст.</span>
+                    </div>
+                  </div>
+                  <div class="compare-col">
+                    <span class="compare-label" style="text-align:center;">Предлагается</span>
+                    <div class="compare-box">
+                      <div style="font-size:34px;">📖✨</div>
+                      <div style="font-weight:600;">Здесь появятся твои тексты</div>
+                      <div class="app-muted">Добавь первый — и начни читать</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="flex:1;"></div>
+                <div class="app-btn">+ Добавить текст</div>
+              </div>
+            </div>
+            <p class="caption">Одна и та же информация — но слева хочется закрыть приложение, справа хочется нажать кнопку.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: SMARTER RE-ENGAGEMENT -->
+  <section class="pillar">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow">Возврат</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Уведомления — не будильник, а напоминание о конкретном</h2>
+          <p class="lede">Сейчас push, скорее всего, один и тот же текст в одно и то же время для всех. Вместо этого — тёплая формулировка про конкретное действие («осталось 2 страницы», «стрик под угрозой») и время, подстроенное под то, когда человек обычно занимается — без всякого ИИ, просто по логам активности.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-mid">Средний эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen" style="background:linear-gradient(180deg,#3a3226,#241c14);">
+                <h4 style="color:#f1e6d2;">19:42</h4>
+                <div class="notif">
+                  <div class="icon">📖</div>
+                  <div style="flex:1;"><div class="title">Странный сосед ждёт</div><div class="body">Осталось всего 2 страницы до конца</div></div>
+                  <span class="time">2 мин</span>
+                </div>
+                <div class="notif">
+                  <div class="icon" style="background:var(--brick);">🔥</div>
+                  <div style="flex:1;"><div class="title">Стрик под угрозой</div><div class="body">12 дней подряд — не потеряй серию сегодня</div></div>
+                  <span class="time">1 ч</span>
+                </div>
+                <div class="notif">
+                  <div class="icon" style="background:var(--teal);">📇</div>
+                  <div style="flex:1;"><div class="title">8 карточек ждут</div><div class="body">Обычно ты повторяешь в это время — 2 минуты</div></div>
+                  <span class="time">вчера</span>
+                </div>
+              </div>
+            </div>
+            <p class="caption">Три разных повода вернуться вместо одного одинакового «пора заниматься».</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="quickwins">
+    <p class="eyebrow">Быстрые улучшения</p>
+    <h2>Мелочи, которые видно с первого дня</h2>
+    <div class="qw-grid">
+      <div class="qw-item"><span class="qw-num">01</span><p>Праздничная анимация при завершении текста или колоды целиком — маленький, но настоящий момент удовольствия.</p></div>
+      <div class="qw-item"><span class="qw-num">02</span><p>Обложки текстов из градиента по названию — без картинок, но полка сразу выглядит наполненной.</p></div>
+      <div class="qw-item"><span class="qw-num">03</span><p>Личный рекорд сессии повторения виден прямо во время неё, не только в конце.</p></div>
+      <div class="qw-item"><span class="qw-num">04</span><p>Заморозка стрика — раз в неделю пропуск дня не обнуляет серию.</p></div>
+      <div class="qw-item"><span class="qw-num">05</span><p>Тёплые иллюстрации вместо серого текста во всех пустых экранах — Библиотека, Тетрадь, Мозг.</p></div>
+      <div class="qw-item"><span class="qw-num">06</span><p>Свайп-жесты в Тетради вместо кнопок «Знаю / Не знаю» — быстрее и приятнее на телефоне.</p></div>
+    </div>
+  </section>
+
+  <section class="roadmap">
+    <p class="eyebrow">Дорожная карта</p>
+    <h2>С чего начать, чтобы стало заметно быстро</h2>
+    <p class="roadmap-sub">Сначала — то, что переставляет уже существующие данные и требует только вёрстки. Потом — контент и мелкая механика. В конце — то, что требует новой иллюстративной работы или сбора данных о поведении.</p>
+    <div class="phase-board">
+      <div class="phase now">
+        <div class="phase-head"><h3>Сейчас</h3><span class="when">0–1 мес</span></div>
+        <div class="phase-list">
+          <div class="item">Главная-дашборд</div>
+          <div class="item">Быстрые улучшения (6 пунктов)</div>
+          <div class="item">Обложки библиотеки</div>
+        </div>
+      </div>
+      <div class="phase next">
+        <div class="phase-head"><h3>Дальше</h3><span class="when">1–3 мес</span></div>
+        <div class="phase-list">
+          <div class="item">Расширение библиотеки контента</div>
+          <div class="item">Достижения + квест недели + заморозка стрика</div>
+          <div class="item">Анимации Мозг/Тетрадь (флип, свайп)</div>
+        </div>
+      </div>
+      <div class="phase later">
+        <div class="phase-head"><h3>Потом</h3><span class="when">3–6+ мес</span></div>
+        <div class="phase-list">
+          <div class="item">Полный онбординг «первые 5 минут»</div>
+          <div class="item">Иллюстрации пустых состояний</div>
+          <div class="item">Умные уведомления по поведению</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="cta-box">
+      <p class="eyebrow" style="color:var(--gold);">Следующий шаг</p>
+      <h2>Скажи, что откликается</h2>
+      <p>Можно занести весь список, можно два-три пункта. Как только определимся — соберём выбранное в один большой промт и начнём делать по-настоящему, шаг за шагом.</p>
+      <p class="signature">LexReader · черновик, часть 2 (без ИИ-фич) · 28.07.2026</p>
+    </div>
+  </section>
+
+</div>

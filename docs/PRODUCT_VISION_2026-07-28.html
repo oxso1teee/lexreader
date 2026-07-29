@@ -1,0 +1,775 @@
+<style>
+  :root {
+    --paper: #ece0c4;
+    --card: #fbf6ea;
+    --card-2: #f4ead4;
+    --ink: #241c14;
+    --ink-soft: #55493a;
+    --line: rgba(36,28,20,0.14);
+    --brick: #a8451f;
+    --brick-strong: #8a3819;
+    --teal: #1f5750;
+    --gold: #9c7526;
+    --frame: #241c14;
+    --shadow: rgba(36,28,20,0.28);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1a1510;
+      --card: #241d16;
+      --card-2: #2c231a;
+      --ink: #f1e6d2;
+      --ink-soft: #c9bba2;
+      --line: rgba(241,230,210,0.14);
+      --brick: #e08658;
+      --brick-strong: #f0a377;
+      --teal: #6fc2b6;
+      --gold: #d9b465;
+      --frame: #0f0c09;
+      --shadow: rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1a1510; --card: #241d16; --card-2: #2c231a; --ink: #f1e6d2; --ink-soft: #c9bba2;
+    --line: rgba(241,230,210,0.14); --brick: #e08658; --brick-strong: #f0a377; --teal: #6fc2b6;
+    --gold: #d9b465; --frame: #0f0c09; --shadow: rgba(0,0,0,0.5);
+  }
+  :root[data-theme="light"] {
+    --paper: #ece0c4; --card: #fbf6ea; --card-2: #f4ead4; --ink: #241c14; --ink-soft: #55493a;
+    --line: rgba(36,28,20,0.14); --brick: #a8451f; --brick-strong: #8a3819; --teal: #1f5750;
+    --gold: #9c7526; --frame: #241c14; --shadow: rgba(36,28,20,0.28);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+  h1, h2, h3 { text-wrap: balance; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+  p { margin: 0; }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brick);
+    font-weight: 600;
+  }
+  .eyebrow.teal { color: var(--teal); }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    padding: 88px 0 64px;
+    border-bottom: 1px solid var(--line);
+  }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-title, .hero-sub, .hero-meta { animation: riseIn 0.7s ease-out both; }
+    .hero-sub { animation-delay: 0.08s; }
+    .hero-meta { animation-delay: 0.16s; }
+  }
+  .hero-title {
+    font-size: clamp(34px, 5.4vw, 58px);
+    line-height: 1.05;
+    max-width: 15ch;
+    margin-top: 18px;
+  }
+  .hero-title em {
+    font-style: normal;
+    color: var(--brick);
+  }
+  .hero-sub {
+    margin-top: 22px;
+    max-width: 56ch;
+    font-size: 18px;
+    color: var(--ink-soft);
+  }
+  .hero-meta {
+    margin-top: 34px;
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero-meta b { color: var(--ink); font-weight: 700; }
+
+  /* ---------- DIAGNOSIS ---------- */
+  .diagnosis { padding: 56px 0; border-bottom: 1px solid var(--line); }
+  .diagnosis-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .diagnosis-head h2 { font-size: 22px; margin-top: 8px; }
+  .diagnosis-grid {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .diagnosis-card {
+    background: var(--card);
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .diagnosis-card .tag {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--brick);
+    text-transform: uppercase;
+  }
+  .diagnosis-card h3 { font-size: 15.5px; }
+  .diagnosis-card p { font-size: 13.5px; color: var(--ink-soft); }
+
+  /* ---------- PILLARS ---------- */
+  .pillar { padding: 72px 0; border-bottom: 1px solid var(--line); }
+  .pillar-grid {
+    margin-top: 26px;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
+    align-items: center;
+  }
+  .pillar.reverse .pillar-grid { grid-template-columns: 0.95fr 1.05fr; }
+  .pillar.reverse .pillar-text { order: 2; }
+  .pillar.reverse .pillar-visual { order: 1; }
+  .pillar-text h2 { font-size: 30px; margin-top: 10px; max-width: 18ch; }
+  .pillar-text p.lede { margin-top: 16px; font-size: 15.5px; color: var(--ink-soft); max-width: 46ch; }
+  .pillar-tags { margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .chip.impact-high { border-color: var(--brick); color: var(--brick); }
+  .chip.impact-mid { border-color: var(--teal); color: var(--teal); }
+  .pillar-visual { display: flex; justify-content: center; }
+
+  /* ---------- PHONE MOCKUP (renders the REAL app's own palette) ---------- */
+  .phone {
+    --app-bg: #f5f1ea;
+    --app-card: #ffffff;
+    --app-fg: #1a1a1a;
+    --app-fg-soft: rgba(26,26,26,0.55);
+    --app-accent: #a67c52;
+    width: 292px;
+    border-radius: 40px;
+    border: 9px solid var(--frame);
+    background: var(--frame);
+    box-shadow: 0 26px 60px -18px var(--shadow), 0 4px 14px rgba(0,0,0,0.12);
+  }
+  .phone__notch {
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .phone__notch::before {
+    content: "";
+    width: 84px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.16);
+  }
+  .phone__screen {
+    background: var(--app-bg);
+    color: var(--app-fg);
+    border-radius: 28px;
+    min-height: 520px;
+    padding: 18px 16px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 13px;
+    overflow: hidden;
+  }
+  .phone__screen h4 { font-size: 15px; font-weight: 700; margin: 0; }
+  .app-card {
+    background: var(--app-card);
+    border-radius: 14px;
+    padding: 12px 13px;
+  }
+  .app-muted { color: var(--app-fg-soft); font-size: 12px; }
+  .app-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(166,124,82,0.14);
+    color: var(--app-accent);
+    font-weight: 600;
+  }
+  .app-btn {
+    background: var(--app-fg);
+    color: var(--app-bg);
+    border-radius: 999px;
+    padding: 9px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .app-btn.ghost {
+    background: transparent;
+    color: var(--app-fg);
+    border: 1px solid rgba(26,26,26,0.18);
+  }
+  .app-row { display: flex; gap: 8px; }
+  .app-col { display: flex; flex-direction: column; gap: 8px; }
+  .app-shelf { display: flex; gap: 8px; overflow: hidden; }
+  .app-shelf .app-card { min-width: 108px; flex-shrink: 0; }
+  .app-progress { height: 6px; border-radius: 999px; background: rgba(26,26,26,0.09); overflow: hidden; }
+  .app-progress > span { display: block; height: 100%; background: var(--app-accent); border-radius: 999px; }
+  .app-diff-del { text-decoration: line-through; color: rgba(26,26,26,0.35); }
+  .app-diff-add { color: #2f7a3d; font-weight: 700; }
+  .app-avatar {
+    width: 26px; height: 26px; border-radius: 999px;
+    background: var(--app-accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .app-mic {
+    width: 52px; height: 52px; border-radius: 999px;
+    background: var(--app-accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin: 0 auto;
+  }
+  .app-wave { display: flex; align-items: flex-end; gap: 2px; height: 20px; }
+  .app-wave span { width: 3px; background: var(--app-accent); border-radius: 2px; opacity: 0.75; }
+  .caption {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align: center;
+    max-width: 292px;
+  }
+  .visual-stack { display: flex; flex-direction: column; align-items: center; }
+
+  /* Lightweight (non-phone) mockup for the social pillar */
+  .lite-mock {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 20px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .friend-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .friend-row:last-child { border-bottom: none; }
+  .friend-row .name { font-size: 13.5px; font-weight: 600; flex: 1; }
+  .friend-row .streak { font-size: 12px; color: var(--brick); font-weight: 700; }
+
+  /* ---------- QUICK WINS ---------- */
+  .quickwins { padding: 60px 0; border-bottom: 1px solid var(--line); }
+  .quickwins h2 { font-size: 22px; margin-top: 8px; }
+  .qw-grid {
+    margin-top: 26px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .qw-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px 18px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .qw-num { font-family: ui-monospace, monospace; font-size: 12px; color: var(--teal); font-weight: 700; flex-shrink: 0; }
+  .qw-item p { font-size: 13.5px; }
+  .qw-item span { color: var(--ink-soft); }
+
+  /* ---------- ROADMAP ---------- */
+  .roadmap { padding: 64px 0; border-bottom: 1px solid var(--line); }
+  .roadmap h2 { font-size: 22px; margin-top: 8px; }
+  .roadmap-sub { margin-top: 10px; color: var(--ink-soft); font-size: 14px; max-width: 60ch; }
+  .phase-board {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .phase {
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .phase-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .phase-head h3 { font-size: 15px; }
+  .phase-head .when { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-soft); }
+  .phase-list { display: flex; flex-direction: column; gap: 8px; }
+  .phase-list .item {
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--card-2);
+  }
+  .phase.now { border-top: 3px solid var(--brick); }
+  .phase.next { border-top: 3px solid var(--gold); }
+  .phase.later { border-top: 3px solid var(--teal); }
+
+  /* ---------- CTA ---------- */
+  .cta { padding: 72px 0 96px; }
+  .cta-box {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 22px;
+    padding: 44px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .cta-box h2 { font-size: 26px; color: var(--paper); max-width: 20ch; }
+  .cta-box p { color: rgba(236,224,196,0.78); max-width: 58ch; font-size: 15px; }
+  .cta-box .signature { margin-top: 8px; font-size: 13px; color: rgba(236,224,196,0.6); }
+
+  @media (max-width: 860px) {
+    .diagnosis-grid { grid-template-columns: repeat(2, 1fr); }
+    .pillar-grid, .pillar.reverse .pillar-grid { grid-template-columns: 1fr; gap: 32px; }
+    .pillar.reverse .pillar-text, .pillar.reverse .pillar-visual { order: initial; }
+    .qw-grid { grid-template-columns: 1fr; }
+    .phase-board { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    .diagnosis-grid { grid-template-columns: 1fr; }
+    .wrap { padding: 0 18px; }
+    .phone { width: 100%; max-width: 292px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow hero-meta" style="margin:0;">ЧЕРНОВИК ДЛЯ ОБСУЖДЕНИЯ · LEXREADER</p>
+    <h1 class="hero-title">LexReader может быть больше, чем <em>читалка со словариком.</em></h1>
+    <p class="hero-sub">План, как из инструмента «читай и сохраняй слова» вырастить полноценную языковую среду: с разговором вслух, лентой историй под твой уровень и мотивацией, которая держит месяцами, а не одну неделю.</p>
+    <div class="hero-meta">
+      <span><b>7</b> направлений роста</span>
+      <span><b>6</b> — с макетами экранов</span>
+      <span><b>3</b> фазы дорожной карты</span>
+    </div>
+  </header>
+
+  <section class="diagnosis">
+    <div class="diagnosis-head">
+      <div>
+        <p class="eyebrow">Честно о текущем состоянии</p>
+        <h2>Прежде чем добавлять — чего сейчас не хватает</h2>
+      </div>
+    </div>
+    <div class="diagnosis-grid">
+      <div class="diagnosis-card">
+        <span class="tag">Главная</span>
+        <h3>Ничего не решает</h3>
+        <p>Открываешь приложение — видишь факты про кривую забывания Эббингауза. Не видно, что конкретно сделать сегодня.</p>
+      </div>
+      <div class="diagnosis-card">
+        <span class="tag">Библиотека</span>
+        <h3>Пустая по умолчанию</h3>
+        <p>Пока сам не притащишь ссылку или файл — читать нечего. Нет момента «о, это интересно», который затягивает.</p>
+      </div>
+      <div class="diagnosis-card">
+        <span class="tag">Практика</span>
+        <h3>Только карточки</h3>
+        <p>Из четырёх языковых навыков задействованы чтение и немного письма-в-карточке. Речь и свободное письмо — вообще никак.</p>
+      </div>
+      <div class="diagnosis-card">
+        <span class="tag">Мотивация</span>
+        <h3>Один счётчик дней</h3>
+        <p>Стрик — это одна переменная. У приложений, которые держат пользователей годами, таких переменных пять-шесть.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: SPEAKING -->
+  <section class="pillar">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow">Говорить</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>ИИ-собеседник, который слышит и поправляет</h2>
+          <p class="lede">Сейчас в LexReader нельзя сказать вслух ни слова. Голосовой разговор с ИИ на изучаемом языке — под уровень пользователя и слова, которые он уже сохранил из своих текстов. Микрофон и синтез речи браузер даёт бесплатно (Web Speech API) — платить нужно только за саму логику диалога.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Средняя сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>🎙️ Разговор с ИИ · Beginner</h4>
+                <div class="app-row">
+                  <div class="app-avatar">AI</div>
+                  <div class="app-card" style="flex:1;">Hi! What did you do today?</div>
+                </div>
+                <div class="app-row" style="justify-content:flex-end;">
+                  <div class="app-card" style="background:var(--app-accent); color:#fff;">
+                    <div class="app-wave">
+                      <span style="height:6px"></span><span style="height:14px"></span><span style="height:9px"></span>
+                      <span style="height:18px"></span><span style="height:7px"></span><span style="height:12px"></span>
+                    </div>
+                    <div style="margin-top:6px; font-size:11.5px; opacity:0.85;">"I go to work"</div>
+                  </div>
+                </div>
+                <div class="app-card" style="border-left:3px solid var(--app-accent);">
+                  <div class="app-muted" style="margin-bottom:4px;">Мягкая поправка</div>
+                  <div>I <span class="app-diff-del">go</span> <span class="app-diff-add">went</span> to work — прошедшее время, ведь день уже закончился.</div>
+                </div>
+                <div style="flex:1;"></div>
+                <div class="app-mic">🎤</div>
+                <p class="app-muted" style="text-align:center;">Зажми и говори</p>
+              </div>
+            </div>
+            <p class="caption">Экран разговора: реплика ИИ, ответ голосом, мягкая поправка без остановки диалога.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: CONTENT FEED -->
+  <section class="pillar reverse">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow teal">Читать</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Лента, которая сама предлагает, что читать</h2>
+          <p class="lede">Библиотека сегодня — пустая полка, пока не притащишь свою ссылку. Нужна подборка по темам и уровню: с оценкой «сколько слов ты уже знаешь» на каждой карточке — из открытых источников без нарушения лицензий (упрощённая Wikipedia, учебные новостные архивы и т.п.).</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Средняя сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>Для тебя · уровень B1</h4>
+                <div class="app-shelf">
+                  <div class="app-card">
+                    <div style="font-size:20px;">🏙️</div>
+                    <div style="font-weight:600; margin-top:6px;">ИИ меняет города</div>
+                    <div class="app-muted">4 мин · 92% слов знакомы</div>
+                  </div>
+                  <div class="app-card">
+                    <div style="font-size:20px;">☕</div>
+                    <div style="font-weight:600; margin-top:6px;">Кофейни Лондона</div>
+                    <div class="app-muted">3 мин · 88% знакомо</div>
+                  </div>
+                  <div class="app-card">
+                    <div style="font-size:20px;">🚀</div>
+                    <div style="font-weight:600; margin-top:6px;">Новости космоса</div>
+                    <div class="app-muted">5 мин · 81% знакомо</div>
+                  </div>
+                </div>
+                <h4 style="margin-top:6px;">Продолжить</h4>
+                <div class="app-card">
+                  <div class="app-row" style="align-items:center;">
+                    <div style="width:34px;height:34px;border-radius:8px;background:var(--app-accent);flex-shrink:0;"></div>
+                    <div style="flex:1;">
+                      <div style="font-weight:600;">Робинзон Крузо — Глава 3</div>
+                      <div class="app-progress" style="margin-top:6px;"><span style="width:64%;"></span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="caption">Главная библиотеки: горизонтальные полки по темам + карточка «продолжить чтение».</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: GAMIFICATION -->
+  <section class="pillar">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow">Игра</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>От одного стрика — к системе, которая держит месяцами</h2>
+          <p class="lede">Счётчик дней подряд — это одна переменная мотивации. Лиги со случайными соперниками похожего уровня, ежедневные квесты с очками опыта, видимый прогресс уровня — именно это держит миллионы людей в конкурентах годами, а не только «умный алгоритм повторения».</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Средняя сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>🥈 Серебряная лига · 4 место из 30</h4>
+                <div class="app-card">
+                  <div class="app-row" style="align-items:center; justify-content:space-between;">
+                    <div class="app-row" style="align-items:center;"><span class="app-avatar">3</span><span style="margin-left:6px;">ты</span></div>
+                    <span style="font-weight:700;">312 XP</span>
+                  </div>
+                  <div class="app-progress" style="margin-top:8px;"><span style="width:78%; background:var(--gold, var(--app-accent));"></span></div>
+                </div>
+                <h4>Квесты на сегодня</h4>
+                <div class="app-col">
+                  <div class="app-card app-row" style="align-items:center; justify-content:space-between;">
+                    <span>☑ Прочитать 200 слов</span><span class="app-muted">+20 XP</span>
+                  </div>
+                  <div class="app-card app-row" style="align-items:center; justify-content:space-between;">
+                    <span>☐ Повторить 15 карточек</span><span class="app-muted">+15 XP</span>
+                  </div>
+                  <div class="app-card app-row" style="align-items:center; justify-content:space-between;">
+                    <span>☐ Добавить 5 новых слов</span><span class="app-muted">+10 XP</span>
+                  </div>
+                </div>
+                <div style="flex:1;"></div>
+                <div class="app-pill" style="align-self:center;">Уровень 12 · 🔥 12 дней</div>
+              </div>
+            </div>
+            <p class="caption">Лига + ежедневные квесты вместо одного числа-стрика.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: WRITING -->
+  <section class="pillar reverse">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow teal">Писать</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Дневник, который сам находит твои ошибки</h2>
+          <p class="lede">Второй молчащий навык — свободное письмо. Несколько предложений в день на изучаемом языке — и разбор с объяснением, что и почему поправлено, а не просто «правильно / неправильно». Тот же переводческий движок, что уже работает в читалке.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-mid">Средний эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>✍️ Дневник · 28 июля</h4>
+                <div class="app-card app-muted">Today I go to shop and buy a some breads.</div>
+                <div class="app-card" style="border-left:3px solid var(--app-accent);">
+                  <div class="app-muted" style="margin-bottom:6px;">Разбор</div>
+                  <div>Today I <span class="app-diff-del">go</span> <span class="app-diff-add">went</span> to <span class="app-diff-del">shop</span> <span class="app-diff-add">the shop</span> and bought <span class="app-diff-del">a some</span> <span class="app-diff-add">some</span> bread<span class="app-diff-del">s</span>.</div>
+                </div>
+                <div class="app-row" style="gap:6px;">
+                  <span class="app-pill">3 ошибки</span>
+                  <span class="app-pill">прошедшее время</span>
+                  <span class="app-pill">артикли</span>
+                </div>
+                <div style="flex:1;"></div>
+                <div class="app-btn">Сохранить в дневник</div>
+              </div>
+            </div>
+            <p class="caption">Правки показаны построчно с причиной — а не общей оценкой.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: HOME REDESIGN -->
+  <section class="pillar">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow">Главная</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Главная должна отвечать на один вопрос: что делать сегодня</h2>
+          <p class="lede">Сейчас на Главной — статичная лента фактов о заучивании. Вместо неё — приборная панель: сколько повторить, что дочитать, дневная цель одним кольцом прогресса. Все данные уже есть в приложении — это пересборка того, что есть, а не новая инфраструктура.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-high">Высокий эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>Привет 👋</h4>
+                <div class="app-card" style="display:flex; align-items:center; gap:14px;">
+                  <svg width="56" height="56" viewBox="0 0 56 56">
+                    <circle cx="28" cy="28" r="24" fill="none" stroke="rgba(26,26,26,0.1)" stroke-width="6"/>
+                    <circle cx="28" cy="28" r="24" fill="none" stroke="#a67c52" stroke-width="6" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="42" transform="rotate(-90 28 28)"/>
+                  </svg>
+                  <div>
+                    <div style="font-weight:700;">32 / 50 слов</div>
+                    <div class="app-muted">дневная цель</div>
+                  </div>
+                </div>
+                <div class="app-card app-row" style="justify-content:space-between;">
+                  <span>🔥 12 дней</span><span>📇 8 к повтору</span><span>＋5 новых</span>
+                </div>
+                <div class="app-card">
+                  <div class="app-muted" style="margin-bottom:6px;">Продолжить чтение</div>
+                  <div style="font-weight:600;">Робинзон Крузо — Глава 3</div>
+                  <div class="app-progress" style="margin-top:6px;"><span style="width:64%;"></span></div>
+                </div>
+                <div class="app-btn">Начать повторение</div>
+              </div>
+            </div>
+            <p class="caption">Дашборд вместо ленты фактов: понятно, что делать, за одну секунду.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: LISTENING -->
+  <section class="pillar reverse">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow teal">Слушать</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Не только YouTube — подкасты и диктант на слух</h2>
+          <p class="lede">Watch Mode уже синхронизирует субтитры с видео. Логичное расширение — любой подкаст или аудио с синхронной расшифровкой, плюс режим диктанта: слушаешь фразу и печатаешь то, что услышал, приложение сверяет.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-mid">Средний эффект</span>
+            <span class="chip" style="border-color:var(--brick); color:var(--brick);">Высокая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="phone">
+              <div class="phone__notch"></div>
+              <div class="phone__screen">
+                <h4>🎧 The Daily · эп. 412</h4>
+                <div class="app-card" style="display:flex; align-items:center; gap:12px;">
+                  <div style="width:40px;height:40px;border-radius:8px;background:var(--app-accent);flex-shrink:0;"></div>
+                  <div style="flex:1;">
+                    <div class="app-wave" style="height:26px;">
+                      <span style="height:10px"></span><span style="height:20px"></span><span style="height:14px"></span>
+                      <span style="height:24px"></span><span style="height:8px"></span><span style="height:18px"></span>
+                      <span style="height:12px"></span><span style="height:22px"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="app-card">
+                  <span class="app-diff-del" style="text-decoration:none; opacity:0.4;">The economy grew </span>
+                  <span style="background:rgba(166,124,82,0.22); padding:1px 3px; border-radius:3px;">faster than expected</span>
+                  <span style="opacity:0.4;"> this quarter.</span>
+                </div>
+                <div class="app-pill" style="align-self:flex-start;">Режим диктанта</div>
+                <div class="app-card app-muted">Напечатай, что услышал…</div>
+                <div style="flex:1;"></div>
+                <div class="app-btn ghost">Проверить</div>
+              </div>
+            </div>
+            <p class="caption">Караоке-подсветка строки в такт аудио + переключатель диктанта.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILLAR: SOCIAL (lightweight, no phone) -->
+  <section class="pillar">
+    <div class="wrap" style="padding:0;">
+      <p class="eyebrow">Друзья</p>
+      <div class="pillar-grid">
+        <div class="pillar-text">
+          <h2>Немного социального — без соцсети внутри приложения</h2>
+          <p class="lede">Пригласить друга по ссылке и видеть его стрик и лигу рядом со своей. Не мессенджер и не лента — просто ещё пара причин не бросать на второй неделе.</p>
+          <div class="pillar-tags">
+            <span class="chip impact-mid">Средний эффект</span>
+            <span class="chip">Низкая сложность</span>
+          </div>
+        </div>
+        <div class="pillar-visual">
+          <div class="visual-stack">
+            <div class="lite-mock">
+              <div class="friend-row"><span class="app-avatar" style="background:var(--brick);">М</span><span class="name">Марина</span><span class="streak">🔥 21</span></div>
+              <div class="friend-row"><span class="app-avatar" style="background:var(--teal);">Д</span><span class="name">Денис</span><span class="streak">🔥 9</span></div>
+              <div class="friend-row"><span class="app-avatar" style="background:var(--gold);">А</span><span class="name">Аня</span><span class="streak">🔥 34</span></div>
+              <div class="app-btn" style="margin-top:12px; background:var(--brick); color:#fff; display:inline-block; padding:9px 16px; border-radius:999px; font-size:12.5px; font-weight:600;">+ Пригласить друга</div>
+            </div>
+            <p class="caption">Список друзей со стриком — встраивается прямо в Статистику.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="quickwins">
+    <p class="eyebrow">Быстрые улучшения</p>
+    <h2>Не тянут на отдельный макет, но заметны сразу</h2>
+    <div class="qw-grid">
+      <div class="qw-item"><span class="qw-num">01</span><p>Плейсмент-тест при онбординге — сразу понятен уровень, а не выбор из трёх карточек «начинающий / средний / продвинутый».</p></div>
+      <div class="qw-item"><span class="qw-num">02</span><p>Значки достижений в Статистике: 7 дней подряд, 100 сохранённых слов, первая колода добита до конца.</p></div>
+      <div class="qw-item"><span class="qw-num">03</span><p>Умное время push-уведомлений — по тому, когда пользователь обычно занимается, а не в одно фиксированное время для всех.</p></div>
+      <div class="qw-item"><span class="qw-num">04</span><p>Озвучка слова в Тетради одним тапом — тот же бесплатный Web Speech API, что и для голосового ввода.</p></div>
+      <div class="qw-item"><span class="qw-num">05</span><p>Иллюстрации для пустых экранов вместо просто текста «пока пусто».</p></div>
+      <div class="qw-item"><span class="qw-num">06</span><p>Ярлык «Повторить карточки» на домашний экран телефона — PWA-шорткат в одно нажатие.</p></div>
+    </div>
+  </section>
+
+  <section class="roadmap">
+    <p class="eyebrow">Дорожная карта</p>
+    <h2>В каком порядке это реально делать</h2>
+    <p class="roadmap-sub">Сначала — дешёвое и заметное. Потом — два ИИ-направления, для которых уже есть вся нужная инфраструктура (перевод, ключи, серверные экшены). В конце — то, что требует новой инфраструктуры или критической массы пользователей.</p>
+    <div class="phase-board">
+      <div class="phase now">
+        <div class="phase-head"><h3>Сейчас</h3><span class="when">0–1 мес</span></div>
+        <div class="phase-list">
+          <div class="item">Главная-дашборд</div>
+          <div class="item">Быстрые улучшения (6 пунктов)</div>
+          <div class="item">Игра: базовый XP + квесты</div>
+        </div>
+      </div>
+      <div class="phase next">
+        <div class="phase-head"><h3>Дальше</h3><span class="when">1–3 мес</span></div>
+        <div class="phase-list">
+          <div class="item">ИИ-собеседник (речь)</div>
+          <div class="item">Дневник с ИИ-разбором</div>
+          <div class="item">Лента персонализированного контента</div>
+        </div>
+      </div>
+      <div class="phase later">
+        <div class="phase-head"><h3>Потом</h3><span class="when">3–6+ мес</span></div>
+        <div class="phase-list">
+          <div class="item">Лиги (нужна масса игроков)</div>
+          <div class="item">Подкасты и диктант</div>
+          <div class="item">Друзья / приглашения</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="cta-box">
+      <p class="eyebrow" style="color:var(--gold);">Следующий шаг</p>
+      <h2>Скажи, что откликается</h2>
+      <p>Можно занести весь список, можно два-три пункта. Как только определимся — соберём выбранное в один большой промт и начнём делать по-настоящему, шаг за шагом, как и всё остальное в этом проекте.</p>
+      <p class="signature">LexReader · черновик видения продукта · 28.07.2026</p>
+    </div>
+  </section>
+
+</div>
