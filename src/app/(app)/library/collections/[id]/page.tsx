@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 import TextCard from "../../text-card";
+import EmptyState from "@/components/empty-state";
 
 export default async function CollectionPage({
   params,
@@ -49,7 +50,11 @@ export default async function CollectionPage({
       <h1 className="mb-4 mt-2 text-xl font-semibold">📚 {collection.title}</h1>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-black/50 dark:text-white/50">В этой коллекции пока нет текстов.</p>
+        <EmptyState
+          icon="📚"
+          title="В коллекции пока пусто"
+          body="Добавь текст из Библиотеки и укажи эту коллекцию при сохранении."
+        />
       ) : (
         <div className="flex flex-col gap-2">
           {rows.map((t, index) => {

@@ -4,6 +4,7 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import AddCardForm from "./add-card-form";
 import CardRow from "./card-row";
+import EmptyState from "@/components/empty-state";
 
 export default async function DeckPage({
   params,
@@ -51,9 +52,11 @@ export default async function DeckPage({
       />
 
       {!cards || cards.length === 0 ? (
-        <p className="text-sm text-black/50 dark:text-white/50">
-          В колоде пока нет карточек — добавь вручную выше или через «Импорт» на экране «Мозг».
-        </p>
+        <EmptyState
+          icon="🧠✨"
+          title="В колоде пока нет карточек"
+          body="Добавь вручную выше или через «Импорт» на экране «Мозг»."
+        />
       ) : (
         <div className="flex flex-col gap-2">
           {cards.map((c) => (

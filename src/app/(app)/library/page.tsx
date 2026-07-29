@@ -5,6 +5,7 @@ import type { TextRow } from "@/lib/types";
 import { hashString, coverGradient, coverEmoji } from "@/lib/text-cover";
 import TextCard from "./text-card";
 import CollectionCard from "./collection-card";
+import EmptyState from "@/components/empty-state";
 
 export default async function LibraryPage() {
   const profile = await requireProfile();
@@ -72,9 +73,11 @@ export default async function LibraryPage() {
             Мои тексты
           </h2>
           {collectionsWithTexts.length === 0 && ownWithoutCollection.length === 0 ? (
-            <p className="text-sm text-black/50 dark:text-white/50">
-              Пока пусто — добавь свой первый текст.
-            </p>
+            <EmptyState
+              icon="📖✨"
+              title="Здесь появятся твои тексты"
+              body="Добавь первый — и начни читать."
+            />
           ) : (
             <div className="flex flex-col gap-2">
               {collectionsWithTexts.map((c) => (
