@@ -1,5 +1,6 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { getPlan, FREE_DAILY_WORD_LIMIT } from "@/lib/subscription";
+import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 
 export interface UpsertWordResult {
   ok: boolean;
@@ -82,6 +83,11 @@ export async function saveVocabularyItem(
     .select("id, level, seen_count")
     .single();
   if (error || !created) return { ok: false, error: "Не удалось сохранить слово. Попробуй ещё раз." };
+
+  // Раздел 5.2 промта: точка входа общая для читалки/ручного добавления/
+  // "отправить в тетрадь" из Мозга — сюда стекается почти весь прогресс по
+  // словарю, поэтому проверка достижений живёт именно здесь.
+  await checkAndAwardAchievements(supabase, userId, input.language);
 
   return { ok: true, id: created.id, level: created.level, seenCount: created.seen_count };
 }

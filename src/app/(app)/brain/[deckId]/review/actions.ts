@@ -7,6 +7,7 @@ import { touchStreak } from "@/lib/streak";
 import { reviewSrsState } from "@/lib/srs";
 import { getSrsParams } from "@/lib/srs-settings";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
+import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 
 export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const supabase = await createClient();
@@ -18,12 +19,15 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const [{ data: current, error: fetchError }, params] = await Promise.all([
     supabase
       .from("srs_state")
-      .select("ease_factor, interval_days, repetitions, first_reviewed_at")
+      .select("ease_factor, interval_days, repetitions, first_reviewed_at, flashcards!inner(language)")
       .eq("flashcard_id", flashcardId)
       .single(),
     getSrsParams(supabase, user.id),
   ]);
   if (fetchError || !current) throw new Error("Карточка не найдена.");
+  const cardLanguage = (
+    Array.isArray(current.flashcards) ? current.flashcards[0] : current.flashcards
+  ).language;
 
   const next = reviewSrsState(
     {
@@ -68,6 +72,7 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   if (logError) throw new Error("Не удалось сохранить ответ.");
 
   await touchStreak(supabase, user.id);
+  await checkAndAwardAchievements(supabase, user.id, cardLanguage);
   revalidatePath("/brain");
   revalidatePath("/progress");
 }

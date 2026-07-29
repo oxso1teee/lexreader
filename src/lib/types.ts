@@ -7,6 +7,9 @@ export interface Profile {
   streak_current: number;
   streak_longest: number;
   last_active_date: string | null;
+  streak_freeze_available: boolean;
+  streak_freeze_week: string | null;
+  review_best_session_count: number;
   created_at: string;
 }
 

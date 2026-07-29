@@ -5,6 +5,15 @@ import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
 import LineChart from "./line-chart";
 import HardestWords, { type HardestWord } from "./hardest-words";
+import AchievementsShelf from "./achievements-shelf";
+
+function isoWeekStart(d: Date): string {
+  const day = (d.getUTCDay() + 6) % 7;
+  const monday = new Date(d);
+  monday.setUTCDate(d.getUTCDate() - day);
+  monday.setUTCHours(0, 0, 0, 0);
+  return monday.toISOString();
+}
 
 // Ниже скольки попыток слово не попадает в рейтинг "сложных" — одна
 // случайная "Не помню" в начале иначе даёт 0% точности и лезет в топ
@@ -102,6 +111,8 @@ export default async function ProgressPage({
     heatmapSessions,
     heatmapReviews,
     accuracyLogQuery,
+    { data: earnedAchievements },
+    { count: weeklyQuestProgress },
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -173,6 +184,13 @@ export default async function ProgressPage({
       .select("flashcard_id, grade, flashcards!inner(front, back, owner_id, language)")
       .eq("flashcards.owner_id", profile.id)
       .eq("flashcards.language", profile.target_language),
+    supabase.from("user_achievements").select("achievement_id").eq("owner_id", profile.id),
+    supabase
+      .from("vocabulary_items")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language)
+      .gte("created_at", isoWeekStart(new Date())),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -253,6 +271,12 @@ export default async function ProgressPage({
       <LineChart title="Карточек повторено в день" points={reviewsChartPoints} color="#2563eb" />
 
       <HardestWords words={hardestWords} />
+
+      <AchievementsShelf
+        earnedIds={new Set((earnedAchievements ?? []).map((a) => a.achievement_id))}
+        weeklyQuestProgress={weeklyQuestProgress ?? 0}
+        streakFreezeAvailable={profile.streak_freeze_available}
+      />
 
       <div className="overflow-x-auto rounded-2xl bg-card p-4 shadow-sm">
         <h2 className="mb-2 font-semibold">Активность</h2>
