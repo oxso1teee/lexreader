@@ -37,3 +37,23 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Раздел 6 промта (docs/IMPLEMENTATION_PROMPT_2026-07-28.md): отклик при
+   открытии ответа в повторении — "переворот" ответа сверху вниз вместо
+   мгновенного появления. Уважает prefers-reduced-motion. */
+@keyframes flip-reveal {
+  from {
+    opacity: 0;
+    transform: rotateX(-90deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotateX(0deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .flip-reveal {
+    transform-origin: top center;
+    animation: flip-reveal 0.35s ease-out;
+  }
+}

@@ -96,6 +96,18 @@ export async function sendCardToNotebook(front: string, back: string): Promise<U
   return result;
 }
 
+// docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 6.2: вызывается один раз
+// по завершении сессии, только если счётчик реально побил сохранённый
+// рекорд (проверка на клиенте до вызова — здесь просто безусловная запись).
+export async function updateReviewBest(count: number): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from("profiles").update({ review_best_session_count: count }).eq("id", user.id);
+}
+
 export async function getCurrentStreak(): Promise<number> {
   const supabase = await createClient();
   const {

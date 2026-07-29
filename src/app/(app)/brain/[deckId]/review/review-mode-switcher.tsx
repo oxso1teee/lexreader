@@ -20,10 +20,12 @@ export default function ReviewModeSwitcher({
   cards: cardsProp,
   studyDirection,
   srsParams,
+  bestSessionCount,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
   srsParams: SrsParams;
+  bestSessionCount: number;
 }) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
@@ -88,7 +90,13 @@ export default function ReviewModeSwitcher({
       </div>
 
       {mode === "cards" && (
-        <ReviewSession key="cards" cards={cards} studyDirection={direction} srsParams={srsParams} />
+        <ReviewSession
+          key="cards"
+          cards={cards}
+          studyDirection={direction}
+          srsParams={srsParams}
+          bestSessionCount={bestSessionCount}
+        />
       )}
       {mode === "choice" && (
         <MultipleChoiceMode key="choice" cards={cards} studyDirection={direction} />

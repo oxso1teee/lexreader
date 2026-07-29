@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import EmptyState from "./empty-state";
+
+// docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 6.3: порог смещения в
+// пикселях, после которого отпускание считается свайпом, а не просто тапом.
+const SWIPE_THRESHOLD_PX = 80;
 
 export interface PracticeWord {
   id: string;
@@ -18,6 +22,10 @@ export default function PracticeSession({ words }: { words: PracticeWord[] }) {
   const [revealed, setRevealed] = useState(false);
   const [known, setKnown] = useState(0);
   const [unknown, setUnknown] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragging = useRef(false);
+  const startX = useRef(0);
 
   if (words.length === 0) {
     return <EmptyState />;
@@ -38,7 +46,27 @@ export default function PracticeSession({ words }: { words: PracticeWord[] }) {
     if (isKnown) setKnown((n) => n + 1);
     else setUnknown((n) => n + 1);
     setRevealed(false);
+    setDragX(0);
     setIndex((i) => i + 1);
+  }
+
+  function handlePointerDown(e: React.PointerEvent) {
+    if (!revealed) return;
+    dragging.current = true;
+    startX.current = e.clientX;
+    setIsDragging(true);
+  }
+  function handlePointerMove(e: React.PointerEvent) {
+    if (!dragging.current) return;
+    setDragX(e.clientX - startX.current);
+  }
+  function handlePointerUp() {
+    if (!dragging.current) return;
+    dragging.current = false;
+    setIsDragging(false);
+    if (dragX > SWIPE_THRESHOLD_PX) mark(true);
+    else if (dragX < -SWIPE_THRESHOLD_PX) mark(false);
+    else setDragX(0);
   }
 
   return (
@@ -72,10 +100,25 @@ export default function PracticeSession({ words }: { words: PracticeWord[] }) {
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-6 py-10 text-center">
-          <div>
+          <div
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            style={{
+              transform: `translateX(${dragX}px) rotate(${dragX / 20}deg)`,
+              transition: isDragging ? "none" : "transform 0.2s ease-out",
+              touchAction: revealed ? "none" : undefined,
+            }}
+          >
             <p className="text-2xl font-semibold">{word.headword}</p>
             {revealed && (
               <p className="mt-2 text-lg text-black/60 dark:text-white/60">{word.translation}</p>
+            )}
+            {revealed && (
+              <p className="mt-2 text-xs text-black/30 dark:text-white/30">
+                ← смахни, чтобы отметить →
+              </p>
             )}
           </div>
 

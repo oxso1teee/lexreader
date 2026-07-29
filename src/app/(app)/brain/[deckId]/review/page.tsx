@@ -114,6 +114,11 @@ export default async function DeckReviewPage({
   };
 
   return (
-    <ReviewModeSwitcher cards={cards} studyDirection={settings.study_direction} srsParams={srsParams} />
+    <ReviewModeSwitcher
+      cards={cards}
+      studyDirection={settings.study_direction}
+      srsParams={srsParams}
+      bestSessionCount={profile.review_best_session_count}
+    />
   );
 }

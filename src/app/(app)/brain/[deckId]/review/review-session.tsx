@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
-import { reviewWord, sendCardToNotebook } from "./actions";
+import { reviewWord, sendCardToNotebook, updateReviewBest } from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
 import SessionComplete from "./session-complete";
@@ -38,10 +38,12 @@ export default function ReviewSession({
   cards: cardsProp,
   studyDirection,
   srsParams,
+  bestSessionCount,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
   srsParams: SrsParams;
+  bestSessionCount: number;
 }) {
   // Снимок очереди на момент старта сессии: серверные экшены ревью вызывают
   // неявный refresh страницы, из-за которого /review перезапросил бы уже
@@ -54,9 +56,12 @@ export default function ReviewSession({
   const [tally, setTally] = useState<Record<0 | 1 | 2 | 3, number>>({ 0: 0, 1: 0, 2: 0, 3: 0 });
   const [isEditing, setIsEditing] = useState(false);
   const [notebookStatus, setNotebookStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
+  const [flash, setFlash] = useState<"good" | "bad" | null>(null);
+  const [newRecord, setNewRecord] = useState(false);
 
   const done = index >= cards.length;
   const card = cards[index];
+  const sessionTotal = tally[0] + tally[1] + tally[2] + tally[3];
 
   const editAction = card ? updateFlashcard.bind(null, card.deckId, card.flashcardId) : undefined;
   const [editState, editFormAction, editPending] = useActionState<UpdateCardState, FormData>(
@@ -82,10 +87,18 @@ export default function ReviewSession({
   function grade(value: 0 | 1 | 2 | 3) {
     startTransition(async () => {
       await reviewWord(card.flashcardId, value);
+      const newTotal = sessionTotal + 1;
       setTally((t) => ({ ...t, [value]: t[value] + 1 }));
+      setFlash(value >= 2 ? "good" : "bad");
+      setTimeout(() => setFlash(null), 500);
       setRevealed(false);
       setNotebookStatus("idle");
       setIsEditing(false);
+      const isLastCard = index + 1 >= cards.length;
+      if (isLastCard && newTotal > bestSessionCount) {
+        setNewRecord(true);
+        await updateReviewBest(newTotal);
+      }
       setIndex((i) => i + 1);
     });
   }
@@ -111,11 +124,19 @@ export default function ReviewSession({
   }
 
   if (done) {
-    return <SessionComplete count={cards.length} />;
+    return <SessionComplete count={cards.length} newRecord={newRecord} />;
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-8">
+    <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-8">
+      {flash && (
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${
+            flash === "good" ? "bg-emerald-500/15" : "bg-red-500/15"
+          }`}
+        />
+      )}
       <p className="mb-4 text-sm text-black/50 dark:text-white/50">
         {index + 1} / {cards.length}
       </p>
@@ -181,7 +202,7 @@ export default function ReviewSession({
             </div>
 
             {revealed && (
-              <div className="flex flex-col items-center gap-2">
+              <div className="flip-reveal flex flex-col items-center gap-2">
                 <p className="text-xl font-medium text-black/80 dark:text-white/80">{answer}</p>
                 {card.notes && (
                   <p className="max-w-sm text-sm text-black/50 dark:text-white/50">{card.notes}</p>
@@ -213,8 +234,24 @@ export default function ReviewSession({
               Показать ответ
             </button>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {GRADES.map((g) => {
+            <div className="flex flex-col gap-3">
+              {bestSessionCount > 0 && (
+                <div>
+                  <p className="text-center text-xs text-black/40 dark:text-white/40">
+                    Сегодня {sessionTotal} · рекорд {Math.max(bestSessionCount, sessionTotal)}
+                  </p>
+                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-caramel transition-[width]"
+                      style={{
+                        width: `${Math.min(100, (sessionTotal / Math.max(bestSessionCount, 1)) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                {GRADES.map((g) => {
                 const preview = reviewSrsState(
                   { easeFactor: card.easeFactor, intervalDays: card.intervalDays, repetitions: card.repetitions },
                   g.value,
@@ -234,7 +271,8 @@ export default function ReviewSession({
                     </span>
                   </button>
                 );
-              })}
+                })}
+              </div>
             </div>
           )}
         </>
