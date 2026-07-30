@@ -1,10 +1,32 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendPush, type PushSubscriptionRow } from "@/lib/push";
+import { computePreferredHour } from "@/lib/notify-timing";
 import { log } from "@/lib/log";
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
+}
+
+// docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 9: тёплая формулировка
+// вместо общего "N карточек" — если есть незаконченное чтение, упоминаем его
+// по названию вместо generic due-count сообщения.
+async function findContinueReading(
+  supabase: ReturnType<typeof createServiceClient>,
+  ownerId: string,
+): Promise<{ title: string; percentLeft: number } | null> {
+  const { data } = await supabase
+    .from("text_progress")
+    .select("percent_read, texts!inner(title)")
+    .eq("owner_id", ownerId)
+    .gt("percent_read", 4)
+    .lt("percent_read", 96)
+    .order("last_read_at", { ascending: false })
+    .limit(1);
+  const row = data?.[0];
+  if (!row) return null;
+  const text = Array.isArray(row.texts) ? row.texts[0] : row.texts;
+  return { title: text.title, percentLeft: 100 - row.percent_read };
 }
 
 async function sendToAll(
@@ -42,6 +64,7 @@ export async function GET(request: Request) {
 
   const supabase = createServiceClient();
   const now = new Date().toISOString();
+  const currentHour = new Date().getUTCHours();
   const yesterday = isoDate(new Date(Date.now() - 86_400_000));
 
   const { data: subs } = await supabase
@@ -59,6 +82,24 @@ export async function GET(request: Request) {
   let streakReminders = 0;
 
   for (const [ownerId, ownerSubs] of subsByOwner) {
+    // docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 9.2: крон дергается
+    // раз в час (см. .github/workflows/push-reminders.yml — Vercel Cron на
+    // Hobby-плане не даёт чаще раза в сутки), но каждому пользователю шлём
+    // максимум один пуш в сутки, только в его "обычный" час.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("last_active_date, preferred_notify_hour")
+      .eq("id", ownerId)
+      .maybeSingle();
+    if (!profile) continue;
+
+    let preferredHour = profile.preferred_notify_hour;
+    if (preferredHour === null) {
+      preferredHour = await computePreferredHour(supabase, ownerId);
+      await supabase.from("profiles").update({ preferred_notify_hour: preferredHour }).eq("id", ownerId);
+    }
+    if (preferredHour !== currentHour) continue;
+
     const { count: dueCount } = await supabase
       .from("srs_state")
       .select("flashcard_id, flashcards!inner(owner_id)", { count: "exact", head: true })
@@ -66,22 +107,19 @@ export async function GET(request: Request) {
       .lte("due_at", now);
 
     if (dueCount && dueCount > 0) {
+      const continueReading = await findContinueReading(supabase, ownerId);
       await sendToAll(supabase, ownerSubs, {
         title: "LexReader",
-        body: `У тебя ${dueCount} карточек к повторению`,
-        url: "/brain/all/review",
+        body: continueReading
+          ? `«${continueReading.title}» ждёт — осталось ${continueReading.percentLeft}%`
+          : `У тебя ${dueCount} карточек к повторению`,
+        url: continueReading ? "/library" : "/brain/all/review",
       });
       reviewReminders++;
       continue; // повторение важнее напоминания о стрике — не дублировать пуш
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("last_active_date")
-      .eq("id", ownerId)
-      .maybeSingle();
-
-    if (profile?.last_active_date === yesterday) {
+    if (profile.last_active_date === yesterday) {
       await sendToAll(supabase, ownerSubs, {
         title: "LexReader",
         body: "Не теряй стрик 🔥 — зайди сегодня, чтобы не сбросить счётчик",

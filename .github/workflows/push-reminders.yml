@@ -1,0 +1,21 @@
+name: Push reminders (hourly)
+
+# docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 9.2: Vercel Cron на
+# бесплатном (Hobby) плане не даёт частоту чаще раза в сутки — обходим это,
+# дёргая тот же защищённый эндпоинт снаружи по бесплатному расписанию
+# GitHub Actions. Сам эндпоинт сам решает, кому в этот час реально нужен
+# пуш (см. src/app/api/cron/push-reminders/route.ts).
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call push-reminders endpoint
+        run: |
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://lexreader.vercel.app/api/cron/push-reminders"
