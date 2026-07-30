@@ -2,10 +2,13 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
-import { hashString, coverGradient, coverEmoji } from "@/lib/text-cover";
+import { hashString, coverGradient } from "@/lib/text-cover";
 import TextCard from "./text-card";
+import TextCoverCard from "./text-cover-card";
 import CollectionCard from "./collection-card";
 import EmptyState from "@/components/empty-state";
+
+const WORDS_PER_MINUTE = 200;
 
 export default async function LibraryPage() {
   const profile = await requireProfile();
@@ -112,34 +115,36 @@ export default async function LibraryPage() {
 
         {featured && (
           <section className="mb-6">
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
-              Текст дня
-            </h2>
             <Link
               href={`/read/${featured.id}`}
-              className="block rounded-xl p-4 text-white shadow-sm transition-opacity hover:opacity-90"
+              className="block rounded-2xl p-4 text-white shadow-sm transition-opacity hover:opacity-90"
               style={{
                 background: `linear-gradient(135deg, ${coverGradient(featured.title)[0]}, ${coverGradient(featured.title)[1]})`,
               }}
             >
-              <p className="text-xs font-medium uppercase tracking-wide text-white/70">
-                {coverEmoji(featured.title)} {featured.level_tag ?? ""}
+              <span className="inline-block rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm">
+                Текст дня
+              </span>
+              <p className="mt-2 text-lg font-semibold">{featured.title}</p>
+              <p className="text-sm text-white/80">
+                Рассказ · {featured.level_tag?.toUpperCase() ?? "?"} · ≈
+                {featured.word_count ? Math.max(1, Math.ceil(featured.word_count / WORDS_PER_MINUTE)) : "?"} мин
               </p>
-              <p className="mt-1 text-lg font-semibold">{featured.title}</p>
-              <p className="text-sm text-white/80">{featured.word_count ?? "?"} слов</p>
             </Link>
           </section>
         )}
 
         {system.length > 0 && (
-          <Section
-            title="Библиотека приложения"
-            texts={system}
-            empty=""
-            canDelete={false}
-            progressByTextId={progressByTextId}
-            isSystem
-          />
+          <section className="mb-6">
+            <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
+              Библиотека приложения
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {system.map((t) => (
+                <TextCoverCard key={t.id} id={t.id} title={t.title} levelTag={t.level_tag} />
+              ))}
+            </div>
+          </section>
         )}
       </div>
 
@@ -151,52 +156,5 @@ export default async function LibraryPage() {
         +
       </Link>
     </div>
-  );
-}
-
-function Section({
-  title,
-  texts,
-  empty,
-  canDelete,
-  progressByTextId,
-  isSystem = false,
-}: {
-  title: string;
-  texts: TextRow[];
-  empty: string;
-  canDelete: boolean;
-  progressByTextId: Map<string, { percentRead: number; lastReadAt: string | null }>;
-  isSystem?: boolean;
-}) {
-  return (
-    <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
-        {title}
-      </h2>
-      {texts.length === 0 ? (
-        <p className="text-sm text-black/50 dark:text-white/50">{empty}</p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {texts.map((t) => {
-            const progress = progressByTextId.get(t.id);
-            return (
-              <TextCard
-                key={t.id}
-                id={t.id}
-                title={t.title}
-                wordCount={t.word_count}
-                levelTag={t.level_tag}
-                canDelete={canDelete}
-                percentRead={progress?.percentRead ?? 0}
-                lastReadAt={progress?.lastReadAt ?? null}
-                youtubeVideoId={t.youtube_video_id}
-                isSystem={isSystem}
-              />
-            );
-          })}
-        </div>
-      )}
-    </section>
   );
 }
