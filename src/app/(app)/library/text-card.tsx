@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
+import { IconPlay, IconTrash } from "@/components/icons";
 import { deleteText } from "./actions";
 
 const WORDS_PER_MINUTE = 200;
@@ -42,9 +43,9 @@ export default function TextCard({
         className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-black/10 px-4 py-3 transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
       >
         <span className="min-w-0 flex-1">
-        <p className="truncate font-medium">
-          {youtubeVideoId && "📺 "}
-          {title}
+        <p className="flex items-center gap-1.5 truncate font-medium">
+          {youtubeVideoId && <IconPlay className="h-3.5 w-3.5 shrink-0 text-black/40 dark:text-white/40" />}
+          <span className="truncate">{title}</span>
         </p>
         <p className="text-sm text-black/50 dark:text-white/50">
           {wordCount ?? "?"} слов
@@ -59,7 +60,7 @@ export default function TextCard({
         {percentRead > 0 && (
           <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
             <div
-              className="h-full rounded-full bg-emerald-500"
+              className="h-full rounded-full bg-accent"
               style={{ width: `${percentRead}%` }}
             />
           </div>
@@ -70,9 +71,9 @@ export default function TextCard({
         <Link
           href={`/watch/${id}`}
           aria-label="Смотреть с субтитрами"
-          className="flex min-h-11 shrink-0 items-center justify-center rounded-full border border-black/10 px-3 text-sm font-medium dark:border-white/15"
+          className="flex min-h-11 shrink-0 items-center gap-1.5 justify-center rounded-full border border-black/10 px-3 text-sm font-medium dark:border-white/15"
         >
-          📺 Смотреть
+          <IconPlay className="h-4 w-4" /> Смотреть
         </Link>
       )}
       {canDelete && (
@@ -81,9 +82,9 @@ export default function TextCard({
           disabled={isPending}
           onClick={() => startTransition(() => deleteText(id))}
           aria-label="Удалить текст"
-          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-red-500 disabled:opacity-40 dark:border-white/15"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-danger disabled:opacity-40 dark:border-white/15"
         >
-          ✕
+          <IconTrash className="h-4 w-4" />
         </button>
       )}
     </div>

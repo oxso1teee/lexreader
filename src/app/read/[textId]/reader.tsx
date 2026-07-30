@@ -348,7 +348,7 @@ export default function Reader({
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link
             href="/library"
-            className="flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-medium text-caramel transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+            className="flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-medium text-accent-strong transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
           >
             <span aria-hidden="true">←</span>
             <span className="hidden sm:inline">Библиотека</span>
@@ -364,7 +364,7 @@ export default function Reader({
               type="button"
               onClick={() => handleSpeak(currentPageText)}
               aria-label="Озвучить страницу"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-caramel shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-accent-strong shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5 6.5 9H3v6h3.5L11 19V5Z" />
@@ -386,7 +386,7 @@ export default function Reader({
         </div>
         <div className="h-0.5 bg-black/[0.04] dark:bg-white/[0.05]">
           <div
-            className="h-full bg-caramel transition-[width] duration-300"
+            className="h-full bg-accent transition-[width] duration-300"
             style={{ width: `${readingProgress}%` }}
           />
         </div>
@@ -453,7 +453,7 @@ export default function Reader({
                     onPointerUp={() => onPointerUpWord(si, ti, tok.text, sentence)}
                     style={{
                       backgroundColor: selected
-                        ? "#a67c5266"
+                        ? "color-mix(in srgb, var(--color-accent) 40%, transparent)"
                         : levelColor
                           ? `${levelColor}33`
                           : undefined,
@@ -489,7 +489,7 @@ export default function Reader({
           type="button"
           disabled={pageIndex === 0}
           onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
-          className="flex min-h-11 min-w-24 items-center justify-center rounded-full px-4 text-sm font-medium text-caramel transition-colors hover:bg-black/[0.04] disabled:opacity-30 dark:hover:bg-white/[0.06]"
+          className="flex min-h-11 min-w-24 items-center justify-center rounded-full px-4 text-sm font-medium text-accent-strong transition-colors hover:bg-black/[0.04] disabled:opacity-30 dark:hover:bg-white/[0.06]"
         >
           ← Назад
         </button>
@@ -500,7 +500,7 @@ export default function Reader({
           <button
             type="button"
             onClick={() => setPageIndex((i) => Math.min(pages.length - 1, i + 1))}
-            className="flex min-h-11 min-w-24 items-center justify-center rounded-full bg-caramel px-4 text-sm font-medium text-white shadow-sm transition hover:bg-caramel-light"
+            className="flex min-h-11 min-w-24 items-center justify-center rounded-full bg-accent px-4 text-sm font-medium text-white shadow-sm transition hover:bg-accent-strong"
           >
             Далее →
           </button>
@@ -548,7 +548,7 @@ export default function Reader({
                       : "Бесплатный лимит слов на сегодня исчерпан."}{" "}
                     <Link
                       href={`/pricing?reason=${popup.isPhrase ? "cards" : "words"}`}
-                      className="text-caramel underline"
+                      className="text-accent-strong underline"
                     >
                       Смотреть Premium
                     </Link>
@@ -568,7 +568,7 @@ export default function Reader({
                         type="button"
                         onClick={handleManualTranslation}
                         disabled={!manualTranslation.trim()}
-                        className="shrink-0 text-sm font-medium text-caramel disabled:opacity-40"
+                        className="shrink-0 text-sm font-medium text-accent-strong disabled:opacity-40"
                       >
                         + Добавить перевод
                       </button>
@@ -630,7 +630,7 @@ export default function Reader({
                     type="button"
                     onClick={handleAddPhrase}
                     disabled={popup.saved}
-                    className="flex min-h-11 items-center justify-center rounded-lg bg-caramel px-2 text-center text-xs font-medium text-white disabled:opacity-60"
+                    className="flex min-h-11 items-center justify-center rounded-lg bg-accent px-2 text-center text-xs font-medium text-white disabled:opacity-60"
                   >
                     {popup.saved ? "Добавлено ✓" : "+ В карточки"}
                   </button>
@@ -639,7 +639,7 @@ export default function Reader({
                     type="button"
                     onClick={() => handleSetLevel(4)}
                     className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-medium text-white"
-                    style={{ backgroundColor: popup.level === 4 ? WORD_LEVELS[4].color : "#a67c52" }}
+                    style={{ backgroundColor: popup.level === 4 ? WORD_LEVELS[4].color : "var(--color-accent)" }}
                   >
                     {popup.level === 4 ? "Добавлено ✓" : "Знаю это слово ⭐"}
                   </button>

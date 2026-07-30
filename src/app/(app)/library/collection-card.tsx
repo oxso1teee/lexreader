@@ -43,7 +43,7 @@ export default function CollectionCard({
       {avgPercentRead > 0 && (
         <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
           <div
-            className="h-full rounded-full bg-emerald-500"
+            className="h-full rounded-full bg-accent"
             style={{ width: `${avgPercentRead}%` }}
           />
         </div>

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 import { hashString, coverGradient } from "@/lib/text-cover";
+import { IconPlus } from "@/components/icons";
 import TextCard from "./text-card";
 import TextCoverCard from "./text-cover-card";
 import CollectionCard from "./collection-card";
@@ -150,10 +151,10 @@ export default async function LibraryPage() {
 
       <Link
         href="/library/new"
-        className="fixed bottom-20 right-5 flex h-14 w-14 items-center justify-center rounded-full bg-black text-2xl text-white shadow-lg hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+        className="fixed bottom-20 right-5 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-white shadow-lg hover:bg-accent-strong"
         aria-label="Добавить текст"
       >
-        +
+        <IconPlus className="h-6 w-6" />
       </Link>
     </div>
   );
