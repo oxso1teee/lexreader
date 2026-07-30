@@ -16,7 +16,7 @@ export default function ContinueReadingCard({
       </p>
       <p className="mt-1 truncate font-semibold">{title}</p>
       <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-        <div className="h-full rounded-full bg-caramel" style={{ width: `${percentRead}%` }} />
+        <div className="h-full rounded-full bg-accent" style={{ width: `${percentRead}%` }} />
       </div>
     </Link>
   );

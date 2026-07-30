@@ -1,34 +1,67 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f1ea;
-  --foreground: #1a1a1a;
-  --card: #ffffff;
+  --background: #f1e9da;
+  --foreground: #241a10;
+  --card: #fffdf8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-caramel: #a67c52;
-  --color-caramel-light: #b08968;
-  --color-beige: #f5f1ea;
-  --color-indigo-card: #1e1b3a;
-  --color-navy-card: #1c2541;
-  --color-accent-green: #16a34a;
+
+  /* docs/IMPLEMENTATION_PROMPT_REDESIGN_2026-07-30.md, раздел 1: единственный
+     акцент бренда — заменяет собой прежние caramel/caramel-light. Основное
+     действие, прогресс, стрик. Больше нигде фиолетовый/зелёный/синий/оранжевый
+     как "цвет бренда" не используются — см. раздел 1.1 того же промта. */
+  --color-accent: #b8471c;
+  --color-accent-strong: #8f350f;
+  --color-accent-soft: #f0d2b8;
+
+  /* Глубокие поверхности: пейволл, лицевая сторона карточки в повторении,
+     премиум-бейдж. Заменяет indigo-card/navy-card. */
+  --color-well: #172823;
+  --color-well-2: #223a33;
+
+  /* Нейтральная подложка для инсетов (треки прогресса, чипы, скелетоны) */
+  --color-paper-sunken: #e8ddc8;
+
+  /* Состояния — НЕ бренд-акцент. Только там, где реально нужна семантика
+     "успех/трудно/ошибка" (SRS-оценки, бейджи "новое"). */
+  --color-success: #3f7d5c;
+  --color-success-soft: #d9e9dd;
+  --color-warning: #b8862f;
+  --color-warning-soft: #f0e1c2;
+  --color-danger: #b23a3a;
+  --color-danger-soft: #f2dcdc;
+
+  /* Алиасы на переходный период редизайна — удалить, когда grep "caramel"
+     по src/ станет пустым (см. промт, конец Фазы 2). */
+  --color-caramel: var(--color-accent);
+  --color-caramel-light: var(--color-accent-strong);
+  --color-beige: var(--background);
+
+  /* orange/green — НЕ бренд-токены, а самостоятельная шкала уровня знания
+     слова (reader.tsx, панель статистики текста) — постоянные, не удалять.
+     purple/blue/red — временные алиасы под progress/stat-card.tsx до тех
+     пор, пока Фаза 4 не уберёт оттуда параметр color вовсе (см. промт,
+     раздел 4.9, п.2) — тогда удалить обе строки. */
   --color-accent-orange: #ea580c;
+  --color-accent-green: #16a34a;
   --color-accent-purple: #7c3aed;
   --color-accent-blue: #2563eb;
   --color-accent-red: #dc2626;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #14120f;
-    --foreground: #f0ece3;
-    --card: #201d29;
+    --background: #14100b;
+    --foreground: #f1e9da;
+    --card: #1f1911;
   }
 }
 
@@ -55,5 +88,28 @@ body {
   .flip-reveal {
     transform-origin: top center;
     animation: flip-reveal 0.35s ease-out;
+  }
+}
+
+/* docs/IMPLEMENTATION_PROMPT_REDESIGN_2026-07-30.md, раздел 5: короткий
+   пульс на счётчике стрика при увеличении дневного стрика. */
+@keyframes streak-pulse {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.14); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .streak-pulse {
+    animation: streak-pulse 0.5s ease-out;
+  }
+}
+
+/* докрутка дневной цели: галочка мягко проявляется поверх кольца прогресса */
+@keyframes goal-check-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .goal-check-in {
+    animation: goal-check-in 0.3s ease-out;
   }
 }

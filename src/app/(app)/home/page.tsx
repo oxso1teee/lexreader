@@ -2,13 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getPlan } from "@/lib/subscription";
 import { getDueCount } from "@/lib/brain-stats";
-import LanguageBanner from "./language-banner";
-import PremiumCard from "./premium-card";
-import WelcomeCard from "./welcome-card";
-import InfoCard from "./info-card";
-import AccountSummaryCard from "./account-summary-card";
-import DailyGoalRing from "./daily-goal-ring";
-import StatRow from "./stat-row";
+import TodayCard from "./today-card";
+import UpsellStrip from "./upsell-strip";
 import ContinueReadingCard from "./continue-reading-card";
 
 function todayStartUtc(): string {
@@ -19,11 +14,8 @@ function todayStartUtc(): string {
 export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
-  // Найдено при повторном аудите: карточка "Выберите ваш план" показывалась
-  // и уже оплатившим Premium — выглядит так, будто оплата не сработала.
   const [
     plan,
-    { data: userData },
     { count: wordCount },
     { count: textCount },
     { count: newWordsToday },
@@ -31,7 +23,6 @@ export default async function HomePage() {
     { data: continueRows },
   ] = await Promise.all([
     getPlan(supabase, profile.id),
-    supabase.auth.getUser(),
     supabase
       .from("vocabulary_items")
       .select("id", { count: "exact", head: true })
@@ -69,21 +60,16 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 py-4">
-      <AccountSummaryCard
-        email={userData.user?.email ?? ""}
-        plan={plan}
+      <TodayCard
+        createdAt={profile.created_at}
+        targetLanguage={profile.target_language}
         wordCount={wordCount ?? 0}
         textCount={textCount ?? 0}
+        dueCount={dueCount}
+        newWordsToday={newWordsToday ?? 0}
+        dailyGoal={profile.daily_word_goal}
+        streak={profile.streak_current}
       />
-      <LanguageBanner targetLanguage={profile.target_language} />
-      {plan === "free" && <PremiumCard />}
-      <WelcomeCard createdAt={profile.created_at} />
-
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
-        <DailyGoalRing current={newWordsToday ?? 0} goal={profile.daily_word_goal} />
-      </div>
-
-      <StatRow streak={profile.streak_current} dueCount={dueCount} newWordsToday={newWordsToday ?? 0} />
 
       {continueText && (
         <ContinueReadingCard
@@ -93,13 +79,7 @@ export default async function HomePage() {
         />
       )}
 
-      <InfoCard
-        variant="tip"
-        icon="💡"
-        label="Learning tip"
-        title="Читай то, что интересно"
-        body="Выбирай тексты, которые ты бы читал(а) и на родном языке. Живой интерес держит внимание и заметно улучшает запоминание слов из контекста."
-      />
+      {plan === "free" && <UpsellStrip />}
     </div>
   );
 }
