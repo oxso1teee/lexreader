@@ -25,15 +25,33 @@ export default async function NotebookPage({
     query = query.eq("status", status);
   }
 
-  const [{ data: items }, { data: allWords }] = await Promise.all([
+  const [{ data: items }, { count: totalCount }, { data: defaultDeck }] = await Promise.all([
     query,
     supabase
       .from("vocabulary_items")
-      .select("id, headword, translation")
+      .select("id", { count: "exact", head: true })
       .eq("owner_id", profile.id)
+      .eq("language", profile.target_language),
+    // Слова из чтения и Мозг слиты в один раздел (0028_link_reading_words_to_brain.sql)
+    // — "Учить" ведёт на настоящее интервальное повторение колоды по умолчанию.
+    supabase
+      .from("decks")
+      .select("id")
+      .eq("owner_id", profile.id)
+      .eq("is_default", true)
       .eq("language", profile.target_language)
-      .order("created_at", { ascending: false }),
+      .maybeSingle(),
   ]);
+
+  let reviewDueCount = 0;
+  if (defaultDeck) {
+    const { count } = await supabase
+      .from("srs_state")
+      .select("flashcard_id, flashcards!inner(deck_id)", { count: "exact", head: true })
+      .eq("flashcards.deck_id", defaultDeck.id)
+      .lte("due_at", new Date().toISOString());
+    reviewDueCount = count ?? 0;
+  }
 
   // Найдено при повторном аудите RLS: бакет word-photos был публично
   // читаемым (любой мог перечислить и скачать чужие фото) — теперь
@@ -68,8 +86,9 @@ export default async function NotebookPage({
         is_favorite: item.is_favorite,
         sourceTitle: (item.texts as unknown as { title: string } | null)?.title ?? null,
       }))}
-      allWords={allWords ?? []}
-      totalCount={allWords?.length ?? 0}
+      totalCount={totalCount ?? 0}
+      reviewDeckId={defaultDeck?.id ?? null}
+      reviewDueCount={reviewDueCount}
     />
   );
 }

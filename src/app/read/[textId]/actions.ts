@@ -37,7 +37,10 @@ export async function upsertWord(input: {
     contextTranslation: input.contextTranslation,
     language: text.language,
   });
-  if (result.ok) revalidatePath("/notebook");
+  if (result.ok) {
+    revalidatePath("/notebook");
+    revalidatePath("/brain");
+  }
   return result;
 }
 

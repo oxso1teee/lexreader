@@ -214,12 +214,12 @@ export default function ReviewSession({
                   className="mt-1 text-xs font-medium text-black/40 underline-offset-2 hover:text-black hover:underline disabled:no-underline disabled:opacity-60 dark:text-white/40 dark:hover:text-white"
                 >
                   {notebookStatus === "done"
-                    ? "✓ Добавлено в тетрадь"
+                    ? "✓ Сохранено в слова из чтения"
                     : notebookStatus === "saving"
                       ? "Добавляем…"
                       : notebookStatus === "error"
                         ? "Не удалось — попробовать снова?"
-                        : "📥 Отправить в тетрадь"}
+                        : "📥 Сохранить в слова из чтения"}
                 </button>
               </div>
             )}

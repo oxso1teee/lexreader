@@ -39,7 +39,7 @@ export default function AccountSummaryCard({
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-xl bg-black/5 px-3 py-2 dark:bg-white/10">
           <p className="text-xl font-bold">{wordCount}</p>
-          <p className="text-xs text-black/50 dark:text-white/50">Слов в тетради</p>
+          <p className="text-xs text-black/50 dark:text-white/50">Слов сохранено</p>
         </div>
         <div className="rounded-xl bg-black/5 px-3 py-2 dark:bg-white/10">
           <p className="text-xl font-bold">{textCount}</p>

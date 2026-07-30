@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import WordRow from "./word-row";
 import EmptyState from "./empty-state";
-import PracticeSession, { type PracticeWord } from "./practice-session";
 import AddWordModal from "./add-word-modal";
 
 const STATUS_TABS = [
@@ -27,23 +26,24 @@ interface WordItem {
 export default function NotebookClient({
   ownerId,
   items,
-  allWords,
   status,
   targetLanguage,
   sourceLang,
   nativeLang,
   totalCount,
+  reviewDeckId,
+  reviewDueCount,
 }: {
   ownerId: string;
   items: WordItem[];
-  allWords: PracticeWord[];
   status: string;
   targetLanguage: string;
   sourceLang: string;
   nativeLang: string;
   totalCount: number;
+  reviewDeckId: string | null;
+  reviewDueCount: number;
 }) {
-  const [mode, setMode] = useState<"read" | "practice">("read");
   const [query, setQuery] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
 
@@ -58,39 +58,33 @@ export default function NotebookClient({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-5 py-6">
+      <Link href="/brain" className="mb-3 text-sm text-caramel">
+        ← Мозг
+      </Link>
+
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold">✏️ Тетрадь</h1>
+          <h1 className="text-xl font-bold">📖 Слова из чтения</h1>
           <p className="text-sm text-black/50 dark:text-white/50">
             {targetLanguage} · {totalCount} слов
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex overflow-hidden rounded-full border border-black/15 dark:border-white/20">
-            {(["read", "practice"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={`flex min-h-11 items-center px-3 text-sm font-medium transition-colors ${
-                  mode === m
-                    ? "bg-caramel text-white"
-                    : "text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white"
-                }`}
-              >
-                {m === "read" ? "Чтение" : "Повтор"}
-              </button>
-            ))}
-          </div>
-          <AddWordModal sourceLang={sourceLang} targetLang={nativeLang} />
-        </div>
+        <AddWordModal sourceLang={sourceLang} targetLang={nativeLang} />
       </div>
 
-      {/* Найдено при повторном аудите: переключение вкладок Чтение↔Повтор
-          полностью размонтировало PracticeSession, сбрасывая прогресс
-          текущей тренировки. Оба режима остаются смонтированными постоянно —
-          переключаем только видимость через CSS. */}
-      <div className={mode === "read" ? "contents" : "hidden"}>
+      {reviewDeckId && (
+        <Link
+          href={`/brain/${reviewDeckId}/review`}
+          className="mb-4 flex items-center justify-between rounded-2xl bg-caramel p-4 text-white shadow-sm"
+        >
+          <span className="font-medium">
+            {reviewDueCount > 0 ? `▶ Учить (${reviewDueCount} к повторению)` : "🎉 Всё повторено"}
+          </span>
+          <span>›</span>
+        </Link>
+      )}
+
+      <>
         <input
           type="text"
           value={query}
@@ -155,11 +149,7 @@ export default function NotebookClient({
             ))}
           </div>
         )}
-      </div>
-
-      <div className={mode === "practice" ? "flex flex-1 flex-col" : "hidden"}>
-        <PracticeSession words={allWords} />
-      </div>
+      </>
     </div>
   );
 }

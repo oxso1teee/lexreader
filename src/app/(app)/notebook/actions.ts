@@ -35,11 +35,16 @@ export async function toggleFavorite(id: string, isFavorite: boolean) {
 
 export async function setPhotoUrl(id: string, photoUrl: string | null) {
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: item, error } = await supabase
     .from("vocabulary_items")
     .update({ photo_url: photoUrl })
-    .eq("id", id);
+    .eq("id", id)
+    .select("flashcard_id")
+    .single();
   if (error) throw new Error("Не удалось сохранить фото.");
+  if (item?.flashcard_id) {
+    await supabase.from("flashcards").update({ photo_url: photoUrl }).eq("id", item.flashcard_id);
+  }
   revalidatePath("/notebook");
 }
 
@@ -72,6 +77,9 @@ export async function addManualWord(input: {
     contextTranslation: null,
     language: profile.target_language,
   });
-  if (result.ok) revalidatePath("/notebook");
+  if (result.ok) {
+    revalidatePath("/notebook");
+    revalidatePath("/brain");
+  }
   return result;
 }

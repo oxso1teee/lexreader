@@ -22,7 +22,7 @@ export default async function BrainPage() {
   // — при смене изучаемого языка Мозг показывал колоды и карточки всех
   // языков вперемешку. Теперь список и счётчик "к повторению" ограничены
   // текущим target_language, как и остальные части приложения.
-  const [{ data: decks }, { data: flashcards }, dueCount] = await Promise.all([
+  const [{ data: decks }, { data: flashcards }, dueCount, { count: readingWordCount }] = await Promise.all([
     supabase
       .from("decks")
       .select("id, name, is_default, is_starter")
@@ -36,6 +36,14 @@ export default async function BrainPage() {
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language),
     getDueCount(supabase, profile.id, profile.target_language),
+    // Тетрадь и Мозг раньше ощущались как два разных раздела — слились в
+    // один: слова из чтения видны здесь же и попадают в реальное повторение
+    // (см. supabase/migrations/0028_link_reading_words_to_brain.sql).
+    supabase
+      .from("vocabulary_items")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language),
   ]);
 
   const countByDeck = new Map<string, number>();
@@ -75,6 +83,21 @@ export default async function BrainPage() {
           <p>🎉 Всё повторено!</p>
         )}
       </div>
+
+      {(readingWordCount ?? 0) > 0 && (
+        <Link
+          href="/notebook"
+          className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]"
+        >
+          <span>
+            <span className="block font-medium">📖 Слова из чтения</span>
+            <span className="block text-sm text-black/50 dark:text-white/50">
+              {readingWordCount} слов · фото, избранное, экспорт
+            </span>
+          </span>
+          <span className="text-black/30 dark:text-white/30">›</span>
+        </Link>
+      )}
 
       <div className="flex gap-2">
         <NewDeckModal />
