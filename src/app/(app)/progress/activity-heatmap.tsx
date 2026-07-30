@@ -8,11 +8,13 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+// docs/IMPLEMENTATION_PROMPT_REDESIGN_2026-07-30.md, раздел 4.9: активность
+// красится в акцентный цвет продукта, а не в независимую зелёную шкалу.
 function levelClass(count: number): string {
-  if (count === 0) return "bg-black/5 dark:bg-white/10";
-  if (count <= 2) return "bg-emerald-300 dark:bg-emerald-900";
-  if (count <= 5) return "bg-emerald-500 dark:bg-emerald-700";
-  return "bg-emerald-700 dark:bg-emerald-500";
+  if (count === 0) return "bg-paper-sunken dark:bg-white/10";
+  if (count <= 2) return "bg-accent-soft";
+  if (count <= 5) return "bg-accent/55";
+  return "bg-accent";
 }
 
 export default function ActivityHeatmap({ counts }: { counts: Record<string, number> }) {

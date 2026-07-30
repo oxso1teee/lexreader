@@ -22,12 +22,12 @@ export default function SessionComplete({
       <p className="text-2xl font-semibold">Сессия завершена</p>
       <p className="text-black/60 dark:text-white/60">Повторено слов: {count}</p>
       {newRecord && (
-        <p className="font-medium text-caramel">🏆 Новый личный рекорд сессии!</p>
+        <p className="font-medium text-accent-strong">🏆 Новый личный рекорд сессии!</p>
       )}
       {streak !== null && <p className="text-black/60 dark:text-white/60">Стрик: {streak} 🔥</p>}
       <Link
         href="/library"
-        className="mt-4 rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
+        className="mt-4 rounded-full bg-accent px-5 py-3 font-medium text-white"
       >
         К библиотеке
       </Link>

@@ -8,6 +8,7 @@ interface DeckItem {
   name: string;
   isDefault: boolean;
   cardCount: number;
+  dueCount: number;
 }
 
 export default function DeckList({ decks }: { decks: DeckItem[] }) {
@@ -34,7 +35,14 @@ export default function DeckList({ decks }: { decks: DeckItem[] }) {
           </p>
         )}
         {filtered.map((d) => (
-          <DeckCard key={d.id} id={d.id} name={d.name} isDefault={d.isDefault} cardCount={d.cardCount} />
+          <DeckCard
+            key={d.id}
+            id={d.id}
+            name={d.name}
+            isDefault={d.isDefault}
+            cardCount={d.cardCount}
+            dueCount={d.dueCount}
+          />
         ))}
       </div>
     </>

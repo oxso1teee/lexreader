@@ -27,10 +27,10 @@ export default function HardestWords({ words }: { words: HardestWord[] }) {
               <span
                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                   w.accuracy < 0.4
-                    ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                    ? "bg-danger-soft text-danger"
                     : w.accuracy < 0.7
-                      ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
-                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                      ? "bg-warning-soft text-warning"
+                      : "bg-success-soft text-success"
                 }`}
               >
                 {Math.round(w.accuracy * 100)}%

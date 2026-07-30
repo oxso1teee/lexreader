@@ -6,6 +6,7 @@ import StatCard from "./stat-card";
 import LineChart from "./line-chart";
 import HardestWords, { type HardestWord } from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
+import { IconChart } from "@/components/icons";
 
 function isoWeekStart(d: Date): string {
   const day = (d.getUTCDay() + 6) % 7;
@@ -237,7 +238,9 @@ export default async function ProgressPage({
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">📊 Статистика</h1>
+        <h1 className="flex items-center gap-2 text-xl font-bold">
+          <IconChart className="h-5 w-5" /> Статистика
+        </h1>
         <span className="rounded-lg border border-black/20 px-2.5 py-1 text-sm font-medium dark:border-white/25">
           {profile.target_language}
         </span>
@@ -253,22 +256,22 @@ export default async function ProgressPage({
               состояние словаря, не зависят от вкладки периода выше (в отличие
               от "за период" ниже) — явно помечаем "всего", чтобы не выглядело
               багом на одном экране с показателем, который период учитывает. */}
-          <StatCard value={learningWords ?? 0} label="Изучаются всего (ур. 1-3)" color="orange" />
-          <StatCard value={knownWords ?? 0} label="Знаю всего (ур. 4)" color="green" />
-          <StatCard value={wordsReadTotal} label="Слов прочитано за период" color="purple" />
+          <StatCard value={learningWords ?? 0} label="Изучаются всего (ур. 1-3)" />
+          <StatCard value={knownWords ?? 0} label="Знаю всего (ур. 4)" />
+          <StatCard value={wordsReadTotal} label="Слов прочитано за период" />
         </div>
       </div>
 
       <div>
         <h2 className="mb-2 font-semibold">Карточки</h2>
         <div className="grid grid-cols-2 gap-3">
-          <StatCard value={cardsCreated} label="Карточек создано" color="blue" />
-          <StatCard value={answersGiven} label="Ответов дано" color="red" />
+          <StatCard value={cardsCreated} label="Карточек создано" />
+          <StatCard value={answersGiven} label="Ответов дано" />
         </div>
       </div>
 
-      <LineChart title="Слов прочитано в день" points={wordsChartPoints} color="#a67c52" />
-      <LineChart title="Карточек повторено в день" points={reviewsChartPoints} color="#2563eb" />
+      <LineChart title="Слов прочитано в день" points={wordsChartPoints} />
+      <LineChart title="Карточек повторено в день" points={reviewsChartPoints} variant="dashed" />
 
       <HardestWords words={hardestWords} />
 

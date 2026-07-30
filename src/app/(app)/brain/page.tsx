@@ -6,7 +6,8 @@ import NewDeckModal from "./new-deck-modal";
 import ImportModal from "./import-modal";
 import StarterDeckCard from "./starter-deck-card";
 import { STARTER_DECKS } from "@/lib/starter-decks";
-import { getDueCount } from "@/lib/brain-stats";
+import { getDueCount, getDueCountsByDeck } from "@/lib/brain-stats";
+import { IconCards, IconSettings } from "@/components/icons";
 
 // Перевод слов стартовых колод (lib/starter-decks.ts) считается на лету
 // через MyMemory при нажатии "+ Добавить" — партиями, но всё равно сетевой
@@ -22,29 +23,31 @@ export default async function BrainPage() {
   // — при смене изучаемого языка Мозг показывал колоды и карточки всех
   // языков вперемешку. Теперь список и счётчик "к повторению" ограничены
   // текущим target_language, как и остальные части приложения.
-  const [{ data: decks }, { data: flashcards }, dueCount, { count: readingWordCount }] = await Promise.all([
-    supabase
-      .from("decks")
-      .select("id, name, is_default, is_starter")
-      .eq("owner_id", profile.id)
-      .eq("language", profile.target_language)
-      .order("is_default", { ascending: false })
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("flashcards")
-      .select("id, deck_id")
-      .eq("owner_id", profile.id)
-      .eq("language", profile.target_language),
-    getDueCount(supabase, profile.id, profile.target_language),
-    // Тетрадь и Мозг раньше ощущались как два разных раздела — слились в
-    // один: слова из чтения видны здесь же и попадают в реальное повторение
-    // (см. supabase/migrations/0028_link_reading_words_to_brain.sql).
-    supabase
-      .from("vocabulary_items")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", profile.id)
-      .eq("language", profile.target_language),
-  ]);
+  const [{ data: decks }, { data: flashcards }, dueCount, dueCountByDeck, { count: readingWordCount }] =
+    await Promise.all([
+      supabase
+        .from("decks")
+        .select("id, name, is_default, is_starter")
+        .eq("owner_id", profile.id)
+        .eq("language", profile.target_language)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("flashcards")
+        .select("id, deck_id")
+        .eq("owner_id", profile.id)
+        .eq("language", profile.target_language),
+      getDueCount(supabase, profile.id, profile.target_language),
+      getDueCountsByDeck(supabase, profile.id, profile.target_language),
+      // Тетрадь и Мозг раньше ощущались как два разных раздела — слились в
+      // один: слова из чтения видны здесь же и попадают в реальное повторение
+      // (см. supabase/migrations/0028_link_reading_words_to_brain.sql).
+      supabase
+        .from("vocabulary_items")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", profile.id)
+        .eq("language", profile.target_language),
+    ]);
 
   const countByDeck = new Map<string, number>();
   for (const f of flashcards ?? []) {
@@ -59,7 +62,9 @@ export default async function BrainPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <div>
-        <h1 className="text-2xl font-bold">🧠 Мозг</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <IconCards className="h-6 w-6" /> Мозг
+        </h1>
         <div className="mt-1 flex items-center justify-between">
           <p className="text-sm text-black/50 dark:text-white/50">{profile.target_language}</p>
           <span className="rounded-lg border border-black/20 px-2.5 py-1 text-sm font-medium dark:border-white/25">
@@ -74,7 +79,7 @@ export default async function BrainPage() {
             <p className="mb-3 font-medium">Карточек к повторению: {dueCount}</p>
             <Link
               href="/brain/all/review"
-              className="inline-block rounded-full bg-caramel px-5 py-2.5 font-medium text-white"
+              className="inline-block rounded-full bg-accent px-5 py-2.5 font-medium text-white"
             >
               Начать повторение
             </Link>
@@ -104,9 +109,9 @@ export default async function BrainPage() {
         <ImportModal decks={deckOptions} targetLanguage={profile.target_language} />
         <Link
           href="/brain/settings"
-          className="rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"
+          className="flex items-center gap-1.5 rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"
         >
-          ⚙️ Настройки
+          <IconSettings className="h-4 w-4" /> Настройки
         </Link>
       </div>
 
@@ -134,6 +139,7 @@ export default async function BrainPage() {
           name: d.name,
           isDefault: d.is_default,
           cardCount: countByDeck.get(d.id) ?? 0,
+          dueCount: dueCountByDeck.get(d.id) ?? 0,
         }))}
       />
     </div>

@@ -44,14 +44,10 @@
 
   /* orange/green — НЕ бренд-токены, а самостоятельная шкала уровня знания
      слова (reader.tsx, панель статистики текста) — постоянные, не удалять.
-     purple/blue/red — временные алиасы под progress/stat-card.tsx до тех
-     пор, пока Фаза 4 не уберёт оттуда параметр color вовсе (см. промт,
-     раздел 4.9, п.2) — тогда удалить обе строки. */
+     purple/blue/red убраны в Фазе 4 вместе с параметром color у StatCard
+     (см. промт, раздел 4.9, п.2) — больше нигде не используются. */
   --color-accent-orange: #ea580c;
   --color-accent-green: #16a34a;
-  --color-accent-purple: #7c3aed;
-  --color-accent-blue: #2563eb;
-  --color-accent-red: #dc2626;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

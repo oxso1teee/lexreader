@@ -17,11 +17,15 @@ export interface ReviewCard {
   repetitions: number;
 }
 
+// docs/IMPLEMENTATION_PROMPT_REDESIGN_2026-07-30.md, раздел 4.8: "Помню" и
+// "Легко" раньше были двумя оттенками зелёного — не различить с первого
+// взгляда. "Легко" получает акцентный цвет, отделяя "уверенно знаю" от
+// просто "справился".
 const GRADES: { value: 0 | 1 | 2 | 3; label: string; className: string }[] = [
-  { value: 0, label: "Не помню", className: "bg-red-600 hover:bg-red-500" },
-  { value: 1, label: "Трудно", className: "bg-orange-500 hover:bg-orange-400" },
-  { value: 2, label: "Помню", className: "bg-emerald-600 hover:bg-emerald-500" },
-  { value: 3, label: "Легко", className: "bg-emerald-700 hover:bg-emerald-600" },
+  { value: 0, label: "Не помню", className: "bg-danger hover:opacity-90" },
+  { value: 1, label: "Трудно", className: "bg-warning hover:opacity-90" },
+  { value: 2, label: "Помню", className: "bg-success hover:opacity-90" },
+  { value: 3, label: "Легко", className: "bg-accent hover:bg-accent-strong" },
 ];
 
 // Из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.6): показываем
@@ -133,7 +137,7 @@ export default function ReviewSession({
         <div
           aria-hidden
           className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${
-            flash === "good" ? "bg-emerald-500/15" : "bg-red-500/15"
+            flash === "good" ? "bg-success/15" : "bg-danger/15"
           }`}
         />
       )}
@@ -180,7 +184,7 @@ export default function ReviewSession({
             <button
               type="submit"
               disabled={editPending}
-              className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-caramel text-sm font-medium text-white disabled:opacity-50"
+              className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-accent text-sm font-medium text-white disabled:opacity-50"
             >
               {editPending ? "…" : "Сохранить"}
             </button>
@@ -229,7 +233,7 @@ export default function ReviewSession({
             <button
               type="button"
               onClick={() => setRevealed(true)}
-              className="rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
+              className="rounded-full bg-accent px-5 py-3 font-medium text-white"
             >
               Показать ответ
             </button>
@@ -242,7 +246,7 @@ export default function ReviewSession({
                   </p>
                   <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
                     <div
-                      className="h-full rounded-full bg-caramel transition-[width]"
+                      className="h-full rounded-full bg-accent transition-[width]"
                       style={{
                         width: `${Math.min(100, (sessionTotal / Math.max(bestSessionCount, 1)) * 100)}%`,
                       }}

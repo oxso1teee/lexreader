@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 
+// docs/IMPLEMENTATION_PROMPT_REDESIGN_2026-07-30.md, раздел 4.9: оба графика
+// на этом экране используют акцентный цвет продукта — второй график
+// отличается штриховой линией (variant="dashed"), не отдельным хардкод-цветом.
 export default function LineChart({
   title,
   points,
-  color = "#a67c52",
+  variant = "solid",
 }: {
   title: string;
   points: { label: string; value: number }[];
-  color?: string;
+  variant?: "solid" | "dashed";
 }) {
+  const color = "var(--color-accent)";
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const total = points.reduce((s, p) => s + p.value, 0);
   const max = Math.max(1, ...points.map((p) => p.value));
@@ -73,7 +77,7 @@ export default function LineChart({
           fill="none"
           stroke={color}
           strokeWidth="2"
-          strokeDasharray={total === 0 ? "4 4" : undefined}
+          strokeDasharray={total === 0 ? "4 4" : variant === "dashed" ? "6 4" : undefined}
           opacity={total === 0 ? 0.4 : 1}
         />
         {active && (
