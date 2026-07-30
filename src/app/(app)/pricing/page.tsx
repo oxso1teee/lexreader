@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getPlan } from "@/lib/subscription";
 import { isStripeConfigured } from "@/lib/stripe";
+import { IconCheck } from "@/components/icons";
 import { simulateSubscribe, cancelSimulatedSubscription } from "./actions";
-import CheckoutButton from "./checkout-button";
+import PlanPicker from "./plan-picker";
 import BillingPortalButton from "./billing-portal-button";
 
 function formatDate(iso: string): string {
@@ -50,15 +51,15 @@ export default async function PricingPage({
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
       <div>
-        <Link href="/home" className="text-sm font-medium text-caramel">
+        <Link href="/home" className="text-sm font-medium text-accent-strong">
           ← Назад
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">Выберите ваш план</h1>
+        <h1 className="mt-2 text-2xl font-bold">LexReader Premium</h1>
         <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-          Разблокируйте все премиум-функции и ускорьте изучение языка
+          Учись быстрее — без ограничений
         </p>
         {reason && REASONS[reason] && (
-          <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">{REASONS[reason]}</p>
+          <p className="mt-2 text-sm text-warning">{REASONS[reason]}</p>
         )}
       </div>
 
@@ -68,7 +69,7 @@ export default async function PricingPage({
             У тебя активна подписка: {plan === "premium_yearly" ? "годовая" : "месячная"}
           </p>
           {subscription?.status === "past_due" && (
-            <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
+            <p className="mt-1 text-sm text-warning">
               Последнее списание не прошло — обнови способ оплаты, доступ сохранится ещё
               некоторое время.
             </p>
@@ -95,93 +96,35 @@ export default async function PricingPage({
       ) : (
         <>
           {!stripeReady && (
-            <div className="rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-              <p className="font-semibold">🎁 Бета-тестирование: Premium сейчас бесплатно</p>
+            <div className="rounded-2xl border border-warning bg-warning-soft p-4 text-sm text-black/80 dark:text-white/80">
+              <p className="font-semibold">Бета-тестирование: Premium сейчас бесплатно</p>
               <p className="mt-1">
-                Оплата ещё не подключена — нажатие «Начать» ниже даст полный доступ без списания
-                денег. Цены на карточках — то, что будет после запуска настоящей оплаты, сейчас
-                они не действуют.
+                Оплата ещё не подключена — оформление ниже даст полный доступ без списания денег.
+                Цены — то, что будет после запуска настоящей оплаты, сейчас они не действуют.
               </p>
             </div>
           )}
-          <div className="rounded-2xl bg-card p-5 shadow-sm">
-            <h2 className="text-lg font-bold">LexReader Premium — Ежемесячно</h2>
-            <p className="text-sm text-black/60 dark:text-white/60">
-              Полный доступ ко всем премиум-функциям
-            </p>
-            <p className="mt-3">
-              <span className="text-3xl font-bold text-caramel">449 ₽</span>
-              <span className="text-black/50 dark:text-white/50"> /месяц</span>
-            </p>
-            <ul className="mt-4 flex flex-col gap-2 text-sm">
-              {FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <span className="text-emerald-600 dark:text-emerald-400">✓</span>
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-            {stripeReady ? (
-              <div className="mt-4">
-                <CheckoutButton
-                  plan="premium_monthly"
-                  label="Начать"
-                  className="w-full rounded-full border-2 border-caramel py-3 font-semibold text-caramel"
-                />
-              </div>
-            ) : (
-              <form action={simulateSubscribe.bind(null, "premium_monthly")} className="mt-4">
-                <button
-                  type="submit"
-                  className="w-full rounded-full border-2 border-caramel py-3 font-semibold text-caramel"
-                >
-                  Начать
-                </button>
-              </form>
-            )}
-          </div>
 
-          <div className="relative rounded-2xl border-2 border-caramel bg-card p-5 shadow-sm">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-caramel px-3 py-1 text-xs font-bold tracking-wide text-white uppercase">
-              Популярный
-            </span>
-            <h2 className="mt-1 text-lg font-bold">LexReader Premium — Ежегодно</h2>
+          <div className="rounded-2xl bg-card p-5 shadow-sm">
             <p className="text-sm text-black/60 dark:text-white/60">
               Полный доступ ко всем премиум-функциям
             </p>
-            <p className="mt-3">
-              <span className="text-3xl font-bold text-caramel">4490 ₽</span>
-              <span className="text-black/50 dark:text-white/50"> /год</span>
-            </p>
-            <p className="text-sm text-black/50 dark:text-white/50">
-              ≈ 374 ₽/мес, экономия 17%
-            </p>
             <ul className="mt-4 flex flex-col gap-2 text-sm">
               {FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <span className="text-emerald-600 dark:text-emerald-400">✓</span>
+                <li key={f} className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success-soft text-success">
+                    <IconCheck className="h-3 w-3" />
+                  </span>
                   <span>{f}</span>
                 </li>
               ))}
             </ul>
-            {stripeReady ? (
-              <div className="mt-4">
-                <CheckoutButton
-                  plan="premium_yearly"
-                  label="Начать"
-                  className="w-full rounded-full bg-caramel py-3 font-semibold text-white"
-                />
-              </div>
-            ) : (
-              <form action={simulateSubscribe.bind(null, "premium_yearly")} className="mt-4">
-                <button
-                  type="submit"
-                  className="w-full rounded-full bg-caramel py-3 font-semibold text-white"
-                >
-                  Начать
-                </button>
-              </form>
-            )}
+
+            <PlanPicker
+              stripeReady={stripeReady}
+              simulateMonthly={simulateSubscribe.bind(null, "premium_monthly")}
+              simulateYearly={simulateSubscribe.bind(null, "premium_yearly")}
+            />
           </div>
 
           <p className="text-xs text-black/40 dark:text-white/40">

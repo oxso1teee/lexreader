@@ -48,7 +48,7 @@ function LanguagePicker({
               onClick={() => onChange(l.code)}
               className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
                 value === l.code
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  ? "border-accent bg-accent-soft text-accent-strong"
                   : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
               }`}
             >
@@ -88,7 +88,7 @@ export default function OnboardingWizard() {
           <div
             key={i}
             className={`h-1 flex-1 rounded-full ${
-              i <= step ? "bg-black dark:bg-white" : "bg-black/10 dark:bg-white/15"
+              i <= step ? "bg-accent" : "bg-black/10 dark:bg-white/15"
             }`}
           />
         ))}
@@ -103,7 +103,7 @@ export default function OnboardingWizard() {
             Никаких упражнений и геймификации. Читай реальные тексты, сохраняй
             незнакомые слова одним тапом и повторяй их по расписанию.
           </p>
-          <Link href="/login" className="text-sm text-black/50 underline dark:text-white/50">
+          <Link href="/login" className="text-sm text-accent-strong underline">
             Уже есть аккаунт? Войти
           </Link>
         </div>
@@ -153,7 +153,7 @@ export default function OnboardingWizard() {
                 onClick={() => setLevel(l.value)}
                 className={`rounded-lg border px-4 py-3 text-left transition-colors ${
                   level === l.value
-                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                    ? "border-accent bg-accent-soft text-accent-strong"
                     : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
                 }`}
               >
@@ -175,7 +175,7 @@ export default function OnboardingWizard() {
                 onClick={() => setDailyWordGoal(g)}
                 className={`rounded-lg border py-4 text-center text-lg font-medium transition-colors ${
                   dailyWordGoal === g
-                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                    ? "border-accent bg-accent-soft text-accent-strong"
                     : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
                 }`}
               >
@@ -228,7 +228,7 @@ export default function OnboardingWizard() {
             <button
               type="submit"
               disabled={pending}
-              className="flex-1 rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
+              className="flex-1 rounded-full bg-accent px-5 py-3 font-medium text-white transition-colors hover:bg-accent-strong disabled:opacity-50"
             >
               {pending ? "Создаём…" : "Создать аккаунт и начать"}
             </button>
@@ -262,7 +262,7 @@ export default function OnboardingWizard() {
             type="button"
             disabled={!canAdvance}
             onClick={() => setStep((s) => s + 1)}
-            className="flex-1 rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/80"
+            className="flex-1 rounded-full bg-accent px-5 py-3 font-medium text-white transition-colors hover:bg-accent-strong disabled:opacity-40"
           >
             Далее
           </button>
