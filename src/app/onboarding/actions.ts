@@ -84,5 +84,9 @@ export async function completeOnboarding(
     log.error({ kind: "onboarding_default_deck", message: deckError.message });
   }
 
-  redirect("/home");
+  // docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 8: раньше здесь сразу
+  // редиректило на пустую Главную — новый профиль сначала проходит короткий
+  // управляемый цикл "текст → слово → карточка", чтобы не встретить пустоту
+  // с первой секунды.
+  redirect("/onboarding/first-win");
 }

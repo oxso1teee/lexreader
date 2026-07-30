@@ -10,6 +10,7 @@ export interface Profile {
   streak_freeze_available: boolean;
   streak_freeze_week: string | null;
   review_best_session_count: number;
+  completed_first_win: boolean;
   created_at: string;
 }
 
