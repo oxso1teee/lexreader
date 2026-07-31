@@ -6,6 +6,7 @@ import Link from "next/link";
 import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
 import { log } from "@/lib/log";
+import { track } from "@/lib/posthog-client";
 import {
   upsertWord,
   setWordLevel,
@@ -179,6 +180,8 @@ export default function Reader({
         return;
       }
 
+      if (result.seenCount === 1) track("word_saved");
+
       setLevels((s) => ({
         ...s,
         [text.toLowerCase()]: {
@@ -230,6 +233,7 @@ export default function Reader({
       setPopup({ ...popup, paywall: result.paywall, error: undefined });
       return;
     }
+    if (result.seenCount === 1) track("word_saved");
     setLevels((s) => ({
       ...s,
       [popup.text.toLowerCase()]: {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { tokenizeSentence } from "@/lib/tokenize";
 import { coverGradient, coverEmoji } from "@/lib/text-cover";
+import { track } from "@/lib/posthog-client";
 import { saveFirstWinWord, completeFirstWin } from "./actions";
 
 interface FirstWinText {
@@ -31,6 +32,17 @@ export default function FirstWinFlow({ texts }: { texts: FirstWinText[] }) {
   const [finishing, setFinishing] = useState(false);
 
   const savedHeadwords = new Set(saved.map((s) => s.headword.toLowerCase()));
+
+  // Эта страница редиректит на /home, если profile.completed_first_win уже
+  // true (см. page.tsx) — значит монтируется ровно один раз, сразу после
+  // регистрации, и годится как прокси для signup_completed.
+  useEffect(() => {
+    track("signup_completed");
+  }, []);
+
+  useEffect(() => {
+    if (step === "done") track("onboarding_completed");
+  }, [step]);
 
   async function handleWordTap(word: string) {
     const key = word.toLowerCase();

@@ -7,6 +7,7 @@ import { simulateSubscribe, cancelSimulatedSubscription } from "./actions";
 import CheckoutButton from "./checkout-button";
 import BillingPortalButton from "./billing-portal-button";
 import PricingFaq from "./pricing-faq";
+import PricingViewTracker from "./pricing-view-tracker";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -59,6 +60,7 @@ export default async function PricingPage({
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
+      <PricingViewTracker reason={reason} />
       <div>
         <Link href="/home" className="text-sm font-medium text-caramel">
           ← Назад

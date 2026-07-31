@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { reviewWord, sendCardToNotebook, updateReviewBest } from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
+import { track } from "@/lib/posthog-client";
 import SessionComplete from "./session-complete";
 
 export interface ReviewCard {
@@ -101,9 +102,12 @@ export default function ReviewSession({
       setNotebookStatus("idle");
       setIsEditing(false);
       const isLastCard = index + 1 >= cards.length;
-      if (isLastCard && newTotal > bestSessionCount) {
-        setNewRecord(true);
-        await updateReviewBest(newTotal);
+      if (isLastCard) {
+        track("review_completed", { count: newTotal });
+        if (newTotal > bestSessionCount) {
+          setNewRecord(true);
+          await updateReviewBest(newTotal);
+        }
       }
       setIndex((i) => i + 1);
     });

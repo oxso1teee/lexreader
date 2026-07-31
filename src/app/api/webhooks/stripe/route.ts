@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { PostHog } from "posthog-node";
 import { getStripeClient, isStripeConfigured, planFromPriceId } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
 import { log } from "@/lib/log";
+
+function capturePostHogEvent(distinctId: string, event: string, properties?: Record<string, unknown>) {
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
+  const client = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+    host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
+  });
+  client.capture({ distinctId, event, properties });
+  void client.shutdown();
+}
 
 // Источник истины о статусе подписки — ТОЛЬКО эти вебхуки, никогда не
 // доверять client-side редиректу "оплата прошла" (P0-PAY-01).
@@ -65,6 +75,7 @@ export async function POST(request: Request) {
         { onConflict: "owner_id" },
       );
       log.subscription({ kind: "checkout_completed", ownerId, plan });
+      capturePostHogEvent(ownerId, "subscription_started", { plan });
       break;
     }
 
