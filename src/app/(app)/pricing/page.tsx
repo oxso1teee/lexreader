@@ -6,6 +6,7 @@ import { isStripeConfigured } from "@/lib/stripe";
 import { simulateSubscribe, cancelSimulatedSubscription } from "./actions";
 import CheckoutButton from "./checkout-button";
 import BillingPortalButton from "./billing-portal-button";
+import PricingFaq from "./pricing-faq";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -40,6 +41,15 @@ export default async function PricingPage({
   const supabase = await createClient();
   const plan = await getPlan(supabase, profile.id);
   const stripeReady = isStripeConfigured();
+  // Раздел 5 промта 2026-07-30 (запуск): раньше баннер "Бета: Premium
+  // бесплатно" и тестовая кнопка симуляции показывались всегда, когда Stripe
+  // не настроен — в том числе если ключ случайно не задан в реальном проде.
+  // Теперь в реальном проде при неготовом Stripe показываем нейтральное
+  // "недоступно" вместо тестового пути, а не тихо пускаем "покупку" мимо
+  // настоящей оплаты.
+  const isRealProduction = process.env.NODE_ENV === "production" && process.env.VERCEL_ENV === "production";
+  const showDevSimulation = !stripeReady && !isRealProduction;
+  const showUnavailable = !stripeReady && isRealProduction;
 
   const { data: subscription } = await supabase
     .from("subscriptions")
@@ -94,7 +104,7 @@ export default async function PricingPage({
         </div>
       ) : (
         <>
-          {!stripeReady && (
+          {showDevSimulation && (
             <div className="rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
               <p className="font-semibold">🎁 Бета-тестирование: Premium сейчас бесплатно</p>
               <p className="mt-1">
@@ -102,6 +112,11 @@ export default async function PricingPage({
                 денег. Цены на карточках — то, что будет после запуска настоящей оплаты, сейчас
                 они не действуют.
               </p>
+            </div>
+          )}
+          {showUnavailable && (
+            <div className="rounded-2xl border border-black/10 bg-card p-4 text-sm text-black/60 dark:border-white/15 dark:text-white/60">
+              Оплата временно недоступна — попробуй чуть позже.
             </div>
           )}
           <div className="rounded-2xl bg-card p-5 shadow-sm">
@@ -125,11 +140,11 @@ export default async function PricingPage({
               <div className="mt-4">
                 <CheckoutButton
                   plan="premium_monthly"
-                  label="Начать"
+                  label="Начать — 3 дня бесплатно"
                   className="w-full rounded-full border-2 border-caramel py-3 font-semibold text-caramel"
                 />
               </div>
-            ) : (
+            ) : showDevSimulation ? (
               <form action={simulateSubscribe.bind(null, "premium_monthly")} className="mt-4">
                 <button
                   type="submit"
@@ -138,6 +153,14 @@ export default async function PricingPage({
                   Начать
                 </button>
               </form>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="mt-4 w-full rounded-full border-2 border-black/10 py-3 font-semibold text-black/30 dark:border-white/15 dark:text-white/30"
+              >
+                Временно недоступно
+              </button>
             )}
           </div>
 
@@ -168,11 +191,11 @@ export default async function PricingPage({
               <div className="mt-4">
                 <CheckoutButton
                   plan="premium_yearly"
-                  label="Начать"
+                  label="Начать — 3 дня бесплатно"
                   className="w-full rounded-full bg-caramel py-3 font-semibold text-white"
                 />
               </div>
-            ) : (
+            ) : showDevSimulation ? (
               <form action={simulateSubscribe.bind(null, "premium_yearly")} className="mt-4">
                 <button
                   type="submit"
@@ -181,8 +204,18 @@ export default async function PricingPage({
                   Начать
                 </button>
               </form>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="mt-4 w-full rounded-full bg-black/10 py-3 font-semibold text-black/30 dark:bg-white/10 dark:text-white/30"
+              >
+                Временно недоступно
+              </button>
             )}
           </div>
+
+          <PricingFaq />
 
           <p className="text-xs text-black/40 dark:text-white/40">
             {stripeReady

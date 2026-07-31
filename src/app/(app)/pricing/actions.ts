@@ -70,6 +70,10 @@ export async function createCheckoutSession(
       client_reference_id: profile.id,
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
+      // Раздел 5 промта 2026-07-30 (запуск): 3 дня бесплатно снижают трение
+      // первой оплаты — карта привязывается сразу, списание только после
+      // пробного периода.
+      subscription_data: { trial_period_days: 3 },
       success_url: `${siteUrl()}/library?checkout=success`,
       cancel_url: `${siteUrl()}/pricing?checkout=cancelled`,
     });

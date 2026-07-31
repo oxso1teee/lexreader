@@ -2,20 +2,87 @@
 
 import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
-import { LANGUAGES } from "@/lib/languages";
+import { LANGUAGES, READY_LANGUAGES } from "@/lib/languages";
 import { LEVELS, DAILY_GOALS } from "@/lib/onboarding-options";
 import { completeOnboarding, type OnboardingState } from "./actions";
+import { joinLanguageWaitlist, type WaitlistState } from "./waitlist-actions";
 
 const STEP_COUNT = 6;
+
+// Раздел 5 промта 2026-07-30 (запуск): библиотека готова только для
+// английского — вместо выбора языка без контента открываем лист ожидания.
+function WaitlistLanguageCell({ code, name }: { code: string; name: string }) {
+  const [open, setOpen] = useState(false);
+  const [state, formAction, pending] = useActionState<WaitlistState, FormData>(
+    joinLanguageWaitlist,
+    {},
+  );
+
+  if (state.ok) {
+    return (
+      <div className="rounded-lg border border-black/10 px-4 py-3 text-left text-sm text-black/50 dark:border-white/15 dark:text-white/50">
+        {name} — сообщим, когда будет готово ✓
+      </div>
+    );
+  }
+
+  if (open) {
+    return (
+      <form action={formAction} className="col-span-2 flex flex-col gap-2 rounded-lg border border-black/10 p-3 dark:border-white/15">
+        <input type="hidden" name="language" value={code} />
+        <p className="text-sm font-medium">{name} — оставь почту, сообщим, когда будет готово</p>
+        <input
+          type="email"
+          name="email"
+          required
+          placeholder="Email"
+          className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
+        />
+        {state.error && <p className="text-xs text-red-600 dark:text-red-400">{state.error}</p>}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium dark:border-white/15"
+          >
+            Отмена
+          </button>
+          <button
+            type="submit"
+            disabled={pending}
+            className="flex-1 rounded-full bg-black px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+          >
+            {pending ? "Сохраняем…" : "Сообщить мне"}
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="flex items-center justify-between rounded-lg border border-black/10 px-4 py-3 text-left text-sm text-black/50 transition-colors hover:border-black/30 dark:border-white/15 dark:text-white/50 dark:hover:border-white/40"
+    >
+      {name}
+      <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide dark:bg-white/10">
+        Скоро
+      </span>
+    </button>
+  );
+}
 
 function LanguagePicker({
   value,
   onChange,
   exclude,
+  restrictToReady,
 }: {
   value: string;
   onChange: (code: string) => void;
   exclude?: string;
+  restrictToReady?: boolean;
 }) {
   const [query, setQuery] = useState("");
 
@@ -41,20 +108,24 @@ function LanguagePicker({
         </p>
       ) : (
         <div className="grid max-h-72 grid-cols-2 gap-2 overflow-y-auto">
-          {filtered.map((l) => (
-            <button
-              key={l.code}
-              type="button"
-              onClick={() => onChange(l.code)}
-              className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
-                value === l.code
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
-              }`}
-            >
-              {l.name}
-            </button>
-          ))}
+          {filtered.map((l) =>
+            restrictToReady && !READY_LANGUAGES.includes(l.code) ? (
+              <WaitlistLanguageCell key={l.code} code={l.code} name={l.name} />
+            ) : (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => onChange(l.code)}
+                className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
+                  value === l.code
+                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                    : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                }`}
+              >
+                {l.name}
+              </button>
+            ),
+          )}
         </div>
       )}
     </div>
@@ -114,6 +185,7 @@ export default function OnboardingWizard() {
           <h2 className="text-xl font-semibold">Какой язык учишь?</h2>
           <LanguagePicker
             value={targetLanguage}
+            restrictToReady
             onChange={(code) => {
               setTargetLanguage(code);
               // Найдено при повторном аудите: Step 2 (родной язык) уже

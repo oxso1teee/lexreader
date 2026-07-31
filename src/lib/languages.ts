@@ -19,3 +19,8 @@ export const LANGUAGES = [
 export function languageName(code: string): string {
   return LANGUAGES.find((l) => l.code === code)?.name ?? code;
 }
+
+// Раздел 5 промта 2026-07-30 (запуск): библиотека и стартовые колоды пока
+// есть только для английского — честно помечаем остальные языки "Скоро"
+// вместо того, чтобы выглядеть одинаково готовыми.
+export const READY_LANGUAGES: readonly string[] = ["en"];
