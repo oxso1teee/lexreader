@@ -12,6 +12,7 @@ export interface Profile {
   review_best_session_count: number;
   completed_first_win: boolean;
   preferred_notify_hour: number | null;
+  xp: number;
   created_at: string;
 }
 

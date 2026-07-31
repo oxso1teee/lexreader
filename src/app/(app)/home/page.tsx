@@ -89,6 +89,7 @@ export default async function HomePage() {
             ? { textId: continueText.id, title: continueText.title, percentRead: continuing!.percent_read }
             : null
         }
+        xp={profile.xp}
       />
 
       <SecondaryTips>

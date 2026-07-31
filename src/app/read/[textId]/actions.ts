@@ -6,6 +6,7 @@ import { touchStreak } from "@/lib/streak";
 import { statusFromLevel } from "@/lib/word-level";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { hasFreeFlashcardRoom, hasFreeDeckRoom } from "@/lib/subscription";
+import { addXp } from "@/lib/xp-actions";
 
 export async function upsertWord(input: {
   textId: string;
@@ -155,6 +156,7 @@ export async function finishReading(input: {
   if (error) throw new Error("Не удалось сохранить сессию чтения.");
 
   await touchStreak(supabase, user.id);
+  await addXp(supabase, user.id, 10);
   revalidatePath("/progress");
 }
 

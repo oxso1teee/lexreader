@@ -6,6 +6,7 @@ import StatCard from "./stat-card";
 import LineChart from "./line-chart";
 import HardestWords, { type HardestWord } from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
+import PersonalRecords from "./personal-records";
 import ScreenHeader from "@/components/screen-header";
 
 function isoWeekStart(d: Date): string {
@@ -225,6 +226,14 @@ export default async function ProgressPage({
 
   const hardestWords = computeHardestWords(accuracyLogQuery.data ?? []);
 
+  // Раздел 5 промта 2026-07-30 (полировка): личные рекорды — витрина
+  // гордости вместо просто таблиц. Переиспользуем уже посчитанные
+  // wordsPerDay/reviewsPerDay (в рамках выбранного периода) вместо нового
+  // запроса; "самая быстрая книга" из черновика не сделана — в схеме нет
+  // надёжного способа посчитать её честно, не выдумываем цифру.
+  const bestWordsDay = wordsPerDay.size > 0 ? Math.max(...wordsPerDay.values()) : 0;
+  const bestReviewsDay = reviewsPerDay.size > 0 ? Math.max(...reviewsPerDay.values()) : 0;
+
   const activityCounts: Record<string, number> = {};
   for (const s of heatmapSessions.data ?? []) {
     const key = isoDate(s.started_at);
@@ -267,6 +276,13 @@ export default async function ProgressPage({
       <LineChart title="Карточек повторено в день" points={reviewsChartPoints} color="#2563eb" />
 
       <HardestWords words={hardestWords} />
+
+      <PersonalRecords
+        bestStreak={profile.streak_longest}
+        bestWordsDay={bestWordsDay}
+        bestSession={profile.review_best_session_count}
+        bestReviewsDay={bestReviewsDay}
+      />
 
       <AchievementsShelf
         earnedIds={new Set((earnedAchievements ?? []).map((a) => a.achievement_id))}

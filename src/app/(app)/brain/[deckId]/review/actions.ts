@@ -8,6 +8,7 @@ import { reviewSrsState } from "@/lib/srs";
 import { getSrsParams } from "@/lib/srs-settings";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
+import { addXp } from "@/lib/xp-actions";
 
 export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const supabase = await createClient();
@@ -73,6 +74,7 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
 
   await touchStreak(supabase, user.id);
   await checkAndAwardAchievements(supabase, user.id, cardLanguage);
+  await addXp(supabase, user.id, 1);
   revalidatePath("/brain");
   revalidatePath("/progress");
 }

@@ -21,6 +21,19 @@ export const metadata: Metadata = {
     icon: "/icon-192.png",
     apple: "/icon-192.png",
   },
+  // Раздел 5 промта 2026-07-30 (полировка): раньше ссылка при шаринге
+  // показывала стандартную заглушку Next.js — превью теперь генерируется
+  // файлом opengraph-image.tsx (Next.js подставляет og:image сам).
+  openGraph: {
+    title: "LexReader",
+    description: "Учи язык через чтение реальных текстов",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LexReader",
+    description: "Учи язык через чтение реальных текстов",
+  },
 };
 
 export const viewport: Viewport = {

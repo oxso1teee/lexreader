@@ -1,6 +1,7 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { getPlan, FREE_DAILY_WORD_LIMIT, hasFreeDeckRoom, hasFreeFlashcardRoom } from "@/lib/subscription";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
+import { addXp } from "@/lib/xp-actions";
 
 export interface UpsertWordResult {
   ok: boolean;
@@ -166,6 +167,7 @@ export async function saveVocabularyItem(
   // "отправить в тетрадь" из Мозга — сюда стекается почти весь прогресс по
   // словарю, поэтому проверка достижений живёт именно здесь.
   await checkAndAwardAchievements(supabase, userId, input.language);
+  await addXp(supabase, userId, 2);
 
   return { ok: true, id: created.id, level: created.level, seenCount: created.seen_count };
 }

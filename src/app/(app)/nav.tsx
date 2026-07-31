@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { HomeIcon, LibraryIcon, BrainIcon, ProgressIcon, SettingsIcon } from "@/components/nav-icons";
 
 const ITEMS = [
-  { href: "/home", label: "Главная", icon: "🏠" },
-  { href: "/library", label: "Читать/Слушать", icon: "📖" },
-  { href: "/brain", label: "Мозг", icon: "🧠" },
-  { href: "/progress", label: "Статистика", icon: "📊" },
-  { href: "/settings", label: "Настройки", icon: "⚙️" },
+  { href: "/home", label: "Главная", Icon: HomeIcon },
+  { href: "/library", label: "Читать/Слушать", Icon: LibraryIcon },
+  { href: "/brain", label: "Мозг", Icon: BrainIcon },
+  { href: "/progress", label: "Статистика", Icon: ProgressIcon },
+  { href: "/settings", label: "Настройки", Icon: SettingsIcon },
 ];
 
 export default function Nav() {
@@ -18,6 +19,7 @@ export default function Nav() {
     <nav className="sticky bottom-0 z-20 flex border-t border-black/10 bg-card/95 backdrop-blur dark:border-white/10">
       {ITEMS.map((item) => {
         const active = pathname.startsWith(item.href);
+        const Icon = item.Icon;
         return (
           <Link
             key={item.href}
@@ -28,7 +30,7 @@ export default function Nav() {
                 : "text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"
             }`}
           >
-            <span className="text-lg leading-none">{item.icon}</span>
+            <Icon />
             <span className="leading-none">{item.label}</span>
             <span
               className={`mt-0.5 h-1 w-1 rounded-full transition-opacity ${

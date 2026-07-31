@@ -85,6 +85,12 @@ export default function ReviewSession({
   const answer = studyDirection === "back_front" ? card?.front : card?.back;
 
   function grade(value: 0 | 1 | 2 | 3) {
+    // Раздел 5 промта 2026-07-30 (полировка): короткий вибро-отклик на
+    // оценке — можно выключить в Настройках (флаг только на устройстве,
+    // не в аккаунте, поэтому localStorage, а не БД).
+    if (typeof navigator !== "undefined" && navigator.vibrate && localStorage.getItem("lexreader_haptics_enabled") !== "false") {
+      navigator.vibrate(15);
+    }
     startTransition(async () => {
       await reviewWord(card.flashcardId, value);
       const newTotal = sessionTotal + 1;

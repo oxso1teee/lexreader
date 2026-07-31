@@ -13,6 +13,7 @@ import {
 } from "./actions";
 import { signOut } from "../actions";
 import { deleteAccount, type DeleteAccountState } from "./delete-account-actions";
+import HapticsToggle from "./haptics-toggle";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -172,6 +173,8 @@ export default function SettingsClient({
           </div>
         )}
       </section>
+
+      <HapticsToggle />
 
       <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
         <h2 className="mb-2 font-medium">Данные</h2>
