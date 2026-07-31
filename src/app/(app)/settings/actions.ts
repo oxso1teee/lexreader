@@ -124,3 +124,25 @@ export async function sendTestPush(): Promise<{ ok: boolean; error?: string }> {
 
   return sent > 0 ? { ok: true } : { ok: false, error: "Не удалось отправить уведомление." };
 }
+
+export interface FeedbackState {
+  ok?: boolean;
+  error?: string;
+}
+
+// Раздел 5 промта 2026-07-30 (рост): явный канал обратной связи — раньше
+// его не было в интерфейсе вообще.
+export async function sendFeedback(
+  _prevState: FeedbackState,
+  formData: FormData,
+): Promise<FeedbackState> {
+  const profile = await requireProfile();
+  const message = String(formData.get("message") ?? "").trim();
+  if (!message) return { error: "Напиши сообщение." };
+  if (message.length > 2000) return { error: "Слишком длинное сообщение." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("feedback").insert({ owner_id: profile.id, message });
+  if (error) return { error: "Не удалось отправить — попробуй ещё раз." };
+  return { ok: true };
+}

@@ -14,6 +14,7 @@ import {
 import { signOut } from "../actions";
 import { deleteAccount, type DeleteAccountState } from "./delete-account-actions";
 import HapticsToggle from "./haptics-toggle";
+import FeedbackForm from "./feedback-form";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -176,6 +177,8 @@ export default function SettingsClient({
 
       <HapticsToggle />
 
+      <FeedbackForm />
+
       <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
         <h2 className="mb-2 font-medium">Данные</h2>
         <div className="flex flex-col gap-2">
@@ -208,6 +211,9 @@ export default function SettingsClient({
       <DeleteAccountSection />
 
       <div className="flex gap-4 text-xs text-black/40 dark:text-white/40">
+        <Link href="/changelog" className="underline">
+          Что нового
+        </Link>
         <Link href="/terms" className="underline">
           Условия использования
         </Link>

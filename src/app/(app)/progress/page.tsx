@@ -284,6 +284,14 @@ export default async function ProgressPage({
         bestReviewsDay={bestReviewsDay}
       />
 
+      <a
+        href="/api/share-card"
+        download="lexreader-progress.png"
+        className="block rounded-2xl bg-card p-4 text-center text-sm font-medium shadow-sm"
+      >
+        📤 Скачать карточку прогресса
+      </a>
+
       <AchievementsShelf
         earnedIds={new Set((earnedAchievements ?? []).map((a) => a.achievement_id))}
         weeklyQuestProgress={weeklyQuestProgress ?? 0}
