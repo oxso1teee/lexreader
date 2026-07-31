@@ -6,6 +6,7 @@ import StatCard from "./stat-card";
 import LineChart from "./line-chart";
 import HardestWords, { type HardestWord } from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
+import ScreenHeader from "@/components/screen-header";
 
 function isoWeekStart(d: Date): string {
   const day = (d.getUTCDay() + 6) % 7;
@@ -236,12 +237,7 @@ export default async function ProgressPage({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">📊 Статистика</h1>
-        <span className="rounded-lg border border-black/20 px-2.5 py-1 text-sm font-medium dark:border-white/25">
-          {profile.target_language}
-        </span>
-      </div>
+      <ScreenHeader icon="📊" title="Статистика" metaChip={profile.target_language} />
 
       <PeriodTabs current={period} />
 

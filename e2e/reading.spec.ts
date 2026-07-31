@@ -6,6 +6,11 @@ test("reading flow: open text, tap word, translate, change level, finish", async
   await expect(page).toHaveURL(/\/home$/);
 
   await page.goto("/library");
+  // Раздел 5 промта 2026-07-30 (композиция): Библиотека теперь одна полка
+  // с вкладками "Мои"/"Каталог" — системные тексты видны только во вкладке
+  // "Каталог" (по умолчанию открыта, только если у аккаунта ещё нет своих
+  // текстов; у переиспользуемого e2e-аккаунта они могут уже быть).
+  await page.getByRole("button", { name: "Каталог" }).click();
   await page.getByText("A Walk in the Park").click();
   await expect(page).toHaveURL(/\/read\//);
 

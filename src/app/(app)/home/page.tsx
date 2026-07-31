@@ -2,14 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getPlan } from "@/lib/subscription";
 import { getDueCount } from "@/lib/brain-stats";
-import LanguageBanner from "./language-banner";
 import PremiumCard from "./premium-card";
 import WelcomeCard from "./welcome-card";
 import InfoCard from "./info-card";
-import AccountSummaryCard from "./account-summary-card";
-import DailyGoalRing from "./daily-goal-ring";
-import StatRow from "./stat-row";
-import ContinueReadingCard from "./continue-reading-card";
+import AccountStrip from "./account-strip";
+import TodayCard from "./today-card";
+import SecondaryTips from "./secondary-tips";
+import ScreenHeader from "@/components/screen-header";
 
 function todayStartUtc(): string {
   const now = new Date();
@@ -23,7 +22,6 @@ export default async function HomePage() {
   // и уже оплатившим Premium — выглядит так, будто оплата не сработала.
   const [
     plan,
-    { data: userData },
     { count: wordCount },
     { count: textCount },
     { count: newWordsToday },
@@ -31,7 +29,6 @@ export default async function HomePage() {
     { data: continueRows },
   ] = await Promise.all([
     getPlan(supabase, profile.id),
-    supabase.auth.getUser(),
     supabase
       .from("vocabulary_items")
       .select("id", { count: "exact", head: true })
@@ -69,37 +66,39 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 py-4">
-      <AccountSummaryCard
-        email={userData.user?.email ?? ""}
+      <ScreenHeader icon="🏠" title="Главная" />
+
+      <AccountStrip
         plan={plan}
         wordCount={wordCount ?? 0}
         textCount={textCount ?? 0}
+        targetLanguage={profile.target_language}
       />
-      <LanguageBanner targetLanguage={profile.target_language} />
-      {plan === "free" && <PremiumCard />}
-      <WelcomeCard createdAt={profile.created_at} />
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
-        <DailyGoalRing current={newWordsToday ?? 0} goal={profile.daily_word_goal} />
-      </div>
+      <TodayCard
+        current={newWordsToday ?? 0}
+        goal={profile.daily_word_goal}
+        streak={profile.streak_current}
+        dueCount={dueCount}
+        newWordsToday={newWordsToday ?? 0}
+        continueReading={
+          continueText
+            ? { textId: continueText.id, title: continueText.title, percentRead: continuing!.percent_read }
+            : null
+        }
+      />
 
-      <StatRow streak={profile.streak_current} dueCount={dueCount} newWordsToday={newWordsToday ?? 0} />
-
-      {continueText && (
-        <ContinueReadingCard
-          textId={continueText.id}
-          title={continueText.title}
-          percentRead={continuing!.percent_read}
+      <SecondaryTips>
+        <WelcomeCard createdAt={profile.created_at} />
+        {plan === "free" && <PremiumCard />}
+        <InfoCard
+          variant="tip"
+          icon="💡"
+          label="Learning tip"
+          title="Читай то, что интересно"
+          body="Выбирай тексты, которые ты бы читал(а) и на родном языке. Живой интерес держит внимание и заметно улучшает запоминание слов из контекста."
         />
-      )}
-
-      <InfoCard
-        variant="tip"
-        icon="💡"
-        label="Learning tip"
-        title="Читай то, что интересно"
-        body="Выбирай тексты, которые ты бы читал(а) и на родном языке. Живой интерес держит внимание и заметно улучшает запоминание слов из контекста."
-      />
+      </SecondaryTips>
     </div>
   );
 }

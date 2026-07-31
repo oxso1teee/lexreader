@@ -5,6 +5,7 @@ import Link from "next/link";
 import WordRow from "./word-row";
 import EmptyState from "./empty-state";
 import AddWordModal from "./add-word-modal";
+import ScreenHeader from "@/components/screen-header";
 
 const STATUS_TABS = [
   { value: "", label: "Все" },
@@ -63,12 +64,7 @@ export default function NotebookClient({
       </Link>
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold">📖 Слова из чтения</h1>
-          <p className="text-sm text-black/50 dark:text-white/50">
-            {targetLanguage} · {totalCount} слов
-          </p>
-        </div>
+        <ScreenHeader icon="📖" title="Слова из чтения" metaChip={`${targetLanguage} · ${totalCount} слов`} />
         <AddWordModal sourceLang={sourceLang} targetLang={nativeLang} />
       </div>
 

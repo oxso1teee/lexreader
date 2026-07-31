@@ -1,12 +1,11 @@
-import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import DeckList from "./deck-list";
-import NewDeckModal from "./new-deck-modal";
-import ImportModal from "./import-modal";
+import BrainControlPanel from "./brain-control-panel";
 import StarterDeckCard from "./starter-deck-card";
 import { STARTER_DECKS } from "@/lib/starter-decks";
 import { getDueCount } from "@/lib/brain-stats";
+import ScreenHeader from "@/components/screen-header";
 
 // Перевод слов стартовых колод (lib/starter-decks.ts) считается на лету
 // через MyMemory при нажатии "+ Добавить" — партиями, но всё равно сетевой
@@ -58,57 +57,14 @@ export default async function BrainPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <div>
-        <h1 className="text-2xl font-bold">🧠 Мозг</h1>
-        <div className="mt-1 flex items-center justify-between">
-          <p className="text-sm text-black/50 dark:text-white/50">{profile.target_language}</p>
-          <span className="rounded-lg border border-black/20 px-2.5 py-1 text-sm font-medium dark:border-white/25">
-            {flashcards?.length ?? 0} слов
-          </span>
-        </div>
-      </div>
+      <ScreenHeader icon="🧠" title="Мозг" metaChip={`${flashcards?.length ?? 0} слов`} />
 
-      <div className="rounded-2xl bg-card p-5 text-center shadow-sm">
-        {dueCount && dueCount > 0 ? (
-          <>
-            <p className="mb-3 font-medium">Карточек к повторению: {dueCount}</p>
-            <Link
-              href="/brain/all/review"
-              className="inline-block rounded-full bg-caramel px-5 py-2.5 font-medium text-white"
-            >
-              Начать повторение
-            </Link>
-          </>
-        ) : (
-          <p>🎉 Всё повторено!</p>
-        )}
-      </div>
-
-      {(readingWordCount ?? 0) > 0 && (
-        <Link
-          href="/notebook"
-          className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-sm transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]"
-        >
-          <span>
-            <span className="block font-medium">📖 Слова из чтения</span>
-            <span className="block text-sm text-black/50 dark:text-white/50">
-              {readingWordCount} слов · фото, избранное, экспорт
-            </span>
-          </span>
-          <span className="text-black/30 dark:text-white/30">›</span>
-        </Link>
-      )}
-
-      <div className="flex gap-2">
-        <NewDeckModal />
-        <ImportModal decks={deckOptions} targetLanguage={profile.target_language} />
-        <Link
-          href="/brain/settings"
-          className="rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"
-        >
-          ⚙️ Настройки
-        </Link>
-      </div>
+      <BrainControlPanel
+        dueCount={dueCount ?? 0}
+        readingWordCount={readingWordCount ?? 0}
+        deckOptions={deckOptions}
+        targetLanguage={profile.target_language}
+      />
 
       {profile.target_language === "en" && (
         <div className="rounded-2xl bg-card p-4 shadow-sm">

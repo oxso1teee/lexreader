@@ -6,7 +6,9 @@ import { hashString, coverGradient } from "@/lib/text-cover";
 import TextCard from "./text-card";
 import TextCoverCard from "./text-cover-card";
 import CollectionCard from "./collection-card";
+import LibraryShelf from "./library-shelf";
 import EmptyState from "@/components/empty-state";
+import ScreenHeader from "@/components/screen-header";
 
 const WORDS_PER_MINUTE = 200;
 
@@ -66,86 +68,79 @@ export default async function LibraryPage() {
     })
     .filter((c): c is NonNullable<typeof c> => c !== null);
 
+  const hasOwnTexts = collectionsWithTexts.length > 0 || ownWithoutCollection.length > 0;
+
+  const mineContent = hasOwnTexts ? (
+    <div className="flex flex-col gap-2">
+      {collectionsWithTexts.map((c) => (
+        <CollectionCard
+          key={c.id}
+          id={c.id}
+          title={c.title}
+          textCount={c.textCount}
+          avgPercentRead={c.avgPercentRead}
+          lastReadAt={c.lastReadAt}
+        />
+      ))}
+      {ownWithoutCollection.map((t) => {
+        const progress = progressByTextId.get(t.id);
+        return (
+          <TextCard
+            key={t.id}
+            id={t.id}
+            title={t.title}
+            wordCount={t.word_count}
+            levelTag={t.level_tag}
+            canDelete
+            percentRead={progress?.percentRead ?? 0}
+            lastReadAt={progress?.lastReadAt ?? null}
+            youtubeVideoId={t.youtube_video_id}
+          />
+        );
+      })}
+    </div>
+  ) : (
+    <EmptyState icon="📖✨" title="Здесь появятся твои тексты" body="Добавь первый — и начни читать." />
+  );
+
+  const featuredContent = featured ? (
+    <Link
+      href={`/read/${featured.id}`}
+      className="block rounded-2xl p-4 text-white shadow-sm transition-opacity hover:opacity-90"
+      style={{
+        background: `linear-gradient(135deg, ${coverGradient(featured.title)[0]}, ${coverGradient(featured.title)[1]})`,
+      }}
+    >
+      <span className="inline-block rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm">
+        Текст дня
+      </span>
+      <p className="mt-2 text-lg font-semibold">{featured.title}</p>
+      <p className="text-sm text-white/80">
+        Рассказ · {featured.level_tag?.toUpperCase() ?? "?"} · ≈
+        {featured.word_count ? Math.max(1, Math.ceil(featured.word_count / WORDS_PER_MINUTE)) : "?"} мин
+      </p>
+    </Link>
+  ) : null;
+
+  const catalogContent =
+    system.length > 0 ? (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {system.map((t) => (
+          <TextCoverCard key={t.id} id={t.id} title={t.title} levelTag={t.level_tag} />
+        ))}
+      </div>
+    ) : null;
+
   return (
     <div className="relative flex flex-1 flex-col">
-      <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6">
-        <h1 className="mb-4 text-xl font-semibold">Библиотека</h1>
-
-        <section className="mb-6">
-          <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
-            Мои тексты
-          </h2>
-          {collectionsWithTexts.length === 0 && ownWithoutCollection.length === 0 ? (
-            <EmptyState
-              icon="📖✨"
-              title="Здесь появятся твои тексты"
-              body="Добавь первый — и начни читать."
-            />
-          ) : (
-            <div className="flex flex-col gap-2">
-              {collectionsWithTexts.map((c) => (
-                <CollectionCard
-                  key={c.id}
-                  id={c.id}
-                  title={c.title}
-                  textCount={c.textCount}
-                  avgPercentRead={c.avgPercentRead}
-                  lastReadAt={c.lastReadAt}
-                />
-              ))}
-              {ownWithoutCollection.map((t) => {
-                const progress = progressByTextId.get(t.id);
-                return (
-                  <TextCard
-                    key={t.id}
-                    id={t.id}
-                    title={t.title}
-                    wordCount={t.word_count}
-                    levelTag={t.level_tag}
-                    canDelete
-                    percentRead={progress?.percentRead ?? 0}
-                    lastReadAt={progress?.lastReadAt ?? null}
-                    youtubeVideoId={t.youtube_video_id}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {featured && (
-          <section className="mb-6">
-            <Link
-              href={`/read/${featured.id}`}
-              className="block rounded-2xl p-4 text-white shadow-sm transition-opacity hover:opacity-90"
-              style={{
-                background: `linear-gradient(135deg, ${coverGradient(featured.title)[0]}, ${coverGradient(featured.title)[1]})`,
-              }}
-            >
-              <span className="inline-block rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm">
-                Текст дня
-              </span>
-              <p className="mt-2 text-lg font-semibold">{featured.title}</p>
-              <p className="text-sm text-white/80">
-                Рассказ · {featured.level_tag?.toUpperCase() ?? "?"} · ≈
-                {featured.word_count ? Math.max(1, Math.ceil(featured.word_count / WORDS_PER_MINUTE)) : "?"} мин
-              </p>
-            </Link>
-          </section>
-        )}
-
-        {system.length > 0 && (
-          <section className="mb-6">
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
-              Библиотека приложения
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {system.map((t) => (
-                <TextCoverCard key={t.id} id={t.id} title={t.title} levelTag={t.level_tag} />
-              ))}
-            </div>
-          </section>
-        )}
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-5 py-6">
+        <ScreenHeader icon="📖" title="Библиотека" />
+        <LibraryShelf
+          defaultTab={hasOwnTexts ? "mine" : "catalog"}
+          mine={mineContent}
+          featured={featuredContent}
+          catalog={catalogContent}
+        />
       </div>
 
       <Link
