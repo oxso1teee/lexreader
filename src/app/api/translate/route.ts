@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { translateText, TranslationQuotaError } from "@/lib/translate";
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { log } from "@/lib/log";
+import { captureServerException } from "@/lib/posthog-server";
 
 const RATE_LIMIT_PER_MINUTE = 30;
 
@@ -113,6 +114,7 @@ export async function POST(request: Request) {
       sourceLang,
       targetLang,
     });
+    captureServerException(e, user.id, { sourceLang, targetLang });
     return NextResponse.json(
       { error: "Не удалось получить перевод, попробуй ещё раз." },
       { status: 502 },

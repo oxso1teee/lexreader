@@ -16,21 +16,40 @@
   `openssl rand -hex 32`, задать `HEALTH_CHECK_SECRET` в переменных окружения
   Vercel и в настройках uptime-монитора (см. ниже).
 
-## Что нужно подключить (требует твоего аккаунта — я не могу завести его сам)
+## Продуктовая аналитика + error tracking (PostHog)
 
-### Error tracking (Sentry или аналог)
-Не подключал реальный SDK — библиотека `@sentry/nextjs` требует `SENTRY_DSN`
-из реального проекта в Sentry (создать самому: sentry.io → New Project →
-Next.js). После этого:
-1. `npm install @sentry/nextjs`
-2. `npx @sentry/wizard@latest -i nextjs` — интерактивный мастер настроит
-   `instrumentation.ts`, `sentry.client.config.ts`, оборачивание
-   `next.config.ts` и т.д. автоматически под установленную версию SDK.
-3. Добавить `Sentry.captureException(e)` в catch-блоках ключевых путей:
-   `src/app/api/translate/route.ts` (после `log.translation({outcome: "error"})`),
-   `src/app/api/webhooks/stripe/route.ts` (ошибки обработки событий),
-   `src/app/(app)/library/actions.ts` / `youtube-actions.ts` (после
-   `log.import({outcome: "error"})` — места уже размечены).
+Подключено (2026-07-31). `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST`
+заданы в Vercel и в `.env.local`.
+
+- `src/lib/posthog-client.ts` + `src/app/posthog-provider.tsx` — клиентская
+  часть, монтируется в `(app)/layout.tsx`, идентифицирует пользователя по
+  `profile.id`.
+- `src/lib/posthog-server.ts` — серверная часть (`posthog-node`): клиент
+  создаётся на вызов и сразу `shutdown()` (serverless-функции могут
+  заморозиться раньше фонового флаша).
+- Продуктовые события (`captureServerEvent`/`track`): `signup_completed`,
+  `onboarding_completed` (first-win flow), `word_saved` (только новые слова,
+  `seenCount === 1`), `review_completed` (последняя карточка сессии),
+  `paywall_viewed` (`/pricing`), `subscription_started` (Stripe-вебхук
+  `checkout.session.completed`).
+- Error tracking (`captureServerException`) — изначально планировался
+  Sentry, но `sentry.io` стабильно отдаёт 403 при регистрации из нашей сети
+  (воспроизведено дважды, в двух разных браузерах/сетях — похоже на
+  IP-репутационную блокировку Cloudflare, а не проблему конкретной машины).
+  PostHog уже подключён и имеет собственный продукт Error Tracking, поэтому
+  используем `client.captureException()` вместо отдельного SDK:
+  `src/app/api/translate/route.ts` (реальное исключение в catch-блоке
+  перевода), `src/app/api/webhooks/stripe/route.ts` (весь свитч обработки
+  событий обёрнут в try/catch — при ошибке возвращаем 500, чтобы Stripe
+  повторил доставку), `src/app/(app)/library/actions.ts` /
+  `youtube-actions.ts` (только `insert_failed`/`segments_insert_failed` —
+  ошибки нашей собственной записи в БД; остальные `log.import` ветки вида
+  "битая ссылка"/"нет субтитров" — это ожидаемое поведение при плохом
+  пользовательском вводе, не баг, и уже видно в структурированных логах).
+
+Если позже всё-таки захочется завести Sentry отдельно (например, с другой
+сети) — старая инструкция: `npx @sentry/wizard@latest -i nextjs`, добавить
+`Sentry.captureException(e)` в тех же местах.
 
 ### Uptime-мониторинг
 Внешний сервис (UptimeRobot, Better Stack, Checkly — у всех есть бесплatный

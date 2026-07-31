@@ -10,6 +10,7 @@ import {
   type CreateTextState,
 } from "./actions";
 import { log } from "@/lib/log";
+import { captureServerException } from "@/lib/posthog-server";
 
 // Официальный YouTube Data API v3 требует OAuth для скачивания субтитров
 // чужого видео (раздел 7 ТЗ) — неподъёмно для MVP. Вместо этого парсим
@@ -234,6 +235,10 @@ async function persistYoutubeTranscript(params: {
   });
   if ("error" in result) {
     log.import({ kind: "youtube", outcome: "error", reason: "insert_failed" });
+    captureServerException(new Error(result.error), params.profile.id, {
+      kind: "youtube",
+      reason: "insert_failed",
+    });
     return { error: result.error };
   }
 
@@ -248,6 +253,10 @@ async function persistYoutubeTranscript(params: {
   );
   if (segmentsError) {
     log.import({ kind: "youtube", outcome: "error", reason: "segments_insert_failed" });
+    captureServerException(new Error(segmentsError.message), params.profile.id, {
+      kind: "youtube",
+      reason: "segments_insert_failed",
+    });
     await params.supabase.from("texts").delete().eq("id", result.id);
     return { error: "Не удалось сохранить субтитры этого видео. Попробуй ещё раз." };
   }

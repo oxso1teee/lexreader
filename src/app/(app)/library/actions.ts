@@ -10,6 +10,7 @@ import { getPlan, FREE_TEXT_LIMIT } from "@/lib/subscription";
 import { assertPublicUrl, fetchPublicUrl } from "@/lib/ssrf-guard";
 import type { TextSourceType } from "@/lib/types";
 import { log } from "@/lib/log";
+import { captureServerException } from "@/lib/posthog-server";
 
 export async function deleteText(textId: string) {
   const supabase = await createClient();
@@ -330,6 +331,7 @@ export async function createTextFromUrl(
   const collection = await resolveCollectionAssignment(supabase, profile.id, profile.target_language, formData);
   if ("error" in collection) {
     log.import({ kind: "url", outcome: "error", reason: "insert_failed" });
+    captureServerException(new Error(collection.error), profile.id, { kind: "url", reason: "insert_failed" });
     return { error: collection.error };
   }
 
@@ -345,6 +347,7 @@ export async function createTextFromUrl(
   });
   if ("error" in result) {
     log.import({ kind: "url", outcome: "error", reason: "insert_failed" });
+    captureServerException(new Error(result.error), profile.id, { kind: "url", reason: "insert_failed" });
     return { error: result.error };
   }
 

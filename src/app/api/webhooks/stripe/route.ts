@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { PostHog } from "posthog-node";
 import { getStripeClient, isStripeConfigured, planFromPriceId } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/service";
 import { log } from "@/lib/log";
-
-function capturePostHogEvent(distinctId: string, event: string, properties?: Record<string, unknown>) {
-  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
-  const client = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-    host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
-  });
-  client.capture({ distinctId, event, properties });
-  void client.shutdown();
-}
+import { captureServerEvent, captureServerException } from "@/lib/posthog-server";
 
 // Источник истины о статусе подписки — ТОЛЬКО эти вебхуки, никогда не
 // доверять client-side редиректу "оплата прошла" (P0-PAY-01).
@@ -52,6 +43,23 @@ export async function POST(request: Request) {
 
   const supabase = createServiceClient();
 
+  try {
+    await processStripeEvent(event, stripe, supabase);
+  } catch (e) {
+    captureServerException(e, undefined, { stripeEventType: event.type });
+    // 500 — чтобы Stripe повторил доставку вебхука, а не решил, что мы его
+    // успешно обработали, пока у нас в базе неконсистентное состояние.
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
+  }
+
+  return NextResponse.json({ received: true });
+}
+
+async function processStripeEvent(
+  event: Stripe.Event,
+  stripe: Stripe,
+  supabase: ReturnType<typeof createServiceClient>,
+) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -75,7 +83,7 @@ export async function POST(request: Request) {
         { onConflict: "owner_id" },
       );
       log.subscription({ kind: "checkout_completed", ownerId, plan });
-      capturePostHogEvent(ownerId, "subscription_started", { plan });
+      captureServerEvent(ownerId, "subscription_started", { plan });
       break;
     }
 
@@ -140,6 +148,4 @@ export async function POST(request: Request) {
       break;
     }
   }
-
-  return NextResponse.json({ received: true });
 }
