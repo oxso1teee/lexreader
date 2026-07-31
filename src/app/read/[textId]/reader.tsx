@@ -13,6 +13,13 @@ import {
   finishReading,
   updateTextProgress,
 } from "./actions";
+import ReaderSettings, { useReaderPrefs } from "./reader-settings";
+
+const READING_THEME_COLORS: Record<string, { bg: string; surface: string; text: string } | null> = {
+  paper: null,
+  sepia: { bg: "#f2e6cf", surface: "#fbf3e0", text: "#3f2f1a" },
+  dark: { bg: "#1c1a16", surface: "#242019", text: "#e8e2d4" },
+};
 
 interface WordLevelInfo {
   id: string;
@@ -96,6 +103,10 @@ export default function Reader({
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
   const [manualTranslation, setManualTranslation] = useState("");
+  const [readerPrefs, updateReaderPrefs] = useReaderPrefs();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const themeColors = READING_THEME_COLORS[readerPrefs.theme];
 
   const [selection, setSelection] = useState<{ si: number; start: number; end: number } | null>(
     null,
@@ -343,8 +354,14 @@ export default function Reader({
   const readingProgress = Math.round(((pageIndex + 1) / pages.length) * 100);
 
   return (
-    <div className="relative flex min-h-screen flex-1 flex-col bg-[#f7f4ee] dark:bg-background">
-      <header className="sticky top-0 z-10 border-b border-black/[0.07] bg-[#f7f4ee]/95 backdrop-blur-xl dark:border-white/10 dark:bg-background/95">
+    <div
+      className="relative flex min-h-screen flex-1 flex-col bg-[#f7f4ee] dark:bg-background"
+      style={themeColors ? { backgroundColor: themeColors.bg, color: themeColors.text } : undefined}
+    >
+      <header
+        className="sticky top-0 z-10 border-b border-black/[0.07] bg-[#f7f4ee]/95 backdrop-blur-xl dark:border-white/10 dark:bg-background/95"
+        style={themeColors ? { backgroundColor: `${themeColors.bg}f2` } : undefined}
+      >
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link
             href="/library"
@@ -360,6 +377,14 @@ export default function Reader({
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Настройки чтения"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-caramel shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
+            >
+              <span aria-hidden="true" className="text-base font-bold">Aa</span>
+            </button>
             <button
               type="button"
               onClick={() => handleSpeak(currentPageText)}
@@ -432,7 +457,14 @@ export default function Reader({
           <span className="basis-full italic sm:ml-auto sm:basis-auto">Зажми слово и протяни, чтобы выделить фразу</span>
         </div>
 
-      <article className="mx-auto w-full max-w-[820px] flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 text-[18px] leading-[1.9] tracking-[-0.006em] shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8 sm:text-[19px] sm:leading-[1.95]">
+      <article
+        className="mx-auto w-full max-w-[820px] flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 tracking-[-0.006em] shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8"
+        style={{
+          fontSize: `${readerPrefs.fontSize}px`,
+          lineHeight: readerPrefs.lineHeight,
+          ...(themeColors ? { backgroundColor: themeColors.surface, color: themeColors.text } : {}),
+        }}
+      >
         {sentences.slice(pageStart, pageEnd).map((sentence, localIdx) => {
           const si = pageStart + localIdx;
           return (
@@ -483,7 +515,10 @@ export default function Reader({
           {finishError}
         </div>
       )}
-      <footer className="sticky bottom-0 z-10 border-t border-black/[0.07] bg-[#f7f4ee]/95 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-background/95">
+      <footer
+        className="sticky bottom-0 z-10 border-t border-black/[0.07] bg-[#f7f4ee]/95 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-background/95"
+        style={themeColors ? { backgroundColor: `${themeColors.bg}f2` } : undefined}
+      >
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
         <button
           type="button"
@@ -666,6 +701,14 @@ export default function Reader({
             )}
           </div>
         </div>
+      )}
+
+      {settingsOpen && (
+        <ReaderSettings
+          prefs={readerPrefs}
+          onChange={updateReaderPrefs}
+          onClose={() => setSettingsOpen(false)}
+        />
       )}
     </div>
   );

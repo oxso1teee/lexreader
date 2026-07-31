@@ -8,6 +8,7 @@ import InfoCard from "./info-card";
 import AccountStrip from "./account-strip";
 import TodayCard from "./today-card";
 import SecondaryTips from "./secondary-tips";
+import InstallBanner from "./install-banner";
 import ScreenHeader from "@/components/screen-header";
 
 function todayStartUtc(): string {
@@ -74,6 +75,8 @@ export default async function HomePage() {
         textCount={textCount ?? 0}
         targetLanguage={profile.target_language}
       />
+
+      <InstallBanner />
 
       <TodayCard
         current={newWordsToday ?? 0}
