@@ -217,11 +217,13 @@ export default async function PricingPage({
 
           <PricingFaq />
 
-          <p className="text-xs text-black/40 dark:text-white/40">
-            {stripeReady
-              ? "Оплата через Stripe Checkout — карта не сохраняется в LexReader, всё проходит на стороне Stripe."
-              : "Это тестовая кнопка локальной разработки — она не проводит реальную оплату, а просто помечает подписку активной в базе. Настоящая оплата подключается через Stripe, когда будут заданы STRIPE_SECRET_KEY/STRIPE_PRICE_MONTHLY/STRIPE_PRICE_YEARLY."}
-          </p>
+          {!showUnavailable && (
+            <p className="text-xs text-black/40 dark:text-white/40">
+              {stripeReady
+                ? "Оплата через Stripe Checkout — карта не сохраняется в LexReader, всё проходит на стороне Stripe."
+                : "Это тестовая кнопка локальной разработки — она не проводит реальную оплату, а просто помечает подписку активной в базе. Настоящая оплата подключается через Stripe, когда будут заданы STRIPE_SECRET_KEY/STRIPE_PRICE_MONTHLY/STRIPE_PRICE_YEARLY."}
+            </p>
+          )}
           <p className="text-xs text-black/40 dark:text-white/40">
             Оформляя подписку, ты соглашаешься с{" "}
             <Link href="/terms" className="underline">
