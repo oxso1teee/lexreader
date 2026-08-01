@@ -1,13 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getSrsSettings } from "@/lib/srs-settings";
-import { isFsrsEnabled } from "@/lib/fsrs";
+import { isFsrsEnabled, isMissingFsrsColumnsError } from "@/lib/fsrs";
 import type { SrsParams } from "@/lib/srs";
 import type { ReviewCard } from "./review-session";
 import ReviewModeSwitcher from "./review-mode-switcher";
 
-const SELECT =
-  "flashcard_id, due_at, repetitions, ease_factor, interval_days, last_reviewed_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_lapses, fsrs_reps, fsrs_scheduled_days, flashcards!inner(id, front, back, notes, deck_id, owner_id)";
+// Отдельные строковые литералы (не конкатенация) — Supabase-js выводит форму
+// строки из литерального типа select(), конкатенация через `+` расширяет тип
+// до `string` и ломает вывод типов.
+const LEGACY_SELECT =
+  "flashcard_id, due_at, repetitions, ease_factor, interval_days, last_reviewed_at, flashcards!inner(id, front, back, notes, deck_id, owner_id)" as const;
+const FSRS_SELECT =
+  "flashcard_id, due_at, repetitions, ease_factor, interval_days, last_reviewed_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_lapses, fsrs_reps, fsrs_scheduled_days, flashcards!inner(id, front, back, notes, deck_id, owner_id)" as const;
 
 interface SrsStateRow {
   flashcard_id: string;
@@ -16,12 +21,12 @@ interface SrsStateRow {
   ease_factor: number;
   interval_days: number;
   last_reviewed_at: string | null;
-  fsrs_stability: number | null;
-  fsrs_difficulty: number | null;
-  fsrs_state: number | null;
-  fsrs_lapses: number;
-  fsrs_reps: number;
-  fsrs_scheduled_days: number;
+  fsrs_stability?: number | null;
+  fsrs_difficulty?: number | null;
+  fsrs_state?: number | null;
+  fsrs_lapses?: number;
+  fsrs_reps?: number;
+  fsrs_scheduled_days?: number;
   flashcards:
     | { front: string; back: string; notes: string | null; deck_id: string }
     | { front: string; back: string; notes: string | null; deck_id: string }[];
@@ -45,12 +50,12 @@ function toCards(rows: SrsStateRow[] | null): ReviewCard[] {
       intervalDays: row.interval_days,
       repetitions: row.repetitions,
       fsrsState: {
-        fsrsStability: row.fsrs_stability,
-        fsrsDifficulty: row.fsrs_difficulty,
-        fsrsState: row.fsrs_state,
-        fsrsLapses: row.fsrs_lapses,
-        fsrsReps: row.fsrs_reps,
-        fsrsScheduledDays: row.fsrs_scheduled_days,
+        fsrsStability: row.fsrs_stability ?? null,
+        fsrsDifficulty: row.fsrs_difficulty ?? null,
+        fsrsState: row.fsrs_state ?? null,
+        fsrsLapses: row.fsrs_lapses ?? 0,
+        fsrsReps: row.fsrs_reps ?? 0,
+        fsrsScheduledDays: row.fsrs_scheduled_days ?? 0,
         dueAt: row.due_at,
         lastReviewedAt: row.last_reviewed_at,
       },
@@ -92,32 +97,61 @@ export default async function DeckReviewPage({
   // очередь повторения "все колоды" (deckId === "all") подмешивала карточки
   // всех изучаемых языков сразу. Теперь очередь всегда ограничена текущим
   // target_language.
-  let reviewQuery = supabase
-    .from("srs_state")
-    .select(SELECT)
-    .eq("flashcards.owner_id", profile.id)
-    .eq("flashcards.language", profile.target_language)
-    .not("first_reviewed_at", "is", null)
-    .lte("due_at", now)
-    .order("due_at", { ascending: true })
-    .limit(settings.max_reviews_per_day);
+  // Инцидент 2026-08-01 (FSRS Production Rollout Phase 1): код и migration
+  // 0032 могут быть задеплоены раздельно — если fsrs_*-колонок ещё нет в БД,
+  // select с ними падает целиком ("42703 undefined_column"), а не только по
+  // новым полям, и вся страница ревью переставала открываться. buildQueries
+  // пересобирает тот же фильтр под любой select — сначала пробуем с
+  // FSRS-полями, при ошибке откатываемся на легаси-select.
+  function buildQueries<Select extends string>(select: Select) {
+    let reviewQuery = supabase
+      .from("srs_state")
+      .select(select)
+      .eq("flashcards.owner_id", profile.id)
+      .eq("flashcards.language", profile.target_language)
+      .not("first_reviewed_at", "is", null)
+      .lte("due_at", now)
+      .order("due_at", { ascending: true })
+      .limit(settings.max_reviews_per_day);
 
-  let newQuery = supabase
-    .from("srs_state")
-    .select(SELECT)
-    .eq("flashcards.owner_id", profile.id)
-    .eq("flashcards.language", profile.target_language)
-    .is("first_reviewed_at", null)
-    .lte("due_at", now)
-    .order("due_at", { ascending: true })
-    .limit(remainingNewCards);
+    let newQuery = supabase
+      .from("srs_state")
+      .select(select)
+      .eq("flashcards.owner_id", profile.id)
+      .eq("flashcards.language", profile.target_language)
+      .is("first_reviewed_at", null)
+      .lte("due_at", now)
+      .order("due_at", { ascending: true })
+      .limit(remainingNewCards);
 
-  if (deckId !== "all") {
-    reviewQuery = reviewQuery.eq("flashcards.deck_id", deckId);
-    newQuery = newQuery.eq("flashcards.deck_id", deckId);
+    if (deckId !== "all") {
+      reviewQuery = reviewQuery.eq("flashcards.deck_id", deckId);
+      newQuery = newQuery.eq("flashcards.deck_id", deckId);
+    }
+    return { reviewQuery, newQuery };
   }
 
-  const [{ data: reviewRows }, { data: newRows }] = await Promise.all([reviewQuery, newQuery]);
+  const { reviewQuery, newQuery } = buildQueries(FSRS_SELECT);
+  const [
+    { data: initialReviewRows, error: reviewError },
+    { data: initialNewRows, error: newError },
+  ] = await Promise.all([reviewQuery, newQuery]);
+  let reviewRows = initialReviewRows;
+  let newRows = initialNewRows;
+
+  if (isMissingFsrsColumnsError(reviewError) || isMissingFsrsColumnsError(newError)) {
+    // Легаси-select не содержит fsrs_*-полей — toCards() их и не читает,
+    // пока не задать значения по умолчанию (см. ?? выше); форма отличается
+    // только доп. полями, не структурой join'а — безопасно привести к общему
+    // типу, аналогично src/app/(app)/brain/[deckId]/review/actions.ts.
+    const fallback = buildQueries(LEGACY_SELECT);
+    const [fallbackReview, fallbackNew] = await Promise.all([
+      fallback.reviewQuery,
+      fallback.newQuery,
+    ]);
+    reviewRows = fallbackReview.data as typeof reviewRows;
+    newRows = fallbackNew.data as typeof newRows;
+  }
 
   // Сначала карточки на повторение (не дать очереди повторов утонуть в новых
   // карточках), затем новые — раздел 6.2 роадмапа: два независимых лимита.
