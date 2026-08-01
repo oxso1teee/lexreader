@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reviewFsrsCard, isFsrsEnabled, computeFsrsShadowSafe, type FsrsStateRow } from "./fsrs.ts";
+import {
+  reviewFsrsCard,
+  isFsrsEnabled,
+  computeFsrsShadowSafe,
+  isMissingFsrsColumnsError,
+  type FsrsStateRow,
+} from "./fsrs.ts";
 
 // Значения ниже получены прогоном самой reviewFsrsCard() с фиксированным
 // `now`, не подобраны вручную — точная арифметика FSRS (веса модели,
@@ -185,4 +191,19 @@ test("isFsrsEnabled(): true только при точном значении с
     if (original === undefined) delete process.env.FSRS_ENABLED;
     else process.env.FSRS_ENABLED = original;
   }
+});
+
+// Production Rollout Phase 1, инцидент 2026-08-01: код и migration 0032
+// могут быть задеплоены раздельно — reviewWord()/review-страница используют
+// isMissingFsrsColumnsError() на error от Supabase-select, чтобы откатиться
+// на легаси-select вместо падения всего запроса.
+test("isMissingFsrsColumnsError(): true для Postgres 42703 (undefined_column)", () => {
+  assert.equal(isMissingFsrsColumnsError({ code: "42703" }), true);
+});
+
+test("isMissingFsrsColumnsError(): false для других кодов ошибок и для null/undefined", () => {
+  assert.equal(isMissingFsrsColumnsError({ code: "23505" }), false); // unique_violation, для примера
+  assert.equal(isMissingFsrsColumnsError({}), false);
+  assert.equal(isMissingFsrsColumnsError(null), false);
+  assert.equal(isMissingFsrsColumnsError(undefined), false);
 });

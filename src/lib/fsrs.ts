@@ -145,3 +145,16 @@ export function computeFsrsShadowSafe(
 export function isFsrsEnabled(): boolean {
   return process.env.FSRS_ENABLED === "true";
 }
+
+/**
+ * Production incident (2026-08-01): code and migration 0032 were deployed as
+ * two separate steps ("код сначала, миграция потом"), but reviewWord()/the
+ * review page unconditionally selected fsrs_* columns — PostgREST rejects
+ * queries referencing columns that don't exist yet (Postgres SQLSTATE 42703,
+ * "undefined_column"), which broke every review save/load until migration
+ * 0032 was applied. Callers use this to detect exactly that case and fall
+ * back to a legacy-only query instead of failing the whole request.
+ */
+export function isMissingFsrsColumnsError(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "42703";
+}
