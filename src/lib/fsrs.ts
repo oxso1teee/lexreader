@@ -158,3 +158,47 @@ export function isFsrsEnabled(): boolean {
 export function isMissingFsrsColumnsError(error: { code?: string } | null | undefined): boolean {
   return error?.code === "42703";
 }
+
+/**
+ * FSRS Schema Compatibility Hotfix: отдельный от FSRS_ENABLED флаг —
+ * подтверждение того, что migration 0032 применена к текущей БД. Read-путь
+ * (src/lib/fsrs-flags.ts) решает, включать ли fsrs_*-колонки в запрос,
+ * ДО его отправки — это не замена, а дополнение к isMissingFsrsColumnsError:
+ * если флаг всё же выставлен неверно (миграция на самом деле не применена),
+ * запрос ниже (selectWithFsrsSchemaFallback) всё равно поймает 42703 и
+ * откатится на легаси-запрос, вместо того чтобы падать.
+ */
+export function isFsrsSchemaReady(): boolean {
+  return process.env.FSRS_SCHEMA_READY === "true";
+}
+
+/**
+ * Выполняет FSRS-запрос только если schemaReady=true; иначе сразу уходит на
+ * легаси-запрос, не пытаясь обратиться к несуществующим колонкам вообще
+ * ("нельзя надеяться, что Supabase проигнорирует неизвестные колонки" —
+ * поэтому здесь два РАЗНЫХ запроса, а не один с опциональными полями).
+ * Если schemaReady=true, но колонок всё ещё нет (флаг выставлен раньше
+ * реальной миграции), 42703 от FSRS-запроса всё равно откатывается на
+ * легаси — defense in depth, а не единственная защита.
+ */
+export async function selectWithFsrsSchemaFallback<TFsrs, TLegacy>(
+  schemaReady: boolean,
+  // PromiseLike, не Promise — Supabase-js query builder — thenable, но не
+  // структурно совместим с Promise (нет catch/finally/Symbol.toStringTag).
+  runFsrsQuery: () => PromiseLike<{ data: TFsrs | null; error: { code?: string } | null }>,
+  runLegacyQuery: () => PromiseLike<{ data: TLegacy | null; error: { code?: string } | null }>,
+): Promise<
+  | { data: TFsrs | null; error: { code?: string } | null; usedFsrsColumns: true }
+  | { data: TLegacy | null; error: { code?: string } | null; usedFsrsColumns: false }
+> {
+  if (!schemaReady) {
+    const { data, error } = await runLegacyQuery();
+    return { data, error, usedFsrsColumns: false };
+  }
+  const primary = await runFsrsQuery();
+  if (isMissingFsrsColumnsError(primary.error)) {
+    const fallback = await runLegacyQuery();
+    return { data: fallback.data, error: fallback.error, usedFsrsColumns: false };
+  }
+  return { data: primary.data, error: primary.error, usedFsrsColumns: true };
+}

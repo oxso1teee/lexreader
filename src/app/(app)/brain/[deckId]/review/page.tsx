@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getSrsSettings } from "@/lib/srs-settings";
-import { isFsrsEnabled, isMissingFsrsColumnsError } from "@/lib/fsrs";
+import { isMissingFsrsColumnsError } from "@/lib/fsrs";
+import { getFsrsFlags } from "@/lib/fsrs-flags";
 import type { SrsParams } from "@/lib/srs";
 import type { ReviewCard } from "./review-session";
 import ReviewModeSwitcher from "./review-mode-switcher";
@@ -97,12 +98,18 @@ export default async function DeckReviewPage({
   // очередь повторения "все колоды" (deckId === "all") подмешивала карточки
   // всех изучаемых языков сразу. Теперь очередь всегда ограничена текущим
   // target_language.
-  // Инцидент 2026-08-01 (FSRS Production Rollout Phase 1): код и migration
-  // 0032 могут быть задеплоены раздельно — если fsrs_*-колонок ещё нет в БД,
-  // select с ними падает целиком ("42703 undefined_column"), а не только по
-  // новым полям, и вся страница ревью переставала открываться. buildQueries
-  // пересобирает тот же фильтр под любой select — сначала пробуем с
-  // FSRS-полями, при ошибке откатываемся на легаси-select.
+  const flags = getFsrsFlags();
+
+  // Инцидент 2026-08-01 (FSRS Production Rollout Phase 1) + Schema
+  // Compatibility Hotfix: код и migration 0032 могут быть задеплоены
+  // раздельно — если fsrs_*-колонок ещё нет в БД, select с ними падает
+  // целиком ("42703 undefined_column"), а не только по новым полям.
+  // flags.shadowEnabled решает ДО отправки запроса, какой select
+  // использовать; 42703-fallback ниже — только defense in depth на случай,
+  // если флаг выставлен раньше реальной миграции. buildQueries пересобирает
+  // тот же фильтр под любой select (два отдельных ЛИТЕРАЛЬНЫХ вызова, не
+  // тернарник внутри одного — иначе Supabase-js не может распарсить select
+  // в момент компиляции).
   function buildQueries<Select extends string>(select: Select) {
     let reviewQuery = supabase
       .from("srs_state")
@@ -131,15 +138,19 @@ export default async function DeckReviewPage({
     return { reviewQuery, newQuery };
   }
 
-  const { reviewQuery, newQuery } = buildQueries(FSRS_SELECT);
+  // Два отдельных литеральных вызова buildQueries — не buildQueries(cond ?
+  // FSRS_SELECT : LEGACY_SELECT), это снова сломало бы вывод типов select().
+  const primaryQueries = flags.shadowEnabled ? buildQueries(FSRS_SELECT) : buildQueries(LEGACY_SELECT);
   const [
     { data: initialReviewRows, error: reviewError },
     { data: initialNewRows, error: newError },
-  ] = await Promise.all([reviewQuery, newQuery]);
-  let reviewRows = initialReviewRows;
-  let newRows = initialNewRows;
+  ] = await Promise.all([primaryQueries.reviewQuery, primaryQueries.newQuery]);
+  // SrsStateRow объявляет fsrs_*-поля опциональными — приведение безопасно
+  // независимо от того, каким из двух select() реально получены данные.
+  let reviewRows = initialReviewRows as SrsStateRow[] | null;
+  let newRows = initialNewRows as SrsStateRow[] | null;
 
-  if (isMissingFsrsColumnsError(reviewError) || isMissingFsrsColumnsError(newError)) {
+  if (flags.shadowEnabled && (isMissingFsrsColumnsError(reviewError) || isMissingFsrsColumnsError(newError))) {
     // Легаси-select не содержит fsrs_*-полей — toCards() их и не читает,
     // пока не задать значения по умолчанию (см. ?? выше); форма отличается
     // только доп. полями, не структурой join'а — безопасно привести к общему
@@ -149,8 +160,8 @@ export default async function DeckReviewPage({
       fallback.reviewQuery,
       fallback.newQuery,
     ]);
-    reviewRows = fallbackReview.data as typeof reviewRows;
-    newRows = fallbackNew.data as typeof newRows;
+    reviewRows = fallbackReview.data as SrsStateRow[] | null;
+    newRows = fallbackNew.data as SrsStateRow[] | null;
   }
 
   // Сначала карточки на повторение (не дать очереди повторов утонуть в новых
@@ -165,12 +176,13 @@ export default async function DeckReviewPage({
     easyIntervalDays: settings.easy_interval_days,
   };
 
-  // M2 Learning Upgrade (LEARN-010): единственное место, где решается, какой
-  // алгоритм авторитетен — server-side флаг, не передаётся из клиента.
-  // Клиентский компонент получает уже вычисленное здесь значение только
-  // для выбора формулы предпросмотра интервала на кнопках оценки;
-  // реальное сохранение (reviewWord) всё равно проверяет флаг заново.
-  const fsrsEnabled = isFsrsEnabled();
+  // M2 Learning Upgrade (LEARN-010) + FSRS Schema Compatibility Hotfix:
+  // единственное место, где решается, какой алгоритм авторитетен —
+  // server-side флаги (flags.enabled уже учитывает flags.schemaReady, см.
+  // getFsrsFlags), не передаётся из клиента. Клиентский компонент получает
+  // уже вычисленное значение только для выбора формулы предпросмотра
+  // интервала на кнопках оценки; реальное сохранение (reviewWord) всё равно
+  // проверяет флаги заново на сервере.
 
   return (
     <ReviewModeSwitcher
@@ -178,7 +190,7 @@ export default async function DeckReviewPage({
       studyDirection={settings.study_direction}
       srsParams={srsParams}
       bestSessionCount={profile.review_best_session_count}
-      fsrsEnabled={fsrsEnabled}
+      fsrsEnabled={flags.enabled}
       maxIntervalDays={settings.max_interval_days}
     />
   );

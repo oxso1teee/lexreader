@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { touchStreak } from "@/lib/streak";
 import { reviewSrsState } from "@/lib/srs";
-import { computeFsrsShadowSafe, isFsrsEnabled, isMissingFsrsColumnsError } from "@/lib/fsrs";
+import { computeFsrsShadowSafe, isMissingFsrsColumnsError } from "@/lib/fsrs";
+import { getFsrsFlags } from "@/lib/fsrs-flags";
 import { getSrsParams, getSrsSettings } from "@/lib/srs-settings";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
@@ -26,30 +27,47 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const FSRS_SELECT =
     "ease_factor, interval_days, repetitions, first_reviewed_at, due_at, last_reviewed_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_lapses, fsrs_reps, fsrs_scheduled_days, flashcards!inner(language)" as const;
 
+  const flags = getFsrsFlags();
+
+  // Generic — не ternary внутри .select() — Supabase-js выводит форму строки
+  // из литерального типа аргумента; объединённый (не литеральный) тип из
+  // тернарника внутри самого select() ломает парсер до ParserError. Каждый
+  // ВЫЗОВ fetchSrsState() ниже получает свой литерал отдельно, а сам выбор
+  // между двумя уже готовыми промисами делается тернарником снаружи.
+  function fetchSrsState<Select extends string>(select: Select) {
+    return supabase.from("srs_state").select(select).eq("flashcard_id", flashcardId).single();
+  }
+
+  // FSRS Schema Compatibility Hotfix: flags.shadowEnabled решает ДО отправки
+  // запроса, включать ли fsrs_*-колонки — не полагаемся на то, что Supabase
+  // их проигнорирует. Если флаг всё же выставлен раньше реальной миграции,
+  // 42703 ниже всё равно откатывается на легаси-select (defense in depth,
+  // не единственная защита).
+  // Тип результата берём с FSRS_SELECT-варианта (referenceQuery ниже не
+  // выполняется — только даёт тип для приведения) — при
+  // flags.shadowEnabled=false реально уходит легаси-запрос, но runtime-
+  // доступ к fsrs_*-полям всё равно защищён условием usedFsrsColumns ниже,
+  // так что типовая "ложь" здесь безопасна (тот же приём, что и в fallback-
+  // ветке чуть ниже: `as typeof fetched`).
+  type FetchedRow = Awaited<ReturnType<typeof fetchSrsState<typeof FSRS_SELECT>>>;
   const [{ data: fetched, error: fetchError }, params, settings] = await Promise.all([
-    supabase.from("srs_state").select(FSRS_SELECT).eq("flashcard_id", flashcardId).single(),
+    (flags.shadowEnabled ? fetchSrsState(FSRS_SELECT) : fetchSrsState(LEGACY_SELECT)) as unknown as FetchedRow,
     getSrsParams(supabase, user.id),
     getSrsSettings(supabase, user.id),
   ]);
 
-  // Инцидент 2026-08-01: код и migration 0032 могут быть задеплоены раздельно
-  // (Production Rollout Phase 1) — если fsrs_*-колонок ещё нет в БД, этот
-  // .select() падает с ошибкой PostgREST "42703 undefined_column" для ВСЕГО
-  // запроса, а не только для новых полей. Откатываемся на select без FSRS-
-  // полей вместо того, чтобы ломать сохранение легаси-оценки.
   let current = fetched;
-  let fsrsColumnsAvailable = true;
-  if (isMissingFsrsColumnsError(fetchError)) {
-    fsrsColumnsAvailable = false;
+  let usedFsrsColumns = flags.shadowEnabled;
+  if (flags.shadowEnabled && isMissingFsrsColumnsError(fetchError)) {
+    usedFsrsColumns = false;
     const fallback = await supabase
       .from("srs_state")
       .select(LEGACY_SELECT)
       .eq("flashcard_id", flashcardId)
       .single();
     // Легаси-select не содержит fsrs_*-полей — они просто не читаются нигде
-    // ниже, пока fsrsColumnsAvailable=false (см. использование current.fsrs_*
-    // за условием fsrsColumnsAvailable). Форма отличается только доп.
-    // полями, не структурой join'а — безопасно привести к общему типу.
+    // ниже, пока usedFsrsColumns=false. Форма отличается только доп. полями,
+    // не структурой join'а — безопасно привести к общему типу.
     current = fallback.data as typeof fetched;
     if (fallback.error || !current) throw new Error("Карточка не найдена.");
   } else if (fetchError || !current) {
@@ -80,14 +98,14 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   );
   const legacyDueAt = new Date(now.getTime() + legacyNext.intervalDays * 86_400_000);
 
-  // FSRS Release Review (Шаг 5) + инцидент 2026-08-01: shadow-расчёт
+  // FSRS Release Review (Шаг 5) + Schema Compatibility Hotfix: shadow-расчёт
   // изолирован через computeFsrsShadowSafe (падение вычисления не должно
-  // ломать сохранение оценки) И полностью пропускается, если fsrs_*-колонок
-  // ещё нет в БД (fsrsColumnsAvailable=false) — тогда current не содержит
-  // этих полей вообще. В обоих случаях fsrsResult=null, due_at и review_log
-  // однозначно откатываются на legacy-алгоритм, FSRS-поля srs_state в этом
-  // ревью просто не читаются/не обновляются.
-  const fsrsResult = fsrsColumnsAvailable
+  // ломать сохранение оценки) И полностью пропускается, если select ушёл на
+  // легаси (usedFsrsColumns=false) — тогда current не содержит этих полей
+  // вообще. В обоих случаях fsrsResult=null, due_at и review_log однозначно
+  // откатываются на legacy-алгоритм, FSRS-поля srs_state в этом ревью просто
+  // не читаются/не обновляются.
+  const fsrsResult = usedFsrsColumns
     ? computeFsrsShadowSafe(
         {
           fsrsStability: current.fsrs_stability,
@@ -105,8 +123,7 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
       )
     : null;
 
-  const fsrsEnabled = isFsrsEnabled();
-  const fsrsAuthoritative = fsrsEnabled && fsrsResult !== null;
+  const fsrsAuthoritative = flags.enabled && fsrsResult !== null;
   const dueAt = fsrsAuthoritative ? new Date(fsrsResult.dueAt) : legacyDueAt;
 
   // P0-АУДИТ 3.11 (испр. после повторной проверки): раньше "новизна"
@@ -147,7 +164,7 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const { error: logError } = await supabase.from("review_log").insert({
     flashcard_id: flashcardId,
     grade,
-    ...(fsrsColumnsAvailable
+    ...(usedFsrsColumns
       ? {
           scheduler_type: fsrsAuthoritative ? "fsrs" : "sm2",
           previous_state_json: fsrsResult?.previousState ?? null,
