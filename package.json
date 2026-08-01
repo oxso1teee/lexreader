@@ -11,6 +11,7 @@
     "test:import": "node --experimental-strip-types --test src/lib/import-cards.test.ts",
     "test:extension": "node --test browser-extension/youtube-transcript.test.mjs",
     "test:srs": "node --experimental-strip-types --test src/lib/srs.test.ts",
+    "test:fsrs": "node --experimental-strip-types --test src/lib/fsrs.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "react-dom": "19.2.4",
     "stripe": "^22.3.2",
     "tesseract.js": "^7.0.0",
+    "ts-fsrs": "^5.4.1",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
