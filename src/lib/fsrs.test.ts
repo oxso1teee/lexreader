@@ -3,8 +3,10 @@ import test from "node:test";
 import {
   reviewFsrsCard,
   isFsrsEnabled,
+  isFsrsSchemaReady,
   computeFsrsShadowSafe,
   isMissingFsrsColumnsError,
+  selectWithFsrsSchemaFallback,
   type FsrsStateRow,
 } from "./fsrs.ts";
 
@@ -206,4 +208,83 @@ test("isMissingFsrsColumnsError(): false для других кодов ошиб
   assert.equal(isMissingFsrsColumnsError({}), false);
   assert.equal(isMissingFsrsColumnsError(null), false);
   assert.equal(isMissingFsrsColumnsError(undefined), false);
+});
+
+// FSRS Schema Compatibility Hotfix: FSRS_SCHEMA_READY — отдельный от
+// FSRS_ENABLED флаг, подтверждающий, что migration 0032 применена.
+test("isFsrsSchemaReady(): true только при точном значении строки 'true'", () => {
+  const original = process.env.FSRS_SCHEMA_READY;
+  try {
+    process.env.FSRS_SCHEMA_READY = "true";
+    assert.equal(isFsrsSchemaReady(), true);
+    process.env.FSRS_SCHEMA_READY = "1";
+    assert.equal(isFsrsSchemaReady(), false);
+    delete process.env.FSRS_SCHEMA_READY;
+    assert.equal(isFsrsSchemaReady(), false);
+  } finally {
+    if (original === undefined) delete process.env.FSRS_SCHEMA_READY;
+    else process.env.FSRS_SCHEMA_READY = original;
+  }
+});
+
+// selectWithFsrsSchemaFallback: решает ДО запроса (schemaReady), плюс
+// defense-in-depth откат на легаси при 42703, если флаг всё же выставлен
+// раньше реальной миграции. Проверяется на простых мок-функциях — реальная
+// проверка select()-строк на настоящей pre-0032 схеме сделана отдельно
+// (см. docs/learning/fsrs-schema-compatibility.md, "Проверка против
+// pre-0032 схемы").
+test("selectWithFsrsSchemaFallback(): schemaReady=false — легаси-запрос вызывается, FSRS-запрос не вызывается вообще", async () => {
+  let fsrsCalled = false;
+  const result = await selectWithFsrsSchemaFallback(
+    false,
+    async () => {
+      fsrsCalled = true;
+      return { data: { fsrs_stability: 1 }, error: null };
+    },
+    async () => ({ data: { legacy: true }, error: null }),
+  );
+  assert.equal(fsrsCalled, false, "при schemaReady=false FSRS-запрос не должен даже отправляться");
+  assert.equal(result.usedFsrsColumns, false);
+  assert.deepEqual(result.data, { legacy: true });
+});
+
+test("selectWithFsrsSchemaFallback(): schemaReady=true, FSRS-запрос успешен — легаси не вызывается", async () => {
+  let legacyCalled = false;
+  const result = await selectWithFsrsSchemaFallback(
+    true,
+    async () => ({ data: { fsrs_stability: 1 }, error: null }),
+    async () => {
+      legacyCalled = true;
+      return { data: { legacy: true }, error: null };
+    },
+  );
+  assert.equal(legacyCalled, false);
+  assert.equal(result.usedFsrsColumns, true);
+  assert.deepEqual(result.data, { fsrs_stability: 1 });
+});
+
+test("selectWithFsrsSchemaFallback(): schemaReady=true, но колонок ещё нет (42703) — откатывается на легаси", async () => {
+  const result = await selectWithFsrsSchemaFallback(
+    true,
+    async () => ({ data: null, error: { code: "42703" } }),
+    async () => ({ data: { legacy: true }, error: null }),
+  );
+  assert.equal(result.usedFsrsColumns, false);
+  assert.deepEqual(result.data, { legacy: true });
+  assert.equal(result.error, null);
+});
+
+test("selectWithFsrsSchemaFallback(): schemaReady=true, ошибка НЕ 42703 — не откатывается, отдаёт реальную ошибку как есть", async () => {
+  let legacyCalled = false;
+  const result = await selectWithFsrsSchemaFallback(
+    true,
+    async () => ({ data: null, error: { code: "PGRST116" } }), // "no rows", например
+    async () => {
+      legacyCalled = true;
+      return { data: { legacy: true }, error: null };
+    },
+  );
+  assert.equal(legacyCalled, false, "не 42703-ошибки не должны маскироваться откатом на легаси");
+  assert.equal(result.usedFsrsColumns, true);
+  assert.deepEqual(result.error, { code: "PGRST116" });
 });
