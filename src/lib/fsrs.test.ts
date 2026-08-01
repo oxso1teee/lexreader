@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reviewFsrsCard, isFsrsEnabled, type FsrsStateRow } from "./fsrs.ts";
+import { reviewFsrsCard, isFsrsEnabled, computeFsrsShadowSafe, type FsrsStateRow } from "./fsrs.ts";
 
 // Значения ниже получены прогоном самой reviewFsrsCard() с фиксированным
 // `now`, не подобраны вручную — точная арифметика FSRS (веса модели,
@@ -137,6 +137,38 @@ test("isFsrsEnabled(): по умолчанию (без FSRS_ENABLED в окру�
   } finally {
     if (original === undefined) delete process.env.FSRS_ENABLED;
     else process.env.FSRS_ENABLED = original;
+  }
+});
+
+test("computeFsrsShadowSafe(): при валидной строке ведёт себя как reviewFsrsCard (совпадающий результат)", () => {
+  const safe = computeFsrsShadowSafe(EMPTY_ROW, 2, MAX_INTERVAL_DEFAULT, NOW);
+  const direct = reviewFsrsCard(EMPTY_ROW, 2, MAX_INTERVAL_DEFAULT, NOW);
+  assert.deepEqual(safe, direct);
+});
+
+// FSRS Release Review (Шаг 5): критическое требование — при падении
+// shadow-расчёта (например, из-за повреждённой/неожиданной строки БД)
+// вызывающий код (reviewWord) не должен получить исключение, иначе старое
+// SM-2-повторение сломается вместе с новым FSRS-кодом. `row: null as any`
+// здесь имитирует именно такой сбой — не то, что actions.ts передаёт в
+// норме, а то, что должно быть безопасно перехвачено, если форма данных
+// когда-нибудь окажется не той, что ожидает rowToCard().
+test("computeFsrsShadowSafe(): не бросает исключение и возвращает null, если reviewFsrsCard упал", () => {
+  const originalConsoleError = console.error;
+  let loggedArgs: unknown[] | null = null;
+  console.error = (...args: unknown[]) => {
+    loggedArgs = args;
+  };
+  try {
+    const result = computeFsrsShadowSafe(null as unknown as FsrsStateRow, 2, MAX_INTERVAL_DEFAULT, NOW);
+    assert.equal(result, null);
+    assert.ok(loggedArgs, "ошибка должна быть залогирована, а не проглочена молча");
+    const loggedText = (loggedArgs as unknown[]).map(String).join(" ");
+    // Приватные данные (текст карточки, id пользователя, содержимое строки
+    // srs_state) не должны попадать в лог — только текст самой ошибки.
+    assert.ok(!loggedText.includes("srs_state"));
+  } finally {
+    console.error = originalConsoleError;
   }
 });
 
