@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { touchStreak } from "@/lib/streak";
 import { reviewSrsState } from "@/lib/srs";
-import { reviewFsrsCard, isFsrsEnabled } from "@/lib/fsrs";
+import { computeFsrsShadowSafe, isFsrsEnabled } from "@/lib/fsrs";
 import { getSrsParams, getSrsSettings } from "@/lib/srs-settings";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
@@ -55,7 +55,12 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   );
   const legacyDueAt = new Date(now.getTime() + legacyNext.intervalDays * 86_400_000);
 
-  const fsrsResult = reviewFsrsCard(
+  // FSRS Release Review (Шаг 5): shadow-расчёт изолирован через
+  // computeFsrsShadowSafe — падение здесь (например, из-за неожиданной формы
+  // строки БД) не должно ломать сохранение оценки. При сбое fsrsResult=null,
+  // due_at и review_log однозначно откатываются на legacy-алгоритм, FSRS-поля
+  // srs_state в этом ревью просто не обновляются (остаются как были).
+  const fsrsResult = computeFsrsShadowSafe(
     {
       fsrsStability: current.fsrs_stability,
       fsrsDifficulty: current.fsrs_difficulty,
@@ -72,7 +77,8 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   );
 
   const fsrsEnabled = isFsrsEnabled();
-  const dueAt = fsrsEnabled ? new Date(fsrsResult.dueAt) : legacyDueAt;
+  const fsrsAuthoritative = fsrsEnabled && fsrsResult !== null;
+  const dueAt = fsrsAuthoritative ? new Date(fsrsResult.dueAt) : legacyDueAt;
 
   // P0-АУДИТ 3.11 (испр. после повторной проверки): раньше "новизна"
   // определялась через repetitions === 0 — но SM-2 сбрасывает repetitions
@@ -92,12 +98,16 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
       ease_factor: legacyNext.easeFactor,
       interval_days: legacyNext.intervalDays,
       repetitions: legacyNext.repetitions,
-      fsrs_stability: fsrsResult.fsrsStability,
-      fsrs_difficulty: fsrsResult.fsrsDifficulty,
-      fsrs_state: fsrsResult.fsrsState,
-      fsrs_lapses: fsrsResult.fsrsLapses,
-      fsrs_reps: fsrsResult.fsrsReps,
-      fsrs_scheduled_days: fsrsResult.fsrsScheduledDays,
+      ...(fsrsResult
+        ? {
+            fsrs_stability: fsrsResult.fsrsStability,
+            fsrs_difficulty: fsrsResult.fsrsDifficulty,
+            fsrs_state: fsrsResult.fsrsState,
+            fsrs_lapses: fsrsResult.fsrsLapses,
+            fsrs_reps: fsrsResult.fsrsReps,
+            fsrs_scheduled_days: fsrsResult.fsrsScheduledDays,
+          }
+        : {}),
       due_at: dueAt.toISOString(),
       last_reviewed_at: now.toISOString(),
       ...(wasNew ? { first_reviewed_at: now.toISOString() } : {}),
@@ -108,9 +118,9 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const { error: logError } = await supabase.from("review_log").insert({
     flashcard_id: flashcardId,
     grade,
-    scheduler_type: fsrsEnabled ? "fsrs" : "sm2",
-    previous_state_json: fsrsResult.previousState,
-    next_state_json: fsrsResult.nextState,
+    scheduler_type: fsrsAuthoritative ? "fsrs" : "sm2",
+    previous_state_json: fsrsResult?.previousState ?? null,
+    next_state_json: fsrsResult?.nextState ?? null,
   });
   if (logError) throw new Error("Не удалось сохранить ответ.");
 

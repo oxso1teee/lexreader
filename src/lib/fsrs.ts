@@ -104,6 +104,34 @@ export function reviewFsrsCard(
 }
 
 /**
+ * FSRS Release Review (Шаг 5): reviewFsrsCard() раньше вызывался в actions.ts
+ * без изоляции — падение shadow-расчёта (например, из-за неожиданной формы
+ * строки БД) обрывало reviewWord() до записи srs_state/review_log, то есть
+ * ломало и legacy-повторение тоже, даже при FSRS_ENABLED=false. Эта обёртка
+ * гарантирует, что вызывающий код (actions.ts) всегда может продолжить по
+ * старому алгоритму: при ошибке возвращает null вместо исключения. В лог
+ * попадает только текст ошибки (без содержимого строки srs_state/карточки —
+ * не приватные данные), flashcardId можно безопасно добавить в вызывающем
+ * коде как непрозрачный идентификатор для диагностики.
+ */
+export function computeFsrsShadowSafe(
+  row: FsrsStateRow,
+  grade: 0 | 1 | 2 | 3,
+  maxIntervalDays: number,
+  now: Date = new Date(),
+): FsrsReviewResult | null {
+  try {
+    return reviewFsrsCard(row, grade, maxIntervalDays, now);
+  } catch (error) {
+    console.error(
+      "[fsrs] shadow calculation failed, falling back to legacy scheduling:",
+      error instanceof Error ? error.message : String(error),
+    );
+    return null;
+  }
+}
+
+/**
  * Server-side флаг rollout (LEARN-010). Читается только из вызывающего
  * серверного кода (server actions/page.tsx) — сам по себе ничего не
  * защищает, но и не предназначен для этого: единственная точка, где
