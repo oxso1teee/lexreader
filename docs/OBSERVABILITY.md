@@ -21,6 +21,15 @@
 Подключено (2026-07-31). `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST`
 заданы в Vercel и в `.env.local`.
 
+**2026-08-01: не работало в проде до этой даты.** CSP (`next.config.ts`) не
+пропускала ни скрипт posthog-js, ни его сетевые запросы — `script-src`/
+`connect-src` не знали про хост из `NEXT_PUBLIC_POSTHOG_HOST` (EU-регион:
+`eu.i.posthog.com`) и про его assets-CDN (`eu-assets.i.posthog.com`, куда
+posthog-js грузит скрипт и откуда же фетчит remote-config). Итог: 0 событий
+и 0 пойманных исключений в проекте с момента подключения. Теперь
+`next.config.ts` выводит оба хоста из `NEXT_PUBLIC_POSTHOG_HOST` (та же
+region-логика, что в самом posthog-js) и добавляет их в CSP.
+
 - `src/lib/posthog-client.ts` + `src/app/posthog-provider.tsx` — клиентская
   часть, монтируется в `(app)/layout.tsx`, идентифицирует пользователя по
   `profile.id`.
