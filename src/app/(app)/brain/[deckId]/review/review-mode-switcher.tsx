@@ -21,11 +21,15 @@ export default function ReviewModeSwitcher({
   studyDirection,
   srsParams,
   bestSessionCount,
+  fsrsEnabled,
+  maxIntervalDays,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
   srsParams: SrsParams;
   bestSessionCount: number;
+  fsrsEnabled: boolean;
+  maxIntervalDays: number;
 }) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
@@ -96,6 +100,8 @@ export default function ReviewModeSwitcher({
           studyDirection={direction}
           srsParams={srsParams}
           bestSessionCount={bestSessionCount}
+          fsrsEnabled={fsrsEnabled}
+          maxIntervalDays={maxIntervalDays}
         />
       )}
       {mode === "choice" && (

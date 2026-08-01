@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getSrsSettings } from "@/lib/srs-settings";
+import { isFsrsEnabled } from "@/lib/fsrs";
 import type { SrsParams } from "@/lib/srs";
 import type { ReviewCard } from "./review-session";
 import ReviewModeSwitcher from "./review-mode-switcher";
 
 const SELECT =
-  "flashcard_id, due_at, repetitions, ease_factor, interval_days, flashcards!inner(id, front, back, notes, deck_id, owner_id)";
+  "flashcard_id, due_at, repetitions, ease_factor, interval_days, last_reviewed_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_lapses, fsrs_reps, fsrs_scheduled_days, flashcards!inner(id, front, back, notes, deck_id, owner_id)";
 
 interface SrsStateRow {
   flashcard_id: string;
@@ -14,6 +15,13 @@ interface SrsStateRow {
   repetitions: number;
   ease_factor: number;
   interval_days: number;
+  last_reviewed_at: string | null;
+  fsrs_stability: number | null;
+  fsrs_difficulty: number | null;
+  fsrs_state: number | null;
+  fsrs_lapses: number;
+  fsrs_reps: number;
+  fsrs_scheduled_days: number;
   flashcards:
     | { front: string; back: string; notes: string | null; deck_id: string }
     | { front: string; back: string; notes: string | null; deck_id: string }[];
@@ -36,6 +44,16 @@ function toCards(rows: SrsStateRow[] | null): ReviewCard[] {
       easeFactor: row.ease_factor,
       intervalDays: row.interval_days,
       repetitions: row.repetitions,
+      fsrsState: {
+        fsrsStability: row.fsrs_stability,
+        fsrsDifficulty: row.fsrs_difficulty,
+        fsrsState: row.fsrs_state,
+        fsrsLapses: row.fsrs_lapses,
+        fsrsReps: row.fsrs_reps,
+        fsrsScheduledDays: row.fsrs_scheduled_days,
+        dueAt: row.due_at,
+        lastReviewedAt: row.last_reviewed_at,
+      },
     };
   });
 }
@@ -113,12 +131,21 @@ export default async function DeckReviewPage({
     easyIntervalDays: settings.easy_interval_days,
   };
 
+  // M2 Learning Upgrade (LEARN-010): единственное место, где решается, какой
+  // алгоритм авторитетен — server-side флаг, не передаётся из клиента.
+  // Клиентский компонент получает уже вычисленное здесь значение только
+  // для выбора формулы предпросмотра интервала на кнопках оценки;
+  // реальное сохранение (reviewWord) всё равно проверяет флаг заново.
+  const fsrsEnabled = isFsrsEnabled();
+
   return (
     <ReviewModeSwitcher
       cards={cards}
       studyDirection={settings.study_direction}
       srsParams={srsParams}
       bestSessionCount={profile.review_best_session_count}
+      fsrsEnabled={fsrsEnabled}
+      maxIntervalDays={settings.max_interval_days}
     />
   );
 }

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { reviewWord, sendCardToNotebook, updateReviewBest } from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
+import { reviewFsrsCard, type FsrsStateRow } from "@/lib/fsrs";
 import { track } from "@/lib/posthog-client";
 import SessionComplete from "./session-complete";
 
@@ -16,6 +17,7 @@ export interface ReviewCard {
   easeFactor: number;
   intervalDays: number;
   repetitions: number;
+  fsrsState: FsrsStateRow;
 }
 
 const GRADES: { value: 0 | 1 | 2 | 3; label: string; className: string }[] = [
@@ -40,11 +42,15 @@ export default function ReviewSession({
   studyDirection,
   srsParams,
   bestSessionCount,
+  fsrsEnabled,
+  maxIntervalDays,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
   srsParams: SrsParams;
   bestSessionCount: number;
+  fsrsEnabled: boolean;
+  maxIntervalDays: number;
 }) {
   // Снимок очереди на момент старта сессии: серверные экшены ревью вызывают
   // неявный refresh страницы, из-за которого /review перезапросил бы уже
@@ -262,11 +268,18 @@ export default function ReviewSession({
               )}
               <div className="grid grid-cols-2 gap-2">
                 {GRADES.map((g) => {
-                const preview = reviewSrsState(
-                  { easeFactor: card.easeFactor, intervalDays: card.intervalDays, repetitions: card.repetitions },
-                  g.value,
-                  srsParams,
-                );
+                // M2 Learning Upgrade (LEARN-007): один и тот же адаптер для
+                // предпросмотра и для реального сохранения (src/lib/fsrs.ts,
+                // reviewFsrsCard) — не отдельная копия формулы. Ветка по
+                // fsrsEnabled только выбирает, чьё число показать; сам расчёт
+                // не дублируется ни для одного из двух алгоритмов.
+                const previewDays = fsrsEnabled
+                  ? reviewFsrsCard(card.fsrsState, g.value, maxIntervalDays).fsrsScheduledDays
+                  : reviewSrsState(
+                      { easeFactor: card.easeFactor, intervalDays: card.intervalDays, repetitions: card.repetitions },
+                      g.value,
+                      srsParams,
+                    ).intervalDays;
                 return (
                   <button
                     key={g.value}
@@ -277,7 +290,7 @@ export default function ReviewSession({
                   >
                     <span>{g.label}</span>
                     <span className="text-xs font-normal opacity-80">
-                      {formatInterval(preview.intervalDays)}
+                      {formatInterval(previewDays)}
                     </span>
                   </button>
                 );
