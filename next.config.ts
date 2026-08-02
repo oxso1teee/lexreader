@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
+import { getPostHogCspHosts } from "./src/lib/posthog-csp.ts";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const isDev = process.env.NODE_ENV !== "production";
+const { apiHost: posthogApiHost, assetsHost: posthogAssetsHost } = getPostHogCspHosts(
+  process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 // P0-SEC-06 release-readiness промта: базовый набор security-заголовков.
 // P0-АУДИТ 2.3/2.4: cdn.jsdelivr.net нужен tesseract.js (воркер/wasm-ядро/
@@ -13,14 +17,22 @@ const isDev = process.env.NODE_ENV !== "production";
 // блокируется ещё до создания iframe).
 // ws:/wss: нужны только Turbopack HMR в dev — в проде их разрешать незачем
 // (иначе XSS-пейлоад мог бы открыть WebSocket на любой хост).
+// PostHog CSP hotfix (2026-08-02, см. docs/analytics/posthog-csp-fix.md):
+// posthog-js грузит array.js/config.js со отдельного "-assets"-поддомена
+// (script-src) и шлёт capture/decide-запросы на основной host (connect-src)
+// — без обоих production полностью не получал ни одного события с момента
+// подключения PostHog. Хосты выводятся из NEXT_PUBLIC_POSTHOG_HOST той же
+// логикой, что использует сам SDK (src/lib/posthog-csp.ts), а не
+// захардкожены — тот же fallback-host, что в posthog-client.ts/
+// posthog-server.ts, и тот же self-hosted-режим (assets с того же домена).
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.youtube.com",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.youtube.com ${posthogAssetsHost}`,
   "worker-src 'self' blob: https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self'${isDev ? " ws: wss:" : ""} ${supabaseUrl} https://api.mymemory.translated.net https://cdn.jsdelivr.net`,
+  `connect-src 'self'${isDev ? " ws: wss:" : ""} ${supabaseUrl} https://api.mymemory.translated.net https://cdn.jsdelivr.net ${posthogApiHost}`,
   "frame-src https://www.youtube.com",
   "frame-ancestors 'none'",
 ]
