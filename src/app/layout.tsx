@@ -38,6 +38,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#a67c52",
+  // M3 Slice 1: без viewportFit "cover" env(safe-area-inset-*) в
+  // MobileBottomNav не активен на iOS (docs/ui/current-ui-audit.md §5).
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

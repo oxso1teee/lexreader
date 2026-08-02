@@ -1,21 +1,27 @@
 import { requireProfile } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { getPlan } from "@/lib/subscription";
 import PostHogProvider from "../posthog-provider";
-import Nav from "./nav";
+import AppShell from "@/components/product/app-shell/app-shell";
 
+const PLAN_LABELS: Record<string, string> = {
+  premium_monthly: "Premium",
+  premium_yearly: "Premium",
+};
+
+// M3 Slice 1 (docs/ui/unified-ui-slice-1-plan.md): раньше здесь была
+// ручная разметка header+<Nav/> без desktop-навигации вообще
+// (docs/ui/current-ui-audit.md §1) — AppShell добавляет DesktopSidebar
+// (md+) рядом с той же мобильной раскладкой, ничего не удаляя.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile();
+  const supabase = await createClient();
+  const plan = await getPlan(supabase, profile.id);
 
   return (
-    <div className="flex min-h-screen flex-1 flex-col bg-background">
+    <>
       <PostHogProvider userId={profile.id} />
-      {/* Идея из разбора конкурента (скрины Lexpring, 2026-07-28): Настройки
-          переехали в нижнюю панель как полноценная 6-я вкладка (см. nav.tsx)
-          — отдельная иконка-шестерёнка в шапке стала избыточным дублем. */}
-      <header className="sticky top-0 z-20 flex items-center justify-center bg-background/95 px-4 py-3 backdrop-blur">
-        <span className="text-lg font-bold tracking-tight">LexReader</span>
-      </header>
-      <main className="flex flex-1 flex-col">{children}</main>
-      <Nav />
-    </div>
+      <AppShell planLabel={PLAN_LABELS[plan] ?? null}>{children}</AppShell>
+    </>
   );
 }
