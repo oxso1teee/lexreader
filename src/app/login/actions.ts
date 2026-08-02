@@ -7,6 +7,7 @@ import { isAuthAttemptAllowed, logAuthAttempt } from "@/lib/auth-rate-limit";
 
 export interface LoginState {
   error?: string;
+  retryAfterSeconds?: number;
 }
 
 async function clientIp(): Promise<string> {
@@ -23,8 +24,9 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
   }
 
   const ip = await clientIp();
-  if (!(await isAuthAttemptAllowed([email, ip]))) {
-    return { error: "Слишком много попыток входа — попробуй позже." };
+  const attempt = await isAuthAttemptAllowed("login", [email, ip]);
+  if (!attempt.allowed) {
+    return { error: "Слишком много попыток входа.", retryAfterSeconds: attempt.retryAfterSeconds };
   }
 
   const supabase = await createClient();
@@ -32,7 +34,7 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
   if (error) {
     // В лимит идут только неудачные попытки — иначе обычный пользователь
     // с несколькими вкладками/устройствами рискует сам себя заблокировать.
-    await logAuthAttempt([email, ip]);
+    await logAuthAttempt("login", [email, ip]);
     return { error: "Неверный email или пароль." };
   }
 

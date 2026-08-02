@@ -7,6 +7,7 @@ import { siteUrl } from "@/lib/site-url";
 export interface ResetRequestState {
   submitted?: boolean;
   error?: string;
+  retryAfterSeconds?: number;
 }
 
 export async function requestPasswordReset(
@@ -16,10 +17,11 @@ export async function requestPasswordReset(
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: "Введи email." };
 
-  if (!(await isAuthAttemptAllowed([email]))) {
-    return { error: "Слишком много запросов — попробуй позже." };
+  const attempt = await isAuthAttemptAllowed("reset-password", [email]);
+  if (!attempt.allowed) {
+    return { error: "Слишком много запросов на сброс пароля.", retryAfterSeconds: attempt.retryAfterSeconds };
   }
-  await logAuthAttempt([email]);
+  await logAuthAttempt("reset-password", [email]);
 
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(email, {

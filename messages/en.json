@@ -1,0 +1,48 @@
+{
+  "appShell": {
+    "brand": "LexReader",
+    "nav": {
+      "today": "Today",
+      "learn": "Learn",
+      "practice": "Practice",
+      "progress": "Progress",
+      "profile": "Profile"
+    }
+  },
+  "today": {
+    "greeting": {
+      "night": "Good night",
+      "morning": "Good morning",
+      "day": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "primaryAction": {
+      "reviewEyebrow": "Time to review",
+      "reviewCta": "Review",
+      "continueEyebrow": "Pick up where you left off",
+      "continueCta": "Continue reading",
+      "addMaterialTitle": "Add your first material",
+      "addMaterialDescription": "Read anything interesting — LexReader saves new words and builds review for you.",
+      "addMaterialCta": "Add material"
+    },
+    "plan": {
+      "title": "Today's plan",
+      "due": "Due for review",
+      "streak": "Day streak",
+      "words": "Words saved",
+      "reviewsThisWeek": "Reviews this week"
+    },
+    "continueLearning": {
+      "title": "Continue learning"
+    },
+    "review": {
+      "title": "Review"
+    },
+    "progressSnapshot": {
+      "title": "Progress"
+    },
+    "comingSoon": {
+      "title": "Coming soon"
+    }
+  }
+}

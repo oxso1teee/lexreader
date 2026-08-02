@@ -31,6 +31,31 @@ test("password reset request shows a generic confirmation message", async ({ pag
   await expect(page.getByText(/Если такой email зарегистрирован/)).toBeVisible();
 });
 
+// Раньше login/signup/password-reset делили один identifier-бакет — неудачный
+// вход мог молча "съесть" попытки сброса пароля того же email (и наоборот).
+// Не гоняем здесь реальные 5 неудачных попыток до блокировки: это разделяет
+// один и тот же IP-бакет с соседними тестами файла (у них тоже есть по одной
+// неудачной попытке входа) и рискует словить настоящий 15-минутный лок для
+// всего набора. Вместо этого — минимальное, безопасное доказательство, что
+// один неудачный вход не мешает следующему же запросу сброса пароля для того
+// же email, чего с общим бакетом раньше не было гарантировано.
+test("a failed login attempt does not consume the password-reset bucket for the same email", async ({
+  page,
+}) => {
+  const email = `rate-limit-bucket-check-${Date.now()}@example.com`;
+
+  await page.goto("/login");
+  await page.getByPlaceholder("Email").fill(email);
+  await page.getByPlaceholder("Пароль").fill("whatever-wrong-password");
+  await page.getByRole("button", { name: "Войти" }).click();
+  await expect(page.getByText("Неверный email или пароль.")).toBeVisible();
+
+  await page.goto("/reset-password");
+  await page.getByPlaceholder("Email").fill(email);
+  await page.getByRole("button", { name: "Отправить ссылку для сброса" }).click();
+  await expect(page.getByText(/Если такой email зарегистрирован/)).toBeVisible();
+});
+
 // Раньше в наборе не было ни одного теста, доходящего до конца ссылки сброса
 // пароля (только до "письмо отправлено") — реальная проверка через локальный
 // Mailpit нашла настоящий баг: /auth/callback строил редирект из origin

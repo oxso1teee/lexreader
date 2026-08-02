@@ -1,0 +1,48 @@
+{
+  "appShell": {
+    "brand": "LexReader",
+    "nav": {
+      "today": "Сегодня",
+      "learn": "Учиться",
+      "practice": "Практика",
+      "progress": "Прогресс",
+      "profile": "Профиль"
+    }
+  },
+  "today": {
+    "greeting": {
+      "night": "Доброй ночи",
+      "morning": "Доброе утро",
+      "day": "Добрый день",
+      "evening": "Добрый вечер"
+    },
+    "primaryAction": {
+      "reviewEyebrow": "Пора повторить",
+      "reviewCta": "Повторить",
+      "continueEyebrow": "Продолжи с того же места",
+      "continueCta": "Продолжить чтение",
+      "addMaterialTitle": "Добавь первый материал",
+      "addMaterialDescription": "Читай что угодно интересное — LexReader сохранит незнакомые слова и создаст повторение.",
+      "addMaterialCta": "Добавить материал"
+    },
+    "plan": {
+      "title": "План на сегодня",
+      "due": "К повторению",
+      "streak": "Дней подряд",
+      "words": "Слов сохранено",
+      "reviewsThisWeek": "Повторений за неделю"
+    },
+    "continueLearning": {
+      "title": "Продолжить обучение"
+    },
+    "review": {
+      "title": "Повторение"
+    },
+    "progressSnapshot": {
+      "title": "Прогресс"
+    },
+    "comingSoon": {
+      "title": "Скоро"
+    }
+  }
+}

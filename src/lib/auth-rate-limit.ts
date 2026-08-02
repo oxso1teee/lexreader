@@ -1,17 +1,25 @@
 import { createServiceClient } from "@/lib/supabase/service";
+import { type AuthAction, authAttemptKey, authRateLimitConfig } from "@/lib/auth-rate-limit-config";
 
-const MAX_ATTEMPTS = 5;
-const WINDOW_MS = 15 * 60_000;
+export type { AuthAction };
+export { authAttemptKey, authRateLimitConfig };
 
-// P0-AUTH-04: троттлинг попыток входа — по email и по IP отдельно, любой из
-// двух лимитов может заблокировать попытку. Не раскрывает, какой из них
-// сработал (одинаковое сообщение) — иначе это тоже канал для user enumeration.
-export async function isAuthAttemptAllowed(identifiers: string[]): Promise<boolean> {
+export interface AuthAttemptCheck {
+  allowed: boolean;
+  retryAfterSeconds?: number;
+}
+
+// P0-AUTH-04: троттлинг попыток — по email и по IP отдельно (в своём бакете
+// на action), любой из двух лимитов может заблокировать попытку. Не
+// раскрывает, какой из них сработал (одинаковое сообщение) — иначе это тоже
+// канал для user enumeration.
+export async function isAuthAttemptAllowed(action: AuthAction, identifiers: string[]): Promise<AuthAttemptCheck> {
   const supabase = createServiceClient();
-  const windowStart = new Date(Date.now() - WINDOW_MS).toISOString();
+  const { maxAttempts: limit, windowMs: window } = authRateLimitConfig();
+  const windowStart = new Date(Date.now() - window).toISOString();
 
   for (const raw of identifiers) {
-    const key = raw.trim().toLowerCase();
+    const key = authAttemptKey(action, raw);
     if (!key) continue;
 
     const { count } = await supabase
@@ -20,17 +28,33 @@ export async function isAuthAttemptAllowed(identifiers: string[]): Promise<boole
       .eq("identifier", key)
       .gte("attempted_at", windowStart);
 
-    if ((count ?? 0) >= MAX_ATTEMPTS) return false;
+    if ((count ?? 0) >= limit) {
+      // В обычной работе счётчик не растёт после блокировки (logAuthAttempt
+      // для этого action больше не вызывается), так что самая старая запись
+      // в окне — она же и определяет, когда лимит освободится.
+      const { data: oldest } = await supabase
+        .from("auth_attempts")
+        .select("attempted_at")
+        .eq("identifier", key)
+        .gte("attempted_at", windowStart)
+        .order("attempted_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      const oldestMs = oldest ? new Date(oldest.attempted_at).getTime() : Date.now();
+      const retryAfterSeconds = Math.max(1, Math.ceil((oldestMs + window - Date.now()) / 1000));
+      return { allowed: false, retryAfterSeconds };
+    }
   }
 
-  return true;
+  return { allowed: true };
 }
 
-export async function logAuthAttempt(identifiers: string[]): Promise<void> {
+export async function logAuthAttempt(action: AuthAction, identifiers: string[]): Promise<void> {
   const supabase = createServiceClient();
   const rows = identifiers
-    .map((raw) => raw.trim().toLowerCase())
-    .filter(Boolean)
+    .map((raw) => authAttemptKey(action, raw))
+    .filter((key): key is string => key !== null)
     .map((identifier) => ({ identifier }));
   if (rows.length > 0) {
     await supabase.from("auth_attempts").insert(rows);
