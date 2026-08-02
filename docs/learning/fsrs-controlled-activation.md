@@ -1,9 +1,10 @@
 # FSRS Controlled Activation — Phase D preparation (account-level rollout)
 
-Статус: **код/тесты/документация подготовлены, НЕ задеплоено**. Draft PR,
-`FSRS_ENABLED_USER_IDS` нигде не установлен (ни в production, ни локально) —
-поведение production не меняется этим PR ни для кого, включая тестовый
-аккаунт.
+Статус: **код смёржен и задеплоен (PR #9, merge SHA `fd150ec5c1dca997c8a1797c978156f9a8559448`); `FSRS_ENABLED_USER_IDS` УСТАНОВЛЕН в production для одного тестового аккаунта.**
+Полный отчёт активации, browser/PostHog/DB-verification —
+`docs/learning/fsrs-test-account-activation.md`. Ниже — исходный документ
+подготовки фазы (архитектура, decision matrix, тесты), актуален без
+изменений.
 
 ## Зачем нужен этот шаг
 
@@ -186,9 +187,11 @@ CI-падение `e2e` из-за Node 20 vs требование Node 22+ дл�
 периодические `toHaveURL`-таймауты в 1-2 из 11 тестов, тот же
 pre-existing flake, что и раньше, не регрессия этого PR.
 
-## Активация тестового аккаунта (когда будет решено начать Phase D)
+## Активация тестового аккаунта
 
-**Не выполнено в этой фазе** — только процедура на будущее:
+**Выполнено** — полный отчёт со всеми результатами verification в
+`docs/learning/fsrs-test-account-activation.md`. Процедура ниже сохранена
+как справочная (описывает шаги, которые были выполнены):
 
 1. Владелец устанавливает в Vercel production:
    `FSRS_ENABLED_USER_IDS=eee0e646-56c4-470b-b60f-aea90212ca86`
