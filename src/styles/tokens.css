@@ -1,0 +1,157 @@
+/* M3 Unified UI — Slice 1 design tokens.
+   Extends (does not replace) the existing --color-background/foreground/
+   card/caramel* tokens in src/app/globals.css — those stay as the single
+   source of truth for brand color, this file only adds the semantic
+   roles that were missing (border, surface variants, primary/success/
+   warning/danger/info, focus ring) plus a small typography scale and
+   container widths for the new App Shell/Today components.
+
+   Existing pages (Library/Brain/Progress/Settings) keep using their
+   current ad hoc `border-black/10 dark:border-white/10` etc. — retrofitting
+   them is out of scope for this slice (see docs/ui/current-ui-audit.md
+   §8). New product components use these tokens instead of hardcoded
+   colors. */
+
+:root {
+  /* Surfaces — background is the page canvas, surface is a raised card
+     (== existing --card), surface-elevated is one step up (modals,
+     popovers, the active nav item background). */
+  --surface: var(--card);
+  --surface-elevated: #ffffff;
+  --surface-muted: #ece6db;
+
+  /* Text — 0.68 (not the more obvious 0.55) is deliberate: verified via
+     axe-core (e2e/unified-shell-a11y.spec.ts) to reach WCAG AA 4.5:1 on
+     both --surface (#fff) and --background (#f5f1ea); 0.55 only reached
+     ~3.8:1 and failed the scan. */
+  --text-secondary: rgba(26, 26, 26, 0.68);
+
+  /* Border */
+  --border: rgba(26, 26, 26, 0.1);
+  --border-strong: rgba(26, 26, 26, 0.18);
+
+  /* Semantic color roles — alias the existing accent tokens from
+     globals.css rather than introducing a second palette. */
+  --color-primary: var(--color-caramel);
+  --color-primary-foreground: #ffffff;
+  /* --color-caramel сам по себе (#a67c52) даёт только 3.16-3.73:1 на
+     светлых поверхностях этого приложения — недостаточно для WCAG AA
+     4.5:1 обычного текста (найдено axe-core). Эта пара — та же марка,
+     но выдержана под контраст: используется ТОЛЬКО когда caramel нужен
+     именно как цвет ТЕКСТА (не фона/иконки/акцентной точки, для которых
+     порог мягче). */
+  --color-caramel-text: #7d5d3e;
+  --color-success: var(--color-accent-green);
+  --color-warning: var(--color-accent-orange);
+  --color-danger: var(--color-accent-red);
+  --color-info: var(--color-accent-blue);
+
+  /* Focus ring — deliberately not the brand color, so keyboard focus is
+     never confused with a "you did something" accent state. */
+  --focus-ring: var(--color-accent-blue);
+
+  /* Container widths for the new App Shell (existing pages keep their
+     own inner max-w-2xl untouched). */
+  --container-sidebar: 240px;
+  --container-sidebar-compact: 72px;
+  --container-dashboard: 1280px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-elevated: #262330;
+    --surface-muted: #1c1a24;
+    --text-secondary: rgba(240, 236, 227, 0.68);
+    --border: rgba(240, 236, 227, 0.12);
+    --border-strong: rgba(240, 236, 227, 0.22);
+    --color-caramel-text: #c79562;
+  }
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-muted: var(--surface-muted);
+  --color-text-secondary: var(--text-secondary);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-info: var(--color-info);
+  --color-focus-ring: var(--focus-ring);
+  --color-caramel-text: var(--color-caramel-text);
+}
+
+/* Typography scale — semantic roles instead of ad hoc text-xl/font-bold
+   combinations. Sizes follow docs/ui/current-ui-audit.md's recommended
+   scale (H1 32/28 mobile, H2 24-30, H3 20-24, body 16, caption 13-14). */
+.text-display {
+  font-size: 2.5rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.text-h1 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+@media (min-width: 640px) {
+  .text-h1 {
+    font-size: 2rem;
+  }
+}
+.text-h2 {
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: 700;
+}
+.text-h3 {
+  font-size: 1.125rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.text-body {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.text-body-sm {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.text-label {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.text-caption {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* Focus ring — applied explicitly via this class on custom interactive
+   elements, and globally as a :focus-visible fallback so nothing in the
+   new shell/Today components can end up keyboard-focusable without a
+   visible indicator. */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
