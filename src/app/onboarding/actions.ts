@@ -8,6 +8,7 @@ import { log } from "@/lib/log";
 
 export interface OnboardingState {
   error?: string;
+  retryAfterSeconds?: number;
 }
 
 async function clientIp(): Promise<string> {
@@ -36,8 +37,9 @@ export async function completeOnboarding(
   // P0-АУДИТ 3.8: регистрация раньше не имела рейт-лимита вообще (в отличие
   // от входа/сброса пароля) — можно было скриптовать массовую регистрацию.
   const ip = await clientIp();
-  if (!(await isAuthAttemptAllowed([email, ip]))) {
-    return { error: "Слишком много попыток — попробуй позже." };
+  const attempt = await isAuthAttemptAllowed("signup", [email, ip]);
+  if (!attempt.allowed) {
+    return { error: "Слишком много попыток регистрации.", retryAfterSeconds: attempt.retryAfterSeconds };
   }
 
   const supabase = await createClient();
@@ -48,7 +50,7 @@ export async function completeOnboarding(
   });
 
   if (signUpError) {
-    await logAuthAttempt([email, ip]);
+    await logAuthAttempt("signup", [email, ip]);
     // Не показываем сырое сообщение Supabase — оно может как палить
     // существование аккаунта, так и просто быть непонятным на английском.
     return {
