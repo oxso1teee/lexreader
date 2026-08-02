@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   reviewFsrsCard,
   isFsrsEnabled,
+  isFsrsEnabledForUser,
   isFsrsSchemaReady,
   computeFsrsShadowSafe,
   isMissingFsrsColumnsError,
@@ -225,6 +226,75 @@ test("isFsrsSchemaReady(): true только при точном значени�
     if (original === undefined) delete process.env.FSRS_SCHEMA_READY;
     else process.env.FSRS_SCHEMA_READY = original;
   }
+});
+
+// FSRS Controlled Activation: account-level allowlist до глобального
+// FSRS_ENABLED=true — server-side only (FSRS_ENABLED_USER_IDS, не
+// NEXT_PUBLIC_), сравнивается с auth.uid(), не с email.
+function withAllowlist(value: string | undefined, run: () => void) {
+  const original = process.env.FSRS_ENABLED_USER_IDS;
+  try {
+    if (value === undefined) delete process.env.FSRS_ENABLED_USER_IDS;
+    else process.env.FSRS_ENABLED_USER_IDS = value;
+    run();
+  } finally {
+    if (original === undefined) delete process.env.FSRS_ENABLED_USER_IDS;
+    else process.env.FSRS_ENABLED_USER_IDS = original;
+  }
+}
+
+test("isFsrsEnabledForUser(): переменная не задана -> никто не включён", () => {
+  withAllowlist(undefined, () => {
+    assert.equal(isFsrsEnabledForUser("eee0e646-56c4-470b-b60f-aea90212ca86"), false);
+  });
+});
+
+test("isFsrsEnabledForUser(): userId в списке -> true", () => {
+  withAllowlist("aaaa,eee0e646-56c4-470b-b60f-aea90212ca86,bbbb", () => {
+    assert.equal(isFsrsEnabledForUser("eee0e646-56c4-470b-b60f-aea90212ca86"), true);
+  });
+});
+
+test("isFsrsEnabledForUser(): userId не в списке -> false", () => {
+  withAllowlist("aaaa,bbbb", () => {
+    assert.equal(isFsrsEnabledForUser("eee0e646-56c4-470b-b60f-aea90212ca86"), false);
+  });
+});
+
+test("isFsrsEnabledForUser(): userId не передан (undefined) -> всегда false, даже если список непустой", () => {
+  withAllowlist("aaaa,bbbb", () => {
+    assert.equal(isFsrsEnabledForUser(undefined), false);
+  });
+});
+
+test("isFsrsEnabledForUser(): whitespace вокруг элементов обрабатывается безопасно", () => {
+  withAllowlist("  aaaa , eee0e646-56c4-470b-b60f-aea90212ca86 ,bbbb  ", () => {
+    assert.equal(isFsrsEnabledForUser("eee0e646-56c4-470b-b60f-aea90212ca86"), true);
+  });
+});
+
+test("isFsrsEnabledForUser(): дубликаты в списке не ломают проверку", () => {
+  withAllowlist("eee0e646-56c4-470b-b60f-aea90212ca86,eee0e646-56c4-470b-b60f-aea90212ca86", () => {
+    assert.equal(isFsrsEnabledForUser("eee0e646-56c4-470b-b60f-aea90212ca86"), true);
+  });
+});
+
+test("isFsrsEnabledForUser(): 'мусорный' список (пустая строка, только запятые/пробелы) не включает никого", () => {
+  withAllowlist("", () => {
+    assert.equal(isFsrsEnabledForUser("eee0e646-56c4-470b-b60f-aea90212ca86"), false);
+  });
+  withAllowlist(" , , ,  ,", () => {
+    assert.equal(isFsrsEnabledForUser("eee0e646-56c4-470b-b60f-aea90212ca86"), false);
+    // Мусорный список не должен случайно совпасть и с пустой строкой как id.
+    assert.equal(isFsrsEnabledForUser(""), false);
+  });
+});
+
+test("isFsrsEnabledForUser(): сравнение точное, не подстрокой (частичное совпадение id не включает)", () => {
+  withAllowlist("eee0e646-56c4-470b-b60f-aea90212ca86", () => {
+    assert.equal(isFsrsEnabledForUser("eee0e646"), false);
+    assert.equal(isFsrsEnabledForUser("eee0e646-56c4-470b-b60f-aea90212ca86-extra"), false);
+  });
 });
 
 // selectWithFsrsSchemaFallback: решает ДО запроса (schemaReady), плюс

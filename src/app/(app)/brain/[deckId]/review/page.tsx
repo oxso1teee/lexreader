@@ -98,7 +98,7 @@ export default async function DeckReviewPage({
   // очередь повторения "все колоды" (deckId === "all") подмешивала карточки
   // всех изучаемых языков сразу. Теперь очередь всегда ограничена текущим
   // target_language.
-  const flags = getFsrsFlags();
+  const flags = getFsrsFlags(profile.id);
 
   // Инцидент 2026-08-01 (FSRS Production Rollout Phase 1) + Schema
   // Compatibility Hotfix: код и migration 0032 могут быть задеплоены

@@ -27,7 +27,7 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   const FSRS_SELECT =
     "ease_factor, interval_days, repetitions, first_reviewed_at, due_at, last_reviewed_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_lapses, fsrs_reps, fsrs_scheduled_days, flashcards!inner(language)" as const;
 
-  const flags = getFsrsFlags();
+  const flags = getFsrsFlags(user.id);
 
   // Generic — не ternary внутри .select() — Supabase-js выводит форму строки
   // из литерального типа аргумента; объединённый (не литеральный) тип из
