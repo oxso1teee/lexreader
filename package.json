@@ -13,7 +13,7 @@
     "test:srs": "node --experimental-strip-types --test src/lib/srs.test.ts",
     "test:fsrs": "node --experimental-strip-types --test src/lib/fsrs.test.ts src/lib/fsrs-flags.test.ts",
     "test:csp": "node --experimental-strip-types --test src/lib/posthog-csp.test.ts next.config.test.ts",
-    "test:ui": "node --experimental-strip-types --test src/lib/today.test.ts",
+    "test:ui": "node --experimental-strip-types --test src/lib/today.test.ts src/lib/site-url.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
