@@ -173,6 +173,30 @@ export function isFsrsSchemaReady(): boolean {
 }
 
 /**
+ * FSRS Controlled Activation (Phase D prep): account-level rollout ДО
+ * глобального FSRS_ENABLED=true — сравнивает переданный userId (auth.uid(),
+ * не email — стабильный опаque-идентификатор, не PII сам по себе) со
+ * server-side allowlist'ом в FSRS_ENABLED_USER_IDS (comma-separated UUID).
+ * НЕ NEXT_PUBLIC_* — переменная физически не может попасть в client bundle;
+ * getFsrsFlags() передаёт клиенту только итоговый boolean `enabled`, не
+ * список. Пустые/whitespace-only элементы и дубликаты безопасно
+ * игнорируются парсером — "мусорный" allowlist просто не включает никого,
+ * а не падает и не включает всех (fail-safe в сторону legacy).
+ */
+export function isFsrsEnabledForUser(userId: string | undefined): boolean {
+  if (!userId) return false;
+  const raw = process.env.FSRS_ENABLED_USER_IDS;
+  if (!raw) return false;
+  const allowlist = new Set(
+    raw
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0),
+  );
+  return allowlist.has(userId);
+}
+
+/**
  * Выполняет FSRS-запрос только если schemaReady=true; иначе сразу уходит на
  * легаси-запрос, не пытаясь обратиться к несуществующим колонкам вообще
  * ("нельзя надеяться, что Supabase проигнорирует неизвестные колонки" —
