@@ -45,6 +45,13 @@
   --color-warning: var(--color-accent-orange);
   --color-danger: var(--color-accent-red);
   --color-info: var(--color-accent-blue);
+  /* M3 UI slice 2: тот же паттерн, что и caramel-text выше — accent-green
+     (#16a34a) на белом даёт только 3.29:1, accent-orange туда же. Отдельные
+     text-safe варианты (sRGB-линеаризованный контраст, точный расчёт, не на
+     глаз), используются ТОЛЬКО когда цвет нужен как текст (badge label в
+     SkillSection), не как фон/точка/иконка. */
+  --color-success-text: #166534;
+  --color-warning-text: #9a3412;
 
   /* Focus ring — deliberately not the brand color, so keyboard focus is
      never confused with a "you did something" accent state. */
@@ -65,6 +72,8 @@
     --border: rgba(240, 236, 227, 0.12);
     --border-strong: rgba(240, 236, 227, 0.22);
     --color-caramel-text: #c79562;
+    --color-success-text: #4ade80;
+    --color-warning-text: #fdba74;
   }
 }
 
@@ -83,6 +92,8 @@
   --color-info: var(--color-info);
   --color-focus-ring: var(--focus-ring);
   --color-caramel-text: var(--color-caramel-text);
+  --color-success-text: var(--color-success-text);
+  --color-warning-text: var(--color-warning-text);
 }
 
 /* Typography scale — semantic roles instead of ad hoc text-xl/font-bold
