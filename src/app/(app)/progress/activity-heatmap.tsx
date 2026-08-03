@@ -51,7 +51,7 @@ export default function ActivityHeatmap({ counts }: { counts: Record<string, num
           />
         ))}
       </div>
-      <p className="mt-2 text-xs text-black/40 dark:text-white/40">
+      <p className="mt-2 text-xs text-[var(--text-secondary)]">
         {/* P0-АУДИТ (раздел 5): title недоступен на тач-устройствах — тап по
             клетке показывает то же самое здесь. */}
         {selected

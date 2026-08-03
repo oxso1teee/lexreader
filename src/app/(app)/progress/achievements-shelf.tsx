@@ -37,7 +37,7 @@ export default function AchievementsShelf({
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
           <div className="h-full rounded-full bg-caramel" style={{ width: `${questRatio * 100}%` }} />
         </div>
-        <p className="mt-1 text-xs text-black/50 dark:text-white/50">
+        <p className="mt-1 text-xs text-[var(--text-secondary)]">
           {weeklyQuestProgress} / {WEEKLY_QUEST_TARGET}
         </p>
       </div>

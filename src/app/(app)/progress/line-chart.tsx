@@ -49,7 +49,7 @@ export default function LineChart({
   return (
     <div className="rounded-2xl bg-card p-4 shadow-sm">
       <h3 className="font-semibold">{title}</h3>
-      <p className="mb-2 text-sm text-black/50 dark:text-white/50">
+      <p className="mb-2 text-sm text-[var(--text-secondary)]">
         {active ? `${active.point.label}: ${active.point.value}` : `${total} за период`}
       </p>
       <svg
@@ -91,7 +91,7 @@ export default function LineChart({
           </>
         )}
       </svg>
-      <div className="mt-1 flex justify-between text-xs text-black/40 dark:text-white/40">
+      <div className="mt-1 flex justify-between text-xs text-[var(--text-secondary)]">
         {points.length > 0 && (
           <>
             <span>{points[0].label}</span>
