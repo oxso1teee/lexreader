@@ -22,7 +22,7 @@ function todayStartUtc(): string {
 // P0-АУДИТ (раздел 5): .ilike() трактует % и _ как wildcard-символы — без
 // экранирования слово вроде "50%" могло бы случайно совпасть с несвязанной
 // записью.
-function escapeIlike(s: string): string {
+export function escapeIlike(s: string): string {
   return s.replace(/[%_]/g, (c) => `\\${c}`);
 }
 

@@ -264,11 +264,18 @@ export default function Reader({
 
   async function handleAddPhrase() {
     if (!popup?.wordTranslation) return;
-    const result = await addPhraseToDefaultDeck(popup.text, popup.wordTranslation);
+    const result = await addPhraseToDefaultDeck({
+      textId,
+      front: popup.text,
+      back: popup.wordTranslation,
+      contextSentence: popup.sentence,
+      contextTranslation: popup.sentenceTranslation ?? null,
+    });
     if (!result.ok) {
       setPopup({ ...popup, paywall: result.paywall, error: result.paywall ? undefined : result.error });
       return;
     }
+    track("phrase_saved");
     setPopup({ ...popup, saved: true });
   }
 
