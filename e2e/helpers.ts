@@ -19,12 +19,18 @@ export async function login(page: Page, email = TEST_EMAIL, password = TEST_PASS
 // (без повторного похода через email/Mailpit) — используется в finally
 // тестов, которые сами меняют пароль, чтобы сбой в середине теста не
 // оставлял общий фикстур сломанным для всех остальных тестов набора.
+//
+// listUsers() без perPage отдаёт только первую страницу (50 записей по
+// умолчанию) — по мере накопления тестовых аккаунтов (signup-тесты создают
+// новый на каждый прогон) test@example.com рано или поздно уходит на
+// следующую страницу, и функция молча ничего не восстанавливает. Явный
+// perPage покрывает весь реалистичный диапазон одним запросом.
 export async function restoreTestPassword() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
   );
-  const { data } = await supabase.auth.admin.listUsers();
+  const { data } = await supabase.auth.admin.listUsers({ page: 1, perPage: 10_000 });
   const user = data?.users.find((u) => u.email === TEST_EMAIL);
   if (user) {
     await supabase.auth.admin.updateUserById(user.id, { password: TEST_PASSWORD });

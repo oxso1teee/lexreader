@@ -7,24 +7,34 @@ export default function FeedbackForm() {
   const [state, formAction, pending] = useActionState<FeedbackState, FormData>(sendFeedback, {});
 
   return (
-    <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
-      <h2 className="mb-2 font-medium">Обратная связь</h2>
+    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+      <h2 className="text-h3 mb-2">Обратная связь</h2>
       {state.ok ? (
-        <p className="text-sm text-black/60 dark:text-white/60">Спасибо, получили ✓</p>
+        <p role="status" className="text-body-sm text-[var(--color-success)]">
+          Спасибо, получили ✓
+        </p>
       ) : (
         <form action={formAction} className="flex flex-col gap-2">
+          <label htmlFor="feedback-message" className="sr-only">
+            Что можно улучшить?
+          </label>
           <textarea
+            id="feedback-message"
             name="message"
             required
             rows={3}
             placeholder="Что можно улучшить?"
-            className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
+            className="focus-ring w-full rounded-lg border border-[var(--border-strong)] px-3 py-2 text-body-sm"
           />
-          {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+          {state.error && (
+            <p role="alert" className="text-body-sm text-[var(--color-danger)]">
+              {state.error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={pending}
-            className="self-start rounded-full bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+            className="focus-ring flex min-h-11 items-center self-start rounded-full bg-black px-4 text-body-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
           >
             {pending ? "Отправляем…" : "Отправить"}
           </button>

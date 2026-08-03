@@ -28,7 +28,7 @@ export default function PersonalRecords({
             <p className="text-lg font-bold">
               {r.icon} {r.value}
             </p>
-            <p className="text-xs text-black/50 dark:text-white/50">{r.label}</p>
+            <p className="text-xs text-[var(--text-secondary)]">{r.label}</p>
           </div>
         ))}
       </div>

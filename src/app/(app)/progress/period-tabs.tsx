@@ -14,9 +14,9 @@ export default function PeriodTabs({ current }: { current: string }) {
         <Link
           key={p.value}
           href={`/progress?period=${p.value}`}
-          className={`flex min-h-11 items-center rounded-full border px-3 text-sm font-medium transition-colors ${
+          className={`focus-ring flex min-h-11 items-center rounded-full border px-3 text-sm font-medium transition-colors ${
             current === p.value
-              ? "border-caramel bg-caramel text-white"
+              ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
               : "border-black/15 hover:border-black/30 dark:border-white/20 dark:hover:border-white/40"
           }`}
         >

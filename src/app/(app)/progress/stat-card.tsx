@@ -19,7 +19,7 @@ export default function StatCard({
   return (
     <div className="rounded-2xl bg-card px-4 py-4 shadow-sm">
       <p className={`text-2xl font-bold ${COLORS[color]}`}>{value}</p>
-      <p className="text-sm text-black/50 dark:text-white/50">{label}</p>
+      <p className="text-sm text-[var(--text-secondary)]">{label}</p>
     </div>
   );
 }

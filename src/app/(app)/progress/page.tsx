@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
+import { getDueCount, getReviewsThisWeekCount } from "@/lib/brain-stats";
+import { decideProgressInsight } from "@/lib/progress-insight";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
@@ -7,7 +9,11 @@ import LineChart from "./line-chart";
 import HardestWords, { type HardestWord } from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
 import PersonalRecords from "./personal-records";
-import ScreenHeader from "@/components/screen-header";
+import PageHeader from "@/components/product/page-header";
+import InsightBanner from "@/components/product/progress/insight-banner";
+import ActivityWeekCard from "@/components/product/progress/activity-week-card";
+import SkillSection from "@/components/product/progress/skill-section";
+import ProgressViewTracker from "./progress-view-tracker";
 
 function isoWeekStart(d: Date): string {
   const day = (d.getUTCDay() + 6) % 7;
@@ -76,6 +82,14 @@ function computeHeatmapCutoff(): Date {
   return new Date(Date.now() - 91 * 86_400_000);
 }
 
+function daysAgo(days: number): Date {
+  return new Date(Date.now() - days * 86_400_000);
+}
+
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+}
+
 // Найдено при повторном аудите: для периода "Всё время" chartDays было
 // жёстко захардкожено в 30 — график тихо считал только последний месяц,
 // хотя карточки статистики выше (wordsReadTotal и т.п.) честно суммируют
@@ -115,6 +129,11 @@ export default async function ProgressPage({
     accuracyLogQuery,
     { data: earnedAchievements },
     { count: weeklyQuestProgress },
+    dueReviewsCount,
+    reviewsThisWeek,
+    { data: lastReadingRow },
+    { count: wordsAddedLast7Days },
+    { count: finishedTexts },
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -193,6 +212,33 @@ export default async function ProgressPage({
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language)
       .gte("created_at", isoWeekStart(new Date())),
+    // M3 UI slice 2 — Progress redesign: минимальный набор новых запросов
+    // (docs/ui/slice2-data-audit.md) для честного insight и "Активность за
+    // 7 дней"/skill section — переиспользуем уже существующие helpers из
+    // brain-stats.ts (те же, что и Today), а не пишем новую логику лимита.
+    getDueCount(supabase, profile.id, profile.target_language),
+    getReviewsThisWeekCount(supabase, profile.id, profile.target_language),
+    supabase
+      .from("reading_sessions")
+      .select("started_at")
+      .eq("owner_id", profile.id)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("vocabulary_items")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language)
+      .gte("created_at", daysAgo(7).toISOString()),
+    // "Завершённые материалы" — тот же честный критерий (percent_read >= 100),
+    // что уже используется для ачивки "Первая книга" в achievements-actions.ts.
+    supabase
+      .from("text_progress")
+      .select("text_id, texts!inner(owner_id, language)", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("texts.language", profile.target_language)
+      .gte("percent_read", 100),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -244,9 +290,67 @@ export default async function ProgressPage({
     activityCounts[key] = (activityCounts[key] ?? 0) + 1;
   }
 
+  const daysSinceLastReading = lastReadingRow ? daysSince(lastReadingRow.started_at) : null;
+
+  const insight = decideProgressInsight({
+    dueReviewsCount,
+    totalWordsEver: totalWords ?? 0,
+    hasEverRead: lastReadingRow !== null,
+    daysSinceLastReading,
+    weeklyQuestProgress: weeklyQuestProgress ?? 0,
+    weeklyQuestTarget: 20,
+    wordsAddedThisWeek: wordsAddedLast7Days ?? 0,
+    reviewsThisWeek,
+  });
+
+  // Activity section: фиксированное окно "последние 7 дней" (не зависит от
+  // PeriodTabs выше) — фильтруем уже полученные sessions/reviewLogs, без
+  // дополнительных запросов (см. docs/ui/slice2-data-audit.md).
+  const sevenDaysAgo = daysAgo(7);
+  const sessionsLast7Days = sessions.filter((s) => new Date(s.started_at) >= sevenDaysAgo);
+  const reviewsLast7Days = reviewLogs.filter((r) => new Date(r.reviewed_at) >= sevenDaysAgo);
+  const readingDaysLast7 = new Set(sessionsLast7Days.map((s) => isoDate(s.started_at))).size;
+
+  const activeDaysInPeriod = new Set([
+    ...sessions.map((s) => isoDate(s.started_at)),
+    ...reviewLogs.map((r) => isoDate(r.reviewed_at)),
+  ]).size;
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <ScreenHeader icon="📊" title="Статистика" metaChip={profile.target_language} />
+      <ProgressViewTracker />
+      <PageHeader title="Прогресс" description={`Язык: ${profile.target_language}`} />
+
+      <InsightBanner insight={insight} />
+
+      <div>
+        <h2 className="text-h3 mb-2">Показатели</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard value={profile.streak_current} label="Дней подряд сейчас" />
+          <StatCard value={activeDaysInPeriod} label="Учебных дней за период" color="blue" />
+          <StatCard value={finishedTexts ?? 0} label="Материалов завершено" color="green" />
+          <StatCard value={dueReviewsCount} label="К повторению сейчас" color="orange" />
+        </div>
+      </div>
+
+      <ActivityWeekCard
+        data={{
+          readingDays: readingDaysLast7,
+          sessionsCompleted: sessionsLast7Days.length,
+          wordsAdded: wordsAddedLast7Days ?? 0,
+          reviewsDone: reviewsLast7Days.length,
+        }}
+      />
+
+      <div>
+        <h2 className="text-h3 mb-2">Направления</h2>
+        <SkillSection
+          readingSessions={sessions.length}
+          vocabularyGrowth={wordsAddedLast7Days ?? 0}
+          reviewConsistency={answersGiven}
+          activeDays={activeDaysInPeriod}
+        />
+      </div>
 
       <PeriodTabs current={period} />
 

@@ -27,11 +27,11 @@ export default function HapticsToggle() {
   }
 
   return (
-    <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
-      <h2 className="mb-2 font-medium">Ощущения</h2>
-      <label className="flex items-center justify-between text-sm">
+    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+      <h2 className="text-h3 mb-2">Ощущения</h2>
+      <label className="flex min-h-11 items-center justify-between text-body-sm">
         <span>Вибрация при ответах в Мозге</span>
-        <input type="checkbox" checked={enabled} onChange={toggle} className="h-5 w-5" />
+        <input type="checkbox" checked={enabled} onChange={toggle} className="focus-ring h-5 w-5" />
       </label>
     </section>
   );

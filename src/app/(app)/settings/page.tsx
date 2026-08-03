@@ -1,29 +1,43 @@
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, getSessionUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getPlan } from "@/lib/subscription";
+import PageHeader from "@/components/product/page-header";
 import SettingsClient from "./settings-client";
 
 export default async function SettingsPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
+  const user = await getSessionUser();
 
-  const [plan, { count: pushCount }] = await Promise.all([
+  const [plan, { count: pushCount }, { data: subscription }] = await Promise.all([
     getPlan(supabase, profile.id),
     supabase
       .from("push_subscriptions")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", profile.id),
+    // M3 UI slice 2 — только чтение, тот же паттерн, что уже используется
+    // на /pricing (не трогаем Stripe-код, docs/ui/slice2-data-audit.md §3).
+    supabase
+      .from("subscriptions")
+      .select("status, current_period_end, stripe_customer_id")
+      .eq("owner_id", profile.id)
+      .maybeSingle(),
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6">
-      <h1 className="mb-4 text-xl font-semibold">Настройки</h1>
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
+      <PageHeader title="Настройки" />
       <SettingsClient
+        email={user?.email ?? ""}
+        createdAt={profile.created_at}
         targetLanguage={profile.target_language}
         nativeLanguage={profile.native_language}
         level={profile.level}
         dailyWordGoal={profile.daily_word_goal}
         plan={plan}
+        subscriptionStatus={subscription?.status ?? null}
+        subscriptionPeriodEnd={subscription?.current_period_end ?? null}
+        hasStripeCustomer={Boolean(subscription?.stripe_customer_id)}
         initialPushEnabled={(pushCount ?? 0) > 0}
       />
     </div>

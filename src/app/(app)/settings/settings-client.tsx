@@ -1,9 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { LANGUAGES } from "@/lib/languages";
+import { LANGUAGES, languageName } from "@/lib/languages";
 import { LEVELS, DAILY_GOALS } from "@/lib/onboarding-options";
+import { planLabel, subscriptionPeriodInfo, showPastDueWarning, type Plan } from "@/lib/subscription-display";
+import { track } from "@/lib/posthog-client";
+import ProfileCard from "@/components/product/settings/profile-card";
+import SectionHeader from "@/components/product/section-header";
 import {
   savePushSubscription,
   deleteAllPushSubscriptions,
@@ -28,18 +32,28 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 }
 
 export default function SettingsClient({
+  email,
+  createdAt,
   targetLanguage,
   nativeLanguage,
   level,
   dailyWordGoal,
   plan,
+  subscriptionStatus,
+  subscriptionPeriodEnd,
+  hasStripeCustomer,
   initialPushEnabled,
 }: {
+  email: string;
+  createdAt: string;
   targetLanguage: string;
   nativeLanguage: string;
   level: string | null;
   dailyWordGoal: number;
-  plan: string;
+  plan: Plan;
+  subscriptionStatus: string | null;
+  subscriptionPeriodEnd: string | null;
+  hasStripeCustomer: boolean;
   initialPushEnabled: boolean;
 }) {
   const [pushEnabled, setPushEnabled] = useState(initialPushEnabled);
@@ -49,6 +63,14 @@ export default function SettingsClient({
 
   const pushSupported =
     typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+
+  // Не PII (docs/ui/analytics-events.md конвенция этого проекта): только
+  // enum-план, без email/user id/сумм — видна при каждом визите Settings,
+  // т.к. секция подписки всегда отрендерена, не за экспандером.
+  useEffect(() => {
+    track("subscription_section_viewed", { plan });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function enablePush() {
     setPushBusy(true);
@@ -106,118 +128,171 @@ export default function SettingsClient({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
-        <h2 className="mb-2 font-medium">Профиль</h2>
-        <ProfileForm
-          targetLanguage={targetLanguage}
-          nativeLanguage={nativeLanguage}
-          level={level}
-          dailyWordGoal={dailyWordGoal}
-        />
-      </section>
+    <div className="flex flex-col gap-4">
+      <ProfileCard
+        email={email}
+        targetLanguageName={languageName(targetLanguage)}
+        nativeLanguageName={languageName(nativeLanguage)}
+        dailyWordGoal={dailyWordGoal}
+        createdAt={createdAt}
+        planLabel={planLabel(plan)}
+      />
 
-      <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
-        <h2 className="mb-2 font-medium">Подписка</h2>
-        <p className="mb-3 text-sm text-black/60 dark:text-white/60">
-          Текущий тариф: {plan === "free" ? "бесплатный" : plan === "premium_monthly" ? "Premium (месяц)" : "Premium (год)"}
-        </p>
-        <Link
-          href="/paywall"
-          className="text-sm text-black underline dark:text-white"
-        >
-          Управление подпиской
-        </Link>
-      </section>
+      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+        <SectionHeader title="Учебные настройки" />
+        <div className="mt-3">
+          <LearningPreferencesForm
+            targetLanguage={targetLanguage}
+            nativeLanguage={nativeLanguage}
+            level={level}
+            dailyWordGoal={dailyWordGoal}
+          />
+        </div>
 
-      <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
-        <h2 className="mb-2 font-medium">Уведомления</h2>
+        <hr className="my-4 border-[var(--border)]" />
+
         {!pushSupported ? (
-          <p className="text-sm text-black/50 dark:text-white/50">
+          <p className="text-body-sm text-[var(--text-secondary)]">
             Этот браузер не поддерживает push-уведомления.
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-black/60 dark:text-white/60">
-              Напоминание о повторении слов, когда накопится очередь.
-            </p>
-            {pushError && <p className="text-sm text-red-600 dark:text-red-400">{pushError}</p>}
-            {!pushEnabled ? (
-              <button
-                type="button"
-                disabled={pushBusy}
-                onClick={enablePush}
-                className="self-start rounded-full bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
-              >
-                {pushBusy ? "…" : "Включить напоминания"}
-              </button>
-            ) : (
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-body-sm font-semibold">Напоминание о повторении</p>
+                <p className="text-caption text-[var(--text-secondary)]">Когда накопится очередь карточек</p>
+              </div>
+              {!pushEnabled ? (
+                <button
+                  type="button"
+                  disabled={pushBusy}
+                  onClick={enablePush}
+                  className="focus-ring flex min-h-11 items-center rounded-full bg-black px-4 text-body-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+                >
+                  {pushBusy ? "…" : "Включить"}
+                </button>
+              ) : (
                 <button
                   type="button"
                   disabled={pushBusy}
                   onClick={disablePush}
-                  className="rounded-full border border-black/10 px-4 py-2 text-sm font-medium disabled:opacity-50 dark:border-white/15"
+                  className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium disabled:opacity-50"
                 >
                   Отключить
                 </button>
-                <button
-                  type="button"
-                  onClick={handleTestPush}
-                  className="text-sm text-black/60 underline dark:text-white/60"
-                >
-                  Тестовое уведомление
-                </button>
-              </div>
+              )}
+            </div>
+            {pushError && (
+              <p role="alert" className="text-body-sm text-[var(--color-danger)]">
+                {pushError}
+              </p>
             )}
-            {testResult && <p className="text-sm text-black/60 dark:text-white/60">{testResult}</p>}
+            {pushEnabled && (
+              <button
+                type="button"
+                onClick={handleTestPush}
+                className="focus-ring self-start text-body-sm text-[var(--color-caramel-text)] underline"
+              >
+                Тестовое уведомление
+              </button>
+            )}
+            {testResult && <p className="text-body-sm text-[var(--text-secondary)]">{testResult}</p>}
           </div>
         )}
+      </section>
+
+      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+        <SectionHeader title="Подписка" />
+        <p className="text-body-sm mt-2">
+          Текущий тариф: <strong>{planLabel(plan)}</strong>
+        </p>
+        {showPastDueWarning(plan, subscriptionStatus) && (
+          <p className="text-body-sm mt-1 text-[var(--color-warning)]">
+            Последнее списание не прошло — обнови способ оплаты, доступ сохранится ещё некоторое время.
+          </p>
+        )}
+        {(() => {
+          const period = subscriptionPeriodInfo(plan, subscriptionStatus, subscriptionPeriodEnd);
+          return (
+            period && (
+              <p className="text-body-sm mt-1 text-[var(--text-secondary)]">
+                {period.label}: {period.formattedDate}
+              </p>
+            )
+          );
+        })()}
+        {plan === "free" && (
+          <p className="text-body-sm mt-1 text-[var(--text-secondary)]">Управление подпиской и смена плана — на странице тарифов.</p>
+        )}
+        {hasStripeCustomer && plan !== "free" && (
+          <p className="text-caption mt-1 text-[var(--text-secondary)]">Оплата через Stripe.</p>
+        )}
+        <Link href="/pricing" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-caramel-text)]">
+          {plan === "free" ? "Посмотреть тарифы" : "Управление подпиской"} →
+        </Link>
       </section>
 
       <HapticsToggle />
 
       <FeedbackForm />
 
-      <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
-        <h2 className="mb-2 font-medium">Данные</h2>
-        <div className="flex flex-col gap-2">
-          <a
-            href="/api/export/vocabulary"
-            download
-            className="text-sm text-black underline dark:text-white"
-          >
-            Экспортировать словарь в CSV
-          </a>
-          <a
-            href="/api/export/data"
-            download
-            className="text-sm text-black underline dark:text-white"
-          >
-            Скачать все мои данные (JSON)
-          </a>
+      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+        <SectionHeader title="Аккаунт и безопасность" />
+        <div className="mt-3 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-body-sm">Пароль</span>
+            <Link
+              href="/reset-password"
+              onClick={() => track("password_reset_opened_from_settings")}
+              className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
+            >
+              Сменить пароль
+            </Link>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-body-sm">Экспорт словаря (CSV)</span>
+            <a
+              href="/api/export/vocabulary"
+              download
+              className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
+            >
+              Скачать
+            </a>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-body-sm">Все данные (JSON)</span>
+            <a
+              href="/api/export/data"
+              download
+              className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
+            >
+              Скачать
+            </a>
+          </div>
+
+          <hr className="border-[var(--border)]" />
+
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
+            >
+              Выйти из аккаунта
+            </button>
+          </form>
+
+          <DeleteAccountSection />
         </div>
       </section>
 
-      <form action={signOut}>
-        <button
-          type="submit"
-          className="text-sm text-red-600 underline dark:text-red-400"
-        >
-          Выйти из аккаунта
-        </button>
-      </form>
-
-      <DeleteAccountSection />
-
-      <div className="flex gap-4 text-xs text-black/40 dark:text-white/40">
-        <Link href="/changelog" className="underline">
+      <div className="flex gap-4 text-caption text-[var(--text-secondary)]">
+        <Link href="/changelog" className="focus-ring underline">
           Что нового
         </Link>
-        <Link href="/terms" className="underline">
+        <Link href="/terms" className="focus-ring underline">
           Условия использования
         </Link>
-        <Link href="/privacy" className="underline">
+        <Link href="/privacy" className="focus-ring underline">
           Конфиденциальность
         </Link>
       </div>
@@ -225,7 +300,7 @@ export default function SettingsClient({
   );
 }
 
-function ProfileForm({
+function LearningPreferencesForm({
   targetLanguage,
   nativeLanguage,
   level,
@@ -247,6 +322,10 @@ function ProfileForm({
 
   const languageChanged = target !== targetLanguage;
 
+  useEffect(() => {
+    if (state.saved) track("learning_preferences_updated");
+  }, [state.saved]);
+
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="target_language" value={target} />
@@ -254,12 +333,12 @@ function ProfileForm({
       <input type="hidden" name="level" value={lvl} />
       <input type="hidden" name="daily_word_goal" value={goal} />
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-black/50 dark:text-white/50">Изучаю</span>
+      <label className="flex flex-col gap-1 text-body-sm">
+        <span className="text-[var(--text-secondary)]">Изучаю</span>
         <select
           value={target}
           onChange={(e) => setTarget(e.target.value)}
-          className="rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm dark:border-white/15"
+          className="focus-ring rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-body-sm"
         >
           {LANGUAGES.filter((l) => l.code !== native).map((l) => (
             <option key={l.code} value={l.code}>
@@ -269,12 +348,12 @@ function ProfileForm({
         </select>
       </label>
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-black/50 dark:text-white/50">Родной язык</span>
+      <label className="flex flex-col gap-1 text-body-sm">
+        <span className="text-[var(--text-secondary)]">Родной язык</span>
         <select
           value={native}
           onChange={(e) => setNative(e.target.value)}
-          className="rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm dark:border-white/15"
+          className="focus-ring rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-body-sm"
         >
           {LANGUAGES.filter((l) => l.code !== target).map((l) => (
             <option key={l.code} value={l.code}>
@@ -285,24 +364,27 @@ function ProfileForm({
       </label>
 
       {languageChanged && (
-        <p className="text-xs text-amber-600 dark:text-amber-400">
+        <p className="text-caption text-[var(--color-warning)]">
           Тексты и слова для текущего языка останутся в базе, но пропадут из библиотеки, пока не
           переключишься обратно.
         </p>
       )}
 
       <div>
-        <p className="mb-1 text-sm text-black/50 dark:text-white/50">Уровень</p>
-        <div className="grid grid-cols-3 gap-1.5">
+        <p id="level-label" className="text-body-sm mb-1 text-[var(--text-secondary)]">
+          Уровень
+        </p>
+        <div role="group" aria-labelledby="level-label" className="grid grid-cols-3 gap-1.5">
           {LEVELS.map((l) => (
             <button
               key={l.value}
               type="button"
+              aria-pressed={lvl === l.value}
               onClick={() => setLvl(l.value)}
-              className={`flex min-h-11 items-center justify-center rounded-lg border px-2 text-xs font-medium transition-colors ${
+              className={`focus-ring flex min-h-11 items-center justify-center rounded-lg border px-2 text-xs font-medium transition-colors ${
                 lvl === l.value
                   ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-black/10 dark:border-white/15"
+                  : "border-[var(--border-strong)]"
               }`}
             >
               {l.label}
@@ -312,17 +394,20 @@ function ProfileForm({
       </div>
 
       <div>
-        <p className="mb-1 text-sm text-black/50 dark:text-white/50">Цель в день</p>
-        <div className="grid grid-cols-4 gap-1.5">
+        <p id="goal-label" className="text-body-sm mb-1 text-[var(--text-secondary)]">
+          Цель в день
+        </p>
+        <div role="group" aria-labelledby="goal-label" className="grid grid-cols-4 gap-1.5">
           {DAILY_GOALS.map((g) => (
             <button
               key={g}
               type="button"
+              aria-pressed={goal === g}
               onClick={() => setGoal(g)}
-              className={`flex min-h-11 items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
+              className={`focus-ring flex min-h-11 items-center justify-center rounded-lg border text-body-sm font-medium transition-colors ${
                 goal === g
                   ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-black/10 dark:border-white/15"
+                  : "border-[var(--border-strong)]"
               }`}
             >
               {g}
@@ -331,15 +416,19 @@ function ProfileForm({
         </div>
       </div>
 
-      {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
-      {state.saved && (
-        <p className="text-sm text-emerald-600 dark:text-emerald-400">Сохранено ✓</p>
-      )}
+      <div aria-live="polite">
+        {state.error && (
+          <p role="alert" className="text-body-sm text-[var(--color-danger)]">
+            {state.error}
+          </p>
+        )}
+        {state.saved && <p className="text-body-sm text-[var(--color-success)]">Сохранено ✓</p>}
+      </div>
 
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-full bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+        className="focus-ring self-start flex min-h-11 items-center rounded-full bg-black px-5 text-body-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
       >
         {pending ? "…" : "Сохранить"}
       </button>
@@ -360,7 +449,7 @@ function DeleteAccountSection() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-sm text-red-600 underline dark:text-red-400"
+        className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--color-danger)] px-4 text-body-sm font-medium text-[var(--color-danger)]"
       >
         Удалить аккаунт
       </button>
@@ -368,34 +457,42 @@ function DeleteAccountSection() {
   }
 
   return (
-    <div className="rounded-lg border border-red-200 p-4 dark:border-red-900">
-      <h2 className="mb-2 font-medium text-red-600 dark:text-red-400">Удалить аккаунт</h2>
-      <p className="mb-3 text-sm text-black/60 dark:text-white/60">
+    <div className="rounded-xl border border-[var(--color-danger)] p-4">
+      <h3 className="text-body-sm mb-2 font-semibold text-[var(--color-danger)]">Удалить аккаунт</h3>
+      <p className="text-body-sm mb-3 text-[var(--text-secondary)]">
         Это необратимо удалит твой аккаунт и все данные: тексты, слова, карточки, прогресс. Если
         есть активная подписка, она будет отменена. Чтобы подтвердить, введи «УДАЛИТЬ».
       </p>
       <form action={formAction} className="flex flex-col gap-2">
+        <label htmlFor="delete-confirmation" className="sr-only">
+          Введи УДАЛИТЬ для подтверждения
+        </label>
         <input
+          id="delete-confirmation"
           type="text"
           name="confirmation"
           value={confirmation}
           onChange={(e) => setConfirmation(e.target.value)}
           placeholder="УДАЛИТЬ"
-          className="w-full rounded-lg border border-red-200 px-3 py-2 text-sm outline-none focus:border-red-400 dark:border-red-900 dark:focus:border-red-700"
+          className="focus-ring w-full rounded-lg border border-[var(--color-danger)] px-3 py-2 text-body-sm"
         />
-        {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+        {state.error && (
+          <p role="alert" className="text-body-sm text-[var(--color-danger)]">
+            {state.error}
+          </p>
+        )}
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="flex min-h-11 items-center justify-center rounded-full border border-black/10 px-4 text-sm font-medium dark:border-white/15"
+            className="focus-ring flex min-h-11 items-center justify-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
           >
             Отмена
           </button>
           <button
             type="submit"
             disabled={pending || confirmation !== "УДАЛИТЬ"}
-            className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-red-600 text-sm font-medium text-white disabled:opacity-40"
+            className="focus-ring flex min-h-11 flex-1 items-center justify-center rounded-full bg-[var(--color-danger)] text-body-sm font-medium text-white disabled:opacity-40"
           >
             {pending ? "…" : "Удалить аккаунт навсегда"}
           </button>
