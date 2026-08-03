@@ -25,7 +25,7 @@ Branch `feature/unified-ui-progress-profile`, base `main` at `cbcc864855331091a8
 
 ## E2E (`npm run test:e2e`, full suite)
 
-34 total (33 passed, 1 skipped — real Stripe checkout, needs a live key). The one recurring failure across two consecutive full runs is the **exact same pre-existing deck-creation-redirect flake** already documented for PR #11 (`docs/ui/full-check-suite.md`):
+37 total (32 passed, 1 skipped — real Stripe checkout, needs a live key — 4 failed). Isolated re-run of the 4 failures: `onboarding-first-win.spec.ts` passed on retry (one-off flake, unrelated to this branch); the other 3 reproduced **byte-for-byte identically** every time:
 
 ```
 Error: expect(page).toHaveURL(expected) failed
@@ -35,11 +35,9 @@ Timeout: 5000ms
 13-14 × unexpected value "http://127.0.0.1:3000/brain"
 ```
 
-Proof this is not caused by this branch: the same failure reproduces byte-for-byte in **two files this branch does not touch** —
-- `e2e/brain-notebook.spec.ts` (zero diff vs `main`, confirmed by `git diff main...HEAD`)
-- `e2e/unified-shell-today.spec.ts` (shipped and merged in PR #11, unmodified here)
+Proof this is not caused by this branch: the same failure reproduces in **`e2e/brain-notebook.spec.ts`**, which has zero diff vs `main`, alongside `e2e/unified-shell-today.spec.ts` (merged in PR #11, unmodified here) and this branch's own new test — all three share the identical "create deck → wait for redirect" pattern and the same root cause (Turbopack dev-server compilation timing under load), already documented for PR #11 (`docs/ui/full-check-suite.md`). Also independently confirmed pre-existing on `main` itself: `main`'s own tip commit (`cbcc864`, already merged) currently fails CI's `e2e` job with an unrelated but equally pre-existing issue (Node 20 lacks the native WebSocket `@supabase/realtime-js` needs; tracked separately, not re-diagnosed here).
 
-alongside this branch's own new test (`unified-shell-progress-settings.spec.ts`) that uses the identical "create deck → wait for redirect" pattern. All three share the same root cause (Turbopack dev-server compilation timing under load), not a Slice 2 regression.
+**Local-environment note**: earlier runs in this pass surfaced two false leads before the real signal — (1) a second, unrelated Claude Code session was briefly running the same suite against the same local dev server/Supabase instance concurrently, and (2) `e2e/helpers.ts`'s `restoreTestPassword()` called `listUsers()` without pagination, silently missing `test@example.com` once the local instance accumulated 68+ test accounts from repeated runs, so it stopped actually restoring the shared account's password after any test that changes it. Fixed by passing an explicit `perPage`. Both were resolved before the results above.
 
 New e2e coverage (`e2e/unified-shell-progress-settings.spec.ts`, 11 tests, 10/11 passing — the 1 failure is the flake above):
 1. Brand-new account → honest empty Progress state, no fake CEFR strings.
