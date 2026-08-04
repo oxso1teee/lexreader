@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { parseHTML } from "linkedom";
 import { Readability } from "@mozilla/readability";
@@ -22,6 +21,12 @@ export async function deleteText(textId: string) {
 export interface CreateTextState {
   error?: string;
   paywall?: boolean;
+  // M3 Slice 3: возвращаем путь редиректа вместо redirect() на сервере —
+  // тот же паттерн, что уже был у saveBrowserYoutubeTranscript(). Даёт
+  // клиенту точку, откуда честно можно послать material_add_succeeded
+  // (redirect() на сервере выбрасывает NEXT_REDIRECT и не даёт клиентскому
+  // коду выполниться после успеха вообще).
+  redirectTo?: string;
 }
 
 export async function hasFreeTextRoom(
@@ -164,6 +169,12 @@ export async function createText(
   if (!title || !body) {
     return { error: "Заполни название и текст." };
   }
+  // M3 Slice 3: у минимальной длины раньше не было нижней границы — можно
+  // было сохранить текст из пары символов, для которого чтение/статистика
+  // не имеют смысла.
+  if (body.length < 20) {
+    return { error: "Текст слишком короткий — добавь хотя бы пару предложений (минимум 20 символов)." };
+  }
   // P0-АУДИТ (раздел 5): не было верхней границы на длину вставляемого
   // текста — read/[textId]/page.tsx пересчитывает статистику по всему телу
   // текста на каждую загрузку страницы.
@@ -192,7 +203,7 @@ export async function createText(
   });
   if ("error" in result) return { error: result.error };
 
-  redirect(`/read/${result.id}`);
+  return { redirectTo: `/read/${result.id}` };
 }
 
 // Найдено при повторном аудите: некоторые сайты (особенно книги/фанфики)
@@ -352,5 +363,5 @@ export async function createTextFromUrl(
   }
 
   log.import({ kind: "url", outcome: "success" });
-  redirect(`/read/${result.id}`);
+  return { redirectTo: `/read/${result.id}` };
 }

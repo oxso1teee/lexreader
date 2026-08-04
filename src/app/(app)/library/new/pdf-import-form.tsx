@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
-import { createText, type CreateTextState } from "../actions";
+import { createText } from "../actions";
+import { useAddMaterialAction } from "./use-add-material-action";
 import { validatePdfFile } from "@/lib/file-validation";
 import { log } from "@/lib/log";
 import PaywallNotice from "./paywall-notice";
@@ -28,10 +29,7 @@ export default function PdfImportForm({
   canAddText: boolean;
   collections: CollectionOption[];
 }) {
-  const [state, formAction, pending] = useActionState<CreateTextState, FormData>(
-    createText,
-    {},
-  );
+  const [state, formAction, pending] = useAddMaterialAction("file_pdf", createText, {});
   const [status, setStatus] = useState<"idle" | "working" | "error">("idle");
   const [progress, setProgress] = useState(0);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -95,58 +93,83 @@ export default function PdfImportForm({
   if (!text) {
     return (
       <div className="flex flex-1 flex-col gap-4 px-5 py-6">
-        <label className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-black/20 px-4 py-10 text-center text-black/60 hover:border-black/40 dark:border-white/20 dark:text-white/60 dark:hover:border-white/40">
-          <span>Выбери PDF-файл</span>
+        <label className="focus-within:border-[var(--color-forest)] flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--border-strong)] px-4 py-10 text-center text-[var(--text-secondary)] hover:border-[var(--color-forest)]">
+          <span className="font-semibold">Выбери PDF-файл</span>
           <input
             type="file"
             accept="application/pdf"
-            className="hidden"
+            className="sr-only"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) handleFile(file);
             }}
           />
         </label>
-        <p className="text-xs text-black/40 dark:text-white/40">
-          Работает с текстовым слоем PDF (не со сканами) — целевой язык: {targetLanguage}.
+        <p className="text-xs text-[var(--text-secondary)]">
+          Работает с текстовым слоем PDF (не со сканами) — целевой язык: {targetLanguage}. До 20 МБ.
         </p>
         {status === "working" && (
-          <p className="text-sm text-black/50 dark:text-white/50">Читаем PDF… {progress}%</p>
+          <div className="flex flex-col gap-1.5" aria-live="polite">
+            <p className="text-sm text-[var(--text-secondary)]">Читаем PDF… {progress}%</p>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
+              <div className="h-full rounded-full bg-[var(--color-forest)] transition-all" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
         )}
-        {pdfError && <p className="text-sm text-red-600 dark:text-red-400">{pdfError}</p>}
+        {pdfError && (
+          <p className="text-sm text-[var(--color-danger)]" role="alert">
+            {pdfError}
+          </p>
+        )}
       </div>
     );
   }
 
   return (
     <form action={formAction} className="flex flex-1 flex-col gap-4 px-5 py-6">
-      <input
-        type="text"
-        name="title"
-        required
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Название текста"
-        className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
-      />
-      <textarea
-        name="body"
-        required
-        rows={14}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Текст, извлечённый из PDF"
-        className="w-full flex-1 resize-none rounded-lg border border-black/10 px-4 py-3 text-base leading-7 outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
-      />
-      <p className="text-xs text-black/40 dark:text-white/40">
-        Проверь текст перед сохранением — разметка страниц PDF иногда ломает порядок слов.
-      </p>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="pdf-import-title" className="text-sm font-semibold">
+          Название
+        </label>
+        <input
+          id="pdf-import-title"
+          type="text"
+          name="title"
+          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Название текста"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+        />
+      </div>
+      <div className="flex flex-1 flex-col gap-1.5">
+        <label htmlFor="pdf-import-body" className="text-sm font-semibold">
+          Текст из PDF
+        </label>
+        <textarea
+          id="pdf-import-body"
+          name="body"
+          required
+          rows={14}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Текст, извлечённый из PDF"
+          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7 outline-none"
+        />
+        <p className="text-xs text-[var(--text-secondary)]">
+          Проверь текст перед сохранением — разметка страниц PDF иногда ломает порядок слов.
+        </p>
+      </div>
       <CollectionPicker collections={collections} />
-      {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.error && (
+        <p className="text-sm text-[var(--color-danger)]" role="alert">
+          {state.error}
+        </p>
+      )}
       {state.paywall && (
-        <p className="text-sm text-black/60 dark:text-white/60">
+        <p className="text-sm text-[var(--text-secondary)]">
           Лимит бесплатного тарифа по текстам исчерпан.{" "}
-          <a href="/paywall?reason=texts" className="text-caramel underline">
+          <a href="/paywall?reason=texts" className="focus-ring font-semibold text-[var(--color-caramel-text)] underline">
             Смотреть Premium
           </a>
           . Текст ниже сохранён — можно оформить Premium и сохранить его после.
@@ -156,14 +179,14 @@ export default function PdfImportForm({
         <button
           type="button"
           onClick={() => setText("")}
-          className="rounded-full border border-black/10 px-5 py-3 font-medium dark:border-white/15"
+          className="focus-ring min-h-11 rounded-full border border-[var(--border-strong)] px-5 py-3 font-semibold"
         >
           Другой файл
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
+          className="focus-ring min-h-11 flex-1 rounded-full bg-[var(--color-forest)] px-5 py-3 font-bold text-white transition-colors hover:bg-[var(--color-forest-deep)] disabled:opacity-50"
         >
           {pending ? "Сохраняем…" : "Добавить в библиотеку"}
         </button>

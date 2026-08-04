@@ -15,6 +15,33 @@ export async function login(page: Page, email = TEST_EMAIL, password = TEST_PASS
   await page.waitForURL(/\/home$/);
 }
 
+// M3 Slice 3: некоторые проверки (например, свободное место по free-tier
+// лимиту текстов) не могут переиспользовать общий test@example.com — он
+// давно исчерпал FREE_TEXT_LIMIT за счёт множества прогонов набора за один
+// день. Даёт новый аккаунт с нуля, останавливаясь сразу после регистрации
+// (не проходит сам first-win — вызывающий тест сам решает, куда перейти).
+export async function signUpFreshAccount(page: Page): Promise<string> {
+  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+
+  await page.goto("/onboarding");
+  await page.getByRole("button", { name: "Далее" }).click();
+  await page.getByRole("button", { name: "Английский" }).click();
+  await page.getByRole("button", { name: "Далее" }).click();
+  await page.getByRole("button", { name: "Русский" }).click();
+  await page.getByRole("button", { name: "Далее" }).click();
+  await page.getByRole("button", { name: "Начинающий" }).click();
+  await page.getByRole("button", { name: "Далее" }).click();
+  await page.getByRole("button", { name: "10", exact: true }).click();
+  await page.getByRole("button", { name: "Далее" }).click();
+
+  await page.getByPlaceholder("Email").fill(email);
+  await page.getByPlaceholder("Пароль (мин. 6 символов)").fill("testpass123");
+  await page.getByRole("button", { name: "Создать аккаунт и начать" }).click();
+
+  await page.waitForURL(/\/onboarding\/first-win$/);
+  return email;
+}
+
 // Быстрый, надёжный способ вернуть TEST_PASSWORD напрямую через service_role
 // (без повторного похода через email/Mailpit) — используется в finally
 // тестов, которые сами меняют пароль, чтобы сбой в середине теста не

@@ -1,15 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
-import { createTextFromUrl, type CreateTextState } from "../actions";
+import { createTextFromUrl } from "../actions";
+import { useAddMaterialAction } from "./use-add-material-action";
 import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
 export default function UrlImportForm({ collections }: { collections: CollectionOption[] }) {
-  const [state, formAction, pending] = useActionState<CreateTextState, FormData>(
-    createTextFromUrl,
-    {},
-  );
+  const [state, formAction, pending] = useAddMaterialAction("url", createTextFromUrl, {});
 
   if (state.paywall) {
     return <PaywallNotice />;
@@ -17,22 +14,32 @@ export default function UrlImportForm({ collections }: { collections: Collection
 
   return (
     <form action={formAction} className="flex flex-1 flex-col gap-4 px-5 py-6">
-      <input
-        type="url"
-        name="url"
-        required
-        placeholder="https://example.com/статья"
-        className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
-      />
-      <p className="text-sm text-black/50 dark:text-white/50">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="url-import-url" className="text-sm font-semibold">
+          Ссылка на статью
+        </label>
+        <input
+          id="url-import-url"
+          type="url"
+          name="url"
+          required
+          placeholder="https://example.com/статья"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+        />
+      </div>
+      <p className="text-sm text-[var(--text-secondary)]">
         Загрузим страницу и вытащим только текст статьи, без рекламы и меню.
       </p>
       <CollectionPicker collections={collections} />
-      {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.error && (
+        <p className="text-sm text-[var(--color-danger)]" role="alert">
+          {state.error}
+        </p>
+      )}
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
+        className="focus-ring min-h-11 rounded-full bg-[var(--color-forest)] px-5 py-3 font-bold text-white transition-colors hover:bg-[var(--color-forest-deep)] disabled:opacity-50"
       >
         {pending ? "Загружаем…" : "Импортировать статью"}
       </button>
