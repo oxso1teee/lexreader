@@ -52,6 +52,20 @@ export async function signUpFreshAccount(page: Page): Promise<string> {
 // новый на каждый прогон) test@example.com рано или поздно уходит на
 // следующую страницу, и функция молча ничего не восстанавливает. Явный
 // perPage покрывает весь реалистичный диапазон одним запросом.
+// Seeded system texts (supabase/seed.sql) don't have fixed ids — every
+// `supabase db reset` regenerates fresh UUIDs. Tests that need to
+// page.goto() a specific text directly (skipping a Library click) must
+// look the id up by title instead of hardcoding it.
+export async function getSystemTextIdByTitle(title: string): Promise<string> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+  );
+  const { data, error } = await supabase.from("texts").select("id").eq("title", title).single();
+  if (error || !data) throw new Error(`Seeded text "${title}" not found — check supabase/seed.sql`);
+  return data.id;
+}
+
 export async function restoreTestPassword() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",

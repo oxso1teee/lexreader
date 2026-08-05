@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
+import { hasSavedReaderPrefs, parseReaderPrefs } from "./reader-prefs";
 import Reader from "./reader";
 
 export default async function ReadPage({
@@ -89,6 +90,10 @@ export default async function ReadPage({
     else statsNew++;
   }
 
+  const initialServerPrefs = hasSavedReaderPrefs(profile.reader_settings)
+    ? parseReaderPrefs(profile.reader_settings)
+    : null;
+
   return (
     <Reader
       textId={text.id}
@@ -98,6 +103,7 @@ export default async function ReadPage({
       targetLang={profile.native_language}
       wordLevels={wordLevels}
       initialPageIndex={progress?.last_page_index ?? 0}
+      initialServerPrefs={initialServerPrefs}
       chapter={chapter}
       stats={{
         unique: uniqueTokens.size,

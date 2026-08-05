@@ -13,8 +13,9 @@ import {
   addPhraseToDefaultDeck,
   finishReading,
   updateTextProgress,
+  updateReaderSettings,
 } from "./actions";
-import ReaderSettings, { useReaderPrefs, READING_WIDTH_PX } from "./reader-settings";
+import ReaderSettings, { useReaderPrefs, adoptServerReaderPrefs, READING_WIDTH_PX, type ReaderPrefs } from "./reader-settings";
 import ReaderWordPanel, { type Popup } from "./reader-word-panel";
 import ReaderListening, { useListening } from "./reader-listening";
 import { useParallelTranslation } from "./use-parallel-translation";
@@ -80,6 +81,7 @@ export default function Reader({
   wordLevels,
   stats,
   initialPageIndex = 0,
+  initialServerPrefs,
   chapter,
 }: {
   textId: string;
@@ -90,6 +92,7 @@ export default function Reader({
   wordLevels: Record<string, WordLevelInfo>;
   stats: Stats;
   initialPageIndex?: number;
+  initialServerPrefs: ReaderPrefs | null;
   chapter: ChapterInfo | null;
 }) {
   const router = useRouter();
@@ -127,6 +130,14 @@ export default function Reader({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // M3 Slice 3 §8: profiles.reader_settings — adopt the account's saved
+  // prefs on mount so a setting changed on another device shows up here.
+  // No-op when the profile has never saved one (empty JSONB default).
+  useEffect(() => {
+    if (initialServerPrefs) adoptServerReaderPrefs(initialServerPrefs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     updateTextProgress({ textId, pageIndex, pageCount: pages.length }).catch((e) => {
       // P0-АУДИТ 3.18: не показываем это как ошибку пользователю (фоновое
@@ -142,6 +153,9 @@ export default function Reader({
   function updateReaderPrefs(next: typeof readerPrefs) {
     setReaderPrefs(next);
     track("reader_settings_changed");
+    updateReaderSettings(next).catch((e) => {
+      log.error({ kind: "reader_settings_save", message: e instanceof Error ? e.message : "unknown" });
+    });
   }
 
   function changeMode(next: ReaderMode) {

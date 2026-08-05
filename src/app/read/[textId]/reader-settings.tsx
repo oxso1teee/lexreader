@@ -1,47 +1,34 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import {
+  DEFAULT_READER_PREFS,
+  MIN_FONT_SIZE,
+  MAX_FONT_SIZE,
+  MIN_LINE_HEIGHT,
+  MAX_LINE_HEIGHT,
+  parseReaderPrefs,
+  type ReaderPrefs,
+  type ReadingTheme,
+} from "./reader-prefs";
 
-export type ReadingTheme = "paper" | "sepia" | "dark";
-export type ReadingWidth = "narrow" | "wide";
-
-export interface ReaderPrefs {
-  fontSize: number;
-  lineHeight: number;
-  theme: ReadingTheme;
-  width: ReadingWidth;
-}
-
-export const DEFAULT_READER_PREFS: ReaderPrefs = {
-  fontSize: 18,
-  lineHeight: 1.9,
-  theme: "paper",
-  width: "narrow",
-};
-
-export const READING_WIDTH_PX: Record<ReadingWidth, number> = { narrow: 820, wide: 1040 };
+export type { ReadingTheme, ReadingWidth, ReaderPrefs } from "./reader-prefs";
+export { DEFAULT_READER_PREFS, READING_WIDTH_PX } from "./reader-prefs";
 
 const STORAGE_KEY = "lexreader_reader_prefs";
-const MIN_FONT_SIZE = 15;
-const MAX_FONT_SIZE = 24;
-const MIN_LINE_HEIGHT = 1.5;
-const MAX_LINE_HEIGHT = 2.2;
 
-// Раздел 5 промта 2026-07-30 (запуск): читалка была одним фиксированным
-// размером/фоном для всех — настройки хранятся только в localStorage,
-// не в базе (это предпочтение конкретного устройства, не аккаунта).
+// Раздел 5 промта 2026-07-30 (запуск): читалка изначально была одним
+// фиксированным размером/фоном для всех — настройки хранились только в
+// localStorage. M3 Slice 3 §8: profiles.reader_settings добавляет
+// account-sync поверх этого же localStorage-кэша (see adoptServerReaderPrefs
+// in reader.tsx) — localStorage остаётся мгновенным/офлайн-источником,
+// сервер — источником для синхронизации между устройствами.
 export function loadReaderPrefs(): ReaderPrefs {
   if (typeof window === "undefined") return DEFAULT_READER_PREFS;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_READER_PREFS;
-    const parsed = JSON.parse(raw);
-    return {
-      fontSize: typeof parsed.fontSize === "number" ? parsed.fontSize : DEFAULT_READER_PREFS.fontSize,
-      lineHeight: typeof parsed.lineHeight === "number" ? parsed.lineHeight : DEFAULT_READER_PREFS.lineHeight,
-      theme: ["paper", "sepia", "dark"].includes(parsed.theme) ? parsed.theme : DEFAULT_READER_PREFS.theme,
-      width: ["narrow", "wide"].includes(parsed.width) ? parsed.width : DEFAULT_READER_PREFS.width,
-    };
+    return parseReaderPrefs(JSON.parse(raw));
   } catch {
     return DEFAULT_READER_PREFS;
   }
@@ -88,6 +75,17 @@ export function useReaderPrefs(): [ReaderPrefs, (next: ReaderPrefs) => void] {
   }
 
   return [prefs, setPrefs];
+}
+
+// Called once on Reader mount when the server (profiles.reader_settings)
+// has a real saved value — adopts it as this device's current prefs so a
+// setting changed on another device shows up here too. A no-op call (same
+// value already active) still notifies listeners harmlessly.
+export function adoptServerReaderPrefs(prefs: ReaderPrefs): void {
+  currentPrefs = prefs;
+  initialized = true;
+  saveReaderPrefs(prefs);
+  listeners.forEach((l) => l());
 }
 
 const THEME_SWATCHES: { value: ReadingTheme; label: string; bg: string; fg: string }[] = [

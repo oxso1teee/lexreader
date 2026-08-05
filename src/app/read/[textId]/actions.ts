@@ -7,6 +7,7 @@ import { statusFromLevel } from "@/lib/word-level";
 import { saveVocabularyItem, escapeIlike, type UpsertWordResult } from "@/lib/vocabulary";
 import { hasFreeFlashcardRoom, hasFreeDeckRoom } from "@/lib/subscription";
 import { addXp } from "@/lib/xp-actions";
+import type { ReaderPrefs } from "./reader-prefs";
 
 export async function upsertWord(input: {
   textId: string;
@@ -187,6 +188,20 @@ export async function finishReading(input: {
   await touchStreak(supabase, user.id);
   await addXp(supabase, user.id, 10);
   revalidatePath("/progress");
+}
+
+// M3 Slice 3 §8: profiles.reader_settings — account-synced on top of the
+// localStorage cache (see adoptServerReaderPrefs in reader-settings.tsx).
+// Fire-and-forget from the client: a failed sync just means the next
+// device sees stale prefs, never blocks reading or loses local settings.
+export async function updateReaderSettings(prefs: ReaderPrefs) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase.from("profiles").update({ reader_settings: prefs }).eq("id", user.id);
 }
 
 export async function updateTextProgress(input: {
