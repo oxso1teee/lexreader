@@ -32,6 +32,8 @@ export default function ReviewModeSwitcher({
   maxIntervalDays,
   sessionTitle,
   targetLanguage,
+  userId,
+  sessionDeckId,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
@@ -41,6 +43,8 @@ export default function ReviewModeSwitcher({
   maxIntervalDays: number;
   sessionTitle: string;
   targetLanguage: string;
+  userId: string;
+  sessionDeckId: string;
 }) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
@@ -124,6 +128,8 @@ export default function ReviewModeSwitcher({
           fsrsEnabled={fsrsEnabled}
           maxIntervalDays={maxIntervalDays}
           targetLanguage={targetLanguage}
+          userId={userId}
+          sessionDeckId={sessionDeckId}
         />
       )}
       {mode === "choice" && (

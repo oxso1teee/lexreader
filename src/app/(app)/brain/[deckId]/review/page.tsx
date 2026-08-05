@@ -221,6 +221,8 @@ export default async function DeckReviewPage({
       maxIntervalDays={settings.max_interval_days}
       sessionTitle={sessionTitle}
       targetLanguage={profile.target_language}
+      userId={profile.id}
+      sessionDeckId={deckId}
     />
   );
 }

@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { loadReviewSession, clearReviewSession } from "@/lib/review-session-resume";
+import { loadReviewSession, clearReviewSession, type ReviewSessionSnapshot } from "@/lib/review-session-resume";
 
 // useSyncExternalStore (not useState+useEffect): server and the first client
 // render honestly agree on "no resumable session" (localStorage doesn't
 // exist on the server) with no hydration mismatch, and the real value is
 // substituted in a separate, already-client step — same pattern as
 // src/app/read/[textId]/reader-settings.tsx's useReaderPrefs.
+//
+// getSnapshot must return a REFERENTIALLY STABLE value across calls when
+// nothing changed — loadReviewSession() re-parses JSON on every call and
+// returns a new object each time, which made React think the store kept
+// changing and re-render in an infinite loop ("Maximum update depth
+// exceeded", caught live via the app's error boundary). Caching per
+// component instance (not module-level like reader-settings.tsx, since this
+// value is scoped to one userId, not a single shared global) fixes it: the
+// first call computes and caches, every later call returns the same
+// reference until cleared.
 function subscribe(): () => void {
   return () => {};
 }
@@ -33,11 +43,14 @@ export default function PracticeHero({
   newCount: number;
   estMinutes: number;
 }) {
-  const session = useSyncExternalStore(
-    subscribe,
-    () => loadReviewSession(userId, "all"),
-    getServerSnapshot,
-  );
+  const cacheRef = useRef<{ value: ReviewSessionSnapshot | null } | null>(null);
+  function getSnapshot(): ReviewSessionSnapshot | null {
+    if (cacheRef.current === null) {
+      cacheRef.current = { value: loadReviewSession(userId, "all") };
+    }
+    return cacheRef.current.value;
+  }
+  const session = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   // "Отменить" clears the underlying storage immediately, but this component
   // isn't subscribed to storage-change events (single-tab, one-shot read) —
   // dismissed suppresses the banner locally without needing a full store.

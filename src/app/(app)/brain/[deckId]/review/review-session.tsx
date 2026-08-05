@@ -7,6 +7,7 @@ import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
 import { reviewFsrsCard, type FsrsStateRow } from "@/lib/fsrs";
 import { track } from "@/lib/posthog-client";
+import { loadReviewSession, saveReviewSession, clearReviewSession } from "@/lib/review-session-resume";
 import SessionComplete from "./session-complete";
 
 export interface ReviewCard {
@@ -51,6 +52,8 @@ export default function ReviewSession({
   fsrsEnabled,
   maxIntervalDays,
   targetLanguage,
+  userId,
+  sessionDeckId,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
@@ -59,16 +62,47 @@ export default function ReviewSession({
   fsrsEnabled: boolean;
   maxIntervalDays: number;
   targetLanguage: string;
+  userId: string;
+  sessionDeckId: string;
 }) {
   const router = useRouter();
   // Снимок очереди на момент старта сессии: серверные экшены ревью вызывают
   // неявный refresh страницы, из-за которого /review перезапросил бы уже
   // пустую очередь и подменил дерево прямо посреди сессии, если бы мы читали
   // проп напрямую.
-  const [cards, setCards] = useState(cardsProp);
+  //
+  // M3 Slice 4 §7: если есть валидная резюмируемая сессия (тот же
+  // пользователь/deckId, не устаревшая) — переупорядочиваем cardsProp под её
+  // cardIds. Уже оценённые карточки (gradedIds) исключаем явно, а не просто
+  // полагаемся на то, что их due_at ушёл в будущее и сервер сам не вернёт их
+  // в свежей выдаче: reviewSrsState() при grade=0 ставит intervalDays=1, но
+  // это всё равно >0 дней вперёд, так что на практике совпадает — явный
+  // фильтр по gradedIds делает это гарантией, а не побочным эффектом
+  // планировщика. Индекс всегда 0 у отфильтрованного списка — это и есть
+  // "следующая неоценённая карточка", а не позиция в исходном (более
+  // длинном) списке до фильтрации.
+  const [cards, setCards] = useState(() => {
+    const session = loadReviewSession(userId, sessionDeckId);
+    if (!session) return cardsProp;
+    const byId = new Map(cardsProp.map((c) => [c.flashcardId, c]));
+    const gradedSet = new Set(session.gradedIds);
+    const restored = session.cardIds
+      .filter((id) => !gradedSet.has(id))
+      .map((id) => byId.get(id))
+      .filter((c): c is ReviewCard => !!c);
+    return restored.length > 0 ? restored : cardsProp;
+  });
   const [index, setIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState(() => {
+    const session = loadReviewSession(userId, sessionDeckId);
+    return session?.phase === "answer";
+  });
+  const gradedIdsRef = useRef<string[]>(loadReviewSession(userId, sessionDeckId)?.gradedIds ?? []);
   const [isPending, startTransition] = useTransition();
+  // Резюмированные оценки не разбиты по типу (gradedIds не хранит grade) —
+  // счётчик по типам честно стартует с 0 и накапливается только за остаток
+  // сессии; "не повторно оценивать" гарантируется index/gradedIds, а не этим
+  // косметическим счётчиком.
   const [tally, setTally] = useState<Record<0 | 1 | 2 | 3, number>>({ 0: 0, 1: 0, 2: 0, 3: 0 });
   const [isEditing, setIsEditing] = useState(false);
   const [notebookStatus, setNotebookStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
@@ -138,7 +172,7 @@ export default function ReviewSession({
       }
       if (e.key === " " && !revealed) {
         e.preventDefault();
-        setRevealed(true);
+        revealAnswer();
         return;
       }
       if (revealed && ["1", "2", "3", "4"].includes(e.key) && !isPending) {
@@ -151,6 +185,22 @@ export default function ReviewSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed, done, isPending, sessionTotal]);
 
+  // M3 Slice 4 §7: единственное место, где revealed становится true —
+  // сохраняем phase='answer', чтобы резюм точно знал, что вопрос уже
+  // раскрыт (иначе после reload пользователь снова увидел бы закрытую
+  // карточку, которую уже открывал).
+  function revealAnswer() {
+    setRevealed(true);
+    saveReviewSession({
+      userId,
+      deckId: sessionDeckId,
+      cardIds: cards.map((c) => c.flashcardId),
+      gradedIds: gradedIdsRef.current,
+      index,
+      phase: "answer",
+    });
+  }
+
   function grade(value: 0 | 1 | 2 | 3) {
     // Раздел 5 промта 2026-07-30 (полировка): короткий вибро-отклик на
     // оценке — можно выключить в Настройках (флаг только на устройстве,
@@ -160,6 +210,7 @@ export default function ReviewSession({
     }
     startTransition(async () => {
       await reviewWord(card.flashcardId, value);
+      gradedIdsRef.current = [...gradedIdsRef.current, card.flashcardId];
       const newTotal = sessionTotal + 1;
       setTally((t) => ({ ...t, [value]: t[value] + 1 }));
       setFlash(value >= 2 ? "good" : "bad");
@@ -170,10 +221,20 @@ export default function ReviewSession({
       const isLastCard = index + 1 >= cards.length;
       if (isLastCard) {
         track("review_completed", { count: newTotal });
+        clearReviewSession();
         if (newTotal > bestSessionCount) {
           setNewRecord(true);
           await updateReviewBest(newTotal);
         }
+      } else {
+        saveReviewSession({
+          userId,
+          deckId: sessionDeckId,
+          cardIds: cards.map((c) => c.flashcardId),
+          gradedIds: gradedIdsRef.current,
+          index: index + 1,
+          phase: "question",
+        });
       }
       setIndex((i) => i + 1);
     });
@@ -353,7 +414,7 @@ export default function ReviewSession({
           {!revealed ? (
             <button
               type="button"
-              onClick={() => setRevealed(true)}
+              onClick={revealAnswer}
               className="rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
             >
               Показать ответ
