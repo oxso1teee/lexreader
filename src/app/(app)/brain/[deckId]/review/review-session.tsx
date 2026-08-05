@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { reviewWord, sendCardToNotebook, updateReviewBest } from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
@@ -14,6 +15,11 @@ export interface ReviewCard {
   front: string;
   back: string;
   notes: string | null;
+  contextSentence: string | null;
+  contextTranslation: string | null;
+  photoUrl: string | null;
+  sourceTextId: string | null;
+  sourceTextTitle: string | null;
   easeFactor: number;
   intervalDays: number;
   repetitions: number;
@@ -44,6 +50,7 @@ export default function ReviewSession({
   bestSessionCount,
   fsrsEnabled,
   maxIntervalDays,
+  targetLanguage,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
@@ -51,7 +58,9 @@ export default function ReviewSession({
   bestSessionCount: number;
   fsrsEnabled: boolean;
   maxIntervalDays: number;
+  targetLanguage: string;
 }) {
+  const router = useRouter();
   // Снимок очереди на момент старта сессии: серверные экшены ревью вызывают
   // неявный refresh страницы, из-за которого /review перезапросил бы уже
   // пустую очередь и подменил дерево прямо посреди сессии, если бы мы читали
@@ -90,6 +99,57 @@ export default function ReviewSession({
   // ровно наоборот тому, что написано в настройках.
   const question = studyDirection === "back_front" ? card?.back : card?.front;
   const answer = studyDirection === "back_front" ? card?.front : card?.back;
+
+  // M3 Slice 4 §6: browser Web Speech API only, same pattern as the Reader's
+  // Listening mode (src/app/read/[textId]/reader.tsx) — no paid TTS. `front`
+  // is always the target-language word regardless of studyDirection, so
+  // pronunciation always speaks it, not whichever side is "question" right now.
+  const speechAvailable = typeof window !== "undefined" && "speechSynthesis" in window;
+  function speak() {
+    if (!speechAvailable || !card) return;
+    const utterance = new SpeechSynthesisUtterance(card.front);
+    utterance.lang = targetLanguage;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function exitSession() {
+    if (sessionTotal > 0 && !confirm("Выйти из сессии? Прогресс по уже отвеченным карточкам сохранён.")) {
+      return;
+    }
+    router.push("/brain");
+  }
+
+  // M3 Slice 4 §6: Space=reveal, 1-4=grade (Again/Hard/Good/Easy — same
+  // order as the grade buttons below), Escape=exit. Never fires while an
+  // input/textarea/contenteditable has focus (the edit-card form above).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = document.activeElement;
+      const isTyping =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (isTyping || done) return;
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        exitSession();
+        return;
+      }
+      if (e.key === " " && !revealed) {
+        e.preventDefault();
+        setRevealed(true);
+        return;
+      }
+      if (revealed && ["1", "2", "3", "4"].includes(e.key) && !isPending) {
+        e.preventDefault();
+        grade((Number(e.key) - 1) as 0 | 1 | 2 | 3);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealed, done, isPending, sessionTotal]);
 
   function grade(value: 0 | 1 | 2 | 3) {
     // Раздел 5 промта 2026-07-30 (полировка): короткий вибро-отклик на
@@ -144,7 +204,10 @@ export default function ReviewSession({
   }
 
   return (
-    <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-8">
+    <div
+      className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-8"
+      style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
+    >
       {flash && (
         <div
           aria-hidden
@@ -153,9 +216,21 @@ export default function ReviewSession({
           }`}
         />
       )}
-      <p className="mb-4 text-sm text-black/50 dark:text-white/50">
-        {index + 1} / {cards.length}
-      </p>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-black/50 dark:text-white/50">
+          {index + 1} / {cards.length}
+          {cards.length - index - 1 > 0 && <span> · осталось {cards.length - index - 1}</span>}
+        </p>
+        <button
+          type="button"
+          onClick={exitSession}
+          aria-label="Завершить сессию"
+          title="Выйти (Esc)"
+          className="flex min-h-9 min-w-9 items-center justify-center rounded-full text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
 
       {isEditing ? (
         <form
@@ -207,6 +282,16 @@ export default function ReviewSession({
           <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
             <div className="flex items-center gap-2">
               <p className="text-2xl font-semibold">{question}</p>
+              {speechAvailable && (
+                <button
+                  type="button"
+                  onClick={speak}
+                  aria-label="Произнести"
+                  className="flex min-h-9 min-w-9 items-center justify-center text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
+                >
+                  🔊
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
@@ -219,9 +304,33 @@ export default function ReviewSession({
 
             {revealed && (
               <div className="flip-reveal flex flex-col items-center gap-2">
+                {card.photoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={card.photoUrl}
+                    alt=""
+                    className="max-h-40 rounded-lg object-cover"
+                  />
+                )}
                 <p className="text-xl font-medium text-black/80 dark:text-white/80">{answer}</p>
                 {card.notes && (
                   <p className="max-w-sm text-sm text-black/50 dark:text-white/50">{card.notes}</p>
+                )}
+                {card.contextSentence && (
+                  <div className="max-w-sm rounded-lg bg-black/5 px-3 py-2 text-sm dark:bg-white/5">
+                    <p className="text-black/70 dark:text-white/70">{card.contextSentence}</p>
+                    {card.contextTranslation && (
+                      <p className="mt-0.5 text-black/50 dark:text-white/50">{card.contextTranslation}</p>
+                    )}
+                  </div>
+                )}
+                {card.sourceTextId && card.sourceTextTitle && (
+                  <a
+                    href={`/read/${card.sourceTextId}`}
+                    className="text-xs font-medium text-caramel underline-offset-2 hover:underline"
+                  >
+                    из «{card.sourceTextTitle}»
+                  </a>
                 )}
                 <button
                   type="button"
@@ -286,7 +395,7 @@ export default function ReviewSession({
                     type="button"
                     disabled={isPending}
                     onClick={() => grade(g.value)}
-                    className={`flex flex-col items-center rounded-full px-4 py-3 font-medium text-white transition-colors disabled:opacity-50 ${g.className}`}
+                    className={`flex min-h-11 flex-col items-center justify-center rounded-full px-4 py-3 font-medium text-white transition-colors disabled:opacity-50 ${g.className}`}
                   >
                     <span>{g.label}</span>
                     <span className="text-xs font-normal opacity-80">
@@ -309,6 +418,16 @@ export default function ReviewSession({
         <span>✅ {tally[2]}</span>
         <span>⭐ {tally[3]}</span>
       </div>
+
+      {/* M3 Slice 4 §6: клавиатурные подсказки — desktop only, мобильным
+          пользователям это неактуально (нет физической клавиатуры). */}
+      <p className="mt-2 hidden justify-center gap-2 text-center text-[11px] text-black/30 sm:flex dark:text-white/30">
+        <span>Пробел — ответ</span>
+        <span>·</span>
+        <span>1–4 — оценка</span>
+        <span>·</span>
+        <span>Esc — выход</span>
+      </p>
     </div>
   );
 }

@@ -30,6 +30,8 @@ export default function ReviewModeSwitcher({
   bestSessionCount,
   fsrsEnabled,
   maxIntervalDays,
+  sessionTitle,
+  targetLanguage,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
@@ -37,6 +39,8 @@ export default function ReviewModeSwitcher({
   bestSessionCount: number;
   fsrsEnabled: boolean;
   maxIntervalDays: number;
+  sessionTitle: string;
+  targetLanguage: string;
 }) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
@@ -77,7 +81,10 @@ export default function ReviewModeSwitcher({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b border-black/10 px-5 pt-3 dark:border-white/10">
+      <p className="px-5 pt-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+        {sessionTitle}
+      </p>
+      <div className="flex items-center justify-between gap-2 border-b border-black/10 px-5 pt-1 dark:border-white/10">
         <div className="flex gap-2">
           {MODES.map((m) => (
             <button
@@ -116,6 +123,7 @@ export default function ReviewModeSwitcher({
           bestSessionCount={bestSessionCount}
           fsrsEnabled={fsrsEnabled}
           maxIntervalDays={maxIntervalDays}
+          targetLanguage={targetLanguage}
         />
       )}
       {mode === "choice" && (

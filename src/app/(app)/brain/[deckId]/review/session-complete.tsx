@@ -26,10 +26,10 @@ export default function SessionComplete({
       )}
       {streak !== null && <p className="text-black/60 dark:text-white/60">Стрик: {streak} 🔥</p>}
       <Link
-        href="/library"
+        href="/brain"
         className="mt-4 rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
       >
-        К библиотеке
+        К практике
       </Link>
     </div>
   );
