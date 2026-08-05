@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { hasFreeDeckRoom, hasFreeFlashcardRoom } from "@/lib/subscription";
+import { partitionByExistingFront } from "@/lib/flashcard-dedup";
 
 export interface DeckFormState {
   error?: string;
@@ -33,7 +34,11 @@ export async function createDeck(
   if (error || !data) return { error: "Не удалось создать колоду. Попробуй ещё раз." };
 
   revalidatePath("/brain");
-  redirect(`/brain/${data.id}`);
+  // M3 Slice 4 §16: createDeck завершается через redirect(), так что клиент
+  // (new-deck-modal.tsx) никогда не видит успешный useActionState — ?created
+  // это единственный надёжный сигнал для deck_create_succeeded на целевой
+  // странице (see [deckId]/deck-analytics.tsx).
+  redirect(`/brain/${data.id}?created=true`);
 }
 
 export async function deleteDeck(deckId: string) {
@@ -45,18 +50,45 @@ export async function deleteDeck(deckId: string) {
   // карточку" перестаёт работать насовсем (в UI нет способа назначить
   // другую колоду главной). Проверка в UI (deck-card.tsx) уже не даёт
   // нажать кнопку, но дублируем на сервере на случай прямого вызова.
+  //
+  // M3 Slice 4 §11: найдено при аудите — is_starter=true колоды не были
+  // защищены вообще, ни здесь, ни в UI (deck-card.tsx получал только
+  // isDefault, не isStarter). Стартовые колоды — общий бесплатный ресурс
+  // (не расходуют лимит тарифа, hasFreeDeckRoom их не считает), удалять их
+  // так же нежелательно, как и главную.
   const { data: deck } = await supabase
     .from("decks")
-    .select("is_default")
+    .select("is_default, is_starter")
     .eq("id", deckId)
     .maybeSingle();
   if (deck?.is_default) {
     throw new Error("Нельзя удалить главную колоду.");
   }
+  if (deck?.is_starter) {
+    throw new Error("Нельзя удалить стартовую колоду.");
+  }
 
   const { error } = await supabase.from("decks").delete().eq("id", deckId);
   if (error) throw new Error("Не удалось удалить колоду.");
   revalidatePath("/brain");
+  revalidatePath("/brain/vocabulary");
+}
+
+// M3 Slice 4 §11: name уже была mutable-колонкой без schema — просто не было
+// server action, который бы её менял. description остаётся отложенным
+// (колонки нет ни в одной миграции), rename её не блокирует.
+export async function renameDeck(deckId: string, name: string): Promise<{ ok: boolean; error?: string }> {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "Название не может быть пустым." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("decks").update({ name: trimmed }).eq("id", deckId);
+  if (error) return { ok: false, error: "Не удалось переименовать колоду." };
+
+  revalidatePath("/brain");
+  revalidatePath("/brain/vocabulary");
+  revalidatePath(`/brain/${deckId}`);
+  return { ok: true };
 }
 
 interface ImportCard {
@@ -89,11 +121,27 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
     }));
   if (rows.length === 0) return { ok: false, error: "Нет карточек для импорта." };
 
-  if (!(await hasFreeFlashcardRoom(supabase, profile.id, rows.length))) {
+  // M3 Slice 4 §13: validateCards() в import-cards.ts уже дедуплицирует
+  // ВНУТРИ одного файла — но ничего не проверяло против уже сохранённых
+  // карточек, так что повторный импорт того же (или пересекающегося) файла
+  // молча создавал дубликаты. Не блокируем импорт целиком — пропускаем
+  // только сами дубликаты и честно отчитываемся о них (§15: "duplicate
+  // summary; skipped duplicates").
+  const { newRows, skippedDuplicates } = await partitionByExistingFront(
+    supabase,
+    profile.id,
+    deck.language,
+    rows,
+  );
+  if (newRows.length === 0) {
+    return { ok: false, error: "Все карточки уже есть в словаре.", skippedDuplicates };
+  }
+
+  if (!(await hasFreeFlashcardRoom(supabase, profile.id, newRows.length))) {
     return { ok: false, paywall: true };
   }
 
-  const { data: inserted, error } = await supabase.from("flashcards").insert(rows).select("id");
+  const { data: inserted, error } = await supabase.from("flashcards").insert(newRows).select("id");
   if (error) return { ok: false, error: "Не удалось импортировать карточки. Попробуй ещё раз." };
 
   const settings = await supabase
@@ -109,5 +157,6 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
 
   revalidatePath(`/brain/${deckId}`);
   revalidatePath("/brain");
-  return { ok: true, count: rows.length };
+  revalidatePath("/brain/vocabulary");
+  return { ok: true, count: newRows.length, skippedDuplicates };
 }

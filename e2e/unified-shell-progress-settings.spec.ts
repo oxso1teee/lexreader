@@ -37,11 +37,15 @@ test("Progress with real review/material history shows the due-reviews insight a
   // Тот же надёжный паттерн, что и у Today CTA (unified-shell-today.spec.ts)
   // — создаём свою карточку с due_at=now(), не завязываясь на состояние
   // общего e2e-аккаунта, которое меняют другие тесты в наборе.
-  await page.goto("/brain");
+  //
+  // M3 Slice 4: создание колоды переехало с /brain на вкладку "Колоды"
+  // /brain/vocabulary (см. docs/ui/m3-slice4-practice-brain-review-plan.md §4).
+  await page.goto("/brain/vocabulary");
+  await page.getByRole("button", { name: "📚 Колоды" }).click();
   await page.getByRole("button", { name: "+ Новая колода" }).click();
   await page.getByPlaceholder("Название колоды...").fill(`Progress insight ${Date.now()}`);
   await page.getByRole("button", { name: "Создать" }).click();
-  await expect(page).toHaveURL(/\/brain\/[\w-]+$/);
+  await expect(page).toHaveURL(/\/brain\/[\w-]+\?created=true$/, { timeout: 15_000 });
   await page.getByPlaceholder("Слово").fill("progress-insight-front");
   await page.getByPlaceholder("Перевод").fill("progress-insight-back");
   await page.getByRole("button", { name: "+ Добавить карточку" }).click();

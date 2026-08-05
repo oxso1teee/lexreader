@@ -10,10 +10,29 @@ import ReviewModeSwitcher from "./review-mode-switcher";
 // Отдельные строковые литералы (не конкатенация) — Supabase-js выводит форму
 // строки из литерального типа select(), конкатенация через `+` расширяет тип
 // до `string` и ломает вывод типов.
+//
+// M3 Slice 4 §6: context_sentence/context_translation/source_text_id/
+// photo_url уже существуют на flashcards с migration 0028 — сюда их просто
+// не выбирали. texts(title) — embed по существующему FK
+// flashcards.source_text_id -> texts.id, без новой схемы.
+const CARD_FIELDS =
+  "id, front, back, notes, deck_id, owner_id, context_sentence, context_translation, photo_url, source_text_id, texts(title)" as const;
 const LEGACY_SELECT =
-  "flashcard_id, due_at, repetitions, ease_factor, interval_days, last_reviewed_at, flashcards!inner(id, front, back, notes, deck_id, owner_id)" as const;
+  `flashcard_id, due_at, repetitions, ease_factor, interval_days, last_reviewed_at, flashcards!inner(${CARD_FIELDS})` as const;
 const FSRS_SELECT =
-  "flashcard_id, due_at, repetitions, ease_factor, interval_days, last_reviewed_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_lapses, fsrs_reps, fsrs_scheduled_days, flashcards!inner(id, front, back, notes, deck_id, owner_id)" as const;
+  `flashcard_id, due_at, repetitions, ease_factor, interval_days, last_reviewed_at, fsrs_stability, fsrs_difficulty, fsrs_state, fsrs_lapses, fsrs_reps, fsrs_scheduled_days, flashcards!inner(${CARD_FIELDS})` as const;
+
+interface CardRow {
+  front: string;
+  back: string;
+  notes: string | null;
+  deck_id: string;
+  context_sentence: string | null;
+  context_translation: string | null;
+  photo_url: string | null;
+  source_text_id: string | null;
+  texts: { title: string } | { title: string }[] | null;
+}
 
 interface SrsStateRow {
   flashcard_id: string;
@@ -28,25 +47,24 @@ interface SrsStateRow {
   fsrs_lapses?: number;
   fsrs_reps?: number;
   fsrs_scheduled_days?: number;
-  flashcards:
-    | { front: string; back: string; notes: string | null; deck_id: string }
-    | { front: string; back: string; notes: string | null; deck_id: string }[];
+  flashcards: CardRow | CardRow[];
 }
 
 function toCards(rows: SrsStateRow[] | null): ReviewCard[] {
   return (rows ?? []).map((row) => {
-    const card = row.flashcards as unknown as {
-      front: string;
-      back: string;
-      notes: string | null;
-      deck_id: string;
-    };
+    const card = row.flashcards as unknown as CardRow;
+    const text = Array.isArray(card.texts) ? card.texts[0] : card.texts;
     return {
       flashcardId: row.flashcard_id,
       deckId: card.deck_id,
       front: card.front,
       back: card.back,
       notes: card.notes,
+      contextSentence: card.context_sentence,
+      contextTranslation: card.context_translation,
+      photoUrl: card.photo_url,
+      sourceTextId: card.source_text_id,
+      sourceTextTitle: text?.title ?? null,
       easeFactor: row.ease_factor,
       intervalDays: row.interval_days,
       repetitions: row.repetitions,
@@ -168,6 +186,15 @@ export default async function DeckReviewPage({
   // карточках), затем новые — раздел 6.2 роадмапа: два независимых лимита.
   const cards: ReviewCard[] = [...toCards(reviewRows), ...toCards(newRows)];
 
+  // M3 Slice 4 §6: "deck/session title" в шапке ревью. "all" — синтетический
+  // deckId (кросс-деково повторение, не реальная строка в decks) — честное
+  // название вместо попытки найти несуществующую колоду.
+  let sessionTitle = "Повторение";
+  if (deckId !== "all") {
+    const { data: deck } = await supabase.from("decks").select("name").eq("id", deckId).maybeSingle();
+    if (deck) sessionTitle = deck.name;
+  }
+
   const srsParams: SrsParams = {
     easyBonus: settings.easy_bonus,
     intervalModifier: settings.interval_modifier,
@@ -192,6 +219,10 @@ export default async function DeckReviewPage({
       bestSessionCount={profile.review_best_session_count}
       fsrsEnabled={flags.enabled}
       maxIntervalDays={settings.max_interval_days}
+      sessionTitle={sessionTitle}
+      targetLanguage={profile.target_language}
+      userId={profile.id}
+      sessionDeckId={deckId}
     />
   );
 }

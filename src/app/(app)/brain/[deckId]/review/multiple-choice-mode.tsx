@@ -79,7 +79,9 @@ export default function MultipleChoiceMode({
     if (selected) return;
     setSelected(option);
     const grade = option === answerOf(card, studyDirection) ? 2 : 0;
-    startTransition(() => reviewWord(card.flashcardId, grade));
+    startTransition(() => {
+      void reviewWord(card.flashcardId, grade);
+    });
   }
 
   function next() {

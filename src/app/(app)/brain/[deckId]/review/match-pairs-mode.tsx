@@ -67,7 +67,9 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
     if (wordId === translationId) {
       setMatchedIds((s) => new Set(s).add(wordId));
       const grade = struggledIds.has(wordId) ? 0 : 2;
-      startTransition(() => reviewWord(wordId, grade));
+      startTransition(() => {
+        void reviewWord(wordId, grade);
+      });
       setSelectedWord(null);
       setSelectedTranslation(null);
     } else {

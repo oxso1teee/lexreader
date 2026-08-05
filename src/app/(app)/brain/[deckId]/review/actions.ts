@@ -12,7 +12,10 @@ import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 import { addXp } from "@/lib/xp-actions";
 
-export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
+export async function reviewWord(
+  flashcardId: string,
+  grade: 0 | 1 | 2 | 3,
+): Promise<{ reviewLogId: string | null }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -138,6 +141,29 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   // как признак "карточка ещё ни разу не была пройдена".
   const wasNew = current.first_reviewed_at === null;
 
+  // M3 Slice 4 §8 (undo last grade, migration 0035): снимок legacy-полей
+  // до/после — единственный способ восстановить due_at/ease_factor/
+  // interval_days/repetitions/first_reviewed_at для не-FSRS-авторитетных
+  // аккаунтов; previous_state_json/next_state_json (0032) хранят только
+  // FSRS Card, не legacy-состояние. Пишем всегда, не только при
+  // usedFsrsColumns — это не FSRS-специфичные данные.
+  const previousLegacyState = {
+    ease_factor: current.ease_factor,
+    interval_days: current.interval_days,
+    repetitions: current.repetitions,
+    due_at: current.due_at,
+    first_reviewed_at: current.first_reviewed_at,
+    last_reviewed_at: current.last_reviewed_at,
+  };
+  const nextLegacyState = {
+    ease_factor: legacyNext.easeFactor,
+    interval_days: legacyNext.intervalDays,
+    repetitions: legacyNext.repetitions,
+    due_at: dueAt.toISOString(),
+    first_reviewed_at: wasNew ? now.toISOString() : current.first_reviewed_at,
+    last_reviewed_at: now.toISOString(),
+  };
+
   const { error: updateError } = await supabase
     .from("srs_state")
     .update({
@@ -161,17 +187,23 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
     .eq("flashcard_id", flashcardId);
   if (updateError) throw new Error("Не удалось сохранить ответ.");
 
-  const { error: logError } = await supabase.from("review_log").insert({
-    flashcard_id: flashcardId,
-    grade,
-    ...(usedFsrsColumns
-      ? {
-          scheduler_type: fsrsAuthoritative ? "fsrs" : "sm2",
-          previous_state_json: fsrsResult?.previousState ?? null,
-          next_state_json: fsrsResult?.nextState ?? null,
-        }
-      : {}),
-  });
+  const { data: logRow, error: logError } = await supabase
+    .from("review_log")
+    .insert({
+      flashcard_id: flashcardId,
+      grade,
+      previous_legacy_state_json: previousLegacyState,
+      next_legacy_state_json: nextLegacyState,
+      ...(usedFsrsColumns
+        ? {
+            scheduler_type: fsrsAuthoritative ? "fsrs" : "sm2",
+            previous_state_json: fsrsResult?.previousState ?? null,
+            next_state_json: fsrsResult?.nextState ?? null,
+          }
+        : {}),
+    })
+    .select("id")
+    .single();
   if (logError) throw new Error("Не удалось сохранить ответ.");
 
   await touchStreak(supabase, user.id);
@@ -179,6 +211,103 @@ export async function reviewWord(flashcardId: string, grade: 0 | 1 | 2 | 3) {
   await addXp(supabase, user.id, 1);
   revalidatePath("/brain");
   revalidatePath("/progress");
+  return { reviewLogId: logRow?.id ?? null };
+}
+
+// M3 Slice 4 §8: отменяет ровно последнюю оценку этой карточки — проверяет
+// владение через join на flashcards (та же схема, что и RLS-политика
+// "review_log: owner full access"), и что после reviewLogId не появилось
+// более новой записи для той же карточки (защита от отмены "не последней"
+// оценки и от повторной отмены — после удаления строки повторный вызов с
+// тем же id просто не найдёт её). Восстанавливает legacy-поля всегда;
+// FSRS-поля — только если previous_state_json реально был записан в этом
+// ревью (usedFsrsColumns=true на момент оценки).
+export interface UndoResult {
+  ok: boolean;
+  error?: string;
+}
+
+export async function undoLastGrade(reviewLogId: string): Promise<UndoResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Не авторизован." };
+
+  const { data: logRow, error: fetchError } = await supabase
+    .from("review_log")
+    .select(
+      "id, flashcard_id, previous_legacy_state_json, previous_state_json, flashcards!inner(owner_id)",
+    )
+    .eq("id", reviewLogId)
+    .maybeSingle();
+  if (fetchError || !logRow) return { ok: false, error: "Оценка не найдена." };
+
+  const flashcardRow = Array.isArray(logRow.flashcards) ? logRow.flashcards[0] : logRow.flashcards;
+  if (!flashcardRow || flashcardRow.owner_id !== user.id) {
+    return { ok: false, error: "Нет доступа." };
+  }
+
+  const { data: mostRecent } = await supabase
+    .from("review_log")
+    .select("id")
+    .eq("flashcard_id", logRow.flashcard_id)
+    .order("reviewed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!mostRecent || mostRecent.id !== reviewLogId) {
+    return { ok: false, error: "Уже есть более новая оценка — отменить нельзя." };
+  }
+
+  if (!logRow.previous_legacy_state_json) {
+    return { ok: false, error: "Для этой оценки нет сохранённого состояния — отменить нельзя." };
+  }
+  const prevLegacy = logRow.previous_legacy_state_json as {
+    ease_factor: number;
+    interval_days: number;
+    repetitions: number;
+    due_at: string;
+    first_reviewed_at: string | null;
+    last_reviewed_at: string | null;
+  };
+  const prevFsrs = logRow.previous_state_json as {
+    stability: number;
+    difficulty: number;
+    state: number;
+    lapses: number;
+    reps: number;
+    scheduled_days: number;
+  } | null;
+
+  const { error: restoreError } = await supabase
+    .from("srs_state")
+    .update({
+      ease_factor: prevLegacy.ease_factor,
+      interval_days: prevLegacy.interval_days,
+      repetitions: prevLegacy.repetitions,
+      due_at: prevLegacy.due_at,
+      first_reviewed_at: prevLegacy.first_reviewed_at,
+      last_reviewed_at: prevLegacy.last_reviewed_at,
+      ...(prevFsrs
+        ? {
+            fsrs_stability: prevFsrs.stability,
+            fsrs_difficulty: prevFsrs.difficulty,
+            fsrs_state: prevFsrs.state,
+            fsrs_lapses: prevFsrs.lapses,
+            fsrs_reps: prevFsrs.reps,
+            fsrs_scheduled_days: prevFsrs.scheduled_days,
+          }
+        : {}),
+    })
+    .eq("flashcard_id", logRow.flashcard_id);
+  if (restoreError) return { ok: false, error: "Не удалось восстановить состояние." };
+
+  const { error: deleteError } = await supabase.from("review_log").delete().eq("id", reviewLogId);
+  if (deleteError) return { ok: false, error: "Не удалось удалить запись." };
+
+  revalidatePath("/brain");
+  revalidatePath("/progress");
+  return { ok: true };
 }
 
 // Из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, "Дополнительно

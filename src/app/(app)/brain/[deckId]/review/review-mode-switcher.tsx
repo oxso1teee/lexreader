@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { SrsParams } from "@/lib/srs";
 import ReviewSession, { type ReviewCard } from "./review-session";
 import MultipleChoiceMode from "./multiple-choice-mode";
@@ -16,6 +17,12 @@ const MODES = [
 
 type Mode = (typeof MODES)[number]["value"];
 
+const MODE_VALUES: readonly string[] = MODES.map((m) => m.value);
+
+function isMode(value: string | null): value is Mode {
+  return value !== null && MODE_VALUES.includes(value);
+}
+
 export default function ReviewModeSwitcher({
   cards: cardsProp,
   studyDirection,
@@ -23,6 +30,10 @@ export default function ReviewModeSwitcher({
   bestSessionCount,
   fsrsEnabled,
   maxIntervalDays,
+  sessionTitle,
+  targetLanguage,
+  userId,
+  sessionDeckId,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
@@ -30,11 +41,22 @@ export default function ReviewModeSwitcher({
   bestSessionCount: number;
   fsrsEnabled: boolean;
   maxIntervalDays: number;
+  sessionTitle: string;
+  targetLanguage: string;
+  userId: string;
+  sessionDeckId: string;
 }) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
   const [cards] = useState(cardsProp);
-  const [mode, setMode] = useState<Mode>("cards");
+  // Practice Home's quick-practice grid links directly to a mode
+  // (/brain/all/review?mode=choice) — read once on mount, same as
+  // studyDirection below; switching modes afterwards stays purely in-state.
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<Mode>(() => {
+    const requested = searchParams.get("mode");
+    return isMode(requested) ? requested : "cards";
+  });
   // Идея из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.5): быстрый
   // переключатель направления прямо на экране повторения, отдельно от
   // постоянной настройки в Study Settings — действует только на эту сессию.
@@ -63,7 +85,10 @@ export default function ReviewModeSwitcher({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b border-black/10 px-5 pt-3 dark:border-white/10">
+      <p className="px-5 pt-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+        {sessionTitle}
+      </p>
+      <div className="flex items-center justify-between gap-2 border-b border-black/10 px-5 pt-1 dark:border-white/10">
         <div className="flex gap-2">
           {MODES.map((m) => (
             <button
@@ -102,6 +127,9 @@ export default function ReviewModeSwitcher({
           bestSessionCount={bestSessionCount}
           fsrsEnabled={fsrsEnabled}
           maxIntervalDays={maxIntervalDays}
+          targetLanguage={targetLanguage}
+          userId={userId}
+          sessionDeckId={sessionDeckId}
         />
       )}
       {mode === "choice" && (

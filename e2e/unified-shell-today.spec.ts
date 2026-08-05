@@ -20,11 +20,15 @@ test("Today primary CTA shows review action once a due flashcard exists", async 
   // Гарантированно создаёт карточку с due_at=now() (default в схеме) —
   // немедленно попадает в getDueCount(), не завязано на порядок других
   // тестов общего e2e-аккаунта.
-  await page.goto("/brain");
+  //
+  // M3 Slice 4: создание колоды переехало с /brain на вкладку "Колоды"
+  // /brain/vocabulary (см. docs/ui/m3-slice4-practice-brain-review-plan.md §4).
+  await page.goto("/brain/vocabulary");
+  await page.getByRole("button", { name: "📚 Колоды" }).click();
   await page.getByRole("button", { name: "+ Новая колода" }).click();
   await page.getByPlaceholder("Название колоды...").fill(`Today CTA ${Date.now()}`);
   await page.getByRole("button", { name: "Создать" }).click();
-  await expect(page).toHaveURL(/\/brain\/[\w-]+$/);
+  await expect(page).toHaveURL(/\/brain\/[\w-]+\?created=true$/, { timeout: 15_000 });
   await page.getByPlaceholder("Слово").fill("today-cta-front");
   await page.getByPlaceholder("Перевод").fill("today-cta-back");
   await page.getByRole("button", { name: "+ Добавить карточку" }).click();
