@@ -79,32 +79,43 @@ async function ensureTestUser(supabase: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function ensureDueCard(supabase: any, userId: string) {
   const pastDueAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { data: card } = await supabase
+  const { data: card, error: findError } = await supabase
     .from("flashcards")
     .select("id")
     .eq("owner_id", userId)
     .eq("front", "birds")
     .maybeSingle();
+  if (findError) console.error("[ensureDueCard] find flashcard failed:", findError);
 
   if (card) {
-    await supabase.from("srs_state").update({ due_at: pastDueAt }).eq("flashcard_id", card.id);
+    const { error: updateError } = await supabase
+      .from("srs_state")
+      .update({ due_at: pastDueAt })
+      .eq("flashcard_id", card.id);
+    if (updateError) console.error("[ensureDueCard] update srs_state failed:", updateError);
+    else console.log("[ensureDueCard] reused existing 'birds' flashcard", card.id);
     return;
   }
 
-  const { data: deck } = await supabase
+  const { data: deck, error: deckError } = await supabase
     .from("decks")
     .select("id")
     .eq("owner_id", userId)
     .eq("is_default", true)
     .maybeSingle();
-  if (!deck) return;
-  const { data: profile } = await supabase
+  if (deckError) console.error("[ensureDueCard] find default deck failed:", deckError);
+  if (!deck) {
+    console.error("[ensureDueCard] no default deck found for", userId, "— aborting");
+    return;
+  }
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("target_language")
     .eq("id", userId)
     .maybeSingle();
+  if (profileError) console.error("[ensureDueCard] find profile failed:", profileError);
 
-  const { data: inserted } = await supabase
+  const { data: inserted, error: insertError } = await supabase
     .from("flashcards")
     .insert({
       owner_id: userId,
@@ -115,8 +126,13 @@ async function ensureDueCard(supabase: any, userId: string) {
     })
     .select("id")
     .single();
+  if (insertError) console.error("[ensureDueCard] insert flashcard failed:", insertError);
   if (!inserted) return;
-  await supabase.from("srs_state").insert({ flashcard_id: inserted.id, due_at: pastDueAt });
+  const { error: srsInsertError } = await supabase
+    .from("srs_state")
+    .insert({ flashcard_id: inserted.id, due_at: pastDueAt });
+  if (srsInsertError) console.error("[ensureDueCard] insert srs_state failed:", srsInsertError);
+  else console.log("[ensureDueCard] created new 'birds' flashcard", inserted.id);
 }
 
 // Тесты в этом наборе логинятся много раз подряд (несколько spec-файлов,
