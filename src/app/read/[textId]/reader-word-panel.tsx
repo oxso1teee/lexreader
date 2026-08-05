@@ -165,7 +165,9 @@ export default function ReaderWordPanel({
             <button
               type="button"
               onClick={() => onSetLevel(4)}
-              className="focus-ring flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-sm font-bold text-white"
+              className={`focus-ring flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-sm font-bold ${
+                popup.level === 4 ? "text-black" : "text-white"
+              }`}
               style={{ backgroundColor: popup.level === 4 ? WORD_LEVELS[4].color : "var(--color-forest)" }}
             >
               {popup.level === 4 ? "Сохранено ✓" : "Уже знаю"}

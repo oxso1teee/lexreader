@@ -450,10 +450,13 @@ export default function Reader({
           <div className="flex items-center gap-3">
             <Link
               href="/library"
-              className="focus-ring flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+              aria-label="Библиотека"
+              className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
             >
               <span aria-hidden="true">←</span>
-              <span className="hidden sm:inline">Библиотека</span>
+              <span className="hidden sm:inline" aria-hidden="true">
+                Библиотека
+              </span>
             </Link>
             <div className="min-w-0 flex-1 text-center">
               <nav aria-label="Хлебные крошки" className="truncate text-xs text-[var(--text-secondary)]">
