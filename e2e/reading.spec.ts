@@ -2,30 +2,19 @@ import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 
 test("reading flow: open text, tap word, translate, change level, finish", async ({ page }) => {
-  // CI's e2e job runs `supabase start` (Postgres, GoTrue, Kong, Realtime,
-  // PostgREST, Storage, ...) plus the Next.js production server all at once
-  // on a shared 2-vCPU runner. Under that contention the very first
-  // client-side transition into /read/[textId] (a heavier route than most,
-  // with several dynamic-import-adjacent client modules) can take
-  // meaningfully longer than the default 30s test budget allows — reproduced
-  // 0/2 times on the CI runner but 4/4 times locally against a real
-  // `next build && next start` server with normal resource headroom, which
-  // rules out a logic bug and points at CI-runner CPU contention specifically.
+  // Root-caused via temporary CI diagnostics: the Library grid's material
+  // links had no prefetch={false}, so Next.js's default Link prefetching
+  // fired the FULL dynamic /read|/watch/[id] route (every DB query the
+  // Reader page makes — /read/[textId] has no loading.js boundary) for
+  // every card the moment the page mounted. On a real user's browser that's
+  // just wasteful; on CI's shared 2-vCPU runner, also running the full local
+  // Supabase stack (Postgres/GoTrue/Kong/Realtime/PostgREST/Storage)
+  // concurrently, the resulting burst of a dozen+ simultaneous heavy
+  // prefetch requests was severe enough to starve the actual click-triggered
+  // navigation. Fixed at the source in library-item-card.tsx
+  // (prefetch={false}); this generous timeout stays as a safety margin for
+  // CI's genuinely more constrained CPU/DB throughput vs a real deployment.
   test.setTimeout(60_000);
-
-  // TEMP CI DIAGNOSTICS — this test has failed 3/3 times in CI (0/4 times
-  // locally against a real production build) at the exact same assertion.
-  // No trace/HTML report artifact is generated (playwright.config.ts only
-  // configures the "list" reporter), so surface console/page errors and
-  // failed requests directly into the CI log to find the actual cause.
-  page.on("console", (msg) => console.log(`[CI-DEBUG console:${msg.type()}]`, msg.text()));
-  page.on("pageerror", (err) => console.log("[CI-DEBUG pageerror]", err.message, err.stack));
-  page.on("requestfailed", (req) =>
-    console.log("[CI-DEBUG requestfailed]", req.method(), req.url(), req.failure()?.errorText),
-  );
-  page.on("response", (res) => {
-    if (res.status() >= 400) console.log("[CI-DEBUG response>=400]", res.status(), res.url());
-  });
 
   await login(page);
   await expect(page).toHaveURL(/\/home$/);

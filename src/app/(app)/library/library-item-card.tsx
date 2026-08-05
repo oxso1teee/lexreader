@@ -31,7 +31,20 @@ export default function LibraryItemCard({ item }: { item: LibraryItem }) {
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
-      <Link href={item.href} className="flex flex-1 flex-col focus-ring" aria-label={`${typeLabel(item)}: ${item.title}`}>
+      {/* prefetch={false}: /read|/watch/[id] have no loading.js boundary, so
+          Next's default prefetch fetches the FULL dynamic route (every DB
+          query the Reader page makes) for every card the moment it enters
+          the viewport. A grid of 20+ materials was firing dozens of these
+          concurrently on every Library load — confirmed via CI diagnostics
+          to be severe enough to starve the actual click-triggered navigation
+          under load. Wasteful for real users too (most cards are never opened
+          in a session) and unnecessary DB/bandwidth cost at any real scale. */}
+      <Link
+        href={item.href}
+        prefetch={false}
+        className="flex flex-1 flex-col focus-ring"
+        aria-label={`${typeLabel(item)}: ${item.title}`}
+      >
         <div
           className="relative flex h-26 items-end p-2.5 text-white"
           style={{ background: showThumb ? undefined : `linear-gradient(135deg, ${gradientA}, ${gradientB})`, height: "6.5rem" }}
