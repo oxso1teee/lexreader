@@ -91,9 +91,18 @@ export default async function globalSetup() {
   await ensureTestUser(supabase);
   await supabase.from("auth_attempts").delete().gte("id", 0);
 
-  // brain-notebook.spec.ts создаёт новую тестовую колоду в каждом прогоне —
-  // без очистки они копятся и упираются в FREE_DECK_LIMIT (P0-6.3).
-  await supabase.from("decks").delete().like("name", "E2E Deck %");
+  // Несколько спек-файлов создают свою тестовую колоду на каждый прогон
+  // (brain-notebook.spec.ts, unified-shell-today.spec.ts,
+  // unified-shell-progress-settings.spec.ts, brain-undo-rename.spec.ts) —
+  // без очистки они копятся и рано или поздно упираются в FREE_DECK_LIMIT=3
+  // (P0-6.3), заставляя ЛЮБОЙ следующий тест, создающий колоду, попасть на
+  // paywall-ветку вместо формы создания. Четыре отдельных .like() вместо
+  // одного .or() — синтаксис wildcard внутри сырых .or()-фильтров PostgREST
+  // (`*`) отличается от .like() (`%`), не стоит рисковать тихо не находящим
+  // совпадений фильтром.
+  for (const pattern of ["E2E Deck %", "Today CTA %", "Progress insight %", "E2E Rename %"]) {
+    await supabase.from("decks").delete().like("name", pattern);
+  }
 
   const { data: users } = await supabase.auth.admin.listUsers();
   const userId = users?.users.find((u: { email?: string }) => u.email === TEST_EMAIL)?.id;

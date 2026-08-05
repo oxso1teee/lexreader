@@ -323,7 +323,30 @@ export default function ReviewSession({
   }
 
   if (done) {
-    return <SessionComplete count={cards.length} newRecord={newRecord} />;
+    // M3 Slice 4 §8 (found while writing e2e coverage): grading the very
+    // last card sets `lastGraded` and flips `done` to true in the same
+    // batch — without this, the Undo bar would never get a render to
+    // appear in, and a mis-grade on the session's final card would be
+    // permanently un-undoable. undo() already handles restoredIndex
+    // correctly here (cards.length-1 < cards.length reopens this same
+    // card as a fresh question).
+    return (
+      <>
+        {lastGraded && (
+          <div className="mx-auto flex w-full max-w-md justify-center px-5 pt-8">
+            <button
+              type="button"
+              onClick={undo}
+              disabled={isUndoing}
+              className="flex min-h-9 items-center justify-center gap-1 rounded-full border border-black/10 px-3 text-xs font-medium text-black/60 hover:border-black/30 hover:text-black disabled:opacity-50 dark:border-white/15 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
+            >
+              ↩ {isUndoing ? "Отменяем…" : `Отменить оценку «${lastGraded.front}»`}
+            </button>
+          </div>
+        )}
+        <SessionComplete count={cards.length} newRecord={newRecord} />
+      </>
+    );
   }
 
   return (

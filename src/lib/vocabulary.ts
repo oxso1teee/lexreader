@@ -2,6 +2,9 @@ import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { getPlan, FREE_DAILY_WORD_LIMIT, hasFreeDeckRoom, hasFreeFlashcardRoom } from "@/lib/subscription";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 import { addXp } from "@/lib/xp-actions";
+import { escapeIlike } from "./ilike";
+
+export { escapeIlike };
 
 export interface UpsertWordResult {
   ok: boolean;
@@ -17,13 +20,6 @@ function todayStartUtc(): string {
   return new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   ).toISOString();
-}
-
-// P0-АУДИТ (раздел 5): .ilike() трактует % и _ как wildcard-символы — без
-// экранирования слово вроде "50%" могло бы случайно совпасть с несвязанной
-// записью.
-export function escapeIlike(s: string): string {
-  return s.replace(/[%_]/g, (c) => `\\${c}`);
 }
 
 // Слова из чтения и Мозг раньше жили как два не связанных друг с другом

@@ -8,7 +8,7 @@
 // not just within one deck. Import-batch-internal dedup (two rows in the
 // same CSV) already existed in import-cards.ts's validateCards() — this
 // file only adds the check against what's already saved.
-import { escapeIlike } from "./vocabulary.ts";
+import { escapeIlike } from "./ilike.ts";
 import type { SupabaseServerClient } from "./supabase/server.ts";
 
 export function normalizeFront(front: string): string {
