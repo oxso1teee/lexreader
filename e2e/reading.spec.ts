@@ -13,6 +13,20 @@ test("reading flow: open text, tap word, translate, change level, finish", async
   // rules out a logic bug and points at CI-runner CPU contention specifically.
   test.setTimeout(60_000);
 
+  // TEMP CI DIAGNOSTICS — this test has failed 3/3 times in CI (0/4 times
+  // locally against a real production build) at the exact same assertion.
+  // No trace/HTML report artifact is generated (playwright.config.ts only
+  // configures the "list" reporter), so surface console/page errors and
+  // failed requests directly into the CI log to find the actual cause.
+  page.on("console", (msg) => console.log(`[CI-DEBUG console:${msg.type()}]`, msg.text()));
+  page.on("pageerror", (err) => console.log("[CI-DEBUG pageerror]", err.message, err.stack));
+  page.on("requestfailed", (req) =>
+    console.log("[CI-DEBUG requestfailed]", req.method(), req.url(), req.failure()?.errorText),
+  );
+  page.on("response", (res) => {
+    if (res.status() >= 400) console.log("[CI-DEBUG response>=400]", res.status(), res.url());
+  });
+
   await login(page);
   await expect(page).toHaveURL(/\/home$/);
 
