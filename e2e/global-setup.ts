@@ -52,7 +52,19 @@ async function ensureTestUser(supabase: any) {
     .eq("is_default", true)
     .maybeSingle();
   if (!existingDeck) {
-    await supabase.from("decks").insert({ owner_id: userId, name: "Основная колода", is_default: true });
+    // РЕАЛЬНЫЙ БАГ (найден при диагностике CI-падений ensureDueCard()):
+    // decks.language — text NOT NULL без default с миграции 0018 (см.
+    // 0018_brain_language.sql), а этот insert никогда его не заполнял и не
+    // проверял ошибку. На моей локальной БД "Основная колода" пережила эту
+    // миграцию (создана раньше неё), так что ветка `if (!existingDeck)`
+    // здесь никогда больше не выполнялась — бага была скрыта много месяцев.
+    // На свежей CI-базе (`supabase db reset`) деки ещё нет, insert реально
+    // выполняется и падает на NOT NULL constraint, молча — ensureDueCard()
+    // затем не находит вообще никакой default-колоды.
+    const { error } = await supabase
+      .from("decks")
+      .insert({ owner_id: userId, name: "Основная колода", is_default: true, language: "en" });
+    if (error) console.error("[ensureTestUser] insert default deck failed:", error);
   }
 }
 
