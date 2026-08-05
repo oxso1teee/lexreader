@@ -88,6 +88,11 @@ test("Item Details sheet has no serious/critical axe violations", async ({ page 
 test("Review Session has no serious/critical axe violations on desktop, question and revealed states", async ({
   page,
 }) => {
+  // Two full AxeBuilder().analyze() passes in one test occasionally outrun
+  // Playwright's 30s default under CPU load (axe's DOM traversal cost, not
+  // this app) — matches the same headroom already given to the
+  // deck-creation redirect assertions elsewhere in this suite.
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1280, height: 800 });
   await login(page);
   await page.goto("/brain/all/review");
@@ -145,6 +150,7 @@ test("Review Session keyboard shortcuts don't fire while editing a card", async 
 });
 
 test("Deck Details page has no serious/critical axe violations", async ({ page }) => {
+  test.setTimeout(45_000);
   await login(page);
   await page.goto("/brain/vocabulary");
   await page.getByRole("button", { name: "📚 Колоды" }).click();

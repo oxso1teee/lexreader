@@ -63,19 +63,60 @@ async function ensureTestUser(supabase: any) {
 // сидированный флеш-карт как "always due" — без явного сброса здесь оба
 // набора рано или поздно начинают молча ловить пустое состояние вместо
 // экрана повторения.
+//
+// CI-БАГ (найден при первом реальном прогоне полного набора в GitHub
+// Actions): "birds" — это просто слово в тексте seed.sql ("A Walk in the
+// Park"), не отдельно засеянная флеш-карта. Она превращается в реальную
+// строку flashcards только когда КТО-ТО реально тапнул по ней в Reader —
+// на моей долгоживущей локальной БД это уже случилось много раз, поэтому
+// .maybeSingle() ниже раньше молча находил её. На свежей БД CI
+// (`supabase db reset`) её взять неоткуда: reader-library-a11y.spec.ts
+// (единственный тест, который её создаёт) идёт по алфавиту ПОСЛЕ
+// practice-brain-a11y.spec.ts, так что до первого её прогона "birds"-карты
+// физически не существует ни для одного более раннего теста. Раньше эта
+// функция при отсутствии карты просто выходила (`if (!card) return`) —
+// теперь создаёт её напрямую, не полагаясь на порядок файлов/историю БД.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function ensureDueCard(supabase: any, userId: string) {
+  const pastDueAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { data: card } = await supabase
     .from("flashcards")
     .select("id")
     .eq("owner_id", userId)
     .eq("front", "birds")
     .maybeSingle();
-  if (!card) return;
-  await supabase
-    .from("srs_state")
-    .update({ due_at: new Date(Date.now() - 60 * 60 * 1000).toISOString() })
-    .eq("flashcard_id", card.id);
+
+  if (card) {
+    await supabase.from("srs_state").update({ due_at: pastDueAt }).eq("flashcard_id", card.id);
+    return;
+  }
+
+  const { data: deck } = await supabase
+    .from("decks")
+    .select("id")
+    .eq("owner_id", userId)
+    .eq("is_default", true)
+    .maybeSingle();
+  if (!deck) return;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("target_language")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const { data: inserted } = await supabase
+    .from("flashcards")
+    .insert({
+      owner_id: userId,
+      deck_id: deck.id,
+      front: "birds",
+      back: "птицы",
+      language: profile?.target_language ?? "en",
+    })
+    .select("id")
+    .single();
+  if (!inserted) return;
+  await supabase.from("srs_state").insert({ flashcard_id: inserted.id, due_at: pastDueAt });
 }
 
 // Тесты в этом наборе логинятся много раз подряд (несколько spec-файлов,
