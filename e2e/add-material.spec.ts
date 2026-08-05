@@ -72,6 +72,8 @@ test("Add Material: Файл tab offers PDF/Фото sub-choice, both honestly l
   await login(page);
   await page.goto("/library/new");
   await page.getByRole("tab", { name: "Файл" }).click();
-  await expect(page.getByRole("button", { name: "PDF" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Фото" })).toBeVisible();
+  // exact:true — the hidden file input's own accessible name ("Выбери
+  // PDF-файл") contains "PDF" as a substring and would otherwise match too.
+  await expect(page.getByRole("button", { name: "PDF", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Фото", exact: true })).toBeVisible();
 });
