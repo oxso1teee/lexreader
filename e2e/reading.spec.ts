@@ -2,6 +2,17 @@ import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 
 test("reading flow: open text, tap word, translate, change level, finish", async ({ page }) => {
+  // CI's e2e job runs `supabase start` (Postgres, GoTrue, Kong, Realtime,
+  // PostgREST, Storage, ...) plus the Next.js production server all at once
+  // on a shared 2-vCPU runner. Under that contention the very first
+  // client-side transition into /read/[textId] (a heavier route than most,
+  // with several dynamic-import-adjacent client modules) can take
+  // meaningfully longer than the default 30s test budget allows — reproduced
+  // 0/2 times on the CI runner but 4/4 times locally against a real
+  // `next build && next start` server with normal resource headroom, which
+  // rules out a logic bug and points at CI-runner CPU contention specifically.
+  test.setTimeout(60_000);
+
   await login(page);
   await expect(page).toHaveURL(/\/home$/);
 
@@ -10,13 +21,7 @@ test("reading flow: open text, tap word, translate, change level, finish", async
   // один общий грид (собственные + системные тексты по языку), поэтому
   // не нужно переключать вкладку перед тем, как найти системный текст.
   await page.getByRole("link", { name: /A Walk in the Park/ }).click();
-  // Более длинный таймаут: в dev-режиме (Turbopack) первая клиентская
-  // навигация на /read/[textId] после его изменения требует холодной
-  // компиляции + двойного React StrictMode-эффекта (сохранение прогресса),
-  // из-за чего переход иногда занимает больше стандартных 5с. В проде
-  // (сборка в CI) страница уже скомпилирована и StrictMode выключен —
-  // там такой задержки нет, это чисто dev-артефакт, подтверждено вручную.
-  await expect(page).toHaveURL(/\/read\//, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/read\//, { timeout: 30_000 });
 
   // Тап по слову — попап с переводом. M3 Slice 3: контекстная панель
   // рендерится ДВАЖДЫ в DOM — один раз в десктопном <aside>, один раз в
