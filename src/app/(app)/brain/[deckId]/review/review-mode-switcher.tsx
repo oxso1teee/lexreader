@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { SrsParams } from "@/lib/srs";
 import ReviewSession, { type ReviewCard } from "./review-session";
 import MultipleChoiceMode from "./multiple-choice-mode";
@@ -15,6 +16,12 @@ const MODES = [
 ] as const;
 
 type Mode = (typeof MODES)[number]["value"];
+
+const MODE_VALUES: readonly string[] = MODES.map((m) => m.value);
+
+function isMode(value: string | null): value is Mode {
+  return value !== null && MODE_VALUES.includes(value);
+}
 
 export default function ReviewModeSwitcher({
   cards: cardsProp,
@@ -34,7 +41,14 @@ export default function ReviewModeSwitcher({
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
   const [cards] = useState(cardsProp);
-  const [mode, setMode] = useState<Mode>("cards");
+  // Practice Home's quick-practice grid links directly to a mode
+  // (/brain/all/review?mode=choice) — read once on mount, same as
+  // studyDirection below; switching modes afterwards stays purely in-state.
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<Mode>(() => {
+    const requested = searchParams.get("mode");
+    return isMode(requested) ? requested : "cards";
+  });
   // Идея из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.5): быстрый
   // переключатель направления прямо на экране повторения, отдельно от
   // постоянной настройки в Study Settings — действует только на эту сессию.

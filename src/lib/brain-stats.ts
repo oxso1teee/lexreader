@@ -1,5 +1,17 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 
+// Practice Home "estimated duration" (Slice 4 §5): deterministic, no AI, no
+// false precision. 20s/card covers read+flip+decide for a plain flashcard —
+// deliberately a round, documented constant rather than a measured average
+// (no per-card timing is tracked anywhere), and the UI always renders the
+// result as a rounded "~N мин", never a false-precision exact figure.
+const AVG_SECONDS_PER_CARD = 20;
+
+export function estimateReviewMinutes(cardCount: number): number {
+  if (cardCount <= 0) return 0;
+  return Math.max(1, Math.round((cardCount * AVG_SECONDS_PER_CARD) / 60));
+}
+
 export interface HardestWord {
   id: string;
   front: string;
