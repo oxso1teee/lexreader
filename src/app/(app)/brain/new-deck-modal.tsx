@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { createDeck, type DeckFormState } from "./actions";
 import { FREE_DECK_LIMIT } from "@/lib/subscription";
+import { track } from "@/lib/posthog-client";
 
 // M3 Slice 4 §12: deckCount/atLimit are computed server-side from the same
 // query hasFreeDeckRoom() itself uses (src/lib/subscription.ts) — the limit
@@ -20,11 +21,25 @@ export default function NewDeckModal({
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState<DeckFormState, FormData>(createDeck, {});
 
+  // M3 Slice 4 §16: редкий race (atLimit=false при открытии, но лимит уже
+  // достигнут ко времени сабмита — например вторая вкладка) — тот же
+  // defense-in-depth путь, что и сам paywall-гейт в actions.ts.
+  useEffect(() => {
+    if (state.paywall) track("deck_create_blocked_by_limit");
+  }, [state.paywall]);
+
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+          // M3 Slice 4 §16: события взаимоисключающие по состоянию на момент
+          // открытия — atLimit уже посчитан на сервере той же функцией,
+          // что и сам гейт (hasFreeDeckRoom), так что "started" всегда
+          // означает реальную попытку, а не форму, которая тут же откажет.
+          track(atLimit ? "deck_create_blocked_by_limit" : "deck_create_started");
+        }}
         className="rounded-full bg-caramel px-4 py-2 text-sm font-medium text-white"
       >
         + Новая колода

@@ -34,7 +34,11 @@ export async function createDeck(
   if (error || !data) return { error: "Не удалось создать колоду. Попробуй ещё раз." };
 
   revalidatePath("/brain");
-  redirect(`/brain/${data.id}`);
+  // M3 Slice 4 §16: createDeck завершается через redirect(), так что клиент
+  // (new-deck-modal.tsx) никогда не видит успешный useActionState — ?created
+  // это единственный надёжный сигнал для deck_create_succeeded на целевой
+  // странице (see [deckId]/deck-analytics.tsx).
+  redirect(`/brain/${data.id}?created=true`);
 }
 
 export async function deleteDeck(deckId: string) {

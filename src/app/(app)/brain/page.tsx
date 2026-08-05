@@ -10,12 +10,13 @@ import {
   estimateReviewMinutes,
 } from "@/lib/brain-stats";
 import { getSrsSettings } from "@/lib/srs-settings";
-import { greetingForHour } from "@/lib/today";
+import { greetingForHour, dueCountBucket } from "@/lib/today";
 import PageHeader from "@/components/product/page-header";
 import PracticeHero from "./practice-hero";
 import DailyProgressCard from "./daily-progress-card";
 import WeakWordsCard from "./weak-words-card";
 import QuickPracticeGrid from "./quick-practice-grid";
+import PracticeAnalytics from "./practice-analytics";
 
 // Перевод слов стартовых колод (lib/starter-decks.ts) считается на лету
 // через MyMemory при нажатии "+ Добавить" — партиями, но всё равно сетевой
@@ -66,6 +67,7 @@ export default async function BrainPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
+      <PracticeAnalytics dueCountBucket={dueCountBucket(dueCount)} />
       <PageHeader
         title={`${greeting}!`}
         description={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}

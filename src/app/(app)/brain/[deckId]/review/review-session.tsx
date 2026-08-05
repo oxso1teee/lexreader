@@ -119,6 +119,10 @@ export default function ReviewSession({
     grade: 0 | 1 | 2 | 3;
   } | null>(null);
   const [isUndoing, setIsUndoing] = useState(false);
+  // Один и тот же localStorage-чтение, что и у cards/revealed выше — цена
+  // незначительна (одна строка), а по этому единственному месту решается,
+  // какое из двух взаимоисключающих событий отправить при монтировании.
+  const wasResumedRef = useRef(!!loadReviewSession(userId, sessionDeckId));
 
   const done = index >= cards.length;
   const card = cards[index];
@@ -137,6 +141,15 @@ export default function ReviewSession({
       setIsEditing(false);
     }
   }, [editPending, editState]);
+
+  // M3 Slice 4 §16: ровно одно из двух взаимоисключающих событий на
+  // монтирование — card_count вместо содержимого карточек.
+  useEffect(() => {
+    track(wasResumedRef.current ? "review_session_resumed" : "review_session_started", {
+      card_count: cardsProp.length,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // P0-АУДИТ 3.12 (испр.): раньше здесь было жёстко "вопрос = back, ответ =
   // front" независимо от направления — с настройкой по умолчанию
@@ -202,6 +215,7 @@ export default function ReviewSession({
   // карточку, которую уже открывал).
   function revealAnswer() {
     setRevealed(true);
+    track("review_answer_revealed");
     saveReviewSession({
       userId,
       deckId: sessionDeckId,
@@ -221,6 +235,7 @@ export default function ReviewSession({
     }
     startTransition(async () => {
       const { reviewLogId } = await reviewWord(card.flashcardId, value);
+      track("review_card_graded", { grade: value });
       gradedIdsRef.current = [...gradedIdsRef.current, card.flashcardId];
       setLastGraded(
         reviewLogId ? { reviewLogId, flashcardId: card.flashcardId, front: card.front, grade: value } : null,
@@ -234,7 +249,7 @@ export default function ReviewSession({
       setIsEditing(false);
       const isLastCard = index + 1 >= cards.length;
       if (isLastCard) {
-        track("review_completed", { count: newTotal });
+        track("review_session_completed", { count: newTotal });
         clearReviewSession();
         if (newTotal > bestSessionCount) {
           setNewRecord(true);
@@ -268,6 +283,7 @@ export default function ReviewSession({
       alert(result.error ?? "Не удалось отменить оценку.");
       return;
     }
+    track("review_undo_used");
     gradedIdsRef.current = gradedIdsRef.current.filter((id) => id !== lastGraded.flashcardId);
     setTally((t) => ({ ...t, [lastGraded.grade]: Math.max(0, t[lastGraded.grade] - 1) }));
     setRevealed(false);

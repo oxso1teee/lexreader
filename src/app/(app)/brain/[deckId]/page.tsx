@@ -6,14 +6,18 @@ import AddCardForm from "./add-card-form";
 import CardRow from "./card-row";
 import DeckTitle from "./deck-title";
 import DeleteDeckButton from "./delete-deck-button";
+import DeckAnalytics from "./deck-analytics";
 import EmptyState from "@/components/empty-state";
 
 export default async function DeckPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ deckId: string }>;
+  searchParams: Promise<{ created?: string }>;
 }) {
   const { deckId } = await params;
+  const { created } = await searchParams;
   const profile = await requireProfile();
   const supabase = await createClient();
 
@@ -33,6 +37,11 @@ export default async function DeckPage({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
+      <DeckAnalytics
+        deckType={deck.is_default ? "default" : deck.is_starter ? "starter" : "custom"}
+        cardCount={cards?.length ?? 0}
+        justCreated={created === "true"}
+      />
       <Link href="/brain/vocabulary" className="text-sm text-caramel">
         ← Словарь и колоды
       </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import type { VocabularyRow, SchedulerBucket } from "@/lib/vocabulary-list";
 import { bulkMoveToDeck, bulkMarkKnown, bulkDeleteFlashcards } from "./actions";
 import NewDeckModal from "../new-deck-modal";
@@ -9,6 +9,7 @@ import DeckList from "../deck-list";
 import StarterDeckCard from "../starter-deck-card";
 import { STARTER_DECKS } from "@/lib/starter-decks";
 import ItemDetailsSheet from "./item-details-sheet";
+import { track } from "@/lib/posthog-client";
 
 type Tab = "words" | "phrases" | "decks";
 type BucketFilter = "all" | SchedulerBucket;
@@ -88,6 +89,21 @@ export default function VocabularyBrowser({
   const [isPending, startTransition] = useTransition();
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
+  // M3 Slice 4 §16: mount only — initial_tab отражает состояние по умолчанию
+  // ("words"), а не то, что выбрал пользователь (это уже покрыто
+  // vocabulary_filter_changed ниже).
+  useEffect(() => {
+    track("vocabulary_viewed", { initial_tab: tab });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // M3 Slice 4 §16: filter_type — enum названия контрола, value — сам
+  // enum-выбор или "all"/"specific" для колоды (никогда id/имя колоды,
+  // текст поиска или названия слов/фраз).
+  function trackFilterChange(filterType: string, value: string) {
+    track("vocabulary_filter_changed", { filter_type: filterType, value });
+  }
+
   const filtered = useMemo(() => {
     const base = rows.filter((r) => (tab === "words" ? !r.isPhrase : r.isPhrase));
     const byBucket = bucketFilter === "all" ? base : base.filter((r) => r.schedulerBucket === bucketFilter);
@@ -138,7 +154,10 @@ export default function VocabularyBrowser({
     startTransition(async () => {
       const result = await bulkMarkKnown(ids);
       setActionMessage(result.ok ? `Отмечено как «знаю»: ${result.count}` : (result.error ?? "Ошибка"));
-      if (result.ok) clearSelection();
+      if (result.ok) {
+        track("vocabulary_bulk_action_used", { action: "mark_known" });
+        clearSelection();
+      }
     });
   }
 
@@ -148,7 +167,10 @@ export default function VocabularyBrowser({
     startTransition(async () => {
       const result = await bulkMoveToDeck(ids, moveTargetDeck);
       setActionMessage(result.ok ? `Перемещено: ${result.count}` : (result.error ?? "Ошибка"));
-      if (result.ok) clearSelection();
+      if (result.ok) {
+        track("vocabulary_bulk_action_used", { action: "move" });
+        clearSelection();
+      }
     });
   }
 
@@ -158,11 +180,15 @@ export default function VocabularyBrowser({
     startTransition(async () => {
       const result = await bulkDeleteFlashcards(ids);
       setActionMessage(result.ok ? `Удалено: ${result.count}` : (result.error ?? "Ошибка"));
-      if (result.ok) clearSelection();
+      if (result.ok) {
+        track("vocabulary_bulk_action_used", { action: "delete" });
+        clearSelection();
+      }
     });
   }
 
   function handleExportSelected() {
+    track("vocabulary_bulk_action_used", { action: "export" });
     const csv = toCsv(selectedRows.length > 0 ? selectedRows : filtered);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -183,6 +209,7 @@ export default function VocabularyBrowser({
             onClick={() => {
               setTab(t);
               clearSelection();
+              trackFilterChange("tab", t);
             }}
             className={`-mb-px flex min-h-11 items-center gap-1 border-b-2 px-2 text-sm font-medium transition-colors ${
               tab === t
@@ -231,7 +258,10 @@ export default function VocabularyBrowser({
               <button
                 key={b}
                 type="button"
-                onClick={() => setBucketFilter(b)}
+                onClick={() => {
+                  setBucketFilter(b);
+                  trackFilterChange("bucket", b);
+                }}
                 className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
                   bucketFilter === b
                     ? "border-caramel bg-caramel/15 text-caramel"
@@ -246,7 +276,15 @@ export default function VocabularyBrowser({
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <select
               value={deckFilter}
-              onChange={(e) => setDeckFilter(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setDeckFilter(value);
+                // M3 Slice 4 §17: "specific" вместо реального deck id — id
+                // достаточно, чтобы соотнести событие с конкретной колодой,
+                // а бриф прямо запрещает любую deck-идентифицирующую
+                // информацию в payload.
+                trackFilterChange("deck", value === "all" ? "all" : "specific");
+              }}
               className="rounded-lg border border-black/15 bg-card px-2 py-1.5 text-sm dark:border-white/20"
             >
               <option value="all">Все колоды</option>
@@ -258,7 +296,11 @@ export default function VocabularyBrowser({
             </select>
             <select
               value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
+              onChange={(e) => {
+                const value = e.target.value as SortKey;
+                setSort(value);
+                trackFilterChange("sort", value);
+              }}
               className="rounded-lg border border-black/15 bg-card px-2 py-1.5 text-sm dark:border-white/20"
             >
               {(Object.keys(SORT_LABELS) as SortKey[]).map((s) => (
@@ -268,7 +310,15 @@ export default function VocabularyBrowser({
               ))}
             </select>
             <label className="flex items-center gap-1.5 text-xs text-black/60 dark:text-white/60">
-              <input type="checkbox" checked={sourceOnly} onChange={(e) => setSourceOnly(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={sourceOnly}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSourceOnly(checked);
+                  trackFilterChange("source_only", String(checked));
+                }}
+              />
               Только из чтения
             </label>
           </div>
