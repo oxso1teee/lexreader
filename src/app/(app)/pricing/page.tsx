@@ -19,6 +19,11 @@ function formatDate(iso: string): string {
 const REASONS: Record<string, string> = {
   texts: "Ты держишь максимум текстов на бесплатном тарифе.",
   words: "Ты сохранил максимум слов на сегодня по бесплатному тарифу.",
+  // M3 Slice 4 §12: decks/cards уже отправлялись сюда из Мозга
+  // (new-deck-modal.tsx, add-card-form.tsx) — просто не было текста для них,
+  // так что переход с paywall на pricing ничего не объяснял.
+  decks: "Ты создал максимум колод на бесплатном тарифе.",
+  cards: "Ты сохранил максимум карточек на бесплатном тарифе.",
 };
 
 const FEATURES = [

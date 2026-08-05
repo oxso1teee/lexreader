@@ -15,6 +15,7 @@ import {
   estimateReviewMinutes,
 } from "@/lib/brain-stats";
 import { getSrsSettings } from "@/lib/srs-settings";
+import { getPlan, FREE_DECK_LIMIT } from "@/lib/subscription";
 import { greetingForHour } from "@/lib/today";
 import PageHeader from "@/components/product/page-header";
 import PracticeHero from "./practice-hero";
@@ -45,6 +46,8 @@ export default async function BrainPage() {
     weakWords,
     srsSettings,
     { count: readingWordCount },
+    plan,
+    { count: nonStarterDeckCount },
   ] = await Promise.all([
     supabase
       .from("decks")
@@ -71,6 +74,16 @@ export default async function BrainPage() {
       .select("id", { count: "exact", head: true })
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language),
+    getPlan(supabase, profile.id),
+    // M3 Slice 4 §12: тот же счётчик, что и hasFreeDeckRoom (src/lib/
+    // subscription.ts) — БЕЗ фильтра по языку (лимит колод общий на все
+    // изучаемые языки), иначе превью лимита разошлось бы с реальной
+    // серверной проверкой в createDeck.
+    supabase
+      .from("decks")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("is_starter", false),
   ]);
 
   const countByDeck = new Map<string, number>();
@@ -137,7 +150,10 @@ export default async function BrainPage() {
       ) : null}
 
       <div className="flex gap-2">
-        <NewDeckModal />
+        <NewDeckModal
+          deckCount={nonStarterDeckCount ?? 0}
+          atLimit={plan === "free" && (nonStarterDeckCount ?? 0) >= FREE_DECK_LIMIT}
+        />
         <ImportModal decks={deckOptions} targetLanguage={profile.target_language} />
         <Link
           href="/brain/settings"
