@@ -8,12 +8,20 @@ export default function DeckCard({
   id,
   name,
   isDefault,
+  isStarter,
   cardCount,
+  dueCount,
+  newCount,
+  knownCount,
 }: {
   id: string;
   name: string;
   isDefault: boolean;
+  isStarter: boolean;
   cardCount: number;
+  dueCount?: number;
+  newCount?: number;
+  knownCount?: number;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -27,6 +35,11 @@ export default function DeckCard({
     }
     startTransition(() => deleteDeck(id));
   }
+
+  // M3 Slice 4 §11: is_starter теперь тоже защищена от удаления, как и
+  // is_default (см. actions.ts) — раньше deck-card.tsx получал только
+  // isDefault, и стартовую колоду можно было удалить прямо из UI.
+  const canDelete = !isDefault && !isStarter;
 
   return (
     <div className="flex items-center gap-2">
@@ -42,8 +55,21 @@ export default function DeckCard({
                 Главная
               </span>
             )}
+            {isStarter && (
+              <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
+                Стартовая
+              </span>
+            )}
           </div>
-          <p className="mt-0.5 text-sm text-black/50 dark:text-white/50">📚 {cardCount} карт.</p>
+          <p className="mt-0.5 text-sm text-black/50 dark:text-white/50">
+            📚 {cardCount} карт.
+            {dueCount !== undefined && newCount !== undefined && knownCount !== undefined && (
+              <span>
+                {" "}
+                · {dueCount} к повторению · {newCount} новых · {knownCount} выучено
+              </span>
+            )}
+          </p>
         </div>
         <span className="text-black/30 dark:text-white/30">›</span>
       </Link>
@@ -51,8 +77,9 @@ export default function DeckCard({
           addPhraseToDefaultDeck (сохранение слова из читалки в карточку) —
           он ищет колоду с is_default=true, а после удаления её не остаётся
           и UI не даёт назначить другую колоду главной. Просто не даём
-          удалить эту конкретную колоду. */}
-      {!isDefault && (
+          удалить эту конкретную колоду (и стартовые — общий бесплатный
+          ресурс, см. actions.ts). */}
+      {canDelete && (
         <button
           type="button"
           disabled={isPending}

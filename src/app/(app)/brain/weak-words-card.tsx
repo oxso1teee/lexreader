@@ -10,7 +10,7 @@ export default function WeakWordsCard({ words }: { words: HardestWord[] }) {
     <div className="rounded-2xl bg-card p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">Слабые слова</h2>
-        <Link href="/notebook" className="text-sm text-caramel">
+        <Link href="/brain/vocabulary" className="text-sm text-caramel">
           Все →
         </Link>
       </div>

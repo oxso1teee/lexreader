@@ -45,18 +45,45 @@ export async function deleteDeck(deckId: string) {
   // карточку" перестаёт работать насовсем (в UI нет способа назначить
   // другую колоду главной). Проверка в UI (deck-card.tsx) уже не даёт
   // нажать кнопку, но дублируем на сервере на случай прямого вызова.
+  //
+  // M3 Slice 4 §11: найдено при аудите — is_starter=true колоды не были
+  // защищены вообще, ни здесь, ни в UI (deck-card.tsx получал только
+  // isDefault, не isStarter). Стартовые колоды — общий бесплатный ресурс
+  // (не расходуют лимит тарифа, hasFreeDeckRoom их не считает), удалять их
+  // так же нежелательно, как и главную.
   const { data: deck } = await supabase
     .from("decks")
-    .select("is_default")
+    .select("is_default, is_starter")
     .eq("id", deckId)
     .maybeSingle();
   if (deck?.is_default) {
     throw new Error("Нельзя удалить главную колоду.");
   }
+  if (deck?.is_starter) {
+    throw new Error("Нельзя удалить стартовую колоду.");
+  }
 
   const { error } = await supabase.from("decks").delete().eq("id", deckId);
   if (error) throw new Error("Не удалось удалить колоду.");
   revalidatePath("/brain");
+  revalidatePath("/brain/vocabulary");
+}
+
+// M3 Slice 4 §11: name уже была mutable-колонкой без schema — просто не было
+// server action, который бы её менял. description остаётся отложенным
+// (колонки нет ни в одной миграции), rename её не блокирует.
+export async function renameDeck(deckId: string, name: string): Promise<{ ok: boolean; error?: string }> {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "Название не может быть пустым." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("decks").update({ name: trimmed }).eq("id", deckId);
+  if (error) return { ok: false, error: "Не удалось переименовать колоду." };
+
+  revalidatePath("/brain");
+  revalidatePath("/brain/vocabulary");
+  revalidatePath(`/brain/${deckId}`);
+  return { ok: true };
 }
 
 interface ImportCard {
