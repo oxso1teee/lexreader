@@ -53,7 +53,7 @@ export default function ReaderWordPanel({
               type="button"
               onClick={() => onSpeak(popup.text)}
               aria-label="Прослушать произношение"
-              className="focus-ring text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
+              className="focus-ring flex min-h-11 min-w-11 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
             >
               🔊
             </button>
@@ -97,7 +97,7 @@ export default function ReaderWordPanel({
                   type="button"
                   onClick={onManualTranslationSubmit}
                   disabled={!manualTranslation.trim()}
-                  className="focus-ring shrink-0 text-sm font-semibold text-[var(--color-forest-text)] disabled:opacity-40"
+                  className="focus-ring flex min-h-11 shrink-0 items-center text-sm font-semibold text-[var(--color-forest-text)] disabled:opacity-40"
                 >
                   + Добавить перевод
                 </button>
@@ -125,7 +125,7 @@ export default function ReaderWordPanel({
           type="button"
           onClick={onClose}
           aria-label="Закрыть"
-          className="focus-ring shrink-0 text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
+          className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
         >
           ✕
         </button>

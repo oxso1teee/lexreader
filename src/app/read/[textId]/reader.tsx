@@ -473,7 +473,7 @@ export default function Reader({
                 type="button"
                 onClick={() => setSettingsOpen(true)}
                 aria-label="Настройки чтения"
-                className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-[var(--color-forest-text)] shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
+                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/70 text-[var(--color-forest-text)] shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
               >
                 <span aria-hidden="true" className="text-base font-bold">
                   Aa
@@ -484,7 +484,7 @@ export default function Reader({
                 onClick={handleFinish}
                 disabled={finishing}
                 aria-label="Завершить чтение"
-                className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/70 text-black/50 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-500 disabled:opacity-50 dark:border-white/15 dark:bg-white/10 dark:text-white/60"
+                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/70 text-black/50 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-500 disabled:opacity-50 dark:border-white/15 dark:bg-white/10 dark:text-white/60"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
                   <path strokeLinecap="round" d="m7 7 10 10M17 7 7 17" />
@@ -509,7 +509,7 @@ export default function Reader({
                   role="tab"
                   aria-selected={mode === value}
                   onClick={() => changeMode(value)}
-                  className={`focus-ring min-h-9 rounded-full border px-3.5 text-xs font-bold whitespace-nowrap ${
+                  className={`focus-ring min-h-11 rounded-full border px-3.5 text-xs font-bold whitespace-nowrap ${
                     mode === value
                       ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
                       : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)]"
@@ -524,7 +524,7 @@ export default function Reader({
             <button
               type="button"
               onClick={() => changeMode("assisted")}
-              className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-3.5 py-1.5 text-xs font-bold text-[var(--text-secondary)]"
+              className="focus-ring flex min-h-11 items-center self-start rounded-full border border-[var(--border-strong)] px-3.5 text-xs font-bold text-[var(--text-secondary)]"
             >
               ✕ Выйти из Focus
             </button>
