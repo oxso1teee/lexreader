@@ -1,5 +1,24 @@
 -- Стартовые тексты библиотеки приложения (owner_id = null, раздел 4.2 ТЗ)
 
+-- M3 Slice 3: a system-seeded YouTube material — e2e/library.spec.ts's
+-- video-filter and thumbnail tests need a real youtube_video_id row that
+-- survives `supabase db reset` (previously this only existed as an ad-hoc
+-- manually-imported row in a developer's local test account, which broke
+-- the moment the local DB was reset — not actually reproducible from a
+-- clean database, contrary to this file's own "real seeded materials"
+-- claim). jNQXAC9IVRw is the real "Me at the zoo" video id.
+insert into texts (owner_id, title, body, source_type, language, level_tag, word_count, youtube_video_id) values
+(
+  null,
+  'Me at the zoo (test)',
+  'All right, so here we are in front of the elephants. The cool thing about these guys is that they have really, really, really long trunks. And that''s cool. And that''s pretty much all there is to say.',
+  'system',
+  'en',
+  'a1',
+  36,
+  'jNQXAC9IVRw'
+);
+
 insert into texts (owner_id, title, body, source_type, language, level_tag, word_count) values
 (
   null,

@@ -14,6 +14,7 @@ export interface Profile {
   preferred_notify_hour: number | null;
   xp: number;
   created_at: string;
+  reader_settings: Record<string, unknown>;
 }
 
 export type TextSourceType = "manual" | "article_url" | "youtube" | "system";

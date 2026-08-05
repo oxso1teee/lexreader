@@ -1,37 +1,34 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import {
+  DEFAULT_READER_PREFS,
+  MIN_FONT_SIZE,
+  MAX_FONT_SIZE,
+  MIN_LINE_HEIGHT,
+  MAX_LINE_HEIGHT,
+  parseReaderPrefs,
+  type ReaderPrefs,
+  type ReadingTheme,
+} from "./reader-prefs";
 
-export type ReadingTheme = "paper" | "sepia" | "dark";
-
-export interface ReaderPrefs {
-  fontSize: number;
-  lineHeight: number;
-  theme: ReadingTheme;
-}
-
-export const DEFAULT_READER_PREFS: ReaderPrefs = { fontSize: 18, lineHeight: 1.9, theme: "paper" };
+export type { ReadingTheme, ReadingWidth, ReaderPrefs } from "./reader-prefs";
+export { DEFAULT_READER_PREFS, READING_WIDTH_PX } from "./reader-prefs";
 
 const STORAGE_KEY = "lexreader_reader_prefs";
-const MIN_FONT_SIZE = 15;
-const MAX_FONT_SIZE = 24;
-const MIN_LINE_HEIGHT = 1.5;
-const MAX_LINE_HEIGHT = 2.2;
 
-// Раздел 5 промта 2026-07-30 (запуск): читалка была одним фиксированным
-// размером/фоном для всех — настройки хранятся только в localStorage,
-// не в базе (это предпочтение конкретного устройства, не аккаунта).
+// Раздел 5 промта 2026-07-30 (запуск): читалка изначально была одним
+// фиксированным размером/фоном для всех — настройки хранились только в
+// localStorage. M3 Slice 3 §8: profiles.reader_settings добавляет
+// account-sync поверх этого же localStorage-кэша (see adoptServerReaderPrefs
+// in reader.tsx) — localStorage остаётся мгновенным/офлайн-источником,
+// сервер — источником для синхронизации между устройствами.
 export function loadReaderPrefs(): ReaderPrefs {
   if (typeof window === "undefined") return DEFAULT_READER_PREFS;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_READER_PREFS;
-    const parsed = JSON.parse(raw);
-    return {
-      fontSize: typeof parsed.fontSize === "number" ? parsed.fontSize : DEFAULT_READER_PREFS.fontSize,
-      lineHeight: typeof parsed.lineHeight === "number" ? parsed.lineHeight : DEFAULT_READER_PREFS.lineHeight,
-      theme: ["paper", "sepia", "dark"].includes(parsed.theme) ? parsed.theme : DEFAULT_READER_PREFS.theme,
-    };
+    return parseReaderPrefs(JSON.parse(raw));
   } catch {
     return DEFAULT_READER_PREFS;
   }
@@ -80,6 +77,17 @@ export function useReaderPrefs(): [ReaderPrefs, (next: ReaderPrefs) => void] {
   return [prefs, setPrefs];
 }
 
+// Called once on Reader mount when the server (profiles.reader_settings)
+// has a real saved value — adopts it as this device's current prefs so a
+// setting changed on another device shows up here too. A no-op call (same
+// value already active) still notifies listeners harmlessly.
+export function adoptServerReaderPrefs(prefs: ReaderPrefs): void {
+  currentPrefs = prefs;
+  initialized = true;
+  saveReaderPrefs(prefs);
+  listeners.forEach((l) => l());
+}
+
 const THEME_SWATCHES: { value: ReadingTheme; label: string; bg: string; fg: string }[] = [
   { value: "paper", label: "Бумага", bg: "#f7f4ee", fg: "#1a1a1a" },
   { value: "sepia", label: "Сепия", bg: "#f2e6cf", fg: "#5c4326" },
@@ -98,24 +106,24 @@ export default function ReaderSettings({
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
       <div
-        className="w-full max-w-sm rounded-t-2xl bg-card p-5 sm:rounded-2xl"
+        className="w-full max-w-sm rounded-t-2xl bg-[var(--surface)] p-5 sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-bold">Настройки чтения</h2>
-          <button type="button" onClick={onClose} aria-label="Закрыть" className="text-black/40 dark:text-white/40">
+          <h2 className="text-h3">Настройки чтения</h2>
+          <button type="button" onClick={onClose} aria-label="Закрыть" className="focus-ring text-[var(--text-secondary)]">
             ✕
           </button>
         </div>
 
         <div className="flex items-center justify-between py-2">
-          <span className="text-sm font-medium">Размер текста</span>
+          <span className="text-sm font-semibold">Размер текста</span>
           <div className="flex items-center gap-3">
             <button
               type="button"
               aria-label="Уменьшить текст"
               onClick={() => onChange({ ...prefs, fontSize: Math.max(MIN_FONT_SIZE, prefs.fontSize - 1) })}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 font-bold dark:bg-white/10"
+              className="focus-ring flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-muted)] font-bold"
             >
               A−
             </button>
@@ -124,7 +132,7 @@ export default function ReaderSettings({
               type="button"
               aria-label="Увеличить текст"
               onClick={() => onChange({ ...prefs, fontSize: Math.min(MAX_FONT_SIZE, prefs.fontSize + 1) })}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 font-bold dark:bg-white/10"
+              className="focus-ring flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-muted)] font-bold"
             >
               A+
             </button>
@@ -132,7 +140,7 @@ export default function ReaderSettings({
         </div>
 
         <div className="flex items-center justify-between py-2">
-          <span className="text-sm font-medium">Межстрочный интервал</span>
+          <span className="text-sm font-semibold">Межстрочный интервал</span>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -140,7 +148,7 @@ export default function ReaderSettings({
               onClick={() =>
                 onChange({ ...prefs, lineHeight: Math.max(MIN_LINE_HEIGHT, Math.round((prefs.lineHeight - 0.1) * 10) / 10) })
               }
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 font-bold dark:bg-white/10"
+              className="focus-ring flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-muted)] font-bold"
             >
               −
             </button>
@@ -151,24 +159,47 @@ export default function ReaderSettings({
               onClick={() =>
                 onChange({ ...prefs, lineHeight: Math.min(MAX_LINE_HEIGHT, Math.round((prefs.lineHeight + 0.1) * 10) / 10) })
               }
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 font-bold dark:bg-white/10"
+              className="focus-ring flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-muted)] font-bold"
             >
               +
             </button>
           </div>
         </div>
 
+        <div className="flex items-center justify-between py-2">
+          <span className="text-sm font-semibold">Ширина текста</span>
+          <div className="flex gap-2" role="group" aria-label="Ширина текста">
+            <button
+              type="button"
+              aria-pressed={prefs.width === "narrow"}
+              onClick={() => onChange({ ...prefs, width: "narrow" })}
+              className={`focus-ring rounded-full border px-3 py-1.5 text-xs font-semibold ${prefs.width === "narrow" ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white" : "border-[var(--border-strong)]"}`}
+            >
+              Узкая
+            </button>
+            <button
+              type="button"
+              aria-pressed={prefs.width === "wide"}
+              onClick={() => onChange({ ...prefs, width: "wide" })}
+              className={`focus-ring rounded-full border px-3 py-1.5 text-xs font-semibold ${prefs.width === "wide" ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white" : "border-[var(--border-strong)]"}`}
+            >
+              Широкая
+            </button>
+          </div>
+        </div>
+
         <div className="py-2">
-          <p className="mb-2 text-sm font-medium">Фон</p>
+          <p className="mb-2 text-sm font-semibold">Фон</p>
           <div className="flex gap-2">
             {THEME_SWATCHES.map((s) => (
               <button
                 key={s.value}
                 type="button"
+                aria-pressed={prefs.theme === s.value}
                 onClick={() => onChange({ ...prefs, theme: s.value })}
                 style={{ background: s.bg, color: s.fg }}
-                className={`flex h-11 flex-1 items-center justify-center rounded-lg text-xs font-semibold ${
-                  prefs.theme === s.value ? "ring-2 ring-caramel ring-offset-2 ring-offset-card" : ""
+                className={`focus-ring flex h-11 flex-1 items-center justify-center rounded-lg text-xs font-semibold ${
+                  prefs.theme === s.value ? "ring-2 ring-[var(--color-forest)] ring-offset-2 ring-offset-[var(--surface)]" : ""
                 }`}
               >
                 {s.label}
@@ -176,6 +207,14 @@ export default function ReaderSettings({
             ))}
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => onChange(DEFAULT_READER_PREFS)}
+          className="focus-ring mt-3 min-h-11 w-full rounded-lg border border-[var(--border-strong)] text-sm font-semibold text-[var(--text-secondary)]"
+        >
+          Сбросить настройки
+        </button>
       </div>
     </div>
   );

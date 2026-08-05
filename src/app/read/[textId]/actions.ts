@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { touchStreak } from "@/lib/streak";
 import { statusFromLevel } from "@/lib/word-level";
-import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
+import { saveVocabularyItem, escapeIlike, type UpsertWordResult } from "@/lib/vocabulary";
 import { hasFreeFlashcardRoom, hasFreeDeckRoom } from "@/lib/subscription";
 import { addXp } from "@/lib/xp-actions";
+import type { ReaderPrefs } from "./reader-prefs";
 
 export async function upsertWord(input: {
   textId: string;
@@ -61,7 +62,13 @@ export interface AddPhraseResult {
   error?: string;
 }
 
-export async function addPhraseToDefaultDeck(front: string, back: string): Promise<AddPhraseResult> {
+export async function addPhraseToDefaultDeck(input: {
+  textId: string;
+  front: string;
+  back: string;
+  contextSentence: string | null;
+  contextTranslation: string | null;
+}): Promise<AddPhraseResult> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -74,6 +81,20 @@ export async function addPhraseToDefaultDeck(front: string, back: string): Promi
     .eq("id", user.id)
     .single();
   if (!profile) return { ok: false, error: "Профиль не найден." };
+
+  // M3 Slice 3: раньше повторный выбор той же фразы создавал новую карточку
+  // каждый раз — здесь дедуп по тому же принципу, что и у слов в
+  // saveVocabularyItem() (owner_id + language + front без учёта регистра).
+  const { data: existingCard } = await supabase
+    .from("flashcards")
+    .select("id")
+    .eq("owner_id", user.id)
+    .eq("language", profile.target_language)
+    .ilike("front", escapeIlike(input.front))
+    .maybeSingle();
+  if (existingCard) {
+    return { ok: true };
+  }
 
   if (!(await hasFreeFlashcardRoom(supabase, user.id))) {
     return { ok: false, paywall: true };
@@ -113,7 +134,16 @@ export async function addPhraseToDefaultDeck(front: string, back: string): Promi
 
   const { data: card, error } = await supabase
     .from("flashcards")
-    .insert({ deck_id: deck.id, owner_id: user.id, front, back, language: profile.target_language })
+    .insert({
+      deck_id: deck.id,
+      owner_id: user.id,
+      front: input.front,
+      back: input.back,
+      language: profile.target_language,
+      context_sentence: input.contextSentence,
+      context_translation: input.contextTranslation,
+      source_text_id: input.textId,
+    })
     .select("id")
     .single();
   if (error || !card) return { ok: false, error: "Не удалось добавить карточку. Попробуй ещё раз." };
@@ -158,6 +188,20 @@ export async function finishReading(input: {
   await touchStreak(supabase, user.id);
   await addXp(supabase, user.id, 10);
   revalidatePath("/progress");
+}
+
+// M3 Slice 3 §8: profiles.reader_settings — account-synced on top of the
+// localStorage cache (see adoptServerReaderPrefs in reader-settings.tsx).
+// Fire-and-forget from the client: a failed sync just means the next
+// device sees stale prefs, never blocks reading or loses local settings.
+export async function updateReaderSettings(prefs: ReaderPrefs) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase.from("profiles").update({ reader_settings: prefs }).eq("id", user.id);
 }
 
 export async function updateTextProgress(input: {

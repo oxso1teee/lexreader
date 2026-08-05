@@ -17,11 +17,12 @@ export default function CollectionPicker({ collections }: { collections: Collect
   const [newTitle, setNewTitle] = useState("");
 
   return (
-    <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-black/60 dark:text-white/60">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor="collection-picker-select" className="text-sm font-semibold">
         Коллекция (необязательно)
       </label>
       <select
+        id="collection-picker-select"
         value={mode === "new" ? "__new__" : mode === "none" ? "__none__" : selectedId}
         onChange={(e) => {
           const v = e.target.value;
@@ -32,7 +33,7 @@ export default function CollectionPicker({ collections }: { collections: Collect
             setSelectedId(v);
           }
         }}
-        className="rounded-lg border border-black/15 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent"
+        className="focus-ring rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-sm"
       >
         <option value="__none__">Без коллекции</option>
         {collections.map((c) => (
@@ -43,13 +44,19 @@ export default function CollectionPicker({ collections }: { collections: Collect
         <option value="__new__">+ Новая коллекция…</option>
       </select>
       {mode === "new" && (
-        <input
-          type="text"
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          placeholder="Название коллекции (например, «Идиот»)"
-          className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
-        />
+        <>
+          <label htmlFor="collection-picker-new-title" className="sr-only">
+            Название новой коллекции
+          </label>
+          <input
+            id="collection-picker-new-title"
+            type="text"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="Название коллекции (например, «Идиот»)"
+            className="focus-ring rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-sm outline-none"
+          />
+        </>
       )}
       <input type="hidden" name="collection_id" value={mode === "existing" ? selectedId : ""} />
       <input type="hidden" name="new_collection_title" value={mode === "new" ? newTitle : ""} />

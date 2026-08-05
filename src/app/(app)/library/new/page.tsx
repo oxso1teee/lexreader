@@ -23,11 +23,11 @@ export default async function NewTextPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
       <div className="flex items-center gap-3 px-5 pt-6">
-        <Link href="/library" className="text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white">
+        <Link href="/library" className="focus-ring text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]">
           ← Библиотека
         </Link>
       </div>
-      <h1 className="px-5 pt-2 text-xl font-semibold">Добавить текст</h1>
+      <h1 className="text-h1 px-5 pt-2">Добавить материал</h1>
       <AddTextTabs
         targetLanguage={profile.target_language}
         canAddText={canAddText}

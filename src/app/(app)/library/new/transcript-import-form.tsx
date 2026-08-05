@@ -5,8 +5,12 @@ import { useAddMaterialAction } from "./use-add-material-action";
 import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
-export default function NewTextForm({ collections }: { collections: CollectionOption[] }) {
-  const [state, formAction, pending] = useAddMaterialAction("text", createText, {});
+// M3 Slice 3: механически это тот же путь, что и обычный текст (createText,
+// без нового server action) — отдельная вкладка существует только как более
+// понятная точка входа для конкретного сценария («у меня уже есть транскрипт
+// откуда-то ещё»), см. docs/ui/m3-slice3-library-reader-plan.md §5.
+export default function TranscriptImportForm({ collections }: { collections: CollectionOption[] }) {
+  const [state, formAction, pending] = useAddMaterialAction("transcript", createText, {});
 
   if (state.paywall) {
     return <PaywallNotice />;
@@ -15,31 +19,33 @@ export default function NewTextForm({ collections }: { collections: CollectionOp
   return (
     <form action={formAction} className="flex flex-1 flex-col gap-4 px-5 py-6">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="new-text-title" className="text-sm font-semibold">
+        <label htmlFor="transcript-title" className="text-sm font-semibold">
           Название
         </label>
         <input
-          id="new-text-title"
+          id="transcript-title"
           type="text"
           name="title"
           required
-          placeholder="Например: Утро в кофейне"
+          placeholder="Например: подкаст об истории Лондона"
           className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
         />
       </div>
       <div className="flex flex-1 flex-col gap-1.5">
-        <label htmlFor="new-text-body" className="text-sm font-semibold">
-          Текст
+        <label htmlFor="transcript-body" className="text-sm font-semibold">
+          Транскрипт
         </label>
         <textarea
-          id="new-text-body"
+          id="transcript-body"
           name="body"
           required
           rows={16}
-          placeholder="Вставь текст на изучаемом языке…"
+          placeholder="Скопируй транскрипт из любого источника и вставь сюда…"
           className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7 outline-none"
         />
-        <p className="text-xs text-[var(--text-secondary)]">Минимум пара предложений, максимум 200 000 символов.</p>
+        <p className="text-xs text-[var(--text-secondary)]">
+          Сохраняется как обычный текст, без синхронизации с аудио/видео.
+        </p>
       </div>
       <CollectionPicker collections={collections} />
       {state.error && (

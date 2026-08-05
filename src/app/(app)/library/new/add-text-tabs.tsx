@@ -4,16 +4,19 @@ import { useState } from "react";
 import NewTextForm from "./new-text-form";
 import UrlImportForm from "./url-import-form";
 import YoutubeImportForm from "./youtube-import-form";
-import PhotoImportForm from "./photo-import-form";
-import PdfImportForm from "./pdf-import-form";
+import FileImportTabs from "./file-import-tabs";
+import TranscriptImportForm from "./transcript-import-form";
 import type { CollectionOption } from "./collection-picker";
 
+// M3 Slice 3 approved artifact: 5 entry points. "Файл" groups PDF+photo
+// under one tab (see file-import-tabs.tsx); "Транскрипт" reuses the same
+// createText action as "Текст" — see transcript-import-form.tsx.
 const MODES = [
   { value: "text", label: "Текст" },
-  { value: "url", label: "Ссылка" },
+  { value: "file", label: "Файл" },
   { value: "youtube", label: "YouTube" },
-  { value: "photo", label: "Фото" },
-  { value: "pdf", label: "PDF" },
+  { value: "url", label: "Сайт" },
+  { value: "transcript", label: "Транскрипт" },
 ] as const;
 
 type Mode = (typeof MODES)[number]["value"];
@@ -31,16 +34,18 @@ export default function AddTextTabs({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex gap-2 border-b border-black/10 px-5 pt-2 dark:border-white/10">
+      <div className="flex gap-1 overflow-x-auto border-b border-[var(--border)] px-5 pt-2" role="tablist" aria-label="Способ добавления">
         {MODES.map((m) => (
           <button
             key={m.value}
             type="button"
+            role="tab"
+            aria-selected={mode === m.value}
             onClick={() => setMode(m.value)}
-            className={`-mb-px flex min-h-11 items-center border-b-2 px-2 text-sm font-medium transition-colors ${
+            className={`focus-ring -mb-px flex min-h-11 items-center whitespace-nowrap border-b-2 px-2.5 text-sm font-bold transition-colors ${
               mode === m.value
-                ? "border-black text-black dark:border-white dark:text-white"
-                : "border-transparent text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"
+                ? "border-[var(--color-forest)] text-[var(--color-forest-text)]"
+                : "border-transparent text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
             }`}
           >
             {m.label}
@@ -53,20 +58,10 @@ export default function AddTextTabs({
       {mode === "youtube" && (
         <YoutubeImportForm targetLanguage={targetLanguage} collections={collections} />
       )}
-      {mode === "photo" && (
-        <PhotoImportForm
-          targetLanguage={targetLanguage}
-          canAddText={canAddText}
-          collections={collections}
-        />
+      {mode === "file" && (
+        <FileImportTabs targetLanguage={targetLanguage} canAddText={canAddText} collections={collections} />
       )}
-      {mode === "pdf" && (
-        <PdfImportForm
-          targetLanguage={targetLanguage}
-          canAddText={canAddText}
-          collections={collections}
-        />
-      )}
+      {mode === "transcript" && <TranscriptImportForm collections={collections} />}
     </div>
   );
 }

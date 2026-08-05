@@ -57,6 +57,23 @@
      never confused with a "you did something" accent state. */
   --focus-ring: var(--color-accent-blue);
 
+  /* M3 Slice 3: dark-forest-green primary accent, additive — used only by
+     Library/Add Material/Reader. Does NOT repoint --color-primary above,
+     so Today/Progress/Settings keep their existing caramel buttons
+     unchanged in this slice (a full palette migration would be its own
+     separate, separately-approved slice).
+     #1f4d3b gives ~9.6:1 with white text and ~8.6:1 as text-on-cream —
+     unlike caramel, the same raw value clears AA/AAA in both roles, so
+     no separate "-text" variant is needed for LIGHT mode. Dark mode still
+     needs one: the raw value only reaches ~4:1 as text against the dark
+     surface, so --color-forest-text gets a brighter override there,
+     mirroring the --color-caramel-text/--color-success-text pattern. */
+  --color-forest: #1f4d3b;
+  --color-forest-deep: #163a2c;
+  --color-forest-text: #1f4d3b;
+  --color-forest-tint: #e4ede7;
+  --color-forest-tint-strong: #cfe0d6;
+
   /* Container widths for the new App Shell (existing pages keep their
      own inner max-w-2xl untouched). */
   --container-sidebar: 240px;
@@ -74,6 +91,15 @@
     --color-caramel-text: #c79562;
     --color-success-text: #4ade80;
     --color-warning-text: #fdba74;
+    /* Button background stays the same deep green (still ~9.6:1 with white
+       text regardless of theme); hover gets lighter (not darker) so it
+       remains visible against the dark page; -text gets a brighter
+       emerald so it clears AA against the dark surface, distinct in hue
+       from --color-success-text's more chartreuse green. */
+    --color-forest-deep: #2c6b4f;
+    --color-forest-text: #34d399;
+    --color-forest-tint: #16281f;
+    --color-forest-tint-strong: #1c3427;
   }
 }
 
@@ -94,6 +120,11 @@
   --color-caramel-text: var(--color-caramel-text);
   --color-success-text: var(--color-success-text);
   --color-warning-text: var(--color-warning-text);
+  --color-forest: var(--color-forest);
+  --color-forest-deep: var(--color-forest-deep);
+  --color-forest-text: var(--color-forest-text);
+  --color-forest-tint: var(--color-forest-tint);
+  --color-forest-tint-strong: var(--color-forest-tint-strong);
 }
 
 /* Typography scale — semantic roles instead of ad hoc text-xl/font-bold

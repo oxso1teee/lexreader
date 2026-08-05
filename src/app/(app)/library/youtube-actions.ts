@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import {
@@ -385,5 +384,5 @@ export async function createTextFromYoutube(
   if ("error" in saved) return { error: saved.error };
 
   log.import({ kind: "youtube", outcome: "success" });
-  redirect(`/watch/${saved.id}`);
+  return { redirectTo: `/watch/${saved.id}` };
 }

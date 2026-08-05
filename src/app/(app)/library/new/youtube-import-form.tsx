@@ -2,6 +2,7 @@
 
 import { useActionState, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@/lib/posthog-client";
 import {
   createTextFromYoutube,
   saveBrowserYoutubeTranscript,
@@ -110,8 +111,19 @@ export default function YoutubeImportForm({
 
   const importAction = useCallback(
     async (previousState: YoutubeImportState, formData: FormData): Promise<YoutubeImportState> => {
+      track("material_add_started", { source: "youtube" });
+
       if (bridgeStatus !== "ready") {
-        return createTextFromYoutube(previousState, formData);
+        const result = await createTextFromYoutube(previousState, formData);
+        if (result.redirectTo) {
+          track("material_add_succeeded", { source: "youtube" });
+          router.push(result.redirectTo);
+        } else if (result.paywall) {
+          track("material_add_failed", { source: "youtube", reason: "limit" });
+        } else if (result.error) {
+          track("material_add_failed", { source: "youtube", reason: "validation_or_server" });
+        }
+        return result;
       }
 
       const url = String(formData.get("url") ?? "").trim();
@@ -119,10 +131,16 @@ export default function YoutubeImportForm({
         const transcript = await requestTranscriptFromBridge(url, targetLanguage);
         const result = await saveBrowserYoutubeTranscript(transcript, formData);
         if (result.redirectTo) {
+          track("material_add_succeeded", { source: "youtube" });
           router.push(result.redirectTo);
+        } else if (result.paywall) {
+          track("material_add_failed", { source: "youtube", reason: "limit" });
+        } else if (result.error) {
+          track("material_add_failed", { source: "youtube", reason: "validation_or_server" });
         }
         return result;
       } catch (error) {
+        track("material_add_failed", { source: "youtube", reason: "bridge_error" });
         return {
           error: error instanceof Error ? error.message : "Не удалось получить субтитры.",
         };
@@ -142,23 +160,25 @@ export default function YoutubeImportForm({
 
   return (
     <form action={formAction} className="flex flex-1 flex-col gap-4 px-5 py-6">
-      <input
-        type="url"
-        name="url"
-        required
-        placeholder="https://www.youtube.com/watch?v=…"
-        className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
-      />
-      <p className="text-sm text-black/50 dark:text-white/50">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="youtube-import-url" className="text-sm font-semibold">
+          Ссылка на видео
+        </label>
+        <input
+          id="youtube-import-url"
+          type="url"
+          name="url"
+          required
+          placeholder="https://www.youtube.com/watch?v=…"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+        />
+      </div>
+      <p className="text-sm text-[var(--text-secondary)]">
         После импорта можно смотреть видео, читать синхронные субтитры, тапать слова и
-        сохранять перевод.
+        сохранять перевод. Работает для видео с открытыми субтитрами.
       </p>
       <p
-        className={`text-sm ${
-          bridgeStatus === "ready"
-            ? "text-green-700 dark:text-green-400"
-            : "text-black/50 dark:text-white/50"
-        }`}
+        className={`text-sm ${bridgeStatus === "ready" ? "text-[var(--color-success-text)]" : "text-[var(--text-secondary)]"}`}
         aria-live="polite"
       >
         {bridgeStatus === "checking" && "Проверяем браузерный мост…"}
@@ -170,7 +190,7 @@ export default function YoutubeImportForm({
             <a
               href="/lexreader-youtube-bridge.zip"
               download
-              className="font-medium text-caramel underline underline-offset-2"
+              className="focus-ring font-semibold text-[var(--color-caramel-text)] underline underline-offset-2"
             >
               скачай LexReader Bridge
             </a>
@@ -180,14 +200,14 @@ export default function YoutubeImportForm({
       </p>
       <CollectionPicker collections={collections} />
       {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400" aria-live="polite">
+        <p className="text-sm text-[var(--color-danger)]" role="alert" aria-live="polite">
           {state.error}
         </p>
       )}
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
+        className="focus-ring min-h-11 rounded-full bg-[var(--color-forest)] px-5 py-3 font-bold text-white transition-colors hover:bg-[var(--color-forest-deep)] disabled:opacity-50"
       >
         {pending ? "Получаем субтитры…" : "Импортировать субтитры"}
       </button>
