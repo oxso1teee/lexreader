@@ -56,6 +56,28 @@ async function ensureTestUser(supabase: any) {
   }
 }
 
+// M3 Slice 4: practice-brain-a11y.spec.ts стартует настоящую сессию
+// повторения на test@example.com — каждый прогон (или ручная проверка тем же
+// аккаунтом) переносит due_at "birds" в будущее, и следующий прогон находит
+// пустую очередь. reader-library-a11y.spec.ts полагается на тот же
+// сидированный флеш-карт как "always due" — без явного сброса здесь оба
+// набора рано или поздно начинают молча ловить пустое состояние вместо
+// экрана повторения.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function ensureDueCard(supabase: any, userId: string) {
+  const { data: card } = await supabase
+    .from("flashcards")
+    .select("id")
+    .eq("owner_id", userId)
+    .eq("front", "birds")
+    .maybeSingle();
+  if (!card) return;
+  await supabase
+    .from("srs_state")
+    .update({ due_at: new Date(Date.now() - 60 * 60 * 1000).toISOString() })
+    .eq("flashcard_id", card.id);
+}
+
 // Тесты в этом наборе логинятся много раз подряд (несколько spec-файлов,
 // один процесс) — без сброса это само упирается в наш же rate-limit на
 // вход (P0-AUTH-04), который иначе рассчитан на реальных пользователей за
@@ -72,4 +94,8 @@ export default async function globalSetup() {
   // brain-notebook.spec.ts создаёт новую тестовую колоду в каждом прогоне —
   // без очистки они копятся и упираются в FREE_DECK_LIMIT (P0-6.3).
   await supabase.from("decks").delete().like("name", "E2E Deck %");
+
+  const { data: users } = await supabase.auth.admin.listUsers();
+  const userId = users?.users.find((u: { email?: string }) => u.email === TEST_EMAIL)?.id;
+  if (userId) await ensureDueCard(supabase, userId);
 }

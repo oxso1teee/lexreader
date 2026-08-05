@@ -39,6 +39,7 @@ export default function DeckTitle({
     return (
       <div className="flex flex-1 items-center gap-2">
         <input
+          aria-label="Название колоды"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           autoFocus

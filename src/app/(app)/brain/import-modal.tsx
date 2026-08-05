@@ -217,8 +217,11 @@ export default function ImportModal({
               ))}
             </div>
 
-            <label className="text-sm font-medium">Колода</label>
+            <label htmlFor="import-deck" className="text-sm font-medium">
+              Колода
+            </label>
             <select
+              id="import-deck"
               value={deckId}
               onChange={(e) => setDeckId(e.target.value)}
               className="rounded-lg border border-black/20 px-3 py-2 dark:border-white/25 dark:bg-transparent"

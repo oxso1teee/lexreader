@@ -205,6 +205,7 @@ export default function ItemDetailsSheet({
               </div>
               <div className="flex gap-2">
                 <select
+                  aria-label="Переместить в колоду"
                   value={moveTarget}
                   onChange={(e) => setMoveTarget(e.target.value)}
                   className="flex-1 rounded-full border border-black/15 px-3 py-2 text-sm dark:border-white/20"

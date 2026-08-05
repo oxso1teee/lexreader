@@ -275,6 +275,7 @@ export default function VocabularyBrowser({
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <select
+              aria-label="Фильтр по колоде"
               value={deckFilter}
               onChange={(e) => {
                 const value = e.target.value;
@@ -296,6 +297,7 @@ export default function VocabularyBrowser({
             </select>
             <select
               value={sort}
+              aria-label="Сортировка"
               onChange={(e) => {
                 const value = e.target.value as SortKey;
                 setSort(value);
@@ -332,6 +334,7 @@ export default function VocabularyBrowser({
                 </button>
               )}
               <select
+                aria-label="Переместить в колоду"
                 value={moveTargetDeck}
                 onChange={(e) => setMoveTargetDeck(e.target.value)}
                 className="rounded-full border border-black/15 bg-white px-2 py-1.5 text-xs dark:border-white/20 dark:bg-black/40"

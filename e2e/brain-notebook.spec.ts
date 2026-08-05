@@ -4,14 +4,18 @@ import { login } from "./helpers";
 test("brain flow: create deck, add flashcard manually", async ({ page }) => {
   await login(page);
 
-  await page.goto("/brain");
+  // M3 Slice 4: создание колоды переехало с /brain на вкладку "Колоды"
+  // /brain/vocabulary (см. docs/ui/m3-slice4-practice-brain-review-plan.md §4).
+  await page.goto("/brain/vocabulary");
+  await page.getByRole("button", { name: "📚 Колоды" }).click();
   await page.getByRole("button", { name: "+ Новая колода" }).click();
   const deckName = `E2E Deck ${Date.now()}`;
   await page.getByPlaceholder("Название колоды...").fill(deckName);
   await page.getByRole("button", { name: "Создать" }).click();
 
-  // Редирект на страницу новой колоды
-  await expect(page).toHaveURL(/\/brain\/[\w-]+$/);
+  // Редирект на страницу новой колоды — createDeck() добавляет ?created=true
+  // для deck_create_succeeded (см. brain/actions.ts, [deckId]/deck-analytics.tsx).
+  await expect(page).toHaveURL(/\/brain\/[\w-]+\?created=true$/);
 
   await page.getByPlaceholder("Слово").fill("e2e-front");
   await page.getByPlaceholder("Перевод").fill("e2e-back");
