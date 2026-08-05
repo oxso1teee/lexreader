@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { hasFreeFlashcardRoom } from "@/lib/subscription";
+import { findDuplicateFlashcardId } from "@/lib/flashcard-dedup";
 
 export interface AddCardState {
   error?: string;
@@ -34,6 +35,13 @@ export async function addFlashcard(
     .eq("owner_id", profile.id)
     .maybeSingle();
   if (!deck) return { error: "Колода не найдена." };
+
+  // M3 Slice 4 §13: раньше ручное добавление вообще не проверяло дубликаты
+  // — то же нормализованное сравнение (owner+language, без учёта регистра),
+  // что и у Reader-сохранений (saveVocabularyItem), но не блокирует их,
+  // не трогает существующие записи.
+  const duplicateId = await findDuplicateFlashcardId(supabase, profile.id, deck.language, front);
+  if (duplicateId) return { error: "Такое слово уже есть в словаре." };
 
   if (!(await hasFreeFlashcardRoom(supabase, profile.id))) {
     return { paywall: true };

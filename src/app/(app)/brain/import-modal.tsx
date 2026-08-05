@@ -144,7 +144,11 @@ export default function ImportModal({
       );
       return;
     }
-    setResult(`Импортировано карточек: ${res.count}`);
+    setResult(
+      res.skippedDuplicates
+        ? `Импортировано карточек: ${res.count} · пропущено дублей: ${res.skippedDuplicates}`
+        : `Импортировано карточек: ${res.count}`,
+    );
     setCards([]);
   }
 

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { hasFreeDeckRoom, hasFreeFlashcardRoom } from "@/lib/subscription";
+import { partitionByExistingFront } from "@/lib/flashcard-dedup";
 
 export interface DeckFormState {
   error?: string;
@@ -116,11 +117,27 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
     }));
   if (rows.length === 0) return { ok: false, error: "Нет карточек для импорта." };
 
-  if (!(await hasFreeFlashcardRoom(supabase, profile.id, rows.length))) {
+  // M3 Slice 4 §13: validateCards() в import-cards.ts уже дедуплицирует
+  // ВНУТРИ одного файла — но ничего не проверяло против уже сохранённых
+  // карточек, так что повторный импорт того же (или пересекающегося) файла
+  // молча создавал дубликаты. Не блокируем импорт целиком — пропускаем
+  // только сами дубликаты и честно отчитываемся о них (§15: "duplicate
+  // summary; skipped duplicates").
+  const { newRows, skippedDuplicates } = await partitionByExistingFront(
+    supabase,
+    profile.id,
+    deck.language,
+    rows,
+  );
+  if (newRows.length === 0) {
+    return { ok: false, error: "Все карточки уже есть в словаре.", skippedDuplicates };
+  }
+
+  if (!(await hasFreeFlashcardRoom(supabase, profile.id, newRows.length))) {
     return { ok: false, paywall: true };
   }
 
-  const { data: inserted, error } = await supabase.from("flashcards").insert(rows).select("id");
+  const { data: inserted, error } = await supabase.from("flashcards").insert(newRows).select("id");
   if (error) return { ok: false, error: "Не удалось импортировать карточки. Попробуй ещё раз." };
 
   const settings = await supabase
@@ -136,5 +153,6 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
 
   revalidatePath(`/brain/${deckId}`);
   revalidatePath("/brain");
-  return { ok: true, count: rows.length };
+  revalidatePath("/brain/vocabulary");
+  return { ok: true, count: newRows.length, skippedDuplicates };
 }
