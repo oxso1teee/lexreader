@@ -24,19 +24,45 @@ export default async function ReadPage({
     notFound();
   }
 
-  const [{ data: savedWords }, { data: progress }] = await Promise.all([
-    supabase
-      .from("vocabulary_items")
-      .select("id, headword, level, seen_count")
-      .eq("owner_id", profile.id)
-      .eq("language", text.language),
-    supabase
-      .from("text_progress")
-      .select("last_page_index")
-      .eq("owner_id", profile.id)
-      .eq("text_id", textId)
-      .maybeSingle(),
-  ]);
+  const [{ data: savedWords }, { data: progress }, { data: collection }, { data: siblingRows }] =
+    await Promise.all([
+      supabase
+        .from("vocabulary_items")
+        .select("id, headword, level, seen_count")
+        .eq("owner_id", profile.id)
+        .eq("language", text.language),
+      supabase
+        .from("text_progress")
+        .select("last_page_index")
+        .eq("owner_id", profile.id)
+        .eq("text_id", textId)
+        .maybeSingle(),
+      // M3 Slice 3: chapter navigation uses the existing collection_id/
+      // collection_order columns — no schema change (plan doc §5).
+      text.collection_id
+        ? supabase.from("collections").select("title").eq("id", text.collection_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      text.collection_id
+        ? supabase
+            .from("texts")
+            .select("id, collection_order")
+            .eq("collection_id", text.collection_id)
+            .order("collection_order", { ascending: true })
+        : Promise.resolve({ data: null }),
+    ]);
+
+  const siblings = siblingRows ?? [];
+  const myIndex = siblings.findIndex((s) => s.id === text.id);
+  const chapter =
+    text.collection_id && myIndex >= 0
+      ? {
+          collectionTitle: collection?.title ?? "Коллекция",
+          position: myIndex + 1,
+          total: siblings.length,
+          prevTextId: myIndex > 0 ? siblings[myIndex - 1].id : null,
+          nextTextId: myIndex < siblings.length - 1 ? siblings[myIndex + 1].id : null,
+        }
+      : null;
 
   const wordLevels: Record<string, { id: string; level: number; seenCount: number }> = {};
   for (const w of savedWords ?? []) {
@@ -72,6 +98,7 @@ export default async function ReadPage({
       targetLang={profile.native_language}
       wordLevels={wordLevels}
       initialPageIndex={progress?.last_page_index ?? 0}
+      chapter={chapter}
       stats={{
         unique: uniqueTokens.size,
         new: statsNew,

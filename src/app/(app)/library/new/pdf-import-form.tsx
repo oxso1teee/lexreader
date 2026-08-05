@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import * as pdfjsLib from "pdfjs-dist";
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
 import { createText } from "../actions";
 import { useAddMaterialAction } from "./use-add-material-action";
@@ -10,10 +9,23 @@ import { log } from "@/lib/log";
 import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+// M3 Slice 3 fix: pdfjs-dist's own module (canvas.js) runs `new DOMMatrix()`
+// as a module-evaluation side effect — a static top-level import (as this
+// file always had, pre-dating this slice) makes Next.js try to evaluate that
+// during SSR, where DOMMatrix doesn't exist, crashing the whole route render
+// (confirmed via dev server logs: "ReferenceError: DOMMatrix is not defined"
+// on every /library/new request). A dynamic import confined to the
+// click-triggered handler never runs outside the browser.
+let pdfjsLibPromise: ReturnType<typeof loadPdfjs> | null = null;
+function loadPdfjs() {
+  return import("pdfjs-dist").then((mod) => {
+    mod.GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/build/pdf.worker.min.mjs",
+      import.meta.url,
+    ).toString();
+    return mod;
+  });
+}
 
 // Держим в разумных пределах: очень длинные книги всё равно режутся тем же
 // лимитом, что и импорт по URL (actions.ts проверяет body.length <= 200_000).
@@ -50,6 +62,8 @@ export default function PdfImportForm({
     setText("");
 
     try {
+      if (!pdfjsLibPromise) pdfjsLibPromise = loadPdfjs();
+      const pdfjsLib = await pdfjsLibPromise;
       const data = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data }).promise;
       const pageCount = Math.min(pdf.numPages, MAX_PDF_PAGES);
