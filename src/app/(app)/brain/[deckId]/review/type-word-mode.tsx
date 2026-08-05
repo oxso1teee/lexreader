@@ -41,7 +41,9 @@ export default function TypeWordMode({
 
     const isCorrect = value.trim().toLowerCase() === answer.trim().toLowerCase();
     setResult(isCorrect ? "correct" : "wrong");
-    startTransition(() => reviewWord(card.flashcardId, isCorrect ? 2 : 0));
+    startTransition(() => {
+      void reviewWord(card.flashcardId, isCorrect ? 2 : 0);
+    });
   }
 
   return (

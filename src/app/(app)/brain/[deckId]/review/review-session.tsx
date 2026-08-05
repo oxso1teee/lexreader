@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { reviewWord, sendCardToNotebook, updateReviewBest } from "./actions";
+import { reviewWord, undoLastGrade, sendCardToNotebook, updateReviewBest } from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
 import { reviewFsrsCard, type FsrsStateRow } from "@/lib/fsrs";
@@ -108,6 +108,17 @@ export default function ReviewSession({
   const [notebookStatus, setNotebookStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
   const [flash, setFlash] = useState<"good" | "bad" | null>(null);
   const [newRecord, setNewRecord] = useState(false);
+  // M3 Slice 4 §8: только последняя оценка отменяема — новый grade() ниже
+  // затирает lastGraded, так что второй "Отменить" для той же карточки уже
+  // не находит, что отменять (защита от повторной отмены на клиенте;
+  // undoLastGrade() сама же перепроверяет это и на сервере).
+  const [lastGraded, setLastGraded] = useState<{
+    reviewLogId: string;
+    flashcardId: string;
+    front: string;
+    grade: 0 | 1 | 2 | 3;
+  } | null>(null);
+  const [isUndoing, setIsUndoing] = useState(false);
 
   const done = index >= cards.length;
   const card = cards[index];
@@ -209,8 +220,11 @@ export default function ReviewSession({
       navigator.vibrate(15);
     }
     startTransition(async () => {
-      await reviewWord(card.flashcardId, value);
+      const { reviewLogId } = await reviewWord(card.flashcardId, value);
       gradedIdsRef.current = [...gradedIdsRef.current, card.flashcardId];
+      setLastGraded(
+        reviewLogId ? { reviewLogId, flashcardId: card.flashcardId, front: card.front, grade: value } : null,
+      );
       const newTotal = sessionTotal + 1;
       setTally((t) => ({ ...t, [value]: t[value] + 1 }));
       setFlash(value >= 2 ? "good" : "bad");
@@ -238,6 +252,38 @@ export default function ReviewSession({
       }
       setIndex((i) => i + 1);
     });
+  }
+
+  // M3 Slice 4 §8: возвращает карточку в текущую сессию на то же место
+  // (cards — фиксированный массив, index просто отступает назад — сама
+  // карточка никуда не вставляется повторно). Ownership/staleness уже
+  // проверены на сервере (undoLastGrade) — здесь только честно отражаем
+  // результат в UI.
+  async function undo() {
+    if (!lastGraded || isUndoing) return;
+    setIsUndoing(true);
+    const result = await undoLastGrade(lastGraded.reviewLogId);
+    setIsUndoing(false);
+    if (!result.ok) {
+      alert(result.error ?? "Не удалось отменить оценку.");
+      return;
+    }
+    gradedIdsRef.current = gradedIdsRef.current.filter((id) => id !== lastGraded.flashcardId);
+    setTally((t) => ({ ...t, [lastGraded.grade]: Math.max(0, t[lastGraded.grade] - 1) }));
+    setRevealed(false);
+    setIndex((i) => {
+      const restoredIndex = Math.max(0, i - 1);
+      saveReviewSession({
+        userId,
+        deckId: sessionDeckId,
+        cardIds: cards.map((c) => c.flashcardId),
+        gradedIds: gradedIdsRef.current,
+        index: restoredIndex,
+        phase: "question",
+      });
+      return restoredIndex;
+    });
+    setLastGraded(null);
   }
 
   function handleEditSubmit(formData: FormData) {
@@ -292,6 +338,17 @@ export default function ReviewSession({
           ✕
         </button>
       </div>
+
+      {lastGraded && (
+        <button
+          type="button"
+          onClick={undo}
+          disabled={isUndoing}
+          className="mb-4 flex min-h-9 items-center justify-center gap-1 self-center rounded-full border border-black/10 px-3 text-xs font-medium text-black/60 hover:border-black/30 hover:text-black disabled:opacity-50 dark:border-white/15 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
+        >
+          ↩ {isUndoing ? "Отменяем…" : `Отменить оценку «${lastGraded.front}»`}
+        </button>
+      )}
 
       {isEditing ? (
         <form
