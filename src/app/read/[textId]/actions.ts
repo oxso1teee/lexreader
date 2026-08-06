@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { touchStreak } from "@/lib/streak";
-import { statusFromLevel } from "@/lib/word-level";
+import { statusFromLevel, KNOWN_LEVEL } from "@/lib/word-level";
 import { saveVocabularyItem, escapeIlike, type UpsertWordResult } from "@/lib/vocabulary";
 import { hasFreeFlashcardRoom, hasFreeDeckRoom } from "@/lib/subscription";
 import { addXp } from "@/lib/xp-actions";
+import { recordEvidence } from "@/lib/language-twin/evidence";
 import type { ReaderPrefs } from "./reader-prefs";
 
 export async function upsertWord(input: {
@@ -53,6 +54,22 @@ export async function setWordLevel(vocabularyItemId: string, level: 0 | 1 | 2 | 
     .update({ level, status: statusFromLevel(level) })
     .eq("id", vocabularyItemId);
   if (error) throw new Error("Не удалось сохранить уровень слова.");
+
+  if (level === KNOWN_LEVEL) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await recordEvidence(supabase, {
+        userId: user.id,
+        evidenceType: "marked_known",
+        sourceType: "vocabulary_item",
+        sourceId: vocabularyItemId,
+        result: "known",
+        confidence: "medium",
+      });
+    }
+  }
   revalidatePath("/notebook");
 }
 
@@ -157,6 +174,15 @@ export async function addPhraseToDefaultDeck(input: {
   await supabase
     .from("srs_state")
     .insert({ flashcard_id: card.id, ease_factor: settings?.starting_ease ?? 2.5 });
+
+  await recordEvidence(supabase, {
+    userId: user.id,
+    evidenceType: "phrase_saved",
+    sourceType: "flashcard",
+    sourceId: card.id,
+    result: "new_phrase",
+    confidence: "low",
+  });
 
   revalidatePath("/brain");
   return { ok: true };
