@@ -118,6 +118,7 @@ test("Match mode: mismatched pairs differ by more than color (icon + aria-live)"
   test.setTimeout(60_000);
   await login(page);
   const words = makeWords(`${Date.now()}`);
+  const backByFront = new Map(words);
   const deckId = await createDeckWithCards(page, words);
 
   try {
@@ -128,9 +129,24 @@ test("Match mode: mismatched pairs differ by more than color (icon + aria-live)"
 
     const liveRegion = page.locator('[role="status"][aria-live="polite"]');
 
-    // Deliberately mismatch the first word with the second translation.
+    // Both columns are shuffled independently — find a translation that is
+    // NOT the correct match for the first word, rather than assuming a
+    // fixed index pairing is always wrong.
+    const front = await wordButtons.nth(0).innerText();
+    const correctBack = backByFront.get(front);
+    const translationCount = await translationButtons.count();
+    let wrongTranslationIndex = -1;
+    for (let i = 0; i < translationCount; i++) {
+      const text = await translationButtons.nth(i).innerText();
+      if (text !== correctBack) {
+        wrongTranslationIndex = i;
+        break;
+      }
+    }
+    expect(wrongTranslationIndex, "expected at least one non-matching translation").toBeGreaterThanOrEqual(0);
+
     await wordButtons.nth(0).click();
-    await translationButtons.nth(1).click();
+    await translationButtons.nth(wrongTranslationIndex).click();
     await expect(liveRegion).toContainText("Неверно");
     await expect(wordButtons.nth(0).getByText("✗")).toBeVisible();
   } finally {
