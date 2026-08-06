@@ -71,7 +71,7 @@ export default function CardRow({
           <button
             type="submit"
             disabled={updatePending}
-            className="flex min-h-9 flex-1 items-center justify-center rounded-full bg-caramel text-sm font-medium text-white disabled:opacity-50"
+            className="flex min-h-9 flex-1 items-center justify-center rounded-full bg-caramel text-sm font-medium text-black disabled:opacity-50"
           >
             {updatePending ? "…" : "Сохранить"}
           </button>
@@ -84,13 +84,13 @@ export default function CardRow({
     <div className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-3 py-2 text-sm dark:border-white/15">
       <div className="min-w-0">
         <p className="truncate font-medium">{front}</p>
-        <p className="truncate text-black/50 dark:text-white/50">{back}</p>
+        <p className="truncate text-[var(--text-secondary)]">{back}</p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <button
           type="button"
           onClick={() => setIsEditing(true)}
-          className="flex min-h-11 min-w-11 items-center justify-center text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white"
+          className="flex min-h-11 min-w-11 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
           aria-label="Редактировать карточку"
         >
           ✎

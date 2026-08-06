@@ -52,6 +52,13 @@
      SkillSection), не как фон/точка/иконка. */
   --color-success-text: #166534;
   --color-warning-text: #9a3412;
+  /* M3 Slice 4.1: same pattern again — --color-danger (#dc2626) reaches
+     ~4.8:1 as text on light surfaces (fine), but only ~3.4:1 against the
+     dark-mode surface (found via axe-core on Settings' account-deletion
+     card). Light mode keeps the raw danger red as-is (already passes);
+     dark mode gets a brighter red text-safe override, mirroring
+     success-text/warning-text/caramel-text/forest-text above. */
+  --color-danger-text: var(--color-danger);
 
   /* Focus ring — deliberately not the brand color, so keyboard focus is
      never confused with a "you did something" accent state. */
@@ -91,6 +98,7 @@
     --color-caramel-text: #c79562;
     --color-success-text: #4ade80;
     --color-warning-text: #fdba74;
+    --color-danger-text: #f87171;
     /* Button background stays the same deep green (still ~9.6:1 with white
        text regardless of theme); hover gets lighter (not darker) so it
        remains visible against the dark page; -text gets a brighter
@@ -120,6 +128,7 @@
   --color-caramel-text: var(--color-caramel-text);
   --color-success-text: var(--color-success-text);
   --color-warning-text: var(--color-warning-text);
+  --color-danger-text: var(--color-danger-text);
   --color-forest: var(--color-forest);
   --color-forest-deep: var(--color-forest-deep);
   --color-forest-text: var(--color-forest-text);

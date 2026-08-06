@@ -51,7 +51,7 @@ export default function DeckCard({
           <div className="flex items-center gap-2">
             <p className="truncate font-semibold">{name}</p>
             {isDefault && (
-              <span className="shrink-0 rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-caramel">
+              <span className="shrink-0 rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-[#7d5d3e]">
                 Главная
               </span>
             )}
@@ -61,7 +61,7 @@ export default function DeckCard({
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-sm text-black/50 dark:text-white/50">
+          <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
             📚 {cardCount} карт.
             {dueCount !== undefined && newCount !== undefined && knownCount !== undefined && (
               <span>
@@ -71,7 +71,7 @@ export default function DeckCard({
             )}
           </p>
         </div>
-        <span className="text-black/30 dark:text-white/30">›</span>
+        <span aria-hidden="true" className="text-black/30 dark:text-white/30">›</span>
       </Link>
       {/* Найдено при живой проверке: удаление колоды "Главная" ломает
           addPhraseToDefaultDeck (сохранение слова из читалки в карточку) —

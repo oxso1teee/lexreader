@@ -12,7 +12,7 @@ export default async function StudySettingsPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <div className="flex items-center gap-3">
-        <Link href="/brain" className="text-caramel">
+        <Link href="/brain" className="text-[var(--color-caramel-text)]">
           ← Назад
         </Link>
         <h1 className="text-xl font-bold">Настройки повторения</h1>

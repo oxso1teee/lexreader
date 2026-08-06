@@ -93,7 +93,7 @@ export default function MicButton({
       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base transition-colors ${
         listening
           ? "animate-pulse bg-red-500 text-white"
-          : "text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
+          : "text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
       }`}
     >
       🎤

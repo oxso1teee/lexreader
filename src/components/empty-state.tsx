@@ -18,7 +18,7 @@ export default function EmptyState({
     <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">
       <span className="text-6xl">{icon}</span>
       <p className="text-lg font-bold">{title}</p>
-      <p className="max-w-xs text-sm text-black/50 dark:text-white/50">{body}</p>
+      <p className="max-w-xs text-sm text-[var(--text-secondary)]">{body}</p>
       {action}
     </div>
   );

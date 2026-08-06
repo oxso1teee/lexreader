@@ -27,11 +27,16 @@ export interface ReviewCard {
   fsrsState: FsrsStateRow;
 }
 
+// M3 Slice 4.1: bg-orange-500/emerald-600 gave white text only 2.88:1/3.65:1
+// (found via axe-core, e2e/practice-brain-a11y.spec.ts) — one shade darker
+// each clears WCAG AA 4.5:1 while keeping the same red→orange→green meaning
+// and relative light→dark progression between "Помню"/"Легко". red-600
+// already passed as-is.
 const GRADES: { value: 0 | 1 | 2 | 3; label: string; className: string }[] = [
   { value: 0, label: "Не помню", className: "bg-red-600 hover:bg-red-500" },
-  { value: 1, label: "Трудно", className: "bg-orange-500 hover:bg-orange-400" },
-  { value: 2, label: "Помню", className: "bg-emerald-600 hover:bg-emerald-500" },
-  { value: 3, label: "Легко", className: "bg-emerald-700 hover:bg-emerald-600" },
+  { value: 1, label: "Трудно", className: "bg-orange-700 hover:bg-orange-600" },
+  { value: 2, label: "Помню", className: "bg-emerald-700 hover:bg-emerald-600" },
+  { value: 3, label: "Легко", className: "bg-emerald-800 hover:bg-emerald-700" },
 ];
 
 // Из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.6): показываем
@@ -363,7 +368,7 @@ export default function ReviewSession({
         />
       )}
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-black/50 dark:text-white/50">
+        <p className="text-sm text-[var(--text-secondary)]">
           {index + 1} / {cards.length}
           {cards.length - index - 1 > 0 && <span> · осталось {cards.length - index - 1}</span>}
         </p>
@@ -372,7 +377,7 @@ export default function ReviewSession({
           onClick={exitSession}
           aria-label="Завершить сессию"
           title="Выйти (Esc)"
-          className="flex min-h-9 min-w-9 items-center justify-center rounded-full text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
+          className="flex min-h-9 min-w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
         >
           ✕
         </button>
@@ -428,7 +433,7 @@ export default function ReviewSession({
             <button
               type="submit"
               disabled={editPending}
-              className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-caramel text-sm font-medium text-white disabled:opacity-50"
+              className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-caramel text-sm font-medium text-black disabled:opacity-50"
             >
               {editPending ? "…" : "Сохранить"}
             </button>
@@ -444,7 +449,7 @@ export default function ReviewSession({
                   type="button"
                   onClick={speak}
                   aria-label="Произнести"
-                  className="flex min-h-9 min-w-9 items-center justify-center text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
+                  className="flex min-h-9 min-w-9 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
                 >
                   🔊
                 </button>
@@ -453,7 +458,7 @@ export default function ReviewSession({
                 type="button"
                 onClick={() => setIsEditing(true)}
                 aria-label="Редактировать карточку"
-                className="flex min-h-9 min-w-9 items-center justify-center text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
+                className="flex min-h-9 min-w-9 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
               >
                 ✎
               </button>
@@ -471,20 +476,20 @@ export default function ReviewSession({
                 )}
                 <p className="text-xl font-medium text-black/80 dark:text-white/80">{answer}</p>
                 {card.notes && (
-                  <p className="max-w-sm text-sm text-black/50 dark:text-white/50">{card.notes}</p>
+                  <p className="max-w-sm text-sm text-[var(--text-secondary)]">{card.notes}</p>
                 )}
                 {card.contextSentence && (
                   <div className="max-w-sm rounded-lg bg-black/5 px-3 py-2 text-sm dark:bg-white/5">
                     <p className="text-black/70 dark:text-white/70">{card.contextSentence}</p>
                     {card.contextTranslation && (
-                      <p className="mt-0.5 text-black/50 dark:text-white/50">{card.contextTranslation}</p>
+                      <p className="mt-0.5 text-[var(--text-secondary)]">{card.contextTranslation}</p>
                     )}
                   </div>
                 )}
                 {card.sourceTextId && card.sourceTextTitle && (
                   <a
                     href={`/read/${card.sourceTextId}`}
-                    className="text-xs font-medium text-caramel underline-offset-2 hover:underline"
+                    className="text-xs font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
                   >
                     из «{card.sourceTextTitle}»
                   </a>
@@ -493,7 +498,7 @@ export default function ReviewSession({
                   type="button"
                   onClick={handleSendToNotebook}
                   disabled={notebookStatus === "saving" || notebookStatus === "done"}
-                  className="mt-1 text-xs font-medium text-black/40 underline-offset-2 hover:text-black hover:underline disabled:no-underline disabled:opacity-60 dark:text-white/40 dark:hover:text-white"
+                  className="mt-1 text-xs font-medium text-[var(--text-secondary)] underline-offset-2 hover:text-black hover:underline disabled:no-underline disabled:opacity-60 dark:hover:text-white"
                 >
                   {notebookStatus === "done"
                     ? "✓ Сохранено в слова из чтения"
@@ -519,7 +524,7 @@ export default function ReviewSession({
             <div className="flex flex-col gap-3">
               {bestSessionCount > 0 && (
                 <div>
-                  <p className="text-center text-xs text-black/40 dark:text-white/40">
+                  <p className="text-center text-xs text-[var(--text-secondary)]">
                     Сегодня {sessionTotal} · рекорд {Math.max(bestSessionCount, sessionTotal)}
                   </p>
                   <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
@@ -555,9 +560,12 @@ export default function ReviewSession({
                     className={`flex min-h-11 flex-col items-center justify-center rounded-full px-4 py-3 font-medium text-white transition-colors disabled:opacity-50 ${g.className}`}
                   >
                     <span>{g.label}</span>
-                    <span className="text-xs font-normal opacity-80">
-                      {formatInterval(previewDays)}
-                    </span>
+                    {/* M3 Slice 4.1: opacity-80 white blended over these
+                        backgrounds dropped as low as 2.32:1 (found via
+                        axe-core) — full-opacity white stays legible (same
+                        ratio as the label above) and de-emphasis still
+                        comes through via the smaller text-xs size. */}
+                    <span className="text-xs font-normal">{formatInterval(previewDays)}</span>
                   </button>
                 );
                 })}
@@ -569,7 +577,7 @@ export default function ReviewSession({
 
       {/* Из разбора конкурента (п. "Живой счётчик ответов"): промежуточный
           итог ТЕКУЩЕЙ сессии, не за всё время. */}
-      <div className="mt-4 flex justify-center gap-3 text-xs text-black/40 dark:text-white/40">
+      <div className="mt-4 flex justify-center gap-3 text-xs text-[var(--text-secondary)]">
         <span>❌ {tally[0]}</span>
         <span>🟠 {tally[1]}</span>
         <span>✅ {tally[2]}</span>
@@ -578,7 +586,7 @@ export default function ReviewSession({
 
       {/* M3 Slice 4 §6: клавиатурные подсказки — desktop only, мобильным
           пользователям это неактуально (нет физической клавиатуры). */}
-      <p className="mt-2 hidden justify-center gap-2 text-center text-[11px] text-black/30 sm:flex dark:text-white/30">
+      <p className="mt-2 hidden justify-center gap-2 text-center text-[11px] text-[var(--text-secondary)] sm:flex">
         <span>Пробел — ответ</span>
         <span>·</span>
         <span>1–4 — оценка</span>

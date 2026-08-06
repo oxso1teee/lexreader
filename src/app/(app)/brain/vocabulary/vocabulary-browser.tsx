@@ -214,7 +214,7 @@ export default function VocabularyBrowser({
             className={`-mb-px flex min-h-11 items-center gap-1 border-b-2 px-2 text-sm font-medium transition-colors ${
               tab === t
                 ? "border-black text-black dark:border-white dark:text-white"
-                : "border-transparent text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"
+                : "border-transparent text-[var(--text-secondary)] hover:text-black/70 dark:hover:text-white/70"
             }`}
           >
             {t === "words" ? "🔤 Слова" : t === "phrases" ? "💬 Фразы" : "📚 Колоды"}
@@ -231,7 +231,7 @@ export default function VocabularyBrowser({
           {showStarterDecks && (
             <div className="rounded-2xl bg-card p-4 shadow-sm">
               <h2 className="mb-1 font-semibold">Стартовые колоды</h2>
-              <p className="mb-3 text-xs text-black/40 dark:text-white/40">
+              <p className="mb-3 text-xs text-[var(--text-secondary)]">
                 Готовые наборы частых слов по уровням — не расходуют лимит бесплатного тарифа
               </p>
               <div className="flex flex-col gap-2">
@@ -264,7 +264,7 @@ export default function VocabularyBrowser({
                 }}
                 className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
                   bucketFilter === b
-                    ? "border-caramel bg-caramel/15 text-caramel"
+                    ? "border-caramel bg-caramel/15 text-[var(--color-caramel-text)]"
                     : "border-black/10 text-black/60 dark:border-white/15 dark:text-white/60"
                 }`}
               >
@@ -362,12 +362,12 @@ export default function VocabularyBrowser({
               >
                 Удалить
               </button>
-              <button type="button" onClick={clearSelection} className="ml-auto text-xs text-black/50 underline dark:text-white/50">
+              <button type="button" onClick={clearSelection} className="ml-auto text-xs text-[var(--text-secondary)] underline">
                 Снять выбор
               </button>
             </div>
           )}
-          {actionMessage && <p className="text-xs text-black/50 dark:text-white/50">{actionMessage}</p>}
+          {actionMessage && <p className="text-xs text-[var(--text-secondary)]">{actionMessage}</p>}
 
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10 text-center">
@@ -380,7 +380,7 @@ export default function VocabularyBrowser({
                     : "Пока нет сохранённых фраз"}
               </p>
               {!query && bucketFilter === "all" && deckFilter === "all" && !sourceOnly && (
-                <p className="max-w-xs text-sm text-black/50 dark:text-white/50">
+                <p className="max-w-xs text-sm text-[var(--text-secondary)]">
                   Сохраняй слова и фразы прямо во время чтения — тапни по слову в тексте.
                 </p>
               )}
@@ -406,7 +406,7 @@ export default function VocabularyBrowser({
                   >
                     <div className="min-w-0">
                       <p className="truncate font-medium">{r.front}</p>
-                      <p className="truncate text-sm text-black/50 dark:text-white/50">
+                      <p className="truncate text-sm text-[var(--text-secondary)]">
                         {r.back} · {r.deckName}
                       </p>
                     </div>
@@ -433,7 +433,7 @@ export default function VocabularyBrowser({
 function SchedulerBadge({ bucket }: { bucket: SchedulerBucket }) {
   const config: Record<SchedulerBucket, { label: string; className: string }> = {
     new: { label: "Новое", className: "bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60" },
-    due: { label: "К повторению", className: "bg-caramel/15 text-caramel" },
+    due: { label: "К повторению", className: "bg-caramel/15 text-[var(--color-caramel-text)]" },
     learning: { label: "Учу", className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" },
     known: { label: "Знаю", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" },
   };

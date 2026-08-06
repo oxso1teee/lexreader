@@ -122,7 +122,7 @@ export default function ItemDetailsSheet({
               <button type="button" onClick={() => setIsEditing(false)} className="flex-1 rounded-full bg-black/10 py-2 text-sm font-medium dark:bg-white/10">
                 Отмена
               </button>
-              <button type="submit" disabled={editPending} className="flex-1 rounded-full bg-caramel py-2 text-sm font-medium text-white disabled:opacity-50">
+              <button type="submit" disabled={editPending} className="flex-1 rounded-full bg-caramel py-2 text-sm font-medium text-black disabled:opacity-50">
                 {editPending ? "…" : "Сохранить"}
               </button>
             </div>
@@ -145,51 +145,51 @@ export default function ItemDetailsSheet({
             {item.contextSentence && (
               <div className="mb-3 rounded-lg bg-black/5 px-3 py-2 text-sm dark:bg-white/5">
                 <p className="text-black/70 dark:text-white/70">{item.contextSentence}</p>
-                {item.contextTranslation && <p className="mt-0.5 text-black/50 dark:text-white/50">{item.contextTranslation}</p>}
+                {item.contextTranslation && <p className="mt-0.5 text-[var(--text-secondary)]">{item.contextTranslation}</p>}
               </div>
             )}
 
             {item.sourceTextId && item.sourceTextTitle && (
-              <Link href={`/read/${item.sourceTextId}`} className="mb-3 block text-sm font-medium text-caramel underline-offset-2 hover:underline">
+              <Link href={`/read/${item.sourceTextId}`} className="mb-3 block text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline">
                 из «{item.sourceTextTitle}»
               </Link>
             )}
 
             <dl className="mb-4 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-              <dt className="text-black/50 dark:text-white/50">Колода</dt>
+              <dt className="text-[var(--text-secondary)]">Колода</dt>
               <dd className="text-right">{item.deckName}</dd>
-              <dt className="text-black/50 dark:text-white/50">Статус повторения</dt>
+              <dt className="text-[var(--text-secondary)]">Статус повторения</dt>
               <dd className="text-right">{BUCKET_LABELS[item.schedulerBucket]}</dd>
               {item.knowledgeStatus && (
                 <>
-                  <dt className="text-black/50 dark:text-white/50">Знание слова</dt>
+                  <dt className="text-[var(--text-secondary)]">Знание слова</dt>
                   <dd className="text-right">{item.knowledgeStatus === "known" ? "Знаю" : item.knowledgeStatus === "learning" ? "Учу" : "Новое"}</dd>
                 </>
               )}
               {item.schedulerBucket !== "new" && (
                 <>
-                  <dt className="text-black/50 dark:text-white/50">Следующее повторение</dt>
+                  <dt className="text-[var(--text-secondary)]">Следующее повторение</dt>
                   <dd className="text-right">{formatDate(item.dueAt)}</dd>
                 </>
               )}
               {item.totalReviews > 0 && (
                 <>
-                  <dt className="text-black/50 dark:text-white/50">Повторений / точность</dt>
+                  <dt className="text-[var(--text-secondary)]">Повторений / точность</dt>
                   <dd className="text-right">
                     {item.totalReviews} · {Math.round((item.accuracy ?? 0) * 100)}%
                   </dd>
                 </>
               )}
-              <dt className="text-black/50 dark:text-white/50">Добавлено</dt>
+              <dt className="text-[var(--text-secondary)]">Добавлено</dt>
               <dd className="text-right">{formatDate(item.createdAt)}</dd>
             </dl>
 
-            {message && <p className="mb-2 text-xs text-black/50 dark:text-white/50">{message}</p>}
+            {message && <p className="mb-2 text-xs text-[var(--text-secondary)]">{message}</p>}
 
             <div className="flex flex-col gap-2">
               <Link
                 href={`/brain/${item.deckId}/review`}
-                className="flex min-h-11 items-center justify-center rounded-full bg-caramel text-sm font-medium text-white"
+                className="flex min-h-11 items-center justify-center rounded-full bg-caramel text-sm font-medium text-black"
               >
                 Повторить сейчас
               </Link>
@@ -223,7 +223,7 @@ export default function ItemDetailsSheet({
                   </button>
                 )}
               </div>
-              <button type="button" disabled={isPending} onClick={handleDelete} className="rounded-full border border-red-200 py-2 text-sm font-medium text-red-600 disabled:opacity-50 dark:border-red-900">
+              <button type="button" disabled={isPending} onClick={handleDelete} className="rounded-full border border-red-200 py-2 text-sm font-medium text-red-600 disabled:opacity-50 dark:border-red-900 dark:text-red-400">
                 Удалить карточку
               </button>
             </div>

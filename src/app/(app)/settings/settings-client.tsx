@@ -183,7 +183,7 @@ export default function SettingsClient({
               )}
             </div>
             {pushError && (
-              <p role="alert" className="text-body-sm text-[var(--color-danger)]">
+              <p role="alert" className="text-body-sm text-[var(--color-danger-text)]">
                 {pushError}
               </p>
             )}
@@ -418,7 +418,7 @@ function LearningPreferencesForm({
 
       <div aria-live="polite">
         {state.error && (
-          <p role="alert" className="text-body-sm text-[var(--color-danger)]">
+          <p role="alert" className="text-body-sm text-[var(--color-danger-text)]">
             {state.error}
           </p>
         )}
@@ -449,7 +449,7 @@ function DeleteAccountSection() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--color-danger)] px-4 text-body-sm font-medium text-[var(--color-danger)]"
+        className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--color-danger)] px-4 text-body-sm font-medium text-[var(--color-danger-text)]"
       >
         Удалить аккаунт
       </button>
@@ -458,7 +458,7 @@ function DeleteAccountSection() {
 
   return (
     <div className="rounded-xl border border-[var(--color-danger)] p-4">
-      <h3 className="text-body-sm mb-2 font-semibold text-[var(--color-danger)]">Удалить аккаунт</h3>
+      <h3 className="text-body-sm mb-2 font-semibold text-[var(--color-danger-text)]">Удалить аккаунт</h3>
       <p className="text-body-sm mb-3 text-[var(--text-secondary)]">
         Это необратимо удалит твой аккаунт и все данные: тексты, слова, карточки, прогресс. Если
         есть активная подписка, она будет отменена. Чтобы подтвердить, введи «УДАЛИТЬ».
@@ -477,7 +477,7 @@ function DeleteAccountSection() {
           className="focus-ring w-full rounded-lg border border-[var(--color-danger)] px-3 py-2 text-body-sm"
         />
         {state.error && (
-          <p role="alert" className="text-body-sm text-[var(--color-danger)]">
+          <p role="alert" className="text-body-sm text-[var(--color-danger-text)]">
             {state.error}
           </p>
         )}

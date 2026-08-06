@@ -45,7 +45,7 @@ export default function DeckTitle({
           autoFocus
           className="min-w-0 flex-1 rounded-lg border border-black/20 px-3 py-1.5 text-xl font-bold outline-none focus:border-black dark:border-white/25 dark:focus:border-white"
         />
-        <button type="button" disabled={isPending} onClick={handleSave} className="rounded-full bg-caramel px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
+        <button type="button" disabled={isPending} onClick={handleSave} className="rounded-full bg-caramel px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50">
           {isPending ? "…" : "OK"}
         </button>
         <button
@@ -68,14 +68,14 @@ export default function DeckTitle({
     <div className="flex min-w-0 flex-1 items-center gap-2">
       <h1 className="truncate text-xl font-bold">{name}</h1>
       {isDefault && (
-        <span className="shrink-0 rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-caramel">Главная</span>
+        <span className="shrink-0 rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-[#7d5d3e]">Главная</span>
       )}
       {isStarter && (
         <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
           Стартовая
         </span>
       )}
-      <button type="button" onClick={() => setIsEditing(true)} aria-label="Переименовать колоду" className="flex min-h-9 min-w-9 shrink-0 items-center justify-center text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white">
+      <button type="button" onClick={() => setIsEditing(true)} aria-label="Переименовать колоду" className="flex min-h-9 min-w-9 shrink-0 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white">
         ✎
       </button>
     </div>

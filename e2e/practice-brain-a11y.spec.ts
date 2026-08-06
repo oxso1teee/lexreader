@@ -4,20 +4,19 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { login } from "./helpers";
 
-// "color-contrast" is excluded here on purpose: text-black/50 (and the /40,
-// /60 siblings) is the existing secondary-text convention across ~40 files
-// app-wide (Today, Library, Reader, Progress — not just Brain), predates
-// this slice, and independently fails the same axe rule on /home (see
-// unified-shell-a11y.spec.ts, written in an earlier slice). A real fix means
-// swapping that convention for the already-accessible --text-secondary token
-// (src/styles/tokens.css) everywhere it's used — out of scope/blast-radius
-// for a single slice's accessibility pass. Tracked as a follow-up; this spec
-// still catches any *other* serious/critical violation on the Slice 4
-// surfaces (missing labels, keyboard traps, etc).
+// M3 Slice 4.1: "color-contrast" used to be excluded here on purpose —
+// text-black/40, /50 (the existing secondary-text convention) and
+// text-caramel-as-text both failed WCAG AA on these surfaces. Both are now
+// fixed on every Brain/Practice screen this spec visits (swapped for the
+// axe-verified --text-secondary/--color-caramel-text tokens in
+// src/styles/tokens.css; see also practice-modes-feedback.spec.ts for the
+// related color-only-feedback fix in Choice/Type/Match). The exclusion is
+// dropped so a real regression here fails loudly again. The same pattern
+// may still exist on screens outside this spec's surface (Library, Reader,
+// onboarding, pricing, etc.) — out of scope for this slice, tracked
+// separately.
 function seriousViolations(results: Awaited<ReturnType<AxeBuilder["analyze"]>>) {
-  return results.violations.filter(
-    (v) => (v.impact === "serious" || v.impact === "critical") && v.id !== "color-contrast",
-  );
+  return results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
 }
 
 test("Practice Home has no serious/critical axe violations on desktop", async ({ page }) => {
