@@ -13,7 +13,7 @@
     "test:srs": "node --experimental-strip-types --test src/lib/srs.test.ts",
     "test:fsrs": "node --experimental-strip-types --test src/lib/fsrs.test.ts src/lib/fsrs-flags.test.ts",
     "test:csp": "node --experimental-strip-types --test src/lib/posthog-csp.test.ts next.config.test.ts",
-    "test:ui": "node --experimental-strip-types --test src/lib/today.test.ts src/lib/site-url.test.ts src/lib/auth-rate-limit.test.ts src/lib/rate-limit-format.test.ts src/lib/progress-insight.test.ts src/lib/skill-status.test.ts src/lib/avatar-initials.test.ts src/lib/subscription-display.test.ts src/lib/text-cover.test.ts src/lib/posthog-client.test.ts src/lib/review-session-resume.test.ts src/lib/brain-stats.test.ts src/lib/vocabulary-list.test.ts src/lib/flashcard-dedup.test.ts \"src/app/(app)/library/library-item.test.ts\"",
+    "test:ui": "node --experimental-strip-types --test src/lib/today.test.ts src/lib/site-url.test.ts src/lib/auth-rate-limit.test.ts src/lib/rate-limit-format.test.ts src/lib/progress-insight.test.ts src/lib/skill-status.test.ts src/lib/avatar-initials.test.ts src/lib/subscription-display.test.ts src/lib/text-cover.test.ts src/lib/posthog-client.test.ts src/lib/review-session-resume.test.ts src/lib/brain-stats.test.ts src/lib/vocabulary-list.test.ts src/lib/flashcard-dedup.test.ts \"src/app/(app)/library/library-item.test.ts\" src/lib/language-twin/confidence.test.ts src/lib/language-twin/activation-gap.test.ts src/lib/language-twin/review-recall.test.ts src/lib/language-twin/correction-rules.test.ts src/lib/language-twin/recommendations.test.ts src/lib/language-twin/diagnostic.test.ts src/lib/language-twin/behavioral-level.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
