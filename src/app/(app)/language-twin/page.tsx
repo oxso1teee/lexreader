@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateSettings } from "@/lib/language-twin/settings";
+import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
 import { recomputeLanguageTwin, isProfileStale } from "@/lib/language-twin/recompute";
 import { MIN_EVIDENCE_FOR_PROFILE } from "@/lib/language-twin/constants";
 import EmptyState from "@/components/empty-state";
 import PageHeader from "@/components/product/page-header";
 import { ConfidenceBadge, StatusBadge, TrendIndicator, CategoryBadge } from "@/components/product/language-twin/badges";
+import LanguageTwinUnavailable from "@/components/product/language-twin/unavailable";
 import type { PatternRow } from "@/lib/language-twin/types";
 import RecomputeButton from "./recompute-button";
 import HowCalculated from "./how-calculated";
@@ -19,7 +20,16 @@ import LanguageTwinAnalytics from "./language-twin-analytics";
 export default async function LanguageTwinPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
-  const settings = await getOrCreateSettings(supabase, profile.id);
+  const settings = await getOrCreateSettingsSafe(supabase, profile.id);
+
+  if (!settings) {
+    return (
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
+        <PageHeader title="Мой английский" />
+        <LanguageTwinUnavailable />
+      </div>
+    );
+  }
 
   if (!settings.enabled) {
     return (

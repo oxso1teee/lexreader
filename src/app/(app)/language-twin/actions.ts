@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { recomputeLanguageTwin, isProfileStale } from "@/lib/language-twin/recompute";
-import { getOrCreateSettings, updateSettings } from "@/lib/language-twin/settings";
+import { getOrCreateSettings, getOrCreateSettingsSafe, updateSettings } from "@/lib/language-twin/settings";
 import { deleteEvidence, recordEvidence } from "@/lib/language-twin/evidence";
 import { checkSentence } from "@/lib/language-twin/correction-rules";
 import { scoreDiagnostic, diagnosticLevelRange, DIAGNOSTIC_VERSION } from "@/lib/language-twin/diagnostic";
@@ -222,11 +222,14 @@ export interface DiagnosticSubmitResult {
 export async function submitDiagnosticAction(answers: (number | null)[]): Promise<DiagnosticSubmitResult> {
   const profile = await requireProfile();
   const supabase = await createClient();
-  const settings = await getOrCreateSettings(supabase, profile.id);
+  const settings = await getOrCreateSettingsSafe(supabase, profile.id);
   const score = scoreDiagnostic(answers);
   const levelRange = diagnosticLevelRange(score);
 
-  if (settings.allow_diagnostic) {
+  // Scoring itself is pure/local — the diagnostic result is still shown to
+  // the user even if Language Twin's storage is unavailable; only the
+  // evidence-recording side effect below is skipped in that case.
+  if (settings?.allow_diagnostic) {
     const { data: session } = await supabase
       .from("language_evidence")
       .insert({

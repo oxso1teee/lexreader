@@ -1,5 +1,5 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
-import { getOrCreateSettings } from "./settings";
+import { getOrCreateSettingsSafe } from "./settings";
 import { MIN_EVIDENCE_FOR_PROFILE } from "./constants";
 import type { ConfidenceLevel } from "./types";
 
@@ -21,8 +21,8 @@ export async function getLanguageTwinSummary(
   supabase: SupabaseServerClient,
   userId: string,
 ): Promise<LanguageTwinSummary | null> {
-  const settings = await getOrCreateSettings(supabase, userId);
-  if (!settings.enabled) return null;
+  const settings = await getOrCreateSettingsSafe(supabase, userId);
+  if (!settings || !settings.enabled) return null;
 
   const { count: evidenceCount } = await supabase
     .from("language_evidence")
