@@ -33,7 +33,7 @@ export default function DeckList({ decks }: { decks: DeckItem[] }) {
 
       <div className="flex flex-col gap-2">
         {filtered.length === 0 && (
-          <p className="py-4 text-center text-sm text-black/50 dark:text-white/50">
+          <p className="py-4 text-center text-sm text-[var(--text-secondary)]">
             Колоды не найдены.
           </p>
         )}

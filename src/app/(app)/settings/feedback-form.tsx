@@ -27,7 +27,7 @@ export default function FeedbackForm() {
             className="focus-ring w-full rounded-lg border border-[var(--border-strong)] px-3 py-2 text-body-sm"
           />
           {state.error && (
-            <p role="alert" className="text-body-sm text-[var(--color-danger)]">
+            <p role="alert" className="text-body-sm text-[var(--color-danger-text)]">
               {state.error}
             </p>
           )}

@@ -31,17 +31,17 @@ export default function StarterDeckCard({
     <div className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-3 py-2.5 text-sm dark:border-white/15">
       <div className="min-w-0">
         <p className="font-medium">{def.title}</p>
-        <p className="truncate text-black/50 dark:text-white/50">{def.description}</p>
+        <p className="truncate text-[var(--text-secondary)]">{def.description}</p>
         {error && <p className="mt-1 text-red-600 dark:text-red-400">{error}</p>}
       </div>
       {added ? (
-        <span className="shrink-0 text-black/40 dark:text-white/40">✓ Добавлено</span>
+        <span className="shrink-0 text-[var(--text-secondary)]">✓ Добавлено</span>
       ) : (
         <button
           type="button"
           disabled={isPending}
           onClick={handleAdd}
-          className="flex min-h-9 shrink-0 items-center rounded-full bg-caramel px-3 font-medium text-white disabled:opacity-50"
+          className="flex min-h-9 shrink-0 items-center rounded-full bg-caramel px-3 font-medium text-black disabled:opacity-50"
         >
           {isPending ? "Добавляем…" : "+ Добавить"}
         </button>

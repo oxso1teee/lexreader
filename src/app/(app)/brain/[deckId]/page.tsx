@@ -42,7 +42,7 @@ export default async function DeckPage({
         cardCount={cards?.length ?? 0}
         justCreated={created === "true"}
       />
-      <Link href="/brain/vocabulary" className="text-sm text-caramel">
+      <Link href="/brain/vocabulary" className="text-sm text-[var(--color-caramel-text)]">
         ← Словарь и колоды
       </Link>
 
@@ -50,14 +50,14 @@ export default async function DeckPage({
         <DeckTitle deckId={deckId} name={deck.name} isDefault={deck.is_default} isStarter={deck.is_starter} />
         <Link
           href={`/brain/${deckId}/review`}
-          className="shrink-0 rounded-full bg-caramel px-4 py-2 text-sm font-medium text-white"
+          className="shrink-0 rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
         >
           Начать повторение
         </Link>
       </div>
 
       {(deck.is_default || deck.is_starter) && (
-        <p className="text-xs text-black/50 dark:text-white/50">
+        <p className="text-xs text-[var(--text-secondary)]">
           {deck.is_default
             ? "Главную колоду нельзя удалить — слова из чтения сохраняются в неё автоматически."
             : "Стартовую колоду нельзя удалить — это общий бесплатный набор, не расходующий лимит тарифа."}

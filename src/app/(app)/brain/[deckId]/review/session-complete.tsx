@@ -22,7 +22,7 @@ export default function SessionComplete({
       <p className="text-2xl font-semibold">Сессия завершена</p>
       <p className="text-black/60 dark:text-white/60">Повторено слов: {count}</p>
       {newRecord && (
-        <p className="font-medium text-caramel">🏆 Новый личный рекорд сессии!</p>
+        <p className="font-medium text-[var(--color-caramel-text)]">🏆 Новый личный рекорд сессии!</p>
       )}
       {streak !== null && <p className="text-black/60 dark:text-white/60">Стрик: {streak} 🔥</p>}
       <Link

@@ -75,7 +75,7 @@ export default function AddCardForm({
       {state.paywall && (
         <p className="text-sm text-black/60 dark:text-white/60">
           На бесплатном тарифе можно держать до {FREE_FLASHCARD_LIMIT} карточек.{" "}
-          <Link href="/pricing?reason=cards" className="text-caramel underline">
+          <Link href="/pricing?reason=cards" className="text-[var(--color-caramel-text)] underline">
             Смотреть Premium
           </Link>
         </p>
@@ -83,7 +83,7 @@ export default function AddCardForm({
       <button
         type="submit"
         disabled={pending}
-        className="flex min-h-11 items-center justify-center self-start rounded-full bg-caramel px-4 text-sm font-medium text-white disabled:opacity-50"
+        className="flex min-h-11 items-center justify-center self-start rounded-full bg-caramel px-4 text-sm font-medium text-black disabled:opacity-50"
       >
         {pending ? "…" : "+ Добавить карточку"}
       </button>

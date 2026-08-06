@@ -109,7 +109,7 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
           </button>
         </div>
         <input type="hidden" name="study_direction" value={direction} />
-        <p className="text-xs text-black/40 dark:text-white/40">
+        <p className="text-xs text-[var(--text-secondary)]">
           {direction === "front_back" ? "Front: слово → Back: перевод" : "Front: перевод → Back: слово"}
         </p>
       </section>
@@ -183,7 +183,7 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-emerald-600 py-3 font-bold text-white disabled:opacity-50"
+        className="rounded-full bg-emerald-600 py-3 font-bold text-black disabled:opacity-50"
       >
         {pending ? "…" : "💾 Сохранить настройки"}
       </button>

@@ -44,6 +44,10 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
   // ("Помню") — даже после нескольких ошибок подряд. Отмечаем участвовавшие
   // в ошибочной попытке карточки и снижаем итоговую оценку для них.
   const [struggledIds, setStruggledIds] = useState<Set<string>>(new Set());
+  // M3 Slice 4.1: совпадение/ошибка раньше отличались только цветом рамки —
+  // держим текстовое объявление для скринридера (озвучивается через
+  // aria-live ниже), не меняя саму логику подбора пар/грейдинга.
+  const [announcement, setAnnouncement] = useState("");
 
   const round = rounds[roundIndex];
   const allDone = roundIndex >= rounds.length;
@@ -72,11 +76,13 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
       });
       setSelectedWord(null);
       setSelectedTranslation(null);
+      setAnnouncement("Верно, пара найдена.");
     } else {
       setStruggledIds((s) => new Set(s).add(wordId).add(translationId));
       setSelectedWord(wordId);
       setSelectedTranslation(translationId);
       setWrongFlash({ word: wordId, translation: translationId });
+      setAnnouncement("Неверно, попробуй ещё раз.");
     }
   }
 
@@ -107,8 +113,12 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-8">
-      <p className="mb-4 text-sm text-black/50 dark:text-white/50">
+      <p className="mb-4 text-sm text-[var(--text-secondary)]">
         Раунд {roundIndex + 1} из {rounds.length} · сопоставь слово и перевод
+      </p>
+
+      <p role="status" aria-live="polite" className="sr-only">
+        {announcement}
       </p>
 
       <div className="grid flex-1 grid-cols-2 gap-3">
@@ -123,7 +133,7 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
                 type="button"
                 disabled={matched || !!wrongFlash}
                 onClick={() => pickWord(w.flashcardId)}
-                className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
+                className={`flex items-center justify-between gap-1.5 rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
                   matched
                     ? "border-emerald-600 bg-emerald-50 opacity-50 dark:bg-emerald-950"
                     : isWrong
@@ -133,7 +143,17 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
                         : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
                 }`}
               >
-                {w.front}
+                <span>{w.front}</span>
+                {matched && (
+                  <span aria-hidden="true" className="shrink-0 text-emerald-700 dark:text-emerald-400">
+                    ✓
+                  </span>
+                )}
+                {isWrong && (
+                  <span aria-hidden="true" className="shrink-0 text-red-600 dark:text-red-400">
+                    ✗
+                  </span>
+                )}
               </button>
             );
           })}
@@ -150,7 +170,7 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
                 type="button"
                 disabled={matched || !!wrongFlash}
                 onClick={() => pickTranslation(t.flashcardId)}
-                className={`rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
+                className={`flex items-center justify-between gap-1.5 rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
                   matched
                     ? "border-emerald-600 bg-emerald-50 opacity-50 dark:bg-emerald-950"
                     : isWrong
@@ -160,7 +180,17 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
                         : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
                 }`}
               >
-                {t.back}
+                <span>{t.back}</span>
+                {matched && (
+                  <span aria-hidden="true" className="shrink-0 text-emerald-700 dark:text-emerald-400">
+                    ✓
+                  </span>
+                )}
+                {isWrong && (
+                  <span aria-hidden="true" className="shrink-0 text-red-600 dark:text-red-400">
+                    ✗
+                  </span>
+                )}
               </button>
             );
           })}

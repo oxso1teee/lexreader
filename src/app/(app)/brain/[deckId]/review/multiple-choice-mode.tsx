@@ -89,9 +89,11 @@ export default function MultipleChoiceMode({
     setIndex((i) => i + 1);
   }
 
+  const correctAnswer = answerOf(card, studyDirection);
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 py-8">
-      <p className="mb-4 text-sm text-black/50 dark:text-white/50">
+      <p className="mb-4 text-sm text-[var(--text-secondary)]">
         {index + 1} / {cards.length}
       </p>
 
@@ -99,15 +101,25 @@ export default function MultipleChoiceMode({
         <p className="text-2xl font-semibold">{questionOf(card, studyDirection)}</p>
       </div>
 
+      {/* M3 Slice 4.1: результат раньше отличался только цветом рамки/фона —
+          добавляем иконку, текстовую подпись и озвучку для скринридера, не
+          трогая саму логику выбора/грейдинга ниже. */}
+      {selected !== null && (
+        <p role="status" aria-live="polite" className="sr-only">
+          {selected === correctAnswer ? "Верно!" : `Неверно. Правильный ответ: ${correctAnswer}`}
+        </p>
+      )}
+
       <div className="flex flex-col gap-2">
         {options.map((opt) => {
-          const isCorrect = opt === answerOf(card, studyDirection);
+          const isCorrect = opt === correctAnswer;
           const showState = selected !== null;
+          const isSelectedWrong = showState && opt === selected && !isCorrect;
           const stateClass = !showState
             ? "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
             : isCorrect
               ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950"
-              : opt === selected
+              : isSelectedWrong
                 ? "border-red-500 bg-red-50 dark:bg-red-950"
                 : "border-black/10 opacity-50 dark:border-white/15";
           return (
@@ -116,9 +128,19 @@ export default function MultipleChoiceMode({
               type="button"
               disabled={showState}
               onClick={() => choose(opt)}
-              className={`rounded-lg border px-4 py-3 text-left transition-colors ${stateClass}`}
+              className={`flex items-center justify-between gap-2 rounded-lg border px-4 py-3 text-left transition-colors ${stateClass}`}
             >
-              {opt}
+              <span>{opt}</span>
+              {showState && isCorrect && (
+                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                  <span aria-hidden="true">✓</span> Верно
+                </span>
+              )}
+              {isSelectedWrong && (
+                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                  <span aria-hidden="true">✗</span> Неверно
+                </span>
+              )}
             </button>
           );
         })}

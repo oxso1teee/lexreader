@@ -110,7 +110,7 @@ export default async function BrainPage() {
       <div className="flex gap-2">
         <Link
           href="/brain/vocabulary"
-          className="flex-1 rounded-full bg-caramel px-4 py-2 text-center text-sm font-medium text-white"
+          className="flex-1 rounded-full bg-caramel px-4 py-2 text-center text-sm font-medium text-black"
         >
           📚 Словарь и колоды
         </Link>

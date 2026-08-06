@@ -178,7 +178,7 @@ export default function ImportModal({
                 setOpen(false);
                 reset();
               }}
-              className="rounded-full bg-caramel px-5 py-2.5 font-medium text-white"
+              className="rounded-full bg-caramel px-5 py-2.5 font-medium text-black"
             >
               Готово
             </button>
@@ -247,7 +247,7 @@ export default function ImportModal({
                 type="button"
                 disabled={busy || !deckId}
                 onClick={handleImport}
-                className="flex-1 rounded-full bg-caramel py-2.5 font-medium text-white disabled:opacity-50"
+                className="flex-1 rounded-full bg-caramel py-2.5 font-medium text-black disabled:opacity-50"
               >
                 {busy ? "…" : "Импортировать"}
               </button>
@@ -280,7 +280,7 @@ export default function ImportModal({
                 }}
               />
             </label>
-            <p className="text-center text-xs text-black/40 dark:text-white/40">
+            <p className="text-center text-xs text-[var(--text-secondary)]">
               CSV/TSV/TXT/JSON • Обязательны фраза и перевод • HTML-страницы не поддерживаются
             </p>
             <details className="rounded-lg bg-black/5 px-3 py-2 text-xs dark:bg-white/5">
@@ -299,7 +299,7 @@ export default function ImportModal({
               </div>
             </details>
             {busy && (
-              <p className="text-center text-sm text-black/50 dark:text-white/50">
+              <p className="text-center text-sm text-[var(--text-secondary)]">
                 {progress > 0 ? `Распознаём текст… ${progress}%` : "Обрабатываем…"}
               </p>
             )}
