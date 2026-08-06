@@ -92,6 +92,14 @@ test("Review Session has no serious/critical axe violations on desktop, question
   // this app) — matches the same headroom already given to the
   // deck-creation redirect assertions elsewhere in this suite.
   test.setTimeout(60_000);
+  // The revealed answer fades/flips in via the .flip-reveal CSS animation
+  // (globals.css, 0.35s). Scanning mid-transition briefly composites the
+  // dark: text color over the light-mode surface (or vice versa) and can
+  // make axe measure a false-positive contrast failure on a slower runner —
+  // this isn't a real a11y bug, so match what a prefers-reduced-motion user
+  // actually sees (globals.css already skips the animation for them) rather
+  // than racing a fixed sleep against CI's variable CPU load.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1280, height: 800 });
   await login(page);
   await page.goto("/brain/all/review");
