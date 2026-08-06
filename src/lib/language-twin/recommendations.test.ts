@@ -75,3 +75,50 @@ test("buildRecommendations: caps the list at 5", () => {
   const recs = buildRecommendations(many, true);
   assert.equal(recs.length, 5);
 });
+
+test("buildRecommendations: activation pattern's actionTarget carries flashcardIds from metadata_json.words", () => {
+  const recs = buildRecommendations(
+    [
+      pattern({
+        category: "activation",
+        pattern_key: "act1",
+        metadata_json: { words: [{ flashcardId: "fc-1" }, { flashcardId: "fc-2" }] },
+      }),
+    ],
+    true,
+  );
+  assert.deepEqual(recs[0].actionTarget.flashcardIds, ["fc-1", "fc-2"]);
+});
+
+test("buildRecommendations: review_recall pattern's actionTarget also carries flashcardIds", () => {
+  const recs = buildRecommendations(
+    [
+      pattern({
+        category: "review_recall",
+        pattern_key: "rr1",
+        metadata_json: { words: [{ flashcardId: "fc-3" }] },
+      }),
+    ],
+    true,
+  );
+  assert.deepEqual(recs[0].actionTarget.flashcardIds, ["fc-3"]);
+});
+
+test("buildRecommendations: missing/malformed metadata_json.words yields an empty flashcardIds array, not a crash", () => {
+  const recs = buildRecommendations([pattern({ category: "activation", pattern_key: "act2", metadata_json: {} })], true);
+  assert.deepEqual(recs[0].actionTarget.flashcardIds, []);
+});
+
+test("buildRecommendations: entries without a flashcardId are filtered out rather than kept as undefined", () => {
+  const recs = buildRecommendations(
+    [
+      pattern({
+        category: "activation",
+        pattern_key: "act3",
+        metadata_json: { words: [{ flashcardId: "fc-4" }, {}, { flashcardId: undefined }] },
+      }),
+    ],
+    true,
+  );
+  assert.deepEqual(recs[0].actionTarget.flashcardIds, ["fc-4"]);
+});

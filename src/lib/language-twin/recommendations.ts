@@ -6,6 +6,15 @@ import type { PatternRow, RecommendationDraft } from "./types";
 // (or an explicit "not enough data yet" reason).
 const MAX_RECOMMENDATIONS = 5;
 
+// activation/review_recall patterns store their contributing cards in
+// metadata_json.words[].flashcardId (see recompute.ts) — surfacing the ids
+// directly on the recommendation lets the "Начать сессию" CTA open a real
+// targeted practice session without a second lookup at click time.
+function patternFlashcardIds(pattern: PatternRow): string[] {
+  const words = (pattern.metadata_json as { words?: { flashcardId?: string }[] }).words ?? [];
+  return words.map((w) => w.flashcardId).filter((id): id is string => Boolean(id));
+}
+
 export function buildRecommendations(
   patterns: PatternRow[],
   hasEnoughOverallEvidence: boolean,
@@ -49,7 +58,7 @@ export function buildRecommendations(
         reasonKey: "activation_gap",
         relatedPatternKey: p.pattern_key,
         actionType: "open_custom_session",
-        actionTarget: { patternKey: p.pattern_key, mode: "cards" },
+        actionTarget: { patternKey: p.pattern_key, mode: "cards", flashcardIds: patternFlashcardIds(p) },
       };
     }
     if (p.category === "review_recall") {
@@ -59,7 +68,7 @@ export function buildRecommendations(
         reasonKey: "repeated_failure",
         relatedPatternKey: p.pattern_key,
         actionType: "open_custom_session",
-        actionTarget: { patternKey: p.pattern_key, mode: "cards" },
+        actionTarget: { patternKey: p.pattern_key, mode: "cards", flashcardIds: patternFlashcardIds(p) },
       };
     }
     return {
