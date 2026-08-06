@@ -59,3 +59,46 @@ id would let a filter-change event be joined back to one specific deck.
 `createDeck()`'s redirect target gained a `?created=true` query param —
 not sensitive, no change needed to `custom_personal_data_properties` in
 `posthog-client.ts` (which already strips `q`).
+
+# Analytics events — M3 Slice 5 (Language Twin)
+
+Same `track()` wrapper. This is the exact, closed event list for the
+Language Twin feature — no event outside this table fires from any
+`language-twin/*` file (enforced by `e2e/language-twin-privacy.spec.ts`'s
+regex scan, not just this table).
+
+| Event | Fired from | Properties |
+|---|---|---|
+| `language_twin_viewed` | `language-twin/language-twin-analytics.tsx` (mount, on `page.tsx`) | `confidence` (`low`\|`medium`\|`high`\|`none`) |
+| `pattern_opened` | `language-twin/patterns/pattern-list-client.tsx`, list-item click | `category`, `confidence` |
+| `strength_opened` | `language-twin/strengths-list.tsx`, strength-row click | *(none)* |
+| `recommendation_opened` | `language-twin/recommendation-card.tsx`, CTA `<a>` click | `recommendation_type`, `priority` |
+| `recommendation_dismissed` | same file, "Скрыть" click | `recommendation_type` |
+| `diagnostic_started` | `language-twin/diagnostic/diagnostic-flow.tsx`, "Начать" click | *(none)* |
+| `diagnostic_completed` | same file, after `submitDiagnosticAction` resolves | `correct` (count), `total` (count) |
+| `correction_check_started` | `language-twin/correction/correction-form.tsx`, "Проверить" click | *(none)* |
+| `correction_check_completed` | same file, after `checkCorrectionAction` resolves | `supported` (boolean), `match_count` (count) |
+| `profile_recompute_requested` | `language-twin/recompute-button.tsx` click | *(none)* |
+| `evidence_deleted` | `language-twin/patterns/pattern-list-client.tsx` and `evidence/evidence-list-client.tsx`, delete click | `source_type` |
+| `pattern_marked_inaccurate` | `language-twin/patterns/pattern-list-client.tsx` | `category` |
+| `pattern_dismissed` | same file, "Скрыть паттерн" click | `category` |
+| `language_twin_enabled` | `language-twin/settings/settings-form.tsx` and `enable-toggle-inline.tsx` | *(none)* |
+| `language_twin_disabled` | `language-twin/settings/settings-form.tsx` | *(none)* |
+| `language_twin_reset` | `language-twin/settings/settings-form.tsx`, reset confirm | *(none)* |
+
+## Privacy
+
+Never sent, by design (brief's explicit list): sentence, corrected
+sentence, word, phrase, translation, context, evidence content, material
+title, URL, deck name, user email, exact error, free-form text. Every
+property above is an enum, a count, or a boolean — verified mechanically
+by `e2e/language-twin-privacy.spec.ts`'s regex scan of every file in the
+table (forbidden keys: title/text/word/phrase/email/content/body/front/
+back/headword/query/translation/deck_name/deck_id/notes/context/sentence/
+explanation/suggestion/url/material), not just by this document. The
+Correction Input sentence itself is never sent to PostHog at any point —
+`checkCorrectionAction`/`saveCorrectionEvidenceAction` (server actions)
+never call `track()`, only the client-side started/completed events above
+do, and those carry no text. PostHog pageview autocapture already masks
+`?q=` (Library search) via `custom_personal_data_properties`; Language
+Twin adds no new query params that need masking.
