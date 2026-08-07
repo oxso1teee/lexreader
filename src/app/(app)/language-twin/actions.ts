@@ -177,10 +177,15 @@ export async function checkCorrectionAction(text: string): Promise<CorrectionChe
   return checkSentence(text);
 }
 
+export interface SaveCorrectionEvidenceResult {
+  ok: boolean;
+  patternTitle?: string;
+}
+
 export async function saveCorrectionEvidenceAction(
   text: string,
   result: CorrectionCheckResult,
-): Promise<{ ok: boolean }> {
+): Promise<SaveCorrectionEvidenceResult> {
   const profile = await requireProfile();
   const supabase = await createClient();
 
@@ -209,8 +214,33 @@ export async function saveCorrectionEvidenceAction(
     });
   }
 
+  // An explicit save is a meaningful signal worth reflecting immediately —
+  // exempt from the staleness gate for the same reason the manual
+  // "Recompute" button is (recomputeAction above): a passive view-triggered
+  // refresh could sit up to an hour stale and make "check → save" feel
+  // disconnected from the profile it's supposed to update.
+  await recomputeLanguageTwin(supabase, profile.id, profile.target_language);
+
   revalidatePath(`${PATH}/evidence`);
-  return { ok: true };
+  revalidatePath(`${PATH}/patterns`);
+  revalidatePath(`${PATH}/recommendations`);
+  revalidatePath(PATH);
+
+  const categories = [...new Set(result.matches.map((m) => m.category))];
+  let patternTitle: string | undefined;
+  if (categories.length > 0) {
+    const { data: pattern } = await supabase
+      .from("language_error_patterns")
+      .select("title")
+      .eq("user_id", profile.id)
+      .in("category", categories)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    patternTitle = pattern?.title ?? undefined;
+  }
+
+  return { ok: true, patternTitle };
 }
 
 export interface DiagnosticSignal {

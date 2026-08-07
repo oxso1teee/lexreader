@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { track } from "@/lib/posthog-client";
 import { checkCorrectionAction, saveCorrectionEvidenceAction, type CorrectionCheckResult } from "../actions";
 import { categoryLabel } from "@/components/product/language-twin/badges";
@@ -12,10 +13,12 @@ export default function CorrectionForm() {
   const [text, setText] = useState("");
   const [result, setResult] = useState<CorrectionCheckResult | null>(null);
   const [saved, setSaved] = useState(false);
+  const [savedPatternTitle, setSavedPatternTitle] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleCheck() {
     setSaved(false);
+    setSavedPatternTitle(null);
     track("correction_check_started", {});
     startTransition(async () => {
       const res = await checkCorrectionAction(text);
@@ -29,6 +32,7 @@ export default function CorrectionForm() {
     startTransition(async () => {
       const res = await saveCorrectionEvidenceAction(text, result);
       setSaved(res.ok);
+      setSavedPatternTitle(res.patternTitle ?? null);
     });
   }
 
@@ -36,6 +40,7 @@ export default function CorrectionForm() {
     setText("");
     setResult(null);
     setSaved(false);
+    setSavedPatternTitle(null);
   }
 
   return (
@@ -80,8 +85,9 @@ export default function CorrectionForm() {
           )}
           {result.supported && result.matches.length === 0 && (
             <p className="rounded-lg bg-[var(--color-success)]/10 p-3 text-sm">
-              Известных паттернов не найдено. Это не значит «предложение идеально» — проверка охватывает
-              только небольшой список известных ошибок.
+              Известных паттернов не найдено. Это не значит «предложение проверено полностью» — если ошибка
+              в нём есть, но другого типа, этот тип ошибки пока не поддерживается: проверка охватывает
+              только небольшой список известных паттернов, а не полный грамматический разбор.
             </p>
           )}
           {result.supported &&
@@ -112,6 +118,20 @@ export default function CorrectionForm() {
                 {saved ? "✓ Сохранено в профиль" : "Сохранить в профиль"}
               </button>
             </div>
+          )}
+          {saved && (
+            <p className="rounded-lg bg-[var(--color-success)]/10 p-3 text-sm">
+              {savedPatternTitle ? (
+                <>
+                  Сохранено — это укрепило паттерн «{savedPatternTitle}» в твоём профиле.{" "}
+                  <Link href="/language-twin" className="font-medium underline underline-offset-2">
+                    Посмотреть профиль →
+                  </Link>
+                </>
+              ) : (
+                "Сохранено как реальный сигнал в твоём профиле."
+              )}
+            </p>
           )}
           <p className="text-xs text-[var(--text-secondary)]">
             Это может быть неточно — проверь смысл сам, прежде чем полагаться на подсказку.

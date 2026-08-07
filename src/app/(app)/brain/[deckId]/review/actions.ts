@@ -11,6 +11,9 @@ import { getSrsParams, getSrsSettings } from "@/lib/srs-settings";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 import { addXp } from "@/lib/xp-actions";
+import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
+import { recomputeLanguageTwin } from "@/lib/language-twin/recompute";
+import type { PatternCategory, PatternStatus, Trend } from "@/lib/language-twin/types";
 
 export async function reviewWord(
   flashcardId: string,
@@ -339,6 +342,49 @@ export async function updateReviewBest(count: number): Promise<void> {
   } = await supabase.auth.getUser();
   if (!user) return;
   await supabase.from("profiles").update({ review_best_session_count: count }).eq("id", user.id);
+}
+
+export interface LanguageTwinSessionUpdate {
+  patternTitle: string;
+  category: PatternCategory;
+  status: PatternStatus;
+  trend: Trend;
+}
+
+// Called once from SessionComplete, mirroring getCurrentStreak below — a
+// review session is exactly the kind of real signal review_recall/
+// activation patterns are computed from (see recompute.ts), so this forces
+// an immediate recompute (same staleness-bypass reasoning as the manual
+// "Recompute" button and saveCorrectionEvidenceAction) and surfaces
+// whichever review/activation pattern most recently changed. Returns null
+// rather than fabricating a stat when there's nothing genuine to show.
+export async function getLanguageTwinUpdateAction(): Promise<LanguageTwinSessionUpdate | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const settings = await getOrCreateSettingsSafe(supabase, user.id);
+  if (!settings || !settings.enabled) return null;
+
+  const { data: profile } = await supabase.from("profiles").select("target_language").eq("id", user.id).single();
+  if (!profile) return null;
+
+  await recomputeLanguageTwin(supabase, user.id, profile.target_language);
+
+  const { data: patterns } = await supabase
+    .from("language_error_patterns")
+    .select("title, category, status, trend")
+    .eq("user_id", user.id)
+    .in("category", ["activation", "review_recall"])
+    .in("status", ["active", "improving"])
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  const top = patterns?.[0];
+  if (!top) return null;
+  return { patternTitle: top.title, category: top.category, status: top.status, trend: top.trend };
 }
 
 export async function getCurrentStreak(): Promise<number> {

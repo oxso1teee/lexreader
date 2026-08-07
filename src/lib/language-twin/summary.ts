@@ -1,10 +1,17 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { getOrCreateSettingsSafe } from "./settings";
+import { pickTopPattern } from "./recompute";
 import { MIN_EVIDENCE_FOR_PROFILE } from "./constants";
-import type { ConfidenceLevel } from "./types";
+import type { ConfidenceLevel, PatternRow } from "./types";
 
 export interface LanguageTwinSummary {
   focusTitle: string | null;
+  // The concrete, real stat behind focusTitle (e.g. "12 слов ты хорошо
+  // знаешь по чтению, но регулярно не вспоминаешь..." — recompute.ts
+  // already writes this onto the pattern row; twinProfile.weaknesses_json
+  // only ever carried the bare title, which is why Today's card used to say
+  // *what* the focus is but never *why* — see the "Твой фокус сегодня" fix.
+  focusDescription: string | null;
   strengthTitle: string | null;
   confidence: ConfidenceLevel;
   recommendationReasonKey: string | null;
@@ -41,12 +48,18 @@ export async function getLanguageTwinEntryState(
 
   const { data: twinProfile } = await supabase
     .from("language_twin_profiles")
-    .select("confidence, weaknesses_json, strengths_json, last_recomputed_at")
+    .select("confidence, strengths_json, last_recomputed_at")
     .eq("user_id", userId)
     .maybeSingle();
   if (!twinProfile) return { kind: "invite" };
 
-  const weaknesses = (twinProfile.weaknesses_json as { title: string }[] | null) ?? [];
+  const { data: patternsData } = await supabase
+    .from("language_error_patterns")
+    .select("*")
+    .eq("user_id", userId)
+    .in("status", ["active", "improving", "uncertain"]);
+  const topPattern = pickTopPattern((patternsData ?? []) as PatternRow[]);
+
   const strengths = (twinProfile.strengths_json as { title: string }[] | null) ?? [];
 
   const { data: rec } = await supabase
@@ -61,7 +74,8 @@ export async function getLanguageTwinEntryState(
   return {
     kind: "ready",
     summary: {
-      focusTitle: weaknesses[0]?.title ?? null,
+      focusTitle: topPattern?.title ?? null,
+      focusDescription: topPattern?.description ?? null,
       strengthTitle: strengths[0]?.title ?? null,
       confidence: twinProfile.confidence,
       recommendationReasonKey: rec?.reason_key ?? null,

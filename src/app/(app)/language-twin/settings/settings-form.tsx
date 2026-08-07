@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { track } from "@/lib/posthog-client";
 import Dialog from "@/components/product/language-twin/dialog";
 import type { LanguageTwinSettings } from "@/lib/language-twin/types";
@@ -111,6 +112,12 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
           >
             ↻ Пересчитать профиль сейчас
           </button>
+          <Link
+            href="/language-twin/diagnostic"
+            className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
+          >
+            🧭 Обновить оценку (пройти диагностику ещё раз)
+          </Link>
           <a
             href="/api/export/data"
             download

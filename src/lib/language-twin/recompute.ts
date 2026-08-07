@@ -5,7 +5,7 @@ import { computeConfidence, type ConfidenceSignal } from "./confidence";
 import { buildRecommendations } from "./recommendations";
 import { behavioralLevelRange } from "./behavioral-level";
 import { getOrCreateSettings } from "./settings";
-import type { PatternDraft, PatternRow } from "./types";
+import type { PatternCategory, PatternDraft, PatternRow } from "./types";
 
 const ALGORITHM_VERSION = 1;
 // A profile recomputed more recently than this is considered fresh — the
@@ -105,6 +105,18 @@ async function resolveStalePatterns(
   await query;
 }
 
+const CORRECTION_PATTERN_TITLE: Partial<Record<PatternCategory, string>> = {
+  article: "Артикли в проверке предложений",
+  preposition: "Предлоги в проверке предложений",
+  word_order: "Порядок слов в проверке предложений",
+  tense: "Времена в проверке предложений",
+  passive: "Пассивный залог в проверке предложений",
+  gerund_infinitive: "Герундий/инфинитив в проверке предложений",
+  possession: "Притяжательный падеж в проверке предложений",
+  spelling: "Орфография в проверке предложений",
+  collocation: "Сочетаемость слов в проверке предложений",
+};
+
 export async function recomputeLanguageTwin(
   supabase: SupabaseServerClient,
   userId: string,
@@ -168,6 +180,49 @@ export async function recomputeLanguageTwin(
             flashcardId: g.id,
           })),
         },
+      });
+    }
+  }
+
+  // Correction Input already tags every saved match with a category
+  // (recordEvidence's normalized_category) and buildRecommendations already
+  // has a branch for non-activation/non-review_recall categories
+  // ("correction_practice" / "open_correction_input") — but until now
+  // nothing ever turned that evidence into a language_error_patterns row,
+  // so that branch was unreachable. One occurrence isn't a pattern yet
+  // (>= 2 required), same threshold philosophy as the two sources above.
+  if (settings.include_writing_exercises) {
+    const { data: correctionEvidence } = await supabase
+      .from("language_evidence")
+      .select("normalized_category, occurred_at")
+      .eq("user_id", userId)
+      .eq("evidence_type", "correction_match")
+      .is("deleted_at", null);
+
+    const byCategory = new Map<string, string[]>();
+    for (const e of correctionEvidence ?? []) {
+      if (!e.normalized_category) continue;
+      const occurredAts = byCategory.get(e.normalized_category) ?? [];
+      occurredAts.push(e.occurred_at);
+      byCategory.set(e.normalized_category, occurredAts);
+    }
+
+    for (const [category, occurredAts] of byCategory) {
+      if (occurredAts.length < 2) continue;
+      const confidence = computeConfidence(
+        occurredAts.map((occurredAt) => ({ occurredAt, sourceType: "correction", outcome: "failure" as const })),
+      );
+      patternDrafts.push({
+        patternKey: `correction_${category}`,
+        category: category as PatternCategory,
+        title: CORRECTION_PATTERN_TITLE[category as PatternCategory] ?? "Повторяющаяся ошибка в проверке предложений",
+        description: `Эта ошибка встретилась ${occurredAts.length} раз(а) в проверке предложений.`,
+        severity: occurredAts.length >= 5 ? "high" : occurredAts.length >= 3 ? "medium" : "low",
+        evidenceCount: occurredAts.length,
+        confidenceScore: confidence.score,
+        confidence: confidence.level,
+        trend: "flat",
+        metadata: {},
       });
     }
   }
@@ -277,4 +332,15 @@ export async function recomputeLanguageTwin(
 export function isProfileStale(lastRecomputedAt: string | null): boolean {
   if (!lastRecomputedAt) return true;
   return Date.now() - new Date(lastRecomputedAt).getTime() > STALE_AFTER_MS;
+}
+
+const SEVERITY_WEIGHT = { high: 3, medium: 2, low: 1 } as const;
+
+// Shared by the Overview page and the Today/Progress summary cards so all
+// three surfaces agree on "what's the one thing to focus on" instead of
+// each re-deriving it slightly differently (Overview used to sort patterns
+// itself; Today/Progress read only twinProfile.weaknesses_json[0], which
+// carries no description — see summary.ts).
+export function pickTopPattern<T extends { severity: "high" | "medium" | "low" }>(patterns: T[]): T | undefined {
+  return [...patterns].sort((a, b) => SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity])[0];
 }

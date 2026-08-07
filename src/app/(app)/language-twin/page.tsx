@@ -2,11 +2,11 @@ import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
-import { recomputeLanguageTwin, isProfileStale } from "@/lib/language-twin/recompute";
+import { recomputeLanguageTwin, isProfileStale, pickTopPattern } from "@/lib/language-twin/recompute";
+import { buildTimelineEntries } from "@/lib/language-twin/timeline";
 import { MIN_EVIDENCE_FOR_PROFILE } from "@/lib/language-twin/constants";
 import EmptyState from "@/components/empty-state";
 import PageHeader from "@/components/product/page-header";
-import SectionHeader from "@/components/product/section-header";
 import { ConfidenceBadge, StatusBadge, TrendIndicator, CategoryBadge } from "@/components/product/language-twin/badges";
 import LanguageTwinUnavailable from "@/components/product/language-twin/unavailable";
 import type { PatternRow } from "@/lib/language-twin/types";
@@ -90,7 +90,6 @@ export default async function LanguageTwinPage() {
             </Link>
           }
         />
-        <SectionHeader title="Разделы" />
         <LanguageTwinSections />
       </div>
     );
@@ -102,10 +101,7 @@ export default async function LanguageTwinPage() {
     .eq("user_id", profile.id)
     .in("status", ["active", "improving", "uncertain"]);
   const patterns = (patternsData ?? []) as PatternRow[];
-  const topPattern = [...patterns].sort((a, b) => {
-    const weight = { high: 3, medium: 2, low: 1 } as const;
-    return weight[b.severity] - weight[a.severity];
-  })[0];
+  const topPattern = pickTopPattern(patterns);
 
   const { data: recsData } = await supabase
     .from("language_recommendations")
@@ -113,8 +109,23 @@ export default async function LanguageTwinPage() {
     .eq("user_id", profile.id)
     .eq("status", "pending")
     .order("priority", { ascending: true })
-    .limit(1);
-  const topRecommendation = (recsData ?? [])[0] as RecommendationCardData | undefined;
+    .limit(3);
+  const recommendations = (recsData ?? []) as RecommendationCardData[];
+
+  const { data: recentPatterns } = await supabase
+    .from("language_error_patterns")
+    .select("title, status, first_seen_at")
+    .eq("user_id", profile.id)
+    .order("first_seen_at", { ascending: false })
+    .limit(20);
+  const { data: recentEvidenceDays } = await supabase
+    .from("language_evidence")
+    .select("occurred_at")
+    .eq("user_id", profile.id)
+    .is("deleted_at", null)
+    .order("occurred_at", { ascending: false })
+    .limit(40);
+  const recentChanges = buildTimelineEntries(recentPatterns ?? [], recentEvidenceDays ?? []).slice(0, 3);
 
   const strengths = (twinProfile.strengths_json as { title: string; evidence: string }[]) ?? [];
 
@@ -226,19 +237,46 @@ export default async function LanguageTwinPage() {
 
       <div className="rounded-2xl bg-card p-4 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Рекомендация на сегодня</h2>
+          <h2 className="text-sm font-semibold">Что сделать сегодня</h2>
           <Link href="/language-twin/recommendations" className="text-sm text-[var(--color-caramel-text)]">
             Все →
           </Link>
         </div>
-        {topRecommendation ? (
-          <RecommendationCard rec={topRecommendation} />
-        ) : (
+        {recommendations.length === 0 ? (
           <p className="text-sm text-[var(--text-secondary)]">Рекомендаций пока нет.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {recommendations.map((rec) => (
+              <RecommendationCard key={rec.id} rec={rec} />
+            ))}
+          </div>
         )}
       </div>
 
-      <SectionHeader title="Разделы" />
+      {recentChanges.length > 0 && (
+        <div className="rounded-2xl bg-card p-4 shadow-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Последние изменения профиля</h2>
+            <Link href="/language-twin/timeline" className="text-sm text-[var(--color-caramel-text)]">
+              Вся история →
+            </Link>
+          </div>
+          <ol className="flex flex-col gap-2">
+            {recentChanges.map((entry, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-caramel" />
+                <div>
+                  <p className="text-sm">{entry.title}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {entry.date} · {entry.desc}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       <LanguageTwinSections />
     </div>
   );

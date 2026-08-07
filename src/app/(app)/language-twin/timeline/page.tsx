@@ -2,11 +2,8 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import EmptyState from "@/components/empty-state";
 import LanguageTwinSubHeader from "../sub-header";
+import { buildTimelineEntries } from "@/lib/language-twin/timeline";
 
-// Built from language_evidence + language_error_patterns timestamps — there
-// is no dedicated timeline/log table (plan doc §17: no history table for
-// reading-side transitions exists yet). This is an honest reconstruction
-// from what we do log, not a purpose-built audit trail.
 export default async function LanguageTwinTimelinePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
@@ -26,34 +23,7 @@ export default async function LanguageTwinTimelinePage() {
     .order("occurred_at", { ascending: false })
     .limit(60);
 
-  type TimelineEntry = { date: string; title: string; desc: string; sortKey: string };
-  const entries: TimelineEntry[] = [];
-
-  for (const p of patterns ?? []) {
-    entries.push({
-      sortKey: p.first_seen_at,
-      date: new Date(p.first_seen_at).toLocaleDateString("ru-RU"),
-      title: p.status === "resolved" ? `Паттерн закрыт: ${p.title}` : `Замечен новый паттерн`,
-      desc: p.title,
-    });
-  }
-
-  const byDay = new Map<string, number>();
-  for (const e of evidenceDays ?? []) {
-    const day = new Date(e.occurred_at).toISOString().slice(0, 10);
-    byDay.set(day, (byDay.get(day) ?? 0) + 1);
-  }
-  for (const [day, count] of byDay) {
-    if (count < 3) continue; // only surface genuinely active days, not noise
-    entries.push({
-      sortKey: `${day}T00:00:00Z`,
-      date: new Date(day).toLocaleDateString("ru-RU"),
-      title: "Активный день",
-      desc: `${count} новых записей за день`,
-    });
-  }
-
-  entries.sort((a, b) => (a.sortKey < b.sortKey ? 1 : -1));
+  const entries = buildTimelineEntries(patterns ?? [], evidenceDays ?? []);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">

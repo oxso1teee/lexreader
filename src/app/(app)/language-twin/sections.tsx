@@ -1,35 +1,31 @@
 import Link from "next/link";
 
-// Replaces the old LanguageTwinNav horizontal tab strip: in-content links
-// instead of a persistent app-level nav bar (2026-08-07 UX fix — the strip
-// made Language Twin feel like a separate app nested inside LexReader).
-const SECTIONS = [
-  { href: "/language-twin/patterns", label: "Посмотреть паттерны" },
+// UX fix 2026-08-07: Overview used to link out to 6 equal-weight "sections"
+// (including Паттерны and Рекомендации), which made Language Twin feel like
+// a set of separate tools rather than one profile. Патterns/recommendations
+// are now primary content ON the Overview page itself (see page.tsx), so
+// they're gone from here — what's left are genuinely secondary actions,
+// rendered as a plain low-key link row (not cards) so they read as
+// "also available", not as main navigation.
+const SECONDARY_ACTIONS = [
+  { href: "/language-twin/correction", label: "Проверить фразу" },
   { href: "/language-twin/evidence", label: "Почему LexReader так решил" },
-  { href: "/language-twin/recommendations", label: "Рекомендации" },
-  { href: "/language-twin/timeline", label: "История прогресса" },
-  { href: "/language-twin/correction", label: "Проверить предложение" },
-  { href: "/language-twin/settings", label: "Настройки профиля" },
+  { href: "/language-twin/timeline", label: "История" },
+  { href: "/language-twin/settings", label: "Настройки" },
 ];
 
 export default function LanguageTwinSections() {
   return (
-    <div className="rounded-2xl bg-card p-2 shadow-sm">
-      <ul className="flex flex-col divide-y divide-[var(--border)]">
-        {SECTIONS.map((s) => (
-          <li key={s.href}>
-            <Link
-              href={s.href}
-              className="focus-ring flex items-center justify-between gap-2 rounded-xl p-3 text-sm font-medium hover:bg-[var(--surface-muted)]"
-            >
-              {s.label}
-              <span aria-hidden="true" className="text-[var(--text-secondary)]">
-                →
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <nav aria-label="Дополнительные действия" className="flex flex-wrap gap-x-4 gap-y-2 px-1">
+      {SECONDARY_ACTIONS.map((s) => (
+        <Link
+          key={s.href}
+          href={s.href}
+          className="focus-ring text-xs text-[var(--text-secondary)] underline-offset-2 hover:underline"
+        >
+          {s.label}
+        </Link>
+      ))}
+    </nav>
   );
 }

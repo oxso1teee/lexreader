@@ -37,6 +37,41 @@ export default function LanguageTwinSummaryCard({
   }
 
   const { summary } = state;
+
+  // Today's card leads with a concrete, actionable focus (real pattern +
+  // its real description, e.g. "12 слов ты хорошо знаешь по чтению, но
+  // регулярно не вспоминаешь...") instead of a generic "Мой английский"
+  // label — the point is that the user sees today's actual grammar/vocab
+  // focus without opening a separate diagnostic-style screen every day.
+  if (variant === "today" && summary.focusTitle) {
+    return (
+      <div className="flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-medium text-[var(--text-secondary)]">Твой фокус сегодня</span>
+          <ConfidenceBadge level={summary.confidence} />
+        </div>
+        <p className="text-sm font-semibold">{summary.focusTitle}</p>
+        {summary.focusDescription && (
+          <p className="text-sm text-[var(--text-secondary)]">{summary.focusDescription}</p>
+        )}
+        <div className="mt-1 flex flex-wrap items-center gap-3">
+          <Link
+            href="/language-twin/correction"
+            className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+          >
+            Потренировать 5 минут
+          </Link>
+          <Link
+            href="/language-twin"
+            className="focus-ring text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+          >
+            Весь профиль →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">

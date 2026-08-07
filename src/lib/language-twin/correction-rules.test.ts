@@ -48,3 +48,154 @@ test("checkSentence: possession heuristic fires on literal-translation pattern",
   const result = checkSentence("This is the car of my friend.");
   assert.ok(result.matches.some((m) => m.category === "possession"));
 });
+
+// Incident 2026-08-07: "I cleaning my room" returned zero matches ("Известных
+// паттернов не найдено"), which read as "this sentence was checked and is
+// fine" for a textbook missing-auxiliary error. These lock in the fix.
+test("checkSentence: missing auxiliary in Present Continuous — the reported case", () => {
+  const result = checkSentence("I cleaning my room");
+  const match = result.matches.find((m) => m.patternKey === "aux_missing_present_continuous");
+  assert.ok(match, "expected aux_missing_present_continuous to fire");
+  assert.equal(match?.category, "tense");
+  assert.equal(match?.confidence, "high");
+  assert.match(match!.explanation, /\bbe\b/i);
+  assert.equal(match?.suggestion, "I am cleaning");
+});
+
+test("checkSentence: missing auxiliary detected across pronouns", () => {
+  const cases: [string, string][] = [
+    ["He working now.", "He is working"],
+    ["They playing football.", "They are playing"],
+    ["She studying English.", "She is studying"],
+  ];
+  for (const [input, expectedSuggestion] of cases) {
+    const result = checkSentence(input);
+    const match = result.matches.find((m) => m.patternKey === "aux_missing_present_continuous");
+    assert.ok(match, `expected a match for: ${input}`);
+    assert.equal(match?.suggestion, expectedSuggestion);
+  }
+});
+
+test("checkSentence: missing-auxiliary rule does not false-positive on correct sentences", () => {
+  const cleanSentences = [
+    "I am cleaning my room.",
+    "He is working now.",
+    "They are playing football.",
+    "She is studying English.",
+    "I enjoy cleaning my room.",
+    "I'm cleaning my room.",
+  ];
+  for (const sentence of cleanSentences) {
+    const result = checkSentence(sentence);
+    assert.equal(
+      result.matches.some((m) => m.patternKey === "aux_missing_present_continuous"),
+      false,
+      `unexpected match for: ${sentence}`,
+    );
+  }
+});
+
+test("checkSentence: be-agreement mismatch is caught with the correct form", () => {
+  assert.equal(
+    checkSentence("He are working today.").matches.find((m) => m.patternKey === "be_agreement_mismatch")?.suggestion,
+    "He is",
+  );
+  assert.equal(
+    checkSentence("I is happy.").matches.find((m) => m.patternKey === "be_agreement_mismatch")?.suggestion,
+    "I am",
+  );
+  assert.equal(
+    checkSentence("They is late.").matches.find((m) => m.patternKey === "be_agreement_mismatch")?.suggestion,
+    "They are",
+  );
+});
+
+test("checkSentence: be-agreement rule does not false-positive on correct sentences", () => {
+  for (const sentence of ["He is working.", "I am happy.", "They are late.", "We are here."]) {
+    const result = checkSentence(sentence);
+    assert.equal(result.matches.some((m) => m.patternKey === "be_agreement_mismatch"), false, sentence);
+  }
+});
+
+test("checkSentence: fronted always/never word-order error", () => {
+  const result = checkSentence("Always I go to school by bus.");
+  const match = result.matches.find((m) => m.patternKey === "word_order_fronted_adverb");
+  assert.ok(match);
+  assert.equal(match?.category, "word_order");
+});
+
+test("checkSentence: fronted-adverb rule does not flag grammatical sentence-initial adverbs", () => {
+  for (const sentence of ["Sometimes I wonder why.", "Usually I go by bus.", "Always be kind to others."]) {
+    const result = checkSentence(sentence);
+    assert.equal(result.matches.some((m) => m.patternKey === "word_order_fronted_adverb"), false, sentence);
+  }
+});
+
+test("checkSentence: malformed passive (Past Simple instead of Past Participle)", () => {
+  const result = checkSentence("The book was wrote by him.");
+  const match = result.matches.find((m) => m.patternKey === "passive_wrong_participle");
+  assert.ok(match);
+  assert.equal(match?.category, "passive");
+  assert.equal(match?.suggestion, "was written");
+});
+
+test("checkSentence: correct passive is not flagged", () => {
+  const result = checkSentence("The book was written by him.");
+  assert.equal(result.matches.some((m) => m.patternKey === "passive_wrong_participle"), false);
+});
+
+test("checkSentence: gerund/infinitive verb-choice errors in both directions", () => {
+  const wantsGerund = checkSentence("I want going home.").matches.find(
+    (m) => m.patternKey === "infinitive_verb_used_with_gerund",
+  );
+  assert.equal(wantsGerund?.suggestion, "want to go");
+
+  const wantsInfinitive = checkSentence("I enjoy to read books.").matches.find(
+    (m) => m.patternKey === "gerund_verb_used_with_infinitive",
+  );
+  assert.equal(wantsInfinitive?.suggestion, "enjoy reading");
+});
+
+test("checkSentence: gerund/infinitive rule does not false-positive on correct usage", () => {
+  for (const sentence of ["I want to go home.", "I enjoy reading books."]) {
+    const result = checkSentence(sentence);
+    assert.equal(
+      result.matches.some((m) => m.category === "gerund_infinitive"),
+      false,
+      sentence,
+    );
+  }
+});
+
+test("checkSentence: possessive missing apostrophe-s", () => {
+  const result = checkSentence("This is my friend car.");
+  const match = result.matches.find((m) => m.patternKey === "possession_missing_apostrophe_s");
+  assert.ok(match);
+  assert.equal(match?.suggestion, "my friend's car");
+});
+
+test("checkSentence: possessive rule does not flag a correctly formed possessive", () => {
+  const result = checkSentence("This is my friend's car.");
+  assert.equal(result.matches.some((m) => m.patternKey === "possession_missing_apostrophe_s"), false);
+});
+
+test("checkSentence: edit-distance spelling catches a one-letter-off typo", () => {
+  const result = checkSentence("This is a buisness plan.");
+  const match = result.matches.find((m) => m.patternKey === "spelling_edit_distance_business");
+  assert.ok(match);
+  assert.equal(match?.confidence, "medium");
+  assert.equal(match?.suggestion, "business");
+});
+
+test("checkSentence: edit-distance spelling does not flag correctly spelled words", () => {
+  const result = checkSentence("This is a business plan for tomorrow.");
+  assert.equal(result.matches.some((m) => m.category === "spelling"), false);
+});
+
+test("checkSentence: an unsupported error type still returns supported=true with zero matches", () => {
+  // Deliberately not covered by any rule above — the engine must not imply
+  // a full grammar check happened, but it also must not crash or mark the
+  // input as unsupported (that's reserved for empty/too-long/non-Latin).
+  const result = checkSentence("Me no like this thing very much yesterday tomorrow.");
+  assert.equal(result.supported, true);
+});
