@@ -25,21 +25,21 @@
       "addMaterialDescription": "Read anything interesting — LexReader saves new words and builds review for you.",
       "addMaterialCta": "Add material"
     },
-    "plan": {
-      "title": "Today's plan",
-      "due": "Due for review",
-      "streak": "Day streak",
-      "words": "Words saved",
-      "reviewsThisWeek": "Reviews this week"
+    "hero": {
+      "startCta": "Start",
+      "continueCta": "Continue",
+      "allMissionsLink": "All missions →"
     },
-    "continueLearning": {
-      "title": "Continue learning"
+    "summary": {
+      "title": "Today"
     },
-    "review": {
-      "title": "Review"
+    "myEnglish": {
+      "title": "My English"
     },
-    "progressSnapshot": {
-      "title": "Progress"
+    "weekProgress": {
+      "title": "This week's progress",
+      "activeDays": "Active days",
+      "missionsCompleted": "Missions completed"
     },
     "comingSoon": {
       "title": "Coming soon"

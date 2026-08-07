@@ -5,12 +5,13 @@ import {
   COOLDOWN_DISMISSED_MS,
   MAX_ACTIVE_MISSIONS,
   isUnderCooldown,
+  pickHeroMission,
   priorityForCandidate,
   scoreCandidate,
   selectMissionCandidates,
   type FingerprintedCandidate,
 } from "./ranking.ts";
-import type { MissionCandidateInput, MissionHistoryEntry } from "./types.ts";
+import type { MissionCandidateInput, MissionHistoryEntry, MissionRow } from "./types.ts";
 
 function candidate(overrides: Partial<MissionCandidateInput> = {}): MissionCandidateInput {
   return {
@@ -151,4 +152,65 @@ test("selectMissionCandidates: higher-scoring candidate is selected first when o
   ];
   const selected = selectMissionCandidates(candidates, [], now);
   assert.equal(selected[0].fingerprint, "fp-strong");
+});
+
+function mission(overrides: Partial<MissionRow> = {}): MissionRow {
+  return {
+    id: "mission-1",
+    user_id: "user-1",
+    mission_type: "grammar_pattern",
+    source_pattern_id: null,
+    source_recommendation_id: null,
+    title: "Test mission",
+    reason_key: "test",
+    skill_category: "tense",
+    difficulty: "medium",
+    estimated_minutes: 4,
+    step_count: 5,
+    status: "available",
+    priority: "medium",
+    fingerprint: "fp",
+    payload_json: {},
+    algorithm_version: 1,
+    generated_at: new Date().toISOString(),
+    started_at: null,
+    completed_at: null,
+    dismissed_at: null,
+    expires_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+test("pickHeroMission: empty list returns null (no fabricated hero)", () => {
+  assert.equal(pickHeroMission([]), null);
+});
+
+test("pickHeroMission: a started mission always wins over any available one", () => {
+  const started = mission({ id: "started", status: "started", priority: "low" });
+  const available = mission({ id: "available", status: "available", priority: "high" });
+  assert.equal(pickHeroMission([available, started])?.id, "started");
+});
+
+test("pickHeroMission: among available missions, higher priority wins", () => {
+  const low = mission({ id: "low", status: "available", priority: "low" });
+  const high = mission({ id: "high", status: "available", priority: "high" });
+  assert.equal(pickHeroMission([low, high])?.id, "high");
+});
+
+test("pickHeroMission: ties broken by most recently generated", () => {
+  const older = mission({ id: "older", status: "available", priority: "medium", generated_at: new Date(Date.now() - 60_000).toISOString() });
+  const newer = mission({ id: "newer", status: "available", priority: "medium", generated_at: new Date().toISOString() });
+  assert.equal(pickHeroMission([older, newer])?.id, "newer");
+});
+
+test("pickHeroMission: among multiple started missions, most recently generated wins", () => {
+  const older = mission({ id: "older", status: "started", generated_at: new Date(Date.now() - 60_000).toISOString() });
+  const newer = mission({ id: "newer", status: "started", generated_at: new Date().toISOString() });
+  assert.equal(pickHeroMission([older, newer])?.id, "newer");
+});
+
+test("pickHeroMission: dismissed/completed/expired missions are never picked", () => {
+  const done = mission({ id: "done", status: "completed" });
+  const dismissed = mission({ id: "dismissed", status: "dismissed" });
+  assert.equal(pickHeroMission([done, dismissed]), null);
 });

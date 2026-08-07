@@ -1,5 +1,5 @@
 import type { ConfidenceLevel, Severity } from "@/lib/language-twin/types";
-import type { MissionCandidateInput, MissionHistoryEntry, MissionPriority, MissionType } from "./types";
+import type { MissionCandidateInput, MissionHistoryEntry, MissionPriority, MissionRow, MissionType } from "./types";
 
 // plan doc §8/§12 — cooldown windows read from the user's own mission
 // history, no separate cooldown table.
@@ -89,6 +89,27 @@ export function selectMissionCandidates(
     if (patternId) usedPatternIds.add(patternId);
   }
   return selected;
+}
+
+const PRIORITY_RANK: Record<MissionPriority, number> = { high: 3, medium: 2, low: 1 };
+
+// Today v2 §4: which single active mission gets the hero "Твой следующий
+// шаг" slot. Operates on already-persisted rows (unlike scoreCandidate/
+// selectMissionCandidates above, which only ever see fresh generation-time
+// candidates) — a `started` mission always wins over any `available` one
+// (finish what you started beats starting something "more important"),
+// then falls back to the stored priority bucket, then most recent.
+export function pickHeroMission(missions: MissionRow[]): MissionRow | null {
+  if (missions.length === 0) return null;
+  const started = missions.filter((m) => m.status === "started");
+  const pool = started.length > 0 ? started : missions.filter((m) => m.status === "available");
+  if (pool.length === 0) return null;
+
+  return [...pool].sort((a, b) => {
+    const priorityDiff = PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority];
+    if (priorityDiff !== 0) return priorityDiff;
+    return new Date(b.generated_at).getTime() - new Date(a.generated_at).getTime();
+  })[0];
 }
 
 export type { MissionType };
