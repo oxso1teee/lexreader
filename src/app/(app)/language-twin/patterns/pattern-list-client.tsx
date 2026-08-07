@@ -69,9 +69,9 @@ function PatternDetail({
         </p>
 
         <div>
-          <p className="mb-1 text-xs font-semibold text-[var(--text-secondary)]">Свидетельства ({evidence.length})</p>
+          <p className="mb-1 text-xs font-semibold text-[var(--text-secondary)]">На чём основано ({evidence.length})</p>
           <div className="flex flex-col divide-y divide-[var(--border)]">
-            {evidence.length === 0 && <p className="py-2 text-[var(--text-secondary)]">Нет свидетельств.</p>}
+            {evidence.length === 0 && <p className="py-2 text-[var(--text-secondary)]">Пока нет записей.</p>}
             {evidence.map((e) => (
               <div key={e.id} className="flex items-center justify-between gap-2 py-2">
                 <div>
@@ -82,7 +82,7 @@ function PatternDetail({
                 </div>
                 <button
                   type="button"
-                  aria-label="Удалить это свидетельство"
+                  aria-label="Удалить эту запись"
                   disabled={isPending}
                   onClick={() => {
                     track("evidence_deleted", { source_type: e.source_type });
@@ -210,7 +210,7 @@ export default function PatternListClient({
                 <TrendIndicator trend={p.trend} />
               </div>
               <p className="text-xs text-[var(--text-secondary)]">
-                {p.evidence_count} свидетельств · последнее — {formatDate(p.last_seen_at)}
+                {p.evidence_count} записей · последнее — {formatDate(p.last_seen_at)}
               </p>
             </button>
           ))

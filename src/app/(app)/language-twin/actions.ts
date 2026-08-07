@@ -213,11 +213,37 @@ export async function saveCorrectionEvidenceAction(
   return { ok: true };
 }
 
+export interface DiagnosticSignal {
+  label: string;
+  detail: string;
+}
+
 export interface DiagnosticSubmitResult {
   correct: number;
   total: number;
   levelRange: string | null;
+  signals: DiagnosticSignal[];
 }
+
+const DIAGNOSTIC_TAG_LABEL: Record<string, string> = {
+  tense: "Времена",
+  article: "Артикли",
+  passive: "Passive",
+  gerund_infinitive: "Gerund/Infinitive",
+  preposition: "Предлоги",
+  word_order: "Порядок слов",
+};
+
+const BEHAVIORAL_SIGNAL_LABEL: Record<string, string> = {
+  review_recall: "Vocabulary recall",
+  activation: "Passive recognition",
+};
+
+const CONFIDENCE_PHRASE: Record<string, string> = {
+  low: "низкая уверенность",
+  medium: "средняя уверенность",
+  high: "высокая уверенность",
+};
 
 export async function submitDiagnosticAction(answers: (number | null)[]): Promise<DiagnosticSubmitResult> {
   const profile = await requireProfile();
@@ -252,6 +278,39 @@ export async function submitDiagnosticAction(answers: (number | null)[]): Promis
       );
   }
 
+  // Result-screen signals (plan doc: "Профиль обновлён" screen) mix this
+  // diagnostic's own per-tag answers with the two existing behavioral
+  // patterns — both are real, already-computed data, not fabricated
+  // confidence language. Skipped entirely if the schema is unreachable
+  // (settings null), same guard as the evidence-recording branch above.
+  const diagnosticSignals: DiagnosticSignal[] = Object.entries(score.byTag).map(([tag, tagScore]) => ({
+    label: DIAGNOSTIC_TAG_LABEL[tag] ?? tag,
+    detail: tagScore.correct === tagScore.total ? "есть сигнал" : "пока не уверены",
+  }));
+
+  let behavioralPatterns: { category: string; confidence: string }[] = [];
+  if (settings) {
+    const { data } = await supabase
+      .from("language_error_patterns")
+      .select("category, confidence")
+      .eq("user_id", profile.id)
+      .in("category", ["review_recall", "activation"])
+      .in("status", ["active", "improving", "uncertain"]);
+    behavioralPatterns = data ?? [];
+  }
+  const behavioralSignals: DiagnosticSignal[] = (["review_recall", "activation"] as const).map((category) => {
+    const row = behavioralPatterns.find((p) => p.category === category);
+    return {
+      label: BEHAVIORAL_SIGNAL_LABEL[category],
+      detail: row ? CONFIDENCE_PHRASE[row.confidence] ?? row.confidence : "пока мало данных",
+    };
+  });
+
   revalidatePath(PATH);
-  return { correct: score.correct, total: score.total, levelRange };
+  return {
+    correct: score.correct,
+    total: score.total,
+    levelRange,
+    signals: [...diagnosticSignals, ...behavioralSignals],
+  };
 }

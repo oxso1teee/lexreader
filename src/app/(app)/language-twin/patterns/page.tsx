@@ -1,8 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import PageHeader from "@/components/product/page-header";
 import EmptyState from "@/components/empty-state";
-import LanguageTwinNav from "../language-twin-nav";
+import LanguageTwinSubHeader from "../sub-header";
 import PatternListClient from "./pattern-list-client";
 import type { EvidenceRow, PatternRow } from "@/lib/language-twin/types";
 
@@ -37,8 +36,7 @@ export default async function LanguageTwinPatternsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <PageHeader title="Паттерны ошибок" description="Каждый паттерн подкреплён конкретными свидетельствами" />
-      <LanguageTwinNav current="/language-twin/patterns" />
+      <LanguageTwinSubHeader title="Паттерны" description="Каждый паттерн подкреплён конкретными примерами из твоей активности" />
       {patterns.length === 0 ? (
         <EmptyState
           icon="🧩"

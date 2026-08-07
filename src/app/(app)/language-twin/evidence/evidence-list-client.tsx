@@ -61,7 +61,7 @@ export default function EvidenceListClient({ evidence }: { evidence: EvidenceRow
       </div>
       <div className="flex flex-col divide-y divide-[var(--border)] rounded-2xl bg-card p-2 shadow-sm">
         {filtered.length === 0 ? (
-          <p className="p-3 text-sm text-[var(--text-secondary)]">Нет свидетельств в этой категории.</p>
+          <p className="p-3 text-sm text-[var(--text-secondary)]">Нет записей в этой категории.</p>
         ) : (
           filtered.map((e) => (
             <div key={e.id} className="flex items-center justify-between gap-3 p-3">
@@ -75,7 +75,7 @@ export default function EvidenceListClient({ evidence }: { evidence: EvidenceRow
               </div>
               <button
                 type="button"
-                aria-label="Удалить это свидетельство"
+                aria-label="Удалить эту запись"
                 disabled={isPending}
                 onClick={() => handleDelete(e.id, e.source_type)}
                 className="focus-ring flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black disabled:opacity-40 dark:hover:text-white"

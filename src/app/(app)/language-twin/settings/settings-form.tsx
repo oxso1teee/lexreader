@@ -136,7 +136,7 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
       {confirmingReset && (
         <Dialog titleId="reset-title" title="Сбросить Language Twin?" onClose={() => setConfirmingReset(false)}>
           <p className="text-sm">
-            Все паттерны, свидетельства и рекомендации будут удалены безвозвратно. Твои слова, карточки и
+            Все паттерны, записи и рекомендации будут удалены безвозвратно. Твои слова, карточки и
             история повторений в Мозге и Читалке не пострадают — это касается только Language Twin.
           </p>
           <div className="mt-4 flex gap-2">

@@ -1,8 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import PageHeader from "@/components/product/page-header";
 import EmptyState from "@/components/empty-state";
-import LanguageTwinNav from "../language-twin-nav";
+import LanguageTwinSubHeader from "../sub-header";
 
 // Built from language_evidence + language_error_patterns timestamps — there
 // is no dedicated timeline/log table (plan doc §17: no history table for
@@ -50,7 +49,7 @@ export default async function LanguageTwinTimelinePage() {
       sortKey: `${day}T00:00:00Z`,
       date: new Date(day).toLocaleDateString("ru-RU"),
       title: "Активный день",
-      desc: `${count} новых свидетельств за день`,
+      desc: `${count} новых записей за день`,
     });
   }
 
@@ -58,8 +57,7 @@ export default async function LanguageTwinTimelinePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <PageHeader title="История изменений" description="Реальные обновления профиля, не витрина достижений" />
-      <LanguageTwinNav current="/language-twin/timeline" />
+      <LanguageTwinSubHeader title="История прогресса" description="Реальные обновления профиля, не витрина достижений" />
       {entries.length === 0 ? (
         <EmptyState icon="📈" title="История пока пуста" body="Как только накопится активность, здесь появятся реальные изменения профиля." />
       ) : (

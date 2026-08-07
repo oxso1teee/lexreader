@@ -1,8 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import PageHeader from "@/components/product/page-header";
 import EmptyState from "@/components/empty-state";
-import LanguageTwinNav from "../language-twin-nav";
+import LanguageTwinSubHeader from "../sub-header";
 import RecommendationCard, { type RecommendationCardData } from "../recommendation-card";
 
 export default async function LanguageTwinRecommendationsPage() {
@@ -26,8 +25,7 @@ export default async function LanguageTwinRecommendationsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <PageHeader title="Рекомендации" description="Каждая рекомендация связана с конкретным паттерном или пробелом" />
-      <LanguageTwinNav current="/language-twin/recommendations" />
+      <LanguageTwinSubHeader title="Рекомендации" description="Каждая рекомендация связана с конкретным паттерном или пробелом" />
 
       {(pending ?? []).length === 0 ? (
         <EmptyState icon="🎯" title="Рекомендаций пока нет" body="Все текущие рекомендации выполнены — отличная работа, или пока недостаточно данных." />

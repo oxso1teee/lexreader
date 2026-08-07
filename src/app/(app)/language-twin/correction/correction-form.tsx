@@ -109,7 +109,7 @@ export default function CorrectionForm() {
                 disabled={isPending || saved}
                 className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
               >
-                {saved ? "✓ Сохранено как свидетельство" : "Сохранить как свидетельство"}
+                {saved ? "✓ Сохранено в профиль" : "Сохранить в профиль"}
               </button>
             </div>
           )}

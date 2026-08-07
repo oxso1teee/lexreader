@@ -1,5 +1,4 @@
-import PageHeader from "@/components/product/page-header";
-import LanguageTwinNav from "../language-twin-nav";
+import LanguageTwinSubHeader from "../sub-header";
 import { requireProfile } from "@/lib/auth";
 import CorrectionForm from "./correction-form";
 
@@ -7,11 +6,10 @@ export default async function LanguageTwinCorrectionPage() {
   await requireProfile();
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <PageHeader
+      <LanguageTwinSubHeader
         title="Проверка предложения"
         description="Напиши предложение на английском — проверим по известным правилам, без ИИ и без внешних сервисов"
       />
-      <LanguageTwinNav current="/language-twin/correction" />
       <CorrectionForm />
       <div className="rounded-2xl bg-card p-4 shadow-sm">
         <h2 className="mb-2 text-sm font-semibold">Что реально умеет эта проверка (v1)</h2>
@@ -34,8 +32,8 @@ export default async function LanguageTwinCorrectionPage() {
         </div>
       </div>
       <p className="text-xs text-[var(--text-secondary)]">
-        Мы сохраняем предложение только если ты сам нажмёшь «Сохранить как свидетельство». По умолчанию
-        текст никуда не отправляется и не остаётся на сервере.
+        Мы сохраняем предложение только если ты сам нажмёшь «Сохранить в профиль». По умолчанию текст
+        никуда не отправляется и не остаётся на сервере.
       </p>
     </div>
   );

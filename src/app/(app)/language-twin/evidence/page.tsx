@@ -1,8 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import PageHeader from "@/components/product/page-header";
 import EmptyState from "@/components/empty-state";
-import LanguageTwinNav from "../language-twin-nav";
+import LanguageTwinSubHeader from "../sub-header";
 import EvidenceListClient from "./evidence-list-client";
 import type { EvidenceRow } from "@/lib/language-twin/types";
 
@@ -21,20 +20,22 @@ export default async function LanguageTwinEvidencePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <PageHeader title="Свидетельства" description="Полный список того, на чём построены выводы — можно удалить любую запись" />
-      <LanguageTwinNav current="/language-twin/evidence" />
+      <LanguageTwinSubHeader
+        title="На чём основан профиль"
+        description="Полный список записей, на которых построены выводы — можно удалить любую"
+      />
       {evidence.length === 0 ? (
         <EmptyState
           icon="📋"
-          title="Свидетельств пока нет"
-          body="Свидетельства появляются автоматически из истории повторений, чтения и проверок предложений."
+          title="Записей пока нет"
+          body="Записи появляются автоматически из истории повторений, чтения и проверок предложений."
         />
       ) : (
         <EvidenceListClient evidence={evidence} />
       )}
       <p className="text-xs text-[var(--text-secondary)]">
-        Удаление здесь удаляет саму запись-свидетельство. Слово, карточка или текст, к которым она
-        относится, никуда не пропадают — это касается только Language Twin.
+        Удаление здесь удаляет саму запись. Слово, карточка или текст, к которым она относится, никуда не
+        пропадают — это касается только «Мой английский».
       </p>
     </div>
   );

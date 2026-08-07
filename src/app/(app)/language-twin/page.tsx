@@ -6,16 +6,20 @@ import { recomputeLanguageTwin, isProfileStale } from "@/lib/language-twin/recom
 import { MIN_EVIDENCE_FOR_PROFILE } from "@/lib/language-twin/constants";
 import EmptyState from "@/components/empty-state";
 import PageHeader from "@/components/product/page-header";
+import SectionHeader from "@/components/product/section-header";
 import { ConfidenceBadge, StatusBadge, TrendIndicator, CategoryBadge } from "@/components/product/language-twin/badges";
 import LanguageTwinUnavailable from "@/components/product/language-twin/unavailable";
 import type { PatternRow } from "@/lib/language-twin/types";
 import RecomputeButton from "./recompute-button";
 import HowCalculated from "./how-calculated";
-import LanguageTwinNav from "./language-twin-nav";
+import LanguageTwinSections from "./sections";
 import RecommendationCard, { type RecommendationCardData } from "./recommendation-card";
 import EnableToggleInline from "./enable-toggle-inline";
 import StrengthsList from "./strengths-list";
 import LanguageTwinAnalytics from "./language-twin-analytics";
+
+const OVERVIEW_SUBTITLE =
+  "LexReader анализирует твоё чтение, практику и упражнения, чтобы показать, что уже получается и что стоит улучшить.";
 
 export default async function LanguageTwinPage() {
   const profile = await requireProfile();
@@ -72,7 +76,7 @@ export default async function LanguageTwinPage() {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
         <LanguageTwinAnalytics confidence="none" />
-        <PageHeader title="Мой английский" description="Language Twin · оценка на основе твоей реальной активности" />
+        <PageHeader title="Мой английский" description={OVERVIEW_SUBTITLE} />
         <EmptyState
           icon="🌱"
           title="Пока недостаточно данных"
@@ -86,6 +90,8 @@ export default async function LanguageTwinPage() {
             </Link>
           }
         />
+        <SectionHeader title="Разделы" />
+        <LanguageTwinSections />
       </div>
     );
   }
@@ -117,12 +123,7 @@ export default async function LanguageTwinPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <LanguageTwinAnalytics confidence={isLowConfidence ? "low" : twinProfile.confidence} />
-      <PageHeader
-        title="Мой английский"
-        description="Language Twin · оценка на основе твоей реальной активности, не теста на 5 вопросов"
-        action={<RecomputeButton />}
-      />
-      <LanguageTwinNav current="/language-twin" />
+      <PageHeader title="Мой английский" description={OVERVIEW_SUBTITLE} action={<RecomputeButton />} />
 
       {isLowConfidence ? (
         <div className="flex flex-col gap-3 rounded-2xl bg-[var(--color-warning)]/10 p-4">
@@ -150,7 +151,7 @@ export default async function LanguageTwinPage() {
                 {twinProfile.last_recomputed_at
                   ? new Date(twinProfile.last_recomputed_at).toLocaleDateString("ru-RU")
                   : "—"}{" "}
-                · {evidenceCount} свидетельств ·{" "}
+                · {evidenceCount} записей ·{" "}
                 <HowCalculated
                   selfReportedLevel={profile.level}
                   diagnosticLevelRange={twinProfile.diagnostic_level_range}
@@ -236,6 +237,9 @@ export default async function LanguageTwinPage() {
           <p className="text-sm text-[var(--text-secondary)]">Рекомендаций пока нет.</p>
         )}
       </div>
+
+      <SectionHeader title="Разделы" />
+      <LanguageTwinSections />
     </div>
   );
 }

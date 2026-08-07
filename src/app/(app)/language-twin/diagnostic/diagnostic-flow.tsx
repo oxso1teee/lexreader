@@ -37,34 +37,42 @@ export default function DiagnosticFlow() {
 
   if (result) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl bg-card p-6 text-center shadow-sm">
-        <span className="text-4xl" aria-hidden="true">
-          🧭
-        </span>
-        <p className="text-xl font-bold">
-          {result.correct} из {result.total}
-        </p>
-        {result.levelRange && (
-          <p className="text-sm text-[var(--text-secondary)]">Ориентировочный диапазон: {result.levelRange}</p>
-        )}
-        <p className="max-w-sm text-sm text-[var(--text-secondary)]">
-          Это не точный тест на CEFR-уровень — диагностика лишь добавляет один из трёх сигналов в общую
-          оценку (см. «Как это посчитано» на главном экране «Мой английский»).
-        </p>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-3 rounded-2xl bg-card p-6 shadow-sm">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <span className="text-4xl" aria-hidden="true">
+            🧭
+          </span>
+          <h2 className="text-lg font-bold">Профиль обновлён</h2>
+          <p className="text-xs text-[var(--text-secondary)]">
+            {result.correct} из {result.total} правильных ответов
+            {result.levelRange ? ` · ориентировочно ${result.levelRange}` : ""}
+          </p>
+        </div>
+        <p className="text-sm text-[var(--text-secondary)]">LexReader получил новые данные:</p>
+        <ul className="flex flex-col gap-1.5">
+          {result.signals.map((s) => (
+            <li key={s.label} className="flex items-start gap-2 text-sm">
+              <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-caramel" />
+              <span>
+                <span className="font-medium">{s.label}</span> — {s.detail}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex flex-col items-center gap-2 pt-1">
+          <Link
+            href="/language-twin"
+            className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+          >
+            Посмотреть мой профиль
+          </Link>
           <button
             type="button"
             onClick={restart}
-            className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+            className="focus-ring text-xs text-[var(--text-secondary)] underline-offset-2 hover:underline"
           >
             Пройти ещё раз
           </button>
-          <Link
-            href="/language-twin"
-            className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
-          >
-            К обзору
-          </Link>
         </div>
       </div>
     );
@@ -78,7 +86,7 @@ export default function DiagnosticFlow() {
         </span>
         <p className="text-sm text-[var(--text-secondary)]">
           Отвечай как получится — правильный ответ не обязателен. Диагностика не выдаёт точный CEFR-уровень,
-          а становится одним из свидетельств.
+          а просто добавляет новые данные в твой профиль.
         </p>
         <div className="flex gap-2">
           <button
