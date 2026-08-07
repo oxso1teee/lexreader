@@ -3,6 +3,7 @@ import { requireProfile } from "@/lib/auth";
 import { getDueCount, getReviewsThisWeekCount, computeHardestWords } from "@/lib/brain-stats";
 import { decideProgressInsight } from "@/lib/progress-insight";
 import { getLanguageTwinEntryState } from "@/lib/language-twin/summary";
+import { getMissionsCompletedThisWeek } from "@/lib/missions/persist";
 import LanguageTwinSummaryCard from "@/components/product/language-twin/summary-card";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
@@ -111,7 +112,7 @@ export default async function ProgressPage({
     { count: wordsAddedLast7Days },
     { count: finishedTexts },
     languageTwinState,
-    { data: missionsCompletedThisWeekRows },
+    missionWeekStats,
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -218,15 +219,10 @@ export default async function ProgressPage({
       .eq("texts.language", profile.target_language)
       .gte("percent_read", 100),
     getLanguageTwinEntryState(supabase, profile.id),
-    // Missions v1: real completed-this-week rows, not a running total — same
-    // "this week" framing as the other Activity/skill stats above, no
-    // fabricated streaks or points.
-    supabase
-      .from("missions")
-      .select("skill_category")
-      .eq("user_id", profile.id)
-      .eq("status", "completed")
-      .gte("completed_at", isoWeekStart(new Date())),
+    // Missions v1 / Today v2 §5: shared helper (src/lib/missions/persist.ts)
+    // so /home and /progress can never quietly report different numbers for
+    // the same "completed this week" stat.
+    getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date())),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -299,11 +295,6 @@ export default async function ProgressPage({
   const reviewsLast7Days = reviewLogs.filter((r) => new Date(r.reviewed_at) >= sevenDaysAgo);
   const readingDaysLast7 = new Set(sessionsLast7Days.map((s) => isoDate(s.started_at))).size;
 
-  const missionsCompletedThisWeek = missionsCompletedThisWeekRows?.length ?? 0;
-  const missionSkillsTouchedThisWeek = new Set(
-    (missionsCompletedThisWeekRows ?? []).map((r) => r.skill_category).filter((c): c is string => Boolean(c)),
-  ).size;
-
   const activeDaysInPeriod = new Set([
     ...sessions.map((s) => isoDate(s.started_at)),
     ...reviewLogs.map((r) => isoDate(r.reviewed_at)),
@@ -347,12 +338,12 @@ export default async function ProgressPage({
         />
       </div>
 
-      {missionsCompletedThisWeek > 0 && (
+      {missionWeekStats.completed > 0 && (
         <div>
           <h2 className="text-h3 mb-2">Миссии</h2>
           <div className="grid grid-cols-2 gap-3">
-            <StatCard value={missionsCompletedThisWeek} label="Миссий завершено за неделю" color="green" />
-            <StatCard value={missionSkillsTouchedThisWeek} label="Направлений затронуто" color="blue" />
+            <StatCard value={missionWeekStats.completed} label="Миссий завершено за неделю" color="green" />
+            <StatCard value={missionWeekStats.skillsTouched} label="Направлений затронуто" color="blue" />
           </div>
         </div>
       )}

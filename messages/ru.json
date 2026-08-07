@@ -25,21 +25,21 @@
       "addMaterialDescription": "Читай что угодно интересное — LexReader сохранит незнакомые слова и создаст повторение.",
       "addMaterialCta": "Добавить материал"
     },
-    "plan": {
-      "title": "План на сегодня",
-      "due": "К повторению",
-      "streak": "Дней подряд",
-      "words": "Слов сохранено",
-      "reviewsThisWeek": "Повторений за неделю"
+    "hero": {
+      "startCta": "Начать",
+      "continueCta": "Продолжить",
+      "allMissionsLink": "Все миссии →"
     },
-    "continueLearning": {
-      "title": "Продолжить обучение"
+    "summary": {
+      "title": "Сегодня"
     },
-    "review": {
-      "title": "Повторение"
+    "myEnglish": {
+      "title": "Мой английский"
     },
-    "progressSnapshot": {
-      "title": "Прогресс"
+    "weekProgress": {
+      "title": "Прогресс недели",
+      "activeDays": "Дней активности",
+      "missionsCompleted": "Миссий завершено"
     },
     "comingSoon": {
       "title": "Скоро"

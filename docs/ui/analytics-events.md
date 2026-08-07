@@ -7,7 +7,7 @@ new analytics library. PostHog already works in production (see
 | Event | Fired from | Properties |
 |---|---|---|
 | `today_viewed` | `home/today-analytics.tsx` (mount, client) | `due_count_bucket`, `has_active_material`, `viewport_type` |
-| `today_primary_action_clicked` | `product/primary-action-card.tsx` | `action_type` (`review`\|`continue_reading`\|`add_material`), `destination` |
+| `today_primary_action_clicked` | `product/primary-action-card.tsx` (no-mission fallback), or `product/today/hero-mission-card.tsx` (Today v2, when a mission fills the hero slot) | `action_type` (`review`\|`continue_reading`\|`add_material`\|`mission`), `destination` |
 | `app_nav_clicked` | `app-shell/desktop-sidebar.tsx`, `app-shell/mobile-bottom-nav.tsx` | `destination`, `viewport_type` |
 | `continue_learning_clicked` | `product/today/continue-learning-card.tsx` | `destination` |
 | `review_entry_clicked` | `product/today/review-summary-card.tsx` | `destination` |
@@ -130,3 +130,13 @@ one specific mission's content, the same reasoning Language Twin uses for
 `category`/`confidence` instead of a pattern id. Verified by
 `e2e/missions-privacy.spec.ts`, which extends the forbidden-key list above
 with `answer`/`prompt`/`option`/`mission_id`.
+
+# Analytics events — M3 Slice 7 (Today v2)
+
+No new events. `today_primary_action_clicked` (table above, M3 Slice 1) gains
+one more `action_type` value, `"mission"`, fired from the new
+`product/today/hero-mission-card.tsx` when an active mission fills the Today
+hero slot instead of the generic review/continue/add-material action — same
+event name, same property shape, still only an enum + a route string.
+`mission_impression` (Missions v1, above) is unchanged and continues to be
+the signal for "Today showed at least one mission."
