@@ -1,4 +1,4 @@
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, getSessionUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getPlan } from "@/lib/subscription";
 import SettingsClient from "./settings-client";
@@ -7,18 +7,20 @@ export default async function SettingsPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [plan, { count: pushCount }] = await Promise.all([
+  const [plan, { count: pushCount }, user] = await Promise.all([
     getPlan(supabase, profile.id),
     supabase
       .from("push_subscriptions")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", profile.id),
+    getSessionUser(),
   ]);
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6">
       <h1 className="mb-4 text-xl font-semibold">Настройки</h1>
       <SettingsClient
+        email={user?.email ?? null}
         targetLanguage={profile.target_language}
         nativeLanguage={profile.native_language}
         level={profile.level}

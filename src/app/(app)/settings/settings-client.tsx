@@ -26,6 +26,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 }
 
 export default function SettingsClient({
+  email,
   targetLanguage,
   nativeLanguage,
   level,
@@ -33,6 +34,7 @@ export default function SettingsClient({
   plan,
   initialPushEnabled,
 }: {
+  email: string | null;
   targetLanguage: string;
   nativeLanguage: string;
   level: string | null;
@@ -107,6 +109,16 @@ export default function SettingsClient({
     <div className="flex flex-col gap-6">
       <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
         <h2 className="mb-2 font-medium">Профиль</h2>
+        {email && (
+          <p className="mb-3 text-sm text-black/60 dark:text-white/60">
+            Аккаунт: <span className="font-medium text-black dark:text-white">{email}</span>
+            <br />
+            <span className="text-xs text-black/40 dark:text-white/40">
+              Тексты и слова видны только на устройствах, где выполнен вход под этим же email.
+              Если на телефоне не хватает недавно добавленного, проверь здесь, что это тот же адрес.
+            </span>
+          </p>
+        )}
         <ProfileForm
           targetLanguage={targetLanguage}
           nativeLanguage={nativeLanguage}

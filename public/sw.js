@@ -1,4 +1,4 @@
-const CACHE_NAME = "lexreader-shell-v1";
+const CACHE_NAME = "lexreader-shell-v2";
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (event) => {
@@ -6,8 +6,20 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
+// Бага "телефон и ноутбук по-разному синхронизированы": кеш раньше никогда
+// не чистился — при неудачном фетче (см. fetch ниже) отдавался снимок
+// страницы, закешированный сколько угодно давно, и это никак не лечилось
+// само. Версия кеша теперь бампается при правках этого файла — при активации
+// новой версии удаляем все кеши с другим именем, чтобы на устройстве не
+// залёживались произвольно старые снимки страниц.
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      const names = await caches.keys();
+      await Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)));
+      await self.clients.claim();
+    })(),
+  );
 });
 
 // Network-first для навигаций: последняя открытая страница (например,
