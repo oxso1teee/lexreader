@@ -11,32 +11,40 @@ export interface LanguageTwinSummary {
   lastRecomputedAt: string | null;
 }
 
-// Shared by the Today card and the Progress card — both need the same small
-// slice of the profile (plan doc §11: "compact summary... does not duplicate
-// the full screen"), so the gate and the shape live in one place rather than
-// two independent queries drifting apart. Returns null whenever the full
-// Overview would also show its empty/disabled state — Today/Progress stay
-// silent rather than showing a half-built card.
-export async function getLanguageTwinSummary(
+// Incident 2026-08-06: the old boolean gate (evidence >= 15 or nothing) meant
+// a real account — which starts at zero evidence — had literally no way to
+// discover Language Twin from Today/Progress, ever, until it had already
+// accumulated 15 rows on its own. That's not "hidden while empty", that's
+// undiscoverable. "hidden" is now reserved for the two cases where showing
+// *anything* would be actively wrong: the feature's own storage isn't
+// reachable (getOrCreateSettingsSafe returned null), or the user explicitly
+// turned it off in Settings (already surfaced there, not repeated here).
+// Every other state gets a real, always-visible entry point.
+export type LanguageTwinEntryState =
+  | { kind: "hidden" }
+  | { kind: "invite" }
+  | { kind: "ready"; summary: LanguageTwinSummary };
+
+export async function getLanguageTwinEntryState(
   supabase: SupabaseServerClient,
   userId: string,
-): Promise<LanguageTwinSummary | null> {
+): Promise<LanguageTwinEntryState> {
   const settings = await getOrCreateSettingsSafe(supabase, userId);
-  if (!settings || !settings.enabled) return null;
+  if (!settings || !settings.enabled) return { kind: "hidden" };
 
   const { count: evidenceCount } = await supabase
     .from("language_evidence")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .is("deleted_at", null);
-  if ((evidenceCount ?? 0) < MIN_EVIDENCE_FOR_PROFILE) return null;
+  if ((evidenceCount ?? 0) < MIN_EVIDENCE_FOR_PROFILE) return { kind: "invite" };
 
   const { data: twinProfile } = await supabase
     .from("language_twin_profiles")
     .select("confidence, weaknesses_json, strengths_json, last_recomputed_at")
     .eq("user_id", userId)
     .maybeSingle();
-  if (!twinProfile) return null;
+  if (!twinProfile) return { kind: "invite" };
 
   const weaknesses = (twinProfile.weaknesses_json as { title: string }[] | null) ?? [];
   const strengths = (twinProfile.strengths_json as { title: string }[] | null) ?? [];
@@ -51,10 +59,13 @@ export async function getLanguageTwinSummary(
     .maybeSingle();
 
   return {
-    focusTitle: weaknesses[0]?.title ?? null,
-    strengthTitle: strengths[0]?.title ?? null,
-    confidence: twinProfile.confidence,
-    recommendationReasonKey: rec?.reason_key ?? null,
-    lastRecomputedAt: twinProfile.last_recomputed_at,
+    kind: "ready",
+    summary: {
+      focusTitle: weaknesses[0]?.title ?? null,
+      strengthTitle: strengths[0]?.title ?? null,
+      confidence: twinProfile.confidence,
+      recommendationReasonKey: rec?.reason_key ?? null,
+      lastRecomputedAt: twinProfile.last_recomputed_at,
+    },
   };
 }
