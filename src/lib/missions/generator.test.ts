@@ -78,12 +78,29 @@ test("generateMissionDrafts: a mission completed under cooldown is not regenerat
   assert.deepEqual(drafts, []);
 });
 
-test("generateMissionDrafts: vocab_activation candidate carries wordIds through into payload", () => {
+test("generateMissionDrafts: vocab_activation candidate carries wordIds through into a targeted payload", () => {
   const drafts = generateMissionDrafts(
     [candidate({ missionType: "vocab_activation", wordIds: ["card-1", "card-2"] })],
     [],
   );
-  assert.deepEqual(drafts[0].payload, { wordIds: ["card-1", "card-2"] });
+  assert.deepEqual(drafts[0].payload, { kind: "targeted", wordIds: ["card-1", "card-2"] });
+});
+
+test("generateMissionDrafts: grammar_pattern candidate freezes a real, non-empty question set", () => {
+  const drafts = generateMissionDrafts([candidate({ missionType: "grammar_pattern", skillCategory: "tense" })], []);
+  const payload = drafts[0].payload as { kind: string; questions: { id: string }[] };
+  assert.equal(payload.kind, "grammar");
+  assert.equal(payload.questions.length, 5);
+  assert.ok(payload.questions.every((q) => typeof q.id === "string" && q.id.length > 0));
+});
+
+test("generateMissionDrafts: maintenance missions freeze exactly 3 questions", () => {
+  const drafts = generateMissionDrafts(
+    [candidate({ missionType: "maintenance", skillCategory: "preposition", severity: "low", confidence: "medium", trend: "up" })],
+    [],
+  );
+  const payload = drafts[0].payload as { questions: unknown[] };
+  assert.equal(payload.questions.length, 3);
 });
 
 test("generateMissionDrafts: onboarding candidate has no source pattern and an empty payload", () => {

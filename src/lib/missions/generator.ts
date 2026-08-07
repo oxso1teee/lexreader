@@ -1,7 +1,11 @@
 import { buildMissionFingerprint } from "./fingerprint.ts";
+import { GRAMMAR_BANK_VERSION, buildGrammarQuestionSet } from "./grammar-bank.ts";
 import { computeExpiresAt, deriveDifficulty, estimateMinutes } from "./lifecycle.ts";
+import { GRAMMAR_RUNNER_MISSION_TYPES, type MissionPayload } from "./payload.ts";
 import { selectMissionCandidates, type FingerprintedCandidate } from "./ranking.ts";
-import type { MissionCandidateInput, MissionDraft, MissionHistoryEntry } from "./types.ts";
+import type { MissionCandidateInput, MissionDraft, MissionHistoryEntry, MissionType } from "./types.ts";
+
+const GRAMMAR_RUNNER_TYPES = new Set<MissionType>(GRAMMAR_RUNNER_MISSION_TYPES);
 
 export const ALGORITHM_VERSION = 1;
 
@@ -62,9 +66,25 @@ export function generateMissionDrafts(
       stepCount,
       priority,
       fingerprint,
-      payload: candidate.wordIds ? { wordIds: candidate.wordIds } : {},
+      payload: buildPayload(candidate, fingerprint, stepCount),
     };
   });
+}
+
+// The one place a mission's exact question set (or target flashcard ids)
+// gets frozen into payload_json — seeded on the fingerprint so it's stable
+// across retried/idempotent generation calls but still varies per user.
+function buildPayload(candidate: MissionCandidateInput, fingerprint: string, stepCount: number): Record<string, unknown> {
+  if (GRAMMAR_RUNNER_TYPES.has(candidate.missionType) && candidate.skillCategory) {
+    const questions = buildGrammarQuestionSet(candidate.skillCategory, stepCount, fingerprint);
+    const payload: MissionPayload = { kind: "grammar", bankVersion: GRAMMAR_BANK_VERSION, questions };
+    return payload as unknown as Record<string, unknown>;
+  }
+  if (candidate.wordIds && candidate.wordIds.length > 0) {
+    const payload: MissionPayload = { kind: "targeted", wordIds: candidate.wordIds };
+    return payload as unknown as Record<string, unknown>;
+  }
+  return {};
 }
 
 export { computeExpiresAt };

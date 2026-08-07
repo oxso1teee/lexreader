@@ -8,14 +8,19 @@ import SessionComplete from "./session-complete";
 export default function TypeWordMode({
   cards,
   studyDirection,
+  missionId = null,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
+  missionId?: string | null;
 }) {
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState("");
   const [result, setResult] = useState<"correct" | "wrong" | null>(null);
   const [isPending, startTransition] = useTransition();
+  // Реальный per-card результат, тот же, что уходит в reviewWord() ниже —
+  // накопленный счёт для миссии (§11-13), не отдельная метрика.
+  const [tally, setTally] = useState({ correct: 0, incorrect: 0 });
 
   const done = index >= cards.length;
   const card = cards[index];
@@ -26,7 +31,14 @@ export default function TypeWordMode({
   const answer = studyDirection === "back_front" ? card?.front : card?.back;
 
   if (done) {
-    return <SessionComplete count={cards.length} />;
+    return (
+      <SessionComplete
+        count={cards.length}
+        missionId={missionId}
+        missionCorrectCount={tally.correct}
+        missionIncorrectCount={tally.incorrect}
+      />
+    );
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -41,6 +53,7 @@ export default function TypeWordMode({
 
     const isCorrect = value.trim().toLowerCase() === answer.trim().toLowerCase();
     setResult(isCorrect ? "correct" : "wrong");
+    setTally((t) => (isCorrect ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 }));
     startTransition(() => {
       void reviewWord(card.flashcardId, isCorrect ? 2 : 0);
     });

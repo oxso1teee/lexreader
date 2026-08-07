@@ -41,9 +41,11 @@ function buildOptions(cards: ReviewCard[], studyDirection: "front_back" | "back_
 export default function MultipleChoiceMode({
   cards,
   studyDirection,
+  missionId = null,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
+  missionId?: string | null;
 }) {
   // Варианты для всех карточек считаем один раз при монтировании — стабильны
   // на всю сессию, без пересчёта по эффекту при смене index.
@@ -51,13 +53,23 @@ export default function MultipleChoiceMode({
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // Реальный per-card grade (2/0), тот же, что уходит в reviewWord() ниже —
+  // не отдельная метрика, а просто накопленный счёт для миссии (§11-13).
+  const [tally, setTally] = useState({ correct: 0, incorrect: 0 });
 
   const done = index >= cards.length;
   const card = cards[index];
   const options = allOptions[index] ?? [];
 
   if (done) {
-    return <SessionComplete count={cards.length} />;
+    return (
+      <SessionComplete
+        count={cards.length}
+        missionId={missionId}
+        missionCorrectCount={tally.correct}
+        missionIncorrectCount={tally.incorrect}
+      />
+    );
   }
 
   // P0-АУДИТ (раздел 4): при малом числе карточек в сессии (частый случай в
@@ -78,7 +90,9 @@ export default function MultipleChoiceMode({
   function choose(option: string) {
     if (selected) return;
     setSelected(option);
-    const grade = option === answerOf(card, studyDirection) ? 2 : 0;
+    const isCorrect = option === answerOf(card, studyDirection);
+    const grade = isCorrect ? 2 : 0;
+    setTally((t) => (isCorrect ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 }));
     startTransition(() => {
       void reviewWord(card.flashcardId, grade);
     });

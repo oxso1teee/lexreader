@@ -30,7 +30,13 @@ function buildRounds(cards: ReviewCard[]): Round[] {
   return rounds;
 }
 
-export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
+export default function MatchPairsMode({
+  cards,
+  missionId = null,
+}: {
+  cards: ReviewCard[];
+  missionId?: string | null;
+}) {
   // Раунды считаем один раз при монтировании, а не по эффекту на каждую смену раунда.
   const [rounds] = useState(() => buildRounds(cards));
   const [roundIndex, setRoundIndex] = useState(0);
@@ -39,6 +45,9 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
   const [selectedTranslation, setSelectedTranslation] = useState<string | null>(null);
   const [wrongFlash, setWrongFlash] = useState<{ word: string; translation: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  // Тот же grade (0/2), что уходит в reviewWord() ниже — по одной записи на
+  // пару в момент совпадения, накопленный счёт для миссии (§11-13).
+  const [tally, setTally] = useState({ correct: 0, incorrect: 0 });
   // Найдено при повторном аудите: неверные попытки вообще не влияли на SRS
   // (не грейдились никак), а итоговое совпадение всегда шло с оценкой 2
   // ("Помню") — даже после нескольких ошибок подряд. Отмечаем участвовавшие
@@ -64,13 +73,21 @@ export default function MatchPairsMode({ cards }: { cards: ReviewCard[] }) {
   }, [wrongFlash]);
 
   if (allDone) {
-    return <SessionComplete count={cards.length} />;
+    return (
+      <SessionComplete
+        count={cards.length}
+        missionId={missionId}
+        missionCorrectCount={tally.correct}
+        missionIncorrectCount={tally.incorrect}
+      />
+    );
   }
 
   function resolveAttempt(wordId: string, translationId: string) {
     if (wordId === translationId) {
       setMatchedIds((s) => new Set(s).add(wordId));
       const grade = struggledIds.has(wordId) ? 0 : 2;
+      setTally((t) => (grade === 2 ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 }));
       startTransition(() => {
         void reviewWord(wordId, grade);
       });
