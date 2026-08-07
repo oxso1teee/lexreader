@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { KNOWN_LEVEL } from "@/lib/word-level";
+import { recordEvidence } from "@/lib/language-twin/evidence";
 
 export interface BulkResult {
   ok: boolean;
@@ -50,12 +51,24 @@ export async function bulkMoveToDeck(flashcardIds: string[], targetDeckId: strin
 // игнорируются: .in() на пустое множество ничего не находит).
 export async function bulkMarkKnown(vocabularyItemIds: string[]): Promise<BulkResult> {
   if (vocabularyItemIds.length === 0) return { ok: false, error: "Ничего не выбрано." };
+  const profile = await requireProfile();
   const supabase = await createClient();
   const { error, count } = await supabase
     .from("vocabulary_items")
     .update({ status: "known", level: KNOWN_LEVEL }, { count: "exact" })
     .in("id", vocabularyItemIds);
   if (error) return { ok: false, error: "Не удалось обновить слова." };
+
+  // Один агрегированный отпечаток на всё массовое действие, а не по одному
+  // на слово — иначе разовый bulk на сотню слов засорил бы Evidence Explorer.
+  await recordEvidence(supabase, {
+    userId: profile.id,
+    evidenceType: "marked_known_bulk",
+    sourceType: "vocabulary_item",
+    result: `${count ?? vocabularyItemIds.length} слов`,
+    confidence: "medium",
+    metadata: { count: count ?? vocabularyItemIds.length },
+  });
 
   revalidatePath("/brain/vocabulary");
   revalidatePath("/notebook");

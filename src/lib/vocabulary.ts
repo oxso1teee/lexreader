@@ -2,6 +2,7 @@ import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { getPlan, FREE_DAILY_WORD_LIMIT, hasFreeDeckRoom, hasFreeFlashcardRoom } from "@/lib/subscription";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 import { addXp } from "@/lib/xp-actions";
+import { recordEvidence } from "@/lib/language-twin/evidence";
 import { escapeIlike } from "./ilike";
 
 export { escapeIlike };
@@ -164,6 +165,17 @@ export async function saveVocabularyItem(
   // словарю, поэтому проверка достижений живёт именно здесь.
   await checkAndAwardAchievements(supabase, userId, input.language);
   await addXp(supabase, userId, 2);
+
+  // M3 Slice 5: только новое слово, не повторный просмотр — иначе повторные
+  // подсказки одного и того же слова засоряли бы Evidence Explorer дублями.
+  await recordEvidence(supabase, {
+    userId,
+    evidenceType: "vocabulary_saved",
+    sourceType: "vocabulary_item",
+    sourceId: created.id,
+    result: "new_word",
+    confidence: "low",
+  });
 
   return { ok: true, id: created.id, level: created.level, seenCount: created.seen_count };
 }

@@ -232,6 +232,19 @@ export default function SettingsClient({
         </Link>
       </section>
 
+      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+        <SectionHeader title="Мой английский" />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <span className="text-body-sm">Language Twin: профиль, паттерны, приватность</span>
+          <Link
+            href="/language-twin/settings"
+            className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
+          >
+            Открыть
+          </Link>
+        </div>
+      </section>
+
       <HapticsToggle />
 
       <FeedbackForm />

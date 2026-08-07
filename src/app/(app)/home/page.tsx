@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getDueCount, getReviewsThisWeekCount } from "@/lib/brain-stats";
 import { decidePrimaryAction, dueCountBucket, greetingForHour } from "@/lib/today";
+import { getLanguageTwinEntryState } from "@/lib/language-twin/summary";
 import { messages } from "@/lib/i18n";
 import PageHeader from "@/components/product/page-header";
 import SectionHeader from "@/components/product/section-header";
@@ -10,6 +11,7 @@ import DailyPlanCard from "@/components/product/today/daily-plan-card";
 import ContinueLearningCard from "@/components/product/today/continue-learning-card";
 import ReviewSummaryCard from "@/components/product/today/review-summary-card";
 import ComingSoonCard from "@/components/product/today/coming-soon-card";
+import LanguageTwinSummaryCard from "@/components/product/language-twin/summary-card";
 import InstallBanner from "./install-banner";
 import TodayAnalytics from "./today-analytics";
 
@@ -38,6 +40,7 @@ export default async function HomePage() {
     reviewsThisWeek,
     { count: materialsInProgress },
     { data: continueRows },
+    languageTwinState,
   ] = await Promise.all([
     supabase
       .from("vocabulary_items")
@@ -68,6 +71,7 @@ export default async function HomePage() {
       .lt("percent_read", 96)
       .order("last_read_at", { ascending: false })
       .limit(1),
+    getLanguageTwinEntryState(supabase, profile.id),
   ]);
 
   const continuingRow = continueRows?.[0] as
@@ -154,6 +158,13 @@ export default async function HomePage() {
           ]}
         />
       </section>
+
+      {languageTwinState.kind !== "hidden" && (
+        <section className="flex flex-col gap-2">
+          <SectionHeader title="Мой английский" />
+          <LanguageTwinSummaryCard state={languageTwinState} variant="today" />
+        </section>
+      )}
 
       <ComingSoonCard />
     </div>

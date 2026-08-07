@@ -84,10 +84,20 @@ function toCards(rows: SrsStateRow[] | null): ReviewCard[] {
 
 export default async function DeckReviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ deckId: string }>;
+  searchParams: Promise<{ wordIds?: string }>;
 }) {
   const { deckId } = await params;
+  const { wordIds: wordIdsParam } = await searchParams;
+  // M3 Slice 5: opt-in targeted session from a Language Twin recommendation
+  // (a specific, small set of already-existing flashcards the user chose to
+  // focus on right now). Never touches due_at/scheduling/limits below — it
+  // only replaces which cards this one session shows.
+  const wordIds = wordIdsParam
+    ? wordIdsParam.split(",").filter(Boolean)
+    : null;
   const profile = await requireProfile();
   const supabase = await createClient();
   const settings = await getSrsSettings(supabase, profile.id);
@@ -129,6 +139,16 @@ export default async function DeckReviewPage({
   // тернарник внутри одного — иначе Supabase-js не может распарсить select
   // в момент компиляции).
   function buildQueries<Select extends string>(select: Select) {
+    if (wordIds && wordIds.length > 0) {
+      const targetedQuery = supabase
+        .from("srs_state")
+        .select(select)
+        .eq("flashcards.owner_id", profile.id)
+        .eq("flashcards.language", profile.target_language)
+        .in("flashcard_id", wordIds);
+      return { reviewQuery: targetedQuery, newQuery: null };
+    }
+
     let reviewQuery = supabase
       .from("srs_state")
       .select(select)
@@ -161,8 +181,12 @@ export default async function DeckReviewPage({
   const primaryQueries = flags.shadowEnabled ? buildQueries(FSRS_SELECT) : buildQueries(LEGACY_SELECT);
   const [
     { data: initialReviewRows, error: reviewError },
-    { data: initialNewRows, error: newError },
-  ] = await Promise.all([primaryQueries.reviewQuery, primaryQueries.newQuery]);
+    newResult,
+  ] = await Promise.all([
+    primaryQueries.reviewQuery,
+    primaryQueries.newQuery ?? Promise.resolve({ data: [] as SrsStateRow[], error: null }),
+  ]);
+  const { data: initialNewRows, error: newError } = newResult;
   // SrsStateRow объявляет fsrs_*-поля опциональными — приведение безопасно
   // независимо от того, каким из двух select() реально получены данные.
   let reviewRows = initialReviewRows as SrsStateRow[] | null;
@@ -176,7 +200,7 @@ export default async function DeckReviewPage({
     const fallback = buildQueries(LEGACY_SELECT);
     const [fallbackReview, fallbackNew] = await Promise.all([
       fallback.reviewQuery,
-      fallback.newQuery,
+      fallback.newQuery ?? Promise.resolve({ data: [] as SrsStateRow[], error: null }),
     ]);
     reviewRows = fallbackReview.data as SrsStateRow[] | null;
     newRows = fallbackNew.data as SrsStateRow[] | null;

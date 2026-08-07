@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { KNOWN_LEVEL } from "@/lib/word-level";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
+import { recordEvidence } from "@/lib/language-twin/evidence";
 
 export async function deleteWord(id: string) {
   const supabase = await createClient();
@@ -14,12 +15,21 @@ export async function deleteWord(id: string) {
 }
 
 export async function markKnown(id: string) {
+  const profile = await requireProfile();
   const supabase = await createClient();
   const { error } = await supabase
     .from("vocabulary_items")
     .update({ status: "known", level: KNOWN_LEVEL })
     .eq("id", id);
   if (error) throw new Error("Не удалось обновить слово.");
+  await recordEvidence(supabase, {
+    userId: profile.id,
+    evidenceType: "marked_known",
+    sourceType: "vocabulary_item",
+    sourceId: id,
+    result: "known",
+    confidence: "medium",
+  });
   revalidatePath("/notebook");
 }
 

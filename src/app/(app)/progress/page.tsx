@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getDueCount, getReviewsThisWeekCount, computeHardestWords } from "@/lib/brain-stats";
 import { decideProgressInsight } from "@/lib/progress-insight";
+import { getLanguageTwinEntryState } from "@/lib/language-twin/summary";
+import LanguageTwinSummaryCard from "@/components/product/language-twin/summary-card";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
@@ -108,6 +110,7 @@ export default async function ProgressPage({
     { data: lastReadingRow },
     { count: wordsAddedLast7Days },
     { count: finishedTexts },
+    languageTwinState,
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -213,6 +216,7 @@ export default async function ProgressPage({
       .eq("owner_id", profile.id)
       .eq("texts.language", profile.target_language)
       .gte("percent_read", 100),
+    getLanguageTwinEntryState(supabase, profile.id),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -296,6 +300,8 @@ export default async function ProgressPage({
       <PageHeader title="Прогресс" description={`Язык: ${profile.target_language}`} />
 
       <InsightBanner insight={insight} />
+
+      {languageTwinState.kind !== "hidden" && <LanguageTwinSummaryCard state={languageTwinState} variant="progress" />}
 
       <div>
         <h2 className="text-h3 mb-2">Показатели</h2>
