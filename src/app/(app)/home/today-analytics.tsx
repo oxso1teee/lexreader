@@ -9,9 +9,11 @@ import { track } from "@/lib/posthog-client";
 export default function TodayAnalytics({
   dueCountBucket,
   hasActiveMaterial,
+  missionCount,
 }: {
   dueCountBucket: string;
   hasActiveMaterial: boolean;
+  missionCount: number;
 }) {
   useEffect(() => {
     track("today_viewed", {
@@ -19,6 +21,9 @@ export default function TodayAnalytics({
       has_active_material: hasActiveMaterial,
       viewport_type: window.innerWidth < 768 ? "mobile" : "desktop",
     });
+    // Missions v1: a plain count, never which missions or their titles —
+    // same privacy bar as the rest of this event.
+    if (missionCount > 0) track("mission_impression", { mission_count: missionCount });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

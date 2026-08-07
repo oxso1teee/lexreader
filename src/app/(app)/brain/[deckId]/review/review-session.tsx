@@ -59,6 +59,7 @@ export default function ReviewSession({
   targetLanguage,
   userId,
   sessionDeckId,
+  missionId = null,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
@@ -69,6 +70,7 @@ export default function ReviewSession({
   targetLanguage: string;
   userId: string;
   sessionDeckId: string;
+  missionId?: string | null;
 }) {
   const router = useRouter();
   // Снимок очереди на момент старта сессии: серверные экшены ревью вызывают
@@ -349,7 +351,13 @@ export default function ReviewSession({
             </button>
           </div>
         )}
-        <SessionComplete count={cards.length} newRecord={newRecord} />
+        <SessionComplete
+          count={cards.length}
+          newRecord={newRecord}
+          missionId={missionId}
+          missionCorrectCount={tally[2] + tally[3]}
+          missionIncorrectCount={tally[0] + tally[1]}
+        />
       </>
     );
   }

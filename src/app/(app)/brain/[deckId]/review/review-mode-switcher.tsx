@@ -34,6 +34,7 @@ export default function ReviewModeSwitcher({
   targetLanguage,
   userId,
   sessionDeckId,
+  missionId,
 }: {
   cards: ReviewCard[];
   studyDirection: "front_back" | "back_front";
@@ -45,6 +46,7 @@ export default function ReviewModeSwitcher({
   targetLanguage: string;
   userId: string;
   sessionDeckId: string;
+  missionId?: string | null;
 }) {
   // Снимок один раз здесь — все режимы ниже получают тот же стабильный
   // массив, независимо от неявного refresh страницы после server action.
@@ -130,15 +132,16 @@ export default function ReviewModeSwitcher({
           targetLanguage={targetLanguage}
           userId={userId}
           sessionDeckId={sessionDeckId}
+          missionId={missionId}
         />
       )}
       {mode === "choice" && (
-        <MultipleChoiceMode key="choice" cards={cards} studyDirection={direction} />
+        <MultipleChoiceMode key="choice" cards={cards} studyDirection={direction} missionId={missionId} />
       )}
       {mode === "type" && (
-        <TypeWordMode key="type" cards={cards} studyDirection={direction} />
+        <TypeWordMode key="type" cards={cards} studyDirection={direction} missionId={missionId} />
       )}
-      {mode === "match" && <MatchPairsMode key="match" cards={cards} />}
+      {mode === "match" && <MatchPairsMode key="match" cards={cards} missionId={missionId} />}
     </div>
   );
 }

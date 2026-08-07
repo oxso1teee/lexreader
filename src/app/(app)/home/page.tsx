@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getDueCount, getReviewsThisWeekCount } from "@/lib/brain-stats";
 import { decidePrimaryAction, dueCountBucket, greetingForHour } from "@/lib/today";
 import { getLanguageTwinEntryState } from "@/lib/language-twin/summary";
+import { getOrGenerateActiveMissions } from "@/lib/missions/persist";
 import { messages } from "@/lib/i18n";
 import PageHeader from "@/components/product/page-header";
 import SectionHeader from "@/components/product/section-header";
@@ -12,6 +14,7 @@ import ContinueLearningCard from "@/components/product/today/continue-learning-c
 import ReviewSummaryCard from "@/components/product/today/review-summary-card";
 import ComingSoonCard from "@/components/product/today/coming-soon-card";
 import LanguageTwinSummaryCard from "@/components/product/language-twin/summary-card";
+import MissionCard from "@/components/product/missions/mission-card";
 import InstallBanner from "./install-banner";
 import TodayAnalytics from "./today-analytics";
 
@@ -41,6 +44,7 @@ export default async function HomePage() {
     { count: materialsInProgress },
     { data: continueRows },
     languageTwinState,
+    missions,
   ] = await Promise.all([
     supabase
       .from("vocabulary_items")
@@ -72,6 +76,7 @@ export default async function HomePage() {
       .order("last_read_at", { ascending: false })
       .limit(1),
     getLanguageTwinEntryState(supabase, profile.id),
+    getOrGenerateActiveMissions(supabase, profile.id),
   ]);
 
   const continuingRow = continueRows?.[0] as
@@ -92,7 +97,11 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4 md:max-w-3xl md:gap-5 md:px-0 md:py-8">
-      <TodayAnalytics dueCountBucket={dueCountBucket(dueCount)} hasActiveMaterial={continueReading !== null} />
+      <TodayAnalytics
+        dueCountBucket={dueCountBucket(dueCount)}
+        hasActiveMaterial={continueReading !== null}
+        missionCount={missions.length}
+      />
 
       <PageHeader title={`${greeting}!`} description={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)} />
 
@@ -158,6 +167,24 @@ export default async function HomePage() {
           ]}
         />
       </section>
+
+      {missions.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <SectionHeader
+            title="Миссии"
+            action={
+              <Link href="/missions" className="text-sm text-[var(--color-caramel-text)]">
+                Все →
+              </Link>
+            }
+          />
+          <div className="flex flex-col gap-2">
+            {missions.slice(0, 3).map((m) => (
+              <MissionCard key={m.id} mission={m} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {languageTwinState.kind !== "hidden" && (
         <section className="flex flex-col gap-2">

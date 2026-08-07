@@ -87,10 +87,10 @@ export default async function DeckReviewPage({
   searchParams,
 }: {
   params: Promise<{ deckId: string }>;
-  searchParams: Promise<{ wordIds?: string }>;
+  searchParams: Promise<{ wordIds?: string; missionId?: string }>;
 }) {
   const { deckId } = await params;
-  const { wordIds: wordIdsParam } = await searchParams;
+  const { wordIds: wordIdsParam, missionId } = await searchParams;
   // M3 Slice 5: opt-in targeted session from a Language Twin recommendation
   // (a specific, small set of already-existing flashcards the user chose to
   // focus on right now). Never touches due_at/scheduling/limits below — it
@@ -247,6 +247,7 @@ export default async function DeckReviewPage({
       targetLanguage={profile.target_language}
       userId={profile.id}
       sessionDeckId={deckId}
+      missionId={missionId ?? null}
     />
   );
 }

@@ -102,3 +102,31 @@ never call `track()`, only the client-side started/completed events above
 do, and those carry no text. PostHog pageview autocapture already masks
 `?q=` (Library search) via `custom_personal_data_properties`; Language
 Twin adds no new query params that need masking.
+
+# Analytics events — M3 Slice 6 (Missions v1)
+
+Same `track()` wrapper. Closed event list, enforced by
+`e2e/missions-privacy.spec.ts`'s regex scan of every file below.
+
+| Event | Fired from | Properties |
+|---|---|---|
+| `mission_impression` | `home/today-analytics.tsx` (mount, client, only when Today shows ≥1 mission) | `mission_count` (count) |
+| `mission_opened` | `missions/[missionId]/mission-screen.tsx` (mount, when mission is `available`) | `mission_type` |
+| `mission_resumed` | same file, same mount effect — mutually exclusive with `mission_opened`/`mission_result_viewed` | `mission_type` |
+| `mission_result_viewed` | same file, same mount effect (mission is `completed`) | `mission_type` |
+| `mission_started` | `mission-screen.tsx`, "Начать" click | `mission_type` |
+| `mission_step_completed` | `missions/[missionId]/grammar-runner.tsx`, after `submitMissionStepAction` resolves | `mission_type`, `step_index` (count), `correct` (boolean) |
+| `mission_completed` | `grammar-runner.tsx` (grammar-runner types) after `completeMissionAction` resolves, or `brain/[deckId]/review/session-complete.tsx` (targeted types — no `mission_type` known on this path) | `mission_type` (grammar-runner path only) |
+| `mission_dismissed` | `mission-screen.tsx`, "Не сейчас" click | `mission_type` |
+
+## Privacy
+
+Never sent: the mission's own title/reason text, question prompts/options/
+explanations, target words/flashcard ids, answers, or the source Language
+Twin pattern's title/category text. Deliberately no raw `mission_id` (UUID)
+either — every event uses `mission_type` (a 9-value enum already public in
+the schema) instead of an opaque identifier that could be joined back to
+one specific mission's content, the same reasoning Language Twin uses for
+`category`/`confidence` instead of a pattern id. Verified by
+`e2e/missions-privacy.spec.ts`, which extends the forbidden-key list above
+with `answer`/`prompt`/`option`/`mission_id`.

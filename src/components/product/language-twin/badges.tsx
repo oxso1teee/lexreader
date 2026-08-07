@@ -96,6 +96,9 @@ const REASON_LABEL: Record<string, string> = {
   grammar_pattern: "Найден в проверке предложений",
   insufficient_evidence: "Пока мало данных для точных выводов",
   no_active_patterns: "Активных паттернов нет — можно просто поддерживать темп",
+  maintenance: "Паттерн уже улучшился — короткая проверка, чтобы закрепить",
+  diagnostic_followup: "Слабое место по результатам мини-диагностики",
+  phrase_activation: "Сохранённые фразы ещё не закрепились в памяти",
 };
 
 export function reasonLabel(reasonKey: string): string {
