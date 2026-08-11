@@ -45,6 +45,11 @@ function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 86_400_000);
 }
 
+function todayStartUtc(): string {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+}
+
 // M3 Slice 1 — редизайн Today (docs/ui/unified-ui-slice-1-plan.md,
 // docs/ui/current-ui-audit.md §3): один primary CTA вместо нескольких
 // конкурирующих карточек равного веса. PremiumCard/WelcomeCard/tip-карточка
@@ -71,6 +76,7 @@ export default async function HomePage() {
     missionWeekStats,
     { data: activitySessions },
     { data: activityReviews },
+    { count: newWordsToday },
   ] = await Promise.all([
     getDueCount(supabase, profile.id, profile.target_language),
     supabase
@@ -97,6 +103,12 @@ export default async function HomePage() {
       .eq("flashcards.owner_id", profile.id)
       .eq("flashcards.language", profile.target_language)
       .gte("reviewed_at", sevenDaysAgo),
+    supabase
+      .from("vocabulary_items")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language)
+      .gte("created_at", todayStartUtc()),
   ]);
 
   const continuingRow = continueRows?.[0] as
@@ -206,6 +218,12 @@ export default async function HomePage() {
       <section className="flex flex-col gap-2">
         <SectionHeader title={t.summary.title} />
         <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between rounded-xl bg-[var(--surface)] p-4 shadow-sm">
+            <p className="text-body-sm text-[var(--text-secondary)]">Дневная цель</p>
+            <p className="text-body-sm font-semibold">
+              {newWordsToday ?? 0} / {profile.daily_word_goal} слов
+            </p>
+          </div>
           <ReviewSummaryCard dueCount={dueCount} />
           <ContinueLearningCard material={continueReading} />
           {(pendingRecommendationsCount ?? 0) > 0 && (
