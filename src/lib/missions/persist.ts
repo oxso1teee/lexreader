@@ -66,3 +66,29 @@ async function fetchActiveMissions(supabase: SupabaseServerClient, userId: strin
     .order("generated_at", { ascending: false });
   return (data ?? []) as MissionRow[];
 }
+
+export interface MissionsCompletedThisWeek {
+  completed: number;
+  skillsTouched: number;
+}
+
+// Today v2 §5 / Progress: shared by both /home and /progress so the numbers
+// can never quietly drift apart — same real "completed this week" rows,
+// never a running total or a fabricated streak.
+export async function getMissionsCompletedThisWeek(
+  supabase: SupabaseServerClient,
+  userId: string,
+  weekStartIso: string,
+): Promise<MissionsCompletedThisWeek> {
+  const { data } = await supabase
+    .from("missions")
+    .select("skill_category")
+    .eq("user_id", userId)
+    .eq("status", "completed")
+    .gte("completed_at", weekStartIso);
+  const rows = data ?? [];
+  return {
+    completed: rows.length,
+    skillsTouched: new Set(rows.map((r) => r.skill_category).filter((c): c is string => Boolean(c))).size,
+  };
+}
