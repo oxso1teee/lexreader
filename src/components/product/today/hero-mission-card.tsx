@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { track } from "@/lib/posthog-client";
 import { messages } from "@/lib/i18n";
