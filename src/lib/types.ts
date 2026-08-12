@@ -15,6 +15,11 @@ export interface Profile {
   xp: number;
   created_at: string;
   reader_settings: Record<string, unknown>;
+  /** M3 Slice 9 — onboarding goal/self-report, both nullable (never
+   *  backfilled for pre-Slice-9 rows). See src/lib/onboarding/goals.ts and
+   *  src/lib/placement/types.ts for the exact allowed values. */
+  primary_goal: string | null;
+  self_reported_cefr: string | null;
 }
 
 export type TextSourceType = "manual" | "article_url" | "youtube" | "system";
