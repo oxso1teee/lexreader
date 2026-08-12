@@ -13,6 +13,9 @@ const SOURCE_TYPE_SETTING: Record<EvidenceSourceType, keyof LanguageTwinSettings
   vocabulary_item: "include_saved_vocabulary",
   correction_submission: "include_writing_exercises",
   diagnostic_session: "allow_diagnostic",
+  // M3 Slice 9 — Placement v2 is the diagnostic's front-door sibling, so it
+  // shares the same opt-out toggle rather than introducing a new one.
+  placement_session: "allow_diagnostic",
 };
 
 // Returns null (silently, not an error) when the feature or the relevant

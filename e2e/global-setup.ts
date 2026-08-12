@@ -37,12 +37,21 @@ async function ensureTestUser(supabase: any) {
   }
   if (!userId) return;
 
+  // M3 Slice 9: completed_first_win: true here matters far beyond onboarding
+  // itself — src/app/(app)/layout.tsx now gates every (app) route on this
+  // flag, so a false value would redirect this shared test account into
+  // /onboarding/** instead of /home on every login() across the entire e2e
+  // suite. This account is meant to represent an existing, already-onboarded
+  // user (docs/ui/m3-slice9-onboarding-placement-v2-plan.md §11
+  // grandfathering) — new-account/onboarding-specific behavior gets its own
+  // signUpFreshAccount()-based tests instead.
   await supabase.from("profiles").upsert({
     id: userId,
     target_language: "en",
     native_language: "ru",
     level: "intermediate",
     daily_word_goal: 10,
+    completed_first_win: true,
   });
 
   const { data: existingDeck } = await supabase

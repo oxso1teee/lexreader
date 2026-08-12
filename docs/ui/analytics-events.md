@@ -177,3 +177,35 @@ carry injected/user-typed content either. Verified by
 `e2e/learning-paths-privacy.spec.ts`, which extends the forbidden-key list
 above with `evidence`/`reason` (catches an accidental Language Twin pattern
 title or Mission reason-line leak).
+
+## M3 Slice 9 — Onboarding + Placement v2
+
+| Event | Fired from | Properties |
+|---|---|---|
+| `onboarding_started` | `onboarding-wizard.tsx` (mount, client) | *(none)* |
+| `onboarding_goal_selected` | `onboarding-wizard.tsx`, goal step click | `goal` (enum) |
+| `onboarding_level_selected` | `onboarding-wizard.tsx`, self-report step click | `self_reported_cefr` (enum) |
+| `placement_started` | `onboarding/placement/actions.ts`, server-side — only on a genuinely new attempt (0 prior answers), never on resume | `version` |
+| `placement_question_answered` | `onboarding/placement/actions.ts`, server-side, one per submitted answer | `question_id` (enum), `difficulty_tier` (enum), `correct` (boolean) |
+| `placement_completed` | `onboarding/placement/actions.ts`, server-side, on the 10th answer | `version`, `result_range` (enum), `confidence` (enum) |
+| `placement_skipped` | `onboarding/placement/actions.ts`, server-side | *(none)* |
+| `onboarding_resumed` | `onboarding/placement/page.tsx`, server-side — page load finds a genuinely in-progress attempt (refresh/re-login mid-test) | `resume_question_index` |
+| `recommended_path_viewed` | `onboarding/result/result-view.tsx` (mount, client) | `path_slug` (enum), `has_alternative` (boolean) |
+| `learning_path_selected_from_onboarding` | `onboarding/result/actions.ts`, server-side | `path_slug` (enum) |
+| `onboarding_first_action_started` | `onboarding/result/actions.ts`, server-side, right before redirecting into the real first Skill | `path_slug` (enum), `skill_key` (enum) |
+| `onboarding_first_win_completed` | `learning-paths/actions.ts`, server-side — the first Knowledge Check completed while `completed_first_win` was still false (not onboarding-specific plumbing; any real completion counts) | `path_slug` (enum), `skill_key` (enum) |
+| `onboarding_completed` | same call site, same condition | `path_slug` (enum) |
+
+## Privacy (M3 Slice 9)
+
+Never sent: placement question prompt/option text, the free-text answer
+content, email, saved-word content, Reader content. `question_id` is a
+static grammar-bank identifier (e.g. `"tense_ps_1"`), not free text —
+`category`/`difficulty_tier`/`result_range`/`confidence`/`path_slug`/
+`skill_key`/`goal`/`self_reported_cefr` are all closed enums validated
+server-side, never client-supplied free text. Scoring/range/recommendation
+are computed server-side only (`src/app/onboarding/placement/actions.ts`,
+`src/app/onboarding/result/actions.ts`) — the client never sends a score or
+a range for the server to just log back. Verified by
+`e2e/placement-privacy.spec.ts`, using the same forbidden-key regex +
+non-vacuous-call-count idiom as `learning-paths-privacy.spec.ts`.

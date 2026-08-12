@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { LANGUAGES, READY_LANGUAGES } from "@/lib/languages";
-import { LEVELS, DAILY_GOALS } from "@/lib/onboarding-options";
+import { GOALS } from "@/lib/onboarding/goals";
+import { SELF_REPORT_LEVELS } from "@/lib/onboarding/self-report-levels";
 import { completeOnboarding, type OnboardingState } from "./actions";
 import { joinLanguageWaitlist, type WaitlistState } from "./waitlist-actions";
 import RateLimitNotice from "@/components/rate-limit-notice";
+import { track } from "@/lib/posthog-client";
 
 const STEP_COUNT = 6;
 
@@ -135,10 +137,10 @@ function LanguagePicker({
 
 export default function OnboardingWizard() {
   const [step, setStep] = useState(0);
+  const [primaryGoal, setPrimaryGoal] = useState("");
   const [targetLanguage, setTargetLanguage] = useState("");
   const [nativeLanguage, setNativeLanguage] = useState("");
-  const [level, setLevel] = useState("");
-  const [dailyWordGoal, setDailyWordGoal] = useState(10);
+  const [selfReportedCefr, setSelfReportedCefr] = useState("");
 
   const [state, formAction, pending] = useActionState<OnboardingState, FormData>(
     completeOnboarding,
@@ -153,11 +155,19 @@ export default function OnboardingWizard() {
 
   const canAdvance = [
     true,
+    !!primaryGoal,
     !!targetLanguage,
     !!nativeLanguage,
-    !!level,
-    !!dailyWordGoal,
+    !!selfReportedCefr,
   ][step];
+
+  // M3 Slice 9 — mounts exactly once, on first render of the pre-account
+  // wizard (same "mount = start" proxy the old first-win flow used for
+  // signup_completed, since there's no server-side profile row yet at
+  // Welcome to attach a real event to).
+  useEffect(() => {
+    track("onboarding_started", {});
+  }, []);
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-10">
@@ -189,25 +199,50 @@ export default function OnboardingWizard() {
 
       {step === 1 && (
         <div className="flex flex-1 flex-col gap-4">
+          <h2 className="text-xl font-semibold">Для чего тебе английский?</h2>
+          <div className="flex flex-col gap-2">
+            {GOALS.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => {
+                  setPrimaryGoal(g.id);
+                  track("onboarding_goal_selected", { goal: g.id });
+                }}
+                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                  primaryGoal === g.id
+                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                    : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                }`}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="flex flex-1 flex-col gap-4">
           <h2 className="text-xl font-semibold">Какой язык учишь?</h2>
           <LanguagePicker
             value={targetLanguage}
             restrictToReady
             onChange={(code) => {
               setTargetLanguage(code);
-              // Найдено при повторном аудите: Step 2 (родной язык) уже
-              // исключает targetLanguage из списка, но если пользователь
-              // вернётся на Step 1 и сменит целевой язык на тот, что уже
-              // выбран как родной, коллизия обнаруживалась только на
-              // финальном сабмите (Step 5) без автоперехода назад. Сбрасываем
-              // родной язык сразу же, чтобы коллизия была невозможна.
+              // Найдено при повторном аудите: следующий шаг (родной язык)
+              // уже исключает targetLanguage из списка, но если пользователь
+              // вернётся сюда и сменит целевой язык на тот, что уже выбран
+              // как родной, коллизия обнаруживалась только на финальном
+              // сабмите без автоперехода назад. Сбрасываем родной язык
+              // сразу же, чтобы коллизия была невозможна.
               if (code === nativeLanguage) setNativeLanguage("");
             }}
           />
         </div>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <div className="flex flex-1 flex-col gap-4">
           <h2 className="text-xl font-semibold">Какой у тебя родной язык?</h2>
           <p className="text-sm text-black/60 dark:text-white/60">
@@ -221,17 +256,25 @@ export default function OnboardingWizard() {
         </div>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <div className="flex flex-1 flex-col gap-4">
-          <h2 className="text-xl font-semibold">Твой текущий уровень?</h2>
-          <div className="flex flex-col gap-2">
-            {LEVELS.map((l) => (
+          <h2 className="text-xl font-semibold">Какой у тебя уровень английского?</h2>
+          <p className="text-sm text-black/60 dark:text-white/60">
+            Это не экзамен — просто ориентир. Дальше уточним коротким тестом.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {SELF_REPORT_LEVELS.map((l) => (
               <button
                 key={l.value}
                 type="button"
-                onClick={() => setLevel(l.value)}
-                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
-                  level === l.value
+                onClick={() => {
+                  setSelfReportedCefr(l.value);
+                  track("onboarding_level_selected", { self_reported_cefr: l.value });
+                }}
+                className={`rounded-lg border px-4 py-3 text-center font-medium transition-colors ${
+                  l.value === "unsure" ? "col-span-2" : ""
+                } ${
+                  selfReportedCefr === l.value
                     ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
                     : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
                 }`}
@@ -243,38 +286,13 @@ export default function OnboardingWizard() {
         </div>
       )}
 
-      {step === 4 && (
-        <div className="flex flex-1 flex-col gap-4">
-          <h2 className="text-xl font-semibold">Сколько слов в день хочешь учить?</h2>
-          <div className="grid grid-cols-4 gap-2">
-            {DAILY_GOALS.map((g) => (
-              <button
-                key={g}
-                type="button"
-                onClick={() => setDailyWordGoal(g)}
-                className={`rounded-lg border py-4 text-center text-lg font-medium transition-colors ${
-                  dailyWordGoal === g
-                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                    : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
-                }`}
-              >
-                {g}
-              </button>
-            ))}
-          </div>
-          <p className="text-sm text-black/60 dark:text-white/60">
-            При {dailyWordGoal} словах в день — это {dailyWordGoal * 30} слов в месяц.
-          </p>
-        </div>
-      )}
-
       {step === 5 && (
         <form action={formAction} className="flex flex-1 flex-col gap-4">
           <h2 className="text-xl font-semibold">Создай аккаунт</h2>
+          <input type="hidden" name="primaryGoal" value={primaryGoal} />
           <input type="hidden" name="targetLanguage" value={targetLanguage} />
           <input type="hidden" name="nativeLanguage" value={nativeLanguage} />
-          <input type="hidden" name="level" value={level} />
-          <input type="hidden" name="dailyWordGoal" value={dailyWordGoal} />
+          <input type="hidden" name="selfReportedCefr" value={selfReportedCefr} />
 
           <input
             type="email"

@@ -243,6 +243,19 @@ export default function SettingsClient({
             Открыть
           </Link>
         </div>
+        {/* M3 Slice 9 §31/§36 — compact link only, no duplicated retake UI
+            here; the full self-report/Placement/behavioral breakdown and
+            the actual retake flow live on /language-twin ("Как это
+            посчитано?"). */}
+        <div className="mt-2 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-2">
+          <span className="text-body-sm">Диагностика английского</span>
+          <Link
+            href="/language-twin"
+            className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
+          >
+            Открыть
+          </Link>
+        </div>
       </section>
 
       <HapticsToggle />

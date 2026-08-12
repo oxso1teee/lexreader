@@ -10,6 +10,7 @@ const SOURCE_LABEL: Record<EvidenceSourceType, string> = {
   vocabulary_item: "Чтение · Читалка",
   correction_submission: "Проверка предложения",
   diagnostic_session: "Диагностика",
+  placement_session: "Диагностика при регистрации",
 };
 
 const FILTERS: [string, string][] = [
@@ -18,6 +19,7 @@ const FILTERS: [string, string][] = [
   ["vocabulary_item", "Чтение"],
   ["correction_submission", "Проверка предложений"],
   ["diagnostic_session", "Диагностика"],
+  ["placement_session", "Диагностика при регистрации"],
 ];
 
 function formatDateTime(iso: string): string {
