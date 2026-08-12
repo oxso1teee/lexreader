@@ -115,6 +115,13 @@ const CORRECTION_PATTERN_TITLE: Partial<Record<PatternCategory, string>> = {
   possession: "Притяжательный падеж в проверке предложений",
   spelling: "Орфография в проверке предложений",
   collocation: "Сочетаемость слов в проверке предложений",
+  // M3 Slice 8: only the 3 new categories with real correction-rules.ts
+  // detection get a title here — conditional/question_formation have no
+  // correction-input rule in v1 (disclosed, plan doc §4), so this path is
+  // never reached for them.
+  modal: "Модальные глаголы в проверке предложений",
+  comparative: "Сравнения в проверке предложений",
+  relative_clause: "Придаточные предложения в проверке предложений",
 };
 
 export async function recomputeLanguageTwin(

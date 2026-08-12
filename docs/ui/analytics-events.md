@@ -140,3 +140,40 @@ hero slot instead of the generic review/continue/add-material action — same
 event name, same property shape, still only an enum + a route string.
 `mission_impression` (Missions v1, above) is unchanged and continues to be
 the signal for "Today showed at least one mission."
+
+# Analytics events — M3 Slice 8 (Learning Paths)
+
+Closed event list (plan doc's exact 13 names), enforced by
+`e2e/learning-paths-privacy.spec.ts`'s regex scan of every file below.
+`path_slug`/`stage_key`/`skill_key` are closed strings from the static
+curriculum registry (never user-typed text); `bucket` is the 3-value
+Knowledge Check result enum.
+
+| Event | Fired from | Properties |
+|---|---|---|
+| `learning_paths_viewed` | `learning-paths/page.tsx` (Catalog, mount, client tracker) | *(none)* |
+| `learning_path_opened` | `learning-paths/[pathSlug]/page.tsx` (Path Details/Home, mount) | `path_slug` |
+| `learning_path_started` | `learning-paths/path-actions.tsx`, `StartPathButton` — no prior enrollment for this path | `path_slug` |
+| `learning_path_resumed` | same file — enrollment existed and was `paused` | `path_slug` |
+| `learning_path_switched` | same file — a different path was `active` (pauses it, requires confirm()) | `path_slug` |
+| `learning_path_paused` | `path-actions.tsx`, `PausePathButton` | `path_slug` |
+| `stage_opened` | `learning-paths/[pathSlug]/[stageKey]/page.tsx` (mount) | `path_slug`, `stage_key` |
+| `stage_completed` | `learning-paths/actions.ts`, server-side (`captureServerEvent`) once every skill in the stage has `content_completed_at` | `path_slug`, `stage_key` |
+| `skill_opened` | `learning-paths/[pathSlug]/[stageKey]/[skillKey]/page.tsx` (mount) | `path_slug`, `skill_key` |
+| `lesson_completed` | `.../[skillKey]/lesson-actions.tsx`, "Отметить как изученное" click | `path_slug`, `skill_key` |
+| `knowledge_check_started` | `.../[skillKey]/check/page.tsx` (mount) | `path_slug`, `skill_key` |
+| `knowledge_check_completed` | `.../check/check-runner.tsx`, after `submitKnowledgeCheckAction` resolves | `path_slug`, `skill_key`, `bucket` (`strong`/`mixed`/`weak`) |
+| `learning_path_completed` | `learning-paths/actions.ts`, server-side, once every skill has `content_completed_at` | `path_slug` |
+
+## Privacy
+
+Never sent: lesson objective/explanation/examples/commonMistakes text,
+Knowledge Check question prompts/options/explanations, the Language Twin
+pattern title/evidence content shown on Skill Detail, the matched Mission's
+title/reason text. `skill_key`/`stage_key`/`path_slug` are curriculum
+identifiers (e.g. `"grammar.present_simple"`), not free text — validated by
+`isValidSkillForPath` server-side before any mutation, so they can never
+carry injected/user-typed content either. Verified by
+`e2e/learning-paths-privacy.spec.ts`, which extends the forbidden-key list
+above with `evidence`/`reason` (catches an accidental Language Twin pattern
+title or Mission reason-line leak).

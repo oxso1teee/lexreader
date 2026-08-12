@@ -4,7 +4,9 @@ import { getDueCount, getReviewsThisWeekCount, computeHardestWords } from "@/lib
 import { decideProgressInsight } from "@/lib/progress-insight";
 import { getLanguageTwinEntryState } from "@/lib/language-twin/summary";
 import { getMissionsCompletedThisWeek } from "@/lib/missions/persist";
+import { getActivePathStateAction } from "../learning-paths/actions";
 import LanguageTwinSummaryCard from "@/components/product/language-twin/summary-card";
+import Link from "next/link";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
@@ -113,6 +115,7 @@ export default async function ProgressPage({
     { count: finishedTexts },
     languageTwinState,
     missionWeekStats,
+    activePathState,
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -223,6 +226,7 @@ export default async function ProgressPage({
     // so /home and /progress can never quietly report different numbers for
     // the same "completed this week" stat.
     getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date())),
+    getActivePathStateAction(),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -308,6 +312,25 @@ export default async function ProgressPage({
       <InsightBanner insight={insight} />
 
       {languageTwinState.kind !== "hidden" && <LanguageTwinSummaryCard state={languageTwinState} variant="progress" />}
+
+      {/* M3 Slice 8 §11: compact only — active Path, content progress,
+          current stage, skills improved/confident. No giant LMS dashboard. */}
+      {activePathState && (
+        <Link
+          href={`/learning-paths/${activePathState.path.slug}`}
+          className="focus-ring flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-body-sm font-semibold">Мой путь: {activePathState.path.title}</span>
+            <span className="text-body-sm font-bold">{activePathState.contentProgressPercent}%</span>
+          </div>
+          <p className="text-xs text-[var(--text-secondary)]">{activePathState.currentStage?.title}</p>
+          <div className="flex gap-x-4 text-xs text-[var(--text-secondary)]">
+            <span>Уверенно: {activePathState.skillsConfident}</span>
+            <span>Улучшается: {activePathState.skillsImproving}</span>
+          </div>
+        </Link>
+      )}
 
       <div>
         <h2 className="text-h3 mb-2">Показатели</h2>

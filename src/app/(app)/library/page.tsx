@@ -137,6 +137,17 @@ export default async function LibraryPage() {
             </Link>
           }
         />
+        <Link
+          href="/learning-paths"
+          className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm"
+        >
+          <div>
+            <p className="text-body-sm font-semibold">Пути обучения</p>
+            <p className="text-xs text-[var(--text-secondary)]">Структурированные курсы: A2→B1, B1→B2, Everyday, IT</p>
+          </div>
+          <span className="shrink-0 text-body-sm font-semibold text-[var(--color-caramel-text)]">Открыть →</span>
+        </Link>
+
         <LibraryBrowser items={items} />
       </div>
 
