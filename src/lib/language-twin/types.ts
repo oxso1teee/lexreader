@@ -16,7 +16,15 @@ export type PatternCategory =
   | "possession"
   | "collocation"
   | "spelling"
-  | "other";
+  | "other"
+  // M3 Slice 8 — added to close the Learning Paths taxonomy gap (plan doc
+  // §4/§9, migration 0039): exactly 5 new values, no more — every one is
+  // backed by real grammar-bank Mission coverage (see grammar-bank.ts).
+  | "comparative"
+  | "modal"
+  | "relative_clause"
+  | "conditional"
+  | "question_formation";
 
 export type PatternStatus = "active" | "improving" | "resolved" | "uncertain" | "dismissed";
 export type Trend = "up" | "down" | "flat";

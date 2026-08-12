@@ -76,6 +76,11 @@ const CATEGORY_LABEL: Record<PatternCategory, string> = {
   collocation: "Коллокации",
   spelling: "Орфография",
   other: "Другое",
+  comparative: "Сравнения",
+  modal: "Модальные глаголы",
+  relative_clause: "Придаточные предложения",
+  conditional: "Условные предложения",
+  question_formation: "Построение вопросов",
 };
 
 export function categoryLabel(category: PatternCategory): string {

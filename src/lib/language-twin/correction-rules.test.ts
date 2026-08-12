@@ -199,3 +199,48 @@ test("checkSentence: an unsupported error type still returns supported=true with
   const result = checkSentence("Me no like this thing very much yesterday tomorrow.");
   assert.equal(result.supported, true);
 });
+
+// M3 Slice 8 (Learning Paths v1) additions below — three new categories
+// (modal, comparative, relative_clause) get honest correction-input
+// detection; conditional/question_formation deliberately do not (plan doc §4).
+
+test("checkSentence: modal + 'to' error", () => {
+  const result = checkSentence("You must to see a doctor.");
+  const match = result.matches.find((m) => m.patternKey === "modal_plus_to");
+  assert.ok(match);
+  assert.equal(match?.category, "modal");
+  assert.equal(match?.confidence, "high");
+  assert.equal(match?.suggestion, "must see");
+});
+
+test("checkSentence: modal rule does not false-positive on correct modal usage", () => {
+  const result = checkSentence("You must see a doctor.");
+  assert.equal(result.matches.some((m) => m.patternKey === "modal_plus_to"), false);
+});
+
+test("checkSentence: double comparative error", () => {
+  const result = checkSentence("This car is more faster than mine.");
+  const match = result.matches.find((m) => m.patternKey === "double_comparative");
+  assert.ok(match);
+  assert.equal(match?.category, "comparative");
+  assert.equal(match?.suggestion, "faster");
+});
+
+test("checkSentence: comparative rule does not false-positive on a plain comparative", () => {
+  const result = checkSentence("This car is faster than mine.");
+  assert.equal(result.matches.some((m) => m.patternKey === "double_comparative"), false);
+});
+
+test("checkSentence: 'which' used for a person", () => {
+  const result = checkSentence("The teacher which helped me is very kind.");
+  const match = result.matches.find((m) => m.patternKey === "relative_which_for_person");
+  assert.ok(match);
+  assert.equal(match?.category, "relative_clause");
+  assert.equal(match?.confidence, "medium");
+  assert.equal(match?.suggestion, "the teacher who");
+});
+
+test("checkSentence: relative-clause rule does not false-positive on 'which' for a thing", () => {
+  const result = checkSentence("The book which I bought is great.");
+  assert.equal(result.matches.some((m) => m.patternKey === "relative_which_for_person"), false);
+});

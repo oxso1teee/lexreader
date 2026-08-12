@@ -7,6 +7,8 @@ import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
 import { categoryLabel, reasonLabel } from "@/components/product/language-twin/badges";
 import { getOrGenerateActiveMissions, getMissionsCompletedThisWeek } from "@/lib/missions/persist";
 import { pickHeroMission } from "@/lib/missions/ranking";
+import { findMatchingMissionForSkill } from "@/lib/learning-paths/mission-match";
+import { getActivePathStateAction } from "../learning-paths/actions";
 import { messages } from "@/lib/i18n";
 import PageHeader from "@/components/product/page-header";
 import SectionHeader from "@/components/product/section-header";
@@ -77,6 +79,7 @@ export default async function HomePage() {
     { data: activitySessions },
     { data: activityReviews },
     { count: newWordsToday },
+    activePathState,
   ] = await Promise.all([
     getDueCount(supabase, profile.id, profile.target_language),
     supabase
@@ -109,6 +112,7 @@ export default async function HomePage() {
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language)
       .gte("created_at", todayStartUtc()),
+    getActivePathStateAction(),
   ]);
 
   const continuingRow = continueRows?.[0] as
@@ -163,6 +167,19 @@ export default async function HomePage() {
       .slice(0, 2);
   }
 
+  // M3 Slice 8 §11: Today's hero stays authoritative — Learning Paths never
+  // competes with it, only attributes or adds a slim secondary card. Case 1:
+  // the hero mission already matches the active Path's current focus skill
+  // -> small "Из твоего пути" attribution, no ranking changes. Case 2: no
+  // hero relevant to the Path -> one compact secondary card, never a second
+  // dashboard section.
+  const focusSkill = activePathState?.focusSkill ?? null;
+  const heroMatchesPath = Boolean(
+    heroMission && focusSkill && findMatchingMissionForSkill([heroMission], focusSkill)?.id === heroMission.id,
+  );
+  const pathLevelLabel = activePathState ? `${activePathState.path.levelFrom} → ${activePathState.path.levelTo}` : null;
+  const showPathSecondaryCard = Boolean(activePathState && focusSkill && !heroMatchesPath);
+
   const activeDaysThisWeek = new Set([
     ...(activitySessions ?? []).map((s) => isoDate(s.started_at)),
     ...(activityReviews ?? []).map((r) => isoDate(r.reviewed_at)),
@@ -181,7 +198,12 @@ export default async function HomePage() {
       <InstallBanner />
 
       {heroMission ? (
-        <HeroMissionCard mission={heroMission} reasonText={heroReasonText} />
+        <>
+          <HeroMissionCard mission={heroMission} reasonText={heroReasonText} />
+          {heroMatchesPath && pathLevelLabel && (
+            <p className="-mt-2 text-xs text-[var(--text-secondary)]">Из твоего пути: {pathLevelLabel}</p>
+          )}
+        </>
       ) : (
         <>
           {primaryAction.type === "review" && (
@@ -213,6 +235,19 @@ export default async function HomePage() {
             />
           )}
         </>
+      )}
+
+      {showPathSecondaryCard && activePathState && focusSkill && (
+        <Link
+          href={`/learning-paths/${activePathState.path.slug}`}
+          className="focus-ring flex items-center justify-between gap-3 rounded-xl bg-[var(--surface)] p-4 shadow-sm"
+        >
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--text-secondary)]">Мой путь · {pathLevelLabel}</p>
+            <p className="text-body-sm truncate font-medium">{focusSkill.title}</p>
+          </div>
+          <span className="shrink-0 text-body-sm font-semibold text-[var(--color-caramel-text)]">Продолжить →</span>
+        </Link>
       )}
 
       <section className="flex flex-col gap-2">

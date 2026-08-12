@@ -380,6 +380,68 @@ function checkEditDistanceSpelling(text: string): CorrectionMatch | null {
   return null;
 }
 
+// M3 Slice 8 (Learning Paths v1, plan doc §4): three new, narrow, curated
+// detections — only where a rule can be written as honestly/deterministically
+// as the ones above. Conditionals and question-formation deliberately get
+// NO correction-input rule in v1 (disclosed in the plan doc, not silently
+// dropped) — they still get Knowledge Check/Mission coverage via
+// grammar-bank.ts, just not free-text detection here.
+
+// Modal + "to" — a common transfer error (mirrors the already-existing
+// literal-translation style of PREPOSITION_RULES above): a modal verb
+// directly followed by "to" before the main verb ("must to go").
+const MODAL_PLUS_TO_RE = /\b(can|could|must|should|would|might|may)\s+to\s+(\w+)\b/i;
+
+function checkModalPlusTo(text: string): CorrectionMatch | null {
+  const match = MODAL_PLUS_TO_RE.exec(text);
+  if (!match) return null;
+  const modal = match[1];
+  const verb = match[2];
+  return {
+    patternKey: "modal_plus_to",
+    category: "modal",
+    confidence: "high",
+    explanation: `После модального глагола «${modal}» частица «to» не нужна.`,
+    suggestion: `${modal} ${verb}`,
+  };
+}
+
+// Double comparative ("more better", "more bigger") — "more" stacked on an
+// adjective that's already in its -er/irregular comparative form. Closed
+// list of common comparative forms, not general morphology.
+const DOUBLE_COMPARATIVE_RE = /\bmore\s+(better|worse|bigger|faster|nicer|smaller|older|younger|taller|shorter|easier|harder|happier|colder|warmer)\b/i;
+
+function checkDoubleComparative(text: string): CorrectionMatch | null {
+  const match = DOUBLE_COMPARATIVE_RE.exec(text);
+  if (!match) return null;
+  const adjective = match[1];
+  return {
+    patternKey: "double_comparative",
+    category: "comparative",
+    confidence: "high",
+    explanation: `«${adjective}» уже стоит в сравнительной степени — «more» перед ним лишнее.`,
+    suggestion: adjective,
+  };
+}
+
+// "which" used for a person instead of "who" — a common transfer error
+// since some L1s don't distinguish person/thing relative pronouns. Closed
+// list of common person nouns, matching the same narrow-vocabulary style as
+// POSSESSIVE_PERSONS above (not a general person-noun detector).
+const RELATIVE_WHICH_FOR_PERSON_RE = /\bthe\s+(man|woman|boy|girl|person|teacher|doctor|friend|student|driver|neighbor|neighbour)\s+which\b/i;
+
+function checkRelativeWhichForPerson(text: string): CorrectionMatch | null {
+  const match = RELATIVE_WHICH_FOR_PERSON_RE.exec(text);
+  if (!match) return null;
+  return {
+    patternKey: "relative_which_for_person",
+    category: "relative_clause",
+    confidence: "medium",
+    explanation: `Для людей используется относительное местоимение «who», не «which» — «the ${match[1]} which» лучше заменить на «the ${match[1]} who».`,
+    suggestion: `the ${match[1]} who`,
+  };
+}
+
 function normalize(text: string): string {
   return text.trim().replace(/\s+/g, " ");
 }
@@ -434,6 +496,15 @@ export function checkSentence(rawText: string): CorrectionResult {
 
   const gerundInfinitive = checkGerundInfinitive(text);
   if (gerundInfinitive) matches.push(gerundInfinitive);
+
+  const modalPlusTo = checkModalPlusTo(text);
+  if (modalPlusTo) matches.push(modalPlusTo);
+
+  const doubleComparative = checkDoubleComparative(text);
+  if (doubleComparative) matches.push(doubleComparative);
+
+  const relativeWhichForPerson = checkRelativeWhichForPerson(text);
+  if (relativeWhichForPerson) matches.push(relativeWhichForPerson);
 
   if (POSSESSION_HEURISTIC.re.test(text)) {
     matches.push({
