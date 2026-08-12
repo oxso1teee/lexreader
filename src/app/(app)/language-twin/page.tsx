@@ -3,6 +3,7 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
 import { recomputeLanguageTwin, isProfileStale, pickTopPattern } from "@/lib/language-twin/recompute";
+import { getLatestAttempt } from "@/lib/placement/persist";
 import { buildTimelineEntries } from "@/lib/language-twin/timeline";
 import { MIN_EVIDENCE_FOR_PROFILE } from "@/lib/language-twin/constants";
 import EmptyState from "@/components/empty-state";
@@ -95,6 +96,8 @@ export default async function LanguageTwinPage() {
     );
   }
 
+  const latestPlacementAttempt = await getLatestAttempt(supabase, profile.id);
+
   const { data: patternsData } = await supabase
     .from("language_error_patterns")
     .select("*")
@@ -183,6 +186,8 @@ export default async function LanguageTwinPage() {
                 <HowCalculated
                   selfReportedLevel={profile.level}
                   diagnosticLevelRange={twinProfile.diagnostic_level_range}
+                  placementRange={latestPlacementAttempt?.status === "completed" ? latestPlacementAttempt.result_range : null}
+                  placementSkipped={latestPlacementAttempt?.status === "skipped"}
                   behavioralLevelRange={twinProfile.behavioral_level_range}
                 />
               </p>

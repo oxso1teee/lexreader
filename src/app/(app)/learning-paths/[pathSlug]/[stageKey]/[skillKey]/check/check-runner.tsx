@@ -142,6 +142,25 @@ function ResultScreen({
 }) {
   const meta = BUCKET_META[result.outcome.bucket];
   const percent = Math.round(result.outcome.scoreRatio * 100);
+
+  // M3 Slice 9 (plan doc §16/§17) — the real first-win moment, reached
+  // through the exact same Knowledge Check every other skill uses. No
+  // separate onboarding-only screen.
+  if (result.firstWinJustCompleted) {
+    return (
+      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm" role="status" aria-live="polite">
+        <p className="text-lg font-bold">Отличное начало! 🎉</p>
+        <p className="text-sm text-[var(--text-secondary)]">
+          {meta.body} Результат: {percent}%. Твой путь сохранён — дальше Today будет каждый день показывать, что делать
+          следующим.
+        </p>
+        <Link href="/home" onClick={onRefresh} className="focus-ring self-start rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black">
+          Перейти в Today
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm" role="status" aria-live="polite">
       <p className="text-lg font-bold">{meta.title}</p>

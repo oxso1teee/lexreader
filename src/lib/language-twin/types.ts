@@ -45,7 +45,10 @@ export type EvidenceSourceType =
   | "flashcard"
   | "vocabulary_item"
   | "correction_submission"
-  | "diagnostic_session";
+  | "diagnostic_session"
+  // M3 Slice 9 — Placement v2's completed attempts (migration 0040 widened
+  // language_evidence's source_type check constraint to match).
+  | "placement_session";
 
 export interface EvidenceInput {
   userId: string;

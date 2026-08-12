@@ -142,13 +142,12 @@ export async function completeOnboarding(
     }
   }
 
-  // docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 8: раньше здесь сразу
-  // редиректило на пустую Главную — новый профиль сначала проходит короткий
-  // управляемый цикл "текст → слово → карточка", чтобы не встретить пустоту
-  // с первой секунды.
-  //
-  // M3 Slice 9: this redirect target is the OLD first-win tutorial and
-  // stays wired for now — Phase B repoints it to the new placement intro
-  // screen once that route exists (plan doc §16, onboarding state model).
-  redirect("/onboarding/first-win");
+  // M3 Slice 9 (plan doc §3/§16): profile creation now hands off to the
+  // Placement v2 flow — goal + self-reported level, both already saved
+  // above, feed straight into it. Replaces the old "read a text, save 3
+  // words" first-win tutorial (docs/IMPLEMENTATION_PROMPT_2026-07-28.md
+  // §8), which is removed — the real first Learning Paths Skill + Knowledge
+  // Check (reached after placement -> result -> path selection) is now the
+  // guided first action.
+  redirect("/onboarding/placement");
 }

@@ -1,24 +1,12 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { login, TEST_EMAIL } from "./helpers";
+import { login, signUpFreshAccount, completeOnboardingForTest, TEST_EMAIL } from "./helpers";
 
 test("Progress with a brand-new account shows honest zero/empty state, no fake CEFR levels", async ({
   page,
 }) => {
-  const email = `progress-new-${Date.now()}@example.com`;
-  await page.goto("/onboarding");
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Английский" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Русский" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Начинающий" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByPlaceholder("Пароль (мин. 6 символов)").fill("NewProgressAcct123");
-  await page.getByRole("button", { name: "Создать аккаунт и начать" }).click();
-  await page.waitForURL(/\/onboarding\/first-win/);
+  const email = await signUpFreshAccount(page);
+  await completeOnboardingForTest(email);
 
   await page.goto("/progress");
   await expect(page.getByText("Добавь первый материал, чтобы здесь появился реальный прогресс.")).toBeVisible();

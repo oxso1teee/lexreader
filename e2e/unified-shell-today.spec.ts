@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { login, signUpFreshAccount, completeOnboardingForTest } from "./helpers";
 
 test("navigation: active route gets aria-current, others do not", async ({ page }) => {
   await login(page);
@@ -44,20 +44,8 @@ test("Today primary CTA shows review action once a due flashcard exists", async 
 test("Today shows the add-material empty state for a brand-new account (no reviews, no material)", async ({
   page,
 }) => {
-  const email = `e2e-today-empty-${Date.now()}@example.com`;
-  await page.goto("/onboarding");
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Английский" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Русский" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Начинающий" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByPlaceholder("Пароль (мин. 6 символов)").fill("EmptyTodayPass123");
-  await page.getByRole("button", { name: "Создать аккаунт и начать" }).click();
-  await page.waitForURL(/\/onboarding\/first-win/);
+  const email = await signUpFreshAccount(page);
+  await completeOnboardingForTest(email);
 
   await page.goto("/home");
   await expect(page.getByRole("link", { name: "Добавить материал" })).toHaveAttribute("href", "/library/new");

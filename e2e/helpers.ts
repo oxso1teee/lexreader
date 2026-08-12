@@ -19,27 +19,50 @@ export async function login(page: Page, email = TEST_EMAIL, password = TEST_PASS
 // лимиту текстов) не могут переиспользовать общий test@example.com — он
 // давно исчерпал FREE_TEXT_LIMIT за счёт множества прогонов набора за один
 // день. Даёт новый аккаунт с нуля, останавливаясь сразу после регистрации
-// (не проходит сам first-win — вызывающий тест сам решает, куда перейти).
+// (M3 Slice 9: не проходит сам Placement — вызывающий тест сам решает,
+// куда перейти дальше).
 export async function signUpFreshAccount(page: Page): Promise<string> {
   const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
   await page.goto("/onboarding");
   await page.getByRole("button", { name: "Далее" }).click();
+  await page.getByRole("button", { name: "Для жизни" }).click();
+  await page.getByRole("button", { name: "Далее" }).click();
   await page.getByRole("button", { name: "Английский" }).click();
   await page.getByRole("button", { name: "Далее" }).click();
   await page.getByRole("button", { name: "Русский" }).click();
   await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Начинающий" }).click();
-  await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "10", exact: true }).click();
+  await page.getByRole("button", { name: "A2", exact: true }).click();
   await page.getByRole("button", { name: "Далее" }).click();
 
   await page.getByPlaceholder("Email").fill(email);
   await page.getByPlaceholder("Пароль (мин. 6 символов)").fill("testpass123");
   await page.getByRole("button", { name: "Создать аккаунт и начать" }).click();
 
-  await page.waitForURL(/\/onboarding\/first-win$/);
+  await page.waitForURL(/\/onboarding\/placement$/);
   return email;
+}
+
+// M3 Slice 9 — several existing tests (Progress/Today empty-state checks)
+// need an account that's genuinely zero on reading/review/material activity
+// but IS past onboarding v2's own gate (src/app/(app)/layout.tsx), since a
+// not-yet-onboarded account now gets redirected into /onboarding/** before
+// it can reach /home or /progress at all. Flips completed_first_win
+// directly via service_role rather than running the real Placement ->
+// result -> path -> Knowledge Check flow, which would leave the account
+// with real Learning Path progress and defeat the point of these
+// particular tests (verifying Progress/Today's OWN empty-state handling,
+// not onboarding's). Represents a real, valid account shape: someone who
+// onboarded long ago but hasn't touched Reader/Brain yet.
+export async function completeOnboardingForTest(email: string): Promise<void> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+  );
+  const { data } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const user = data?.users.find((u) => u.email === email);
+  if (!user) throw new Error(`completeOnboardingForTest: no auth user found for ${email}`);
+  await supabase.from("profiles").update({ completed_first_win: true }).eq("id", user.id);
 }
 
 // Быстрый, надёжный способ вернуть TEST_PASSWORD напрямую через service_role

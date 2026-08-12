@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login, signUpFreshAccount } from "./helpers";
+import { login, signUpFreshAccount, completeOnboardingForTest } from "./helpers";
 
 // M3 Slice 3: Add Material rewrite. createText/createTextFromUrl/
 // createTextFromYoutube now return { redirectTo } instead of calling
@@ -13,7 +13,8 @@ import { login, signUpFreshAccount } from "./helpers";
 // writing this suite) rather than the success path this test wants to check.
 
 test("Add Material: text tab creates a real material and redirects to the Reader", async ({ page }) => {
-  await signUpFreshAccount(page);
+  const email = await signUpFreshAccount(page);
+  await completeOnboardingForTest(email);
   await page.goto("/library/new");
   await expect(page.getByRole("heading", { name: "Добавить материал" })).toBeVisible();
 
@@ -27,7 +28,8 @@ test("Add Material: text tab creates a real material and redirects to the Reader
 });
 
 test("Add Material: text tab rejects an empty and a too-short body honestly", async ({ page }) => {
-  await signUpFreshAccount(page);
+  const email = await signUpFreshAccount(page);
+  await completeOnboardingForTest(email);
   await page.goto("/library/new");
 
   await page.getByLabel("Название").fill("Too short");

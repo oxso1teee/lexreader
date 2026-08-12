@@ -234,6 +234,52 @@ export async function recomputeLanguageTwin(
     }
   }
 
+  // M3 Slice 9 — Placement v2 evidence (plan doc §13/§18: "one wrong
+  // Placement answer must NOT create a severe permanent weakness"). Mirrors
+  // the correction-evidence branch above exactly: reads what
+  // recordEvidence() already wrote (src/app/onboarding/placement/actions.ts
+  // on attempt completion), only turns it into a pattern once corroborated
+  // by >=2 occurrences — a category missed in exactly one placement
+  // question, with no other evidence yet, stays below that threshold and
+  // never becomes a pattern on its own. computeConfidence's own
+  // >=2-distinct-sources rule then keeps it capped below "high" regardless.
+  if (settings.allow_diagnostic) {
+    const { data: placementEvidence } = await supabase
+      .from("language_evidence")
+      .select("normalized_category, occurred_at")
+      .eq("user_id", userId)
+      .eq("evidence_type", "placement_result")
+      .eq("source_type", "placement_session")
+      .is("deleted_at", null);
+
+    const byCategory = new Map<string, string[]>();
+    for (const e of placementEvidence ?? []) {
+      if (!e.normalized_category) continue;
+      const occurredAts = byCategory.get(e.normalized_category) ?? [];
+      occurredAts.push(e.occurred_at);
+      byCategory.set(e.normalized_category, occurredAts);
+    }
+
+    for (const [category, occurredAts] of byCategory) {
+      if (occurredAts.length < 2) continue;
+      const confidence = computeConfidence(
+        occurredAts.map((occurredAt) => ({ occurredAt, sourceType: "placement", outcome: "failure" as const })),
+      );
+      patternDrafts.push({
+        patternKey: `placement_${category}`,
+        category: category as PatternCategory,
+        title: CORRECTION_PATTERN_TITLE[category as PatternCategory] ?? "Пробел, найденный при первичной диагностике",
+        description: `Эта тема встретилась ${occurredAts.length} раз(а) на короткой диагностике при регистрации.`,
+        severity: "low",
+        evidenceCount: occurredAts.length,
+        confidenceScore: confidence.score,
+        confidence: confidence.level,
+        trend: "flat",
+        metadata: {},
+      });
+    }
+  }
+
   for (const draft of patternDrafts) {
     await upsertPattern(supabase, userId, draft);
   }

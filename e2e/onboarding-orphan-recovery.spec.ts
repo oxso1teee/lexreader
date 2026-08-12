@@ -31,13 +31,13 @@ test("orphaned auth user (no profiles row) recovers via the onboarding form inst
   try {
     await page.goto("/onboarding");
     await page.getByRole("button", { name: "Далее" }).click();
+    await page.getByRole("button", { name: "Для жизни" }).click();
+    await page.getByRole("button", { name: "Далее" }).click();
     await page.getByRole("button", { name: "Английский" }).click();
     await page.getByRole("button", { name: "Далее" }).click();
     await page.getByRole("button", { name: "Русский" }).click();
     await page.getByRole("button", { name: "Далее" }).click();
-    await page.getByRole("button", { name: "Начинающий" }).click();
-    await page.getByRole("button", { name: "Далее" }).click();
-    await page.getByRole("button", { name: "10", exact: true }).click();
+    await page.getByRole("button", { name: "A2", exact: true }).click();
     await page.getByRole("button", { name: "Далее" }).click();
 
     await page.getByPlaceholder("Email").fill(email);
@@ -48,13 +48,18 @@ test("orphaned auth user (no profiles row) recovers via the onboarding form inst
     // stayed on /onboarding forever. The fix falls back to a real login
     // with the same credentials, then upserts the profile — so this must
     // now redirect exactly like a normal fresh signup does.
-    await page.waitForURL(/\/onboarding\/first-win$/, { timeout: 15_000 });
+    await page.waitForURL(/\/onboarding\/placement$/, { timeout: 15_000 });
     await expect(page.getByText(/Не удалось создать аккаунт|уже существует/)).not.toBeVisible();
 
-    const { data: profileRows } = await supabase.from("profiles").select("id, target_language, native_language").eq("id", userId);
+    const { data: profileRows } = await supabase
+      .from("profiles")
+      .select("id, target_language, native_language, primary_goal, self_reported_cefr")
+      .eq("id", userId);
     expect(profileRows?.length, "exactly one profile row must exist — no duplicate from the upsert").toBe(1);
     expect(profileRows?.[0].target_language).toBe("en");
     expect(profileRows?.[0].native_language).toBe("ru");
+    expect(profileRows?.[0].primary_goal).toBe("everyday");
+    expect(profileRows?.[0].self_reported_cefr).toBe("A2");
   } finally {
     await supabase.from("decks").delete().eq("owner_id", userId);
     await supabase.from("profiles").delete().eq("id", userId);

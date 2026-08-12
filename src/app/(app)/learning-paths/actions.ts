@@ -234,6 +234,11 @@ export async function completeLessonAction(pathSlug: PathSlug, skillKey: string)
 export interface KnowledgeCheckSubmitResult {
   outcome: KnowledgeCheckOutcome;
   progress: SkillProgressRow;
+  /** M3 Slice 9 (plan doc §16/§17) — true exactly once, the first time any
+   *  Knowledge Check completes for an account that hadn't won yet. Not
+   *  onboarding-specific plumbing: any real completed Knowledge Check
+   *  counts, matching "no fake onboarding-only exercise". */
+  firstWinJustCompleted: boolean;
 }
 
 // Server-side scoring (never trust a client-computed score/bucket): the
@@ -253,9 +258,17 @@ export async function submitKnowledgeCheckAction(pathSlug: PathSlug, skillKey: s
   const updated = await applySkillProgressPatch(supabase, profile.id, progress.id, patch);
   await maybeCompletePathAndAdvance(supabase, profile.id, path, skillKey);
 
+  let firstWinJustCompleted = false;
+  if (!profile.completed_first_win) {
+    await supabase.from("profiles").update({ completed_first_win: true }).eq("id", profile.id);
+    firstWinJustCompleted = true;
+    captureServerEvent(profile.id, "onboarding_first_win_completed", { path_slug: pathSlug, skill_key: skillKey });
+    captureServerEvent(profile.id, "onboarding_completed", { path_slug: pathSlug });
+  }
+
   revalidateLearningPaths();
   revalidatePath("/language-twin");
-  return { outcome, progress: updated ?? progress };
+  return { outcome, progress: updated ?? progress, firstWinJustCompleted };
 }
 
 // Called after a real Mission/Practice session that touched this skill's
