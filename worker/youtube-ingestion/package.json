@@ -1,0 +1,15 @@
+{
+  "name": "youtube-ingestion-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone worker: YouTube transcript provider chain (yt-dlp captions -> innertube -> faster-whisper STT). Not part of the Next.js app's dependency tree.",
+  "type": "module",
+  "main": "src/server.mjs",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "youtubei.js": "^18.0.0"
+  }
+}

@@ -4,11 +4,11 @@ import { useActionState, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { track } from "@/lib/posthog-client";
 import {
-  createTextFromYoutube,
   saveBrowserYoutubeTranscript,
   type BrowserYoutubeTranscript,
   type YoutubeImportState,
 } from "../youtube-actions";
+import { startYoutubeImportAction } from "../youtube-import-actions";
 import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
@@ -114,7 +114,7 @@ export default function YoutubeImportForm({
       track("material_add_started", { source: "youtube" });
 
       if (bridgeStatus !== "ready") {
-        const result = await createTextFromYoutube(previousState, formData);
+        const result = await startYoutubeImportAction(previousState, formData);
         if (result.redirectTo) {
           track("material_add_succeeded", { source: "youtube" });
           router.push(result.redirectTo);
