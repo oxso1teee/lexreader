@@ -33,6 +33,10 @@ interface WordLevelInfo {
   id: string;
   level: number;
   seenCount: number;
+  flashcardId: string | null;
+  deckId: string | null;
+  learningState: Popup["learningState"] | null;
+  contextCount: number;
 }
 
 interface Stats {
@@ -122,6 +126,13 @@ export default function Reader({
   const pressRef = useRef<{ timer: ReturnType<typeof setTimeout>; fired: boolean; si: number } | null>(
     null,
   );
+  // M3 Slice 11 (plan doc §2, accessibility) — word buttons only ever listened to
+  // onPointerDown/Enter/Up, so keyboard activation (Enter/Space on a focused button fires a
+  // `click`, never a pointer event) silently did nothing — confirmed by reading the full
+  // handler set before this change. onClickWord below is the keyboard path; this ref lets it
+  // tell a real pointer-originated click (which already ran onPointerUpWord's own click event
+  // next) apart from a genuine keyboard activation, so neither path double-fires a lookup.
+  const pointerHandledRef = useRef(false);
 
   const startedAt = useRef<number | null>(null);
   useEffect(() => {
@@ -149,6 +160,10 @@ export default function Reader({
 
   const [pageStart, pageEnd] = pages[pageIndex];
   const pageSentences = useMemo(() => sentences.slice(pageStart, pageEnd), [sentences, pageStart, pageEnd]);
+  // M3 Slice 11 (plan doc §2, performance) — tokenizeSentence() was being re-run on every
+  // sentence on every popup/selection state change (a full page re-render). It's a pure
+  // function of the sentence text, so memoizing it once per page removes that redundant work.
+  const pageTokens = useMemo(() => pageSentences.map((s) => tokenizeSentence(s)), [pageSentences]);
 
   function updateReaderPrefs(next: typeof readerPrefs) {
     setReaderPrefs(next);
@@ -221,6 +236,10 @@ export default function Reader({
           id: result.id!,
           level: result.level ?? 0,
           seenCount: result.seenCount ?? 1,
+          flashcardId: result.flashcardId ?? null,
+          deckId: result.deckId ?? null,
+          learningState: (result.learningState as WordLevelInfo["learningState"]) ?? null,
+          contextCount: result.contextCount ?? 0,
         },
       }));
 
@@ -236,6 +255,10 @@ export default function Reader({
         seenCount: result.seenCount,
         alreadyKnown: (result.seenCount ?? 1) > 1,
         contextAdded: result.contextAdded,
+        flashcardId: result.flashcardId,
+        deckId: result.deckId,
+        learningState: result.learningState as Popup["learningState"],
+        contextCount: result.contextCount,
       });
     } catch (e) {
       setPopup({
@@ -275,6 +298,10 @@ export default function Reader({
         id: result.id!,
         level: result.level ?? 0,
         seenCount: result.seenCount ?? 1,
+        flashcardId: result.flashcardId ?? null,
+        deckId: result.deckId ?? null,
+        learningState: (result.learningState as WordLevelInfo["learningState"]) ?? null,
+        contextCount: result.contextCount ?? 0,
       },
     }));
     setPopup({
@@ -286,6 +313,10 @@ export default function Reader({
       seenCount: result.seenCount,
       alreadyKnown: (result.seenCount ?? 1) > 1,
       contextAdded: result.contextAdded,
+      flashcardId: result.flashcardId,
+      deckId: result.deckId,
+      learningState: result.learningState as Popup["learningState"],
+      contextCount: result.contextCount,
     });
   }
 
@@ -316,7 +347,25 @@ export default function Reader({
     // M3 Slice 10 — only a genuinely new phrase counts as "saved" for analytics; a repeat
     // save of an already-known phrase just attaches a new context, not a new phrase.
     if (!result.alreadyExisted) track("phrase_saved");
-    setPopup({ ...popup, saved: true, alreadyKnown: result.alreadyExisted, contextAdded: result.contextAdded });
+    setPopup({
+      ...popup,
+      saved: true,
+      alreadyKnown: result.alreadyExisted,
+      contextAdded: result.contextAdded,
+      flashcardId: result.flashcardId,
+      deckId: result.deckId,
+      learningState: result.learningState as Popup["learningState"],
+      contextCount: result.contextCount,
+    });
+  }
+
+  // M3 Slice 11 (plan doc §2, Practice Bridge) — tracked separately from other Reader events
+  // since it's the one action that crosses from reading into Мозг's review flow.
+  function handlePracticeClick() {
+    track("reader_practice_cta_clicked", {
+      is_phrase: popup?.isPhrase,
+      learning_state: popup?.learningState,
+    });
   }
 
   function handleSpeak(text: string) {
@@ -378,6 +427,7 @@ export default function Reader({
   }
 
   function onPointerUpWord(si: number, ti: number, tokenText: string, sentence: string) {
+    pointerHandledRef.current = true;
     const press = pressRef.current;
     if (press) clearTimeout(press.timer);
     setBoundaryHint(false);
@@ -405,6 +455,18 @@ export default function Reader({
       runLookup(tokenText, sentence, false);
     }
     pressRef.current = null;
+  }
+
+  // M3 Slice 11 (plan doc §2, accessibility) — the keyboard path: Enter/Space on a focused
+  // word button fires only `click`, never onPointerDown/Up, so without this a keyboard user
+  // could Tab to a word but never open it. Skips when a pointer interaction just handled the
+  // same activation (onPointerUpWord already ran) to avoid a double lookup for mouse/touch.
+  function onClickWord(tokenText: string, sentence: string) {
+    if (pointerHandledRef.current) {
+      pointerHandledRef.current = false;
+      return;
+    }
+    runLookup(tokenText, sentence, false);
   }
 
   function isTokenSelected(si: number, ti: number): boolean {
@@ -492,6 +554,17 @@ export default function Reader({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              {/* M3 Slice 11 (plan doc §2, navigation) — Reader's own position is already
+                  preserved via text_progress, so no state needs carrying to get back here. */}
+              <Link
+                href="/brain/vocabulary"
+                aria-label="Словарь"
+                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/70 text-[var(--color-forest-text)] shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
+              >
+                <span aria-hidden="true" className="text-base">
+                  📖
+                </span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setSettingsOpen(true)}
@@ -655,7 +728,7 @@ export default function Reader({
                 const isSpeaking = mode === "listening" && activeListeningIndex === localIdx;
                 return (
                   <span key={si} className={isSpeaking ? "rounded bg-[var(--color-forest-tint)]" : undefined}>
-                    {tokenizeSentence(sentence).map((tok, ti) => {
+                    {pageTokens[localIdx].map((tok, ti) => {
                       if (!tok.isWord) return <span key={ti}>{tok.text}</span>;
 
                       const info = levels[tok.text.toLowerCase()];
@@ -669,6 +742,7 @@ export default function Reader({
                           onPointerDown={() => onPointerDownWord(si, ti)}
                           onPointerEnter={() => onPointerEnterWord(si, ti)}
                           onPointerUp={() => onPointerUpWord(si, ti, tok.text, sentence)}
+                          onClick={() => onClickWord(tok.text, sentence)}
                           style={{
                             backgroundColor: selected
                               ? "#a67c5266"
@@ -776,6 +850,7 @@ export default function Reader({
                   onSpeak={handleSpeak}
                   onSetLevel={handleSetLevel}
                   onAddPhrase={handleAddPhrase}
+                  onPracticeClick={handlePracticeClick}
                   onClose={() => setPopup(null)}
                 />
               </div>
@@ -805,6 +880,7 @@ export default function Reader({
               onSpeak={handleSpeak}
               onSetLevel={handleSetLevel}
               onAddPhrase={handleAddPhrase}
+              onPracticeClick={handlePracticeClick}
               onClose={() => setPopup(null)}
             />
           </div>
