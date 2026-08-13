@@ -42,6 +42,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# research/prototype scratch (M3 Slice 12) — isolated deps, never production
+/research/**/node_modules
+/research/**/whisper-venv
+/research/**/out
+/research/**/package-lock.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
