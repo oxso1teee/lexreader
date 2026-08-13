@@ -110,10 +110,121 @@ Two real warnings surfaced, both operationally significant for Phase 4 (infra):
 - **youtubei.js live test** (1B): package evaluated structurally, not yet run against a real video.
 - **Full Phase 2 test corpus**: not started — deliberately, since hammering YouTube further right now would extend the rate-limit, and picking "real, stable, public" video IDs for every required category (Shorts, 30–60min, non-English, multi-language, captionless) needs either your input on specific videos or careful, well-paced empirical probing rather than guessing IDs from memory and asserting their caption status without checking.
 
+## Phase 1 continued — Rounds 1–6 (real network results)
+
+All videos below are real, public, non-age-restricted. All requests were made one at a time, no parallelization, with deliberate pacing after the earlier 429.
+
+### Round 1 — youtubei.js real network test
+
+**Video**: `iG9CE55wbtY` ("Do schools kill creativity? | Sir Ken Robinson | TED", 1203s, TED channel).
+
+- `Innertube.create()` + `getInfo()` (default WEB-ish client): **succeeded** — real title, real duration (1203s), real channel name.
+- `info.captions.caption_tracks`: **empty array**. `info.getTranscript()`: **failed, HTTP 400** from `youtubei/v1/get_transcript`.
+- Retried with `ClientType.IOS`: **crashed** — youtubei.js v18.0.0's parser doesn't recognize the current response shape for this client (`InnertubeError: SingleColumnWatchNextResults not found`, then `ParsingError: Type mismatch, got Transcript expected ...`). The crash dump's raw response data included `entityKeys.segmentsKey: 'iG9CE55wbtY.transcript.full.state.key'` — **proof a transcript exists server-side**; the library simply can't parse this client's current response format.
+- **Verdict**: metadata fetch via youtubei.js is reliable; caption/transcript fetch is not, on 2 of the client profiles available, with this library version (18.0.0). Not a "no captions" result — a library/schema-lag result. Discovery-only ≠ success, and neither attempt reached "real timed caption content → parsed segments."
+
+### Round 2 — yt-dlp real caption download
+
+**Videos**: `jNQXAC9IVRw` ("Me at the zoo", 19s — deliberately different from Round 1's video) and `iG9CE55wbtY` (reused, different provider path).
+
+Commands run (secrets/cookies: none used or needed):
+```
+yt-dlp --write-auto-sub --write-sub --sub-lang en --sub-format json3 --skip-download -o "out/%(id)s.%(ext)s" "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+yt-dlp --write-sub --sub-lang en --sub-format json3 --skip-download -o "out/%(id)s.manual.%(ext)s" "https://www.youtube.com/watch?v=iG9CE55wbtY"
+```
+
+- Player client used: **"android vr"** (yt-dlp's automatic fallback — it warned no JS runtime was available for the primary web-client signature challenge, and no `curl_cffi` impersonation backend was installed, then transparently fell back to a client profile that doesn't need either).
+- **Auto captions** (Me at the zoo): downloaded, real content, real timestamps. 6 segments, `1200ms → 18881ms`. First 3: *"All right, so here we are, in front of the elephants"* (1200–3360ms), *"the cool thing about these guys is that they have really..."* (5318–7974ms), *"really really long trunks"* (7974–12616ms). Content matches the video's actual, well-known narration.
+- **Manual captions**, language explicitly selected (`--sub-lang en`) (TED talk): downloaded, 427 real segments, `27103ms → 1165213ms` (≈19.4 min, consistent with the 1203s video). First: *"Good morning. How are you?"* (27103–29678ms).
+- No 429 this time — both downloads succeeded cleanly.
+- **Verdict**: yt-dlp is the only provider tested so far that reached real, correct, fully-timed caption content — for both manual and auto captions, with explicit language selection.
+
+### Round 3 — real browser-extension test (Playwright, `--load-extension`, real `youtube.com` session)
+
+I could not literally click through `chrome://extensions` → "Load unpacked" (that's a native OS file-picker dialog, outside what browser automation can drive). Instead I used Playwright's `chromium.launchPersistentContext()` with `--disable-extensions-except=<path> --load-extension=<path>` pointing at the real `browser-extension/` folder — the standard, non-mocked way to test a real MV3 extension headfully. Script: `research/youtube-transcript/test-extension-real.mjs`.
+
+Steps actually executed:
+1. Launched a real Chromium profile with the real extension loaded. **Service worker registered**: `chrome-extension://obemeaahahlbnfldbjnfhmlnlokdgemj/background.mjs`.
+2. Opened a real tab on `https://www.youtube.com/watch?v=jNQXAC9IVRw` — loaded correctly, real title "Me at the zoo - YouTube" (this establishes a real browser cookie jar for youtube.com in this profile).
+3. Opened a real tab on `http://localhost:3000/library/new` (redirected to `/onboarding` — fresh unauthenticated profile, expected and irrelevant to the bridge test since the content script matches on origin, not path).
+4. Ran the **exact** production handshake from `youtube-import-form.tsx`: `postMessage({source:"lexreader-web", type:"LEXREADER_YOUTUBE_BRIDGE_PING"})` → **received `LEXREADER_YOUTUBE_BRIDGE_READY`** (bridge fully operational: content script ↔ background service worker ↔ page, all real, no mocks).
+5. Sent the real `LEXREADER_YOUTUBE_TRANSCRIPT_REQUEST` for the same video → **`ok: false`, error: "У этого видео нет доступных субтитров."** — the **identical failure message and failure point** as the plain server-side Node test in section 1.1.
+
+**This is the single most important result in the whole Slice.** The extension's *architecture* (bridge, service worker, message-passing, security allowlisting) is fully proven working end-to-end in a real browser with a real YouTube session. The *reason* it still fails is that `background.mjs`'s `fetchYoutubeTranscript()` uses the exact same fragile HTML-`captionTracks`-scrape technique as the server-side code — and that technique is unreliable **regardless of whether it runs from a browser or a server**, because (per Round 1's evidence) the underlying data now often requires the same kind of InnerTube-proper request yt-dlp makes, not a raw HTML scrape. The extension's "runs from a real user IP" property was solving the wrong problem — the datacenter-IP block is real (per the original README), but it is not the only or even the primary failure mode anymore.
+
+**Implication for Phase 3 (not yet started)**: the extension bridge architecture should be **kept as-is** (it's well-designed and now proven end-to-end), but `youtube-transcript.mjs`'s extraction method inside it needs to be replaced with a proper InnerTube-style client call — the same category of fix the server-side path needs. This is exactly what the brief anticipated ("prototype an upgraded extension-side provider... keep the secure origin-checked message bridge").
+
+### Round 4 — captionless video → STT (mandatory)
+
+**Honest framing first**: I ran two things, not one.
+
+1. **A genuinely captionless-search attempt.** `yt-dlp ytsearch1:"10 hours rain sounds ambient no talking"` found `Qo4JIT8jMtI` (confirmed: *"has no automatic captions"*, *"has no subtitles"*) — but at 38,890s (10.8 hours) of pure ambient rain/thunder with no speech, it's not a meaningful STT proof (nothing is said, so there's nothing to verify Whisper produced correctly). A follow-up search for short real-speech clips (`ytsearch3:"homemade voice memo talking to myself short clip"`) found 3 candidates; the one I checked in full (`22zais_nYfU`, "How to record VOICE OVER video on IPHONE", 238s) turned out to **have** auto-captions after all (just no manual ones) — YouTube auto-captions almost all clear English speech now, which made a blind search for a genuine zero-caption-with-real-speech video unexpectedly hard within a reasonable, rate-limit-respecting number of requests. I stopped searching further rather than keep hammering YouTube on low-odds guesses.
+
+2. **The actual mandatory pipeline proof, run on "Me at the zoo" (`jNQXAC9IVRw`, 19s), using its already-downloaded real captions purely as ground truth to verify correctness — not as an input to the STT step.** This is architecturally airtight: `faster-whisper`'s `transcribe()` call takes only a local `.wav` file path; it has zero network access and zero knowledge of YouTube or its captions during inference. Whatever it produces is 100% independently derived from the raw audio.
+
+   - **Audio extraction**: `yt-dlp -x --audio-format wav --audio-quality 0` → real 19.0s WAV, 3.65MB (`ffprobe`-confirmed duration `19.005542s`, matching the video).
+   - **STT model**: `faster-whisper`, `tiny`, `compute_type="int8"` (smallest available — deliberate, given this box's ~1.4–1.7GB free RAM).
+   - **Language**: auto-detected as English, **p=0.95**.
+   - **CPU/RAM**: peak RSS **252MB** (`/usr/bin/time -v`), 11% average CPU (single-threaded int8 tiny model) — comfortably inside this environment's tight memory budget.
+   - **Timing**: model load 61s (one-time HuggingFace download of the ~75MB tiny model on first run; 3.55s on the warm-cache rerun), transcription itself **2.26s** for 19s of audio.
+   - **Output** (first run, sentence-level): one 0.00–19.00s segment: *"All right so here we are one of the elephant's cool thing, what these guys expect is that they have really, really, really, long, and that's cool and that's pretty much all it is to say."* — compare to the **real, independently-downloaded** auto-caption text from Round 2: *"All right, so here we are, in front of the elephants... the cool thing about these guys is that they have really... really really long trunks... and that's cool... and that's pretty much all there is to say."* The `tiny` model's output is recognizably the same content with real (expected, well-documented) small-model accuracy loss (drops "trunks," mishears "in front of the elephants" as "one of the elephant's cool thing") — not garbage, not hallucinated, genuinely derived from the audio.
+   - **Segment granularity gap found**: the default `transcribe()` call returned **one single segment for the whole clip**, not per-sentence timed lines. Re-ran with `word_timestamps=True, vad_filter=True`: still one native Whisper "segment," but **real word-level start/end timestamps are present on every word** (confirmed via the `seg.words` array). This means fine-grained `TranscriptSegment[]` is achievable, but needs an explicit regrouping step (bucket words into ~5–8s display lines) — a normal, well-understood part of building Whisper-based captions, not a research risk. I built and proved this regrouping in Round 5 (`fromWhisperWords()`).
+   - **Cleanup**: all research audio/output files live under `research/youtube-transcript/out/`, which is gitignored — nothing was committed, and the files can be deleted freely (they are, effectively, transient artifacts of this run).
+
+3. **Ran the same pipeline a third time, on a video independently confirmed genuinely captionless** (`Qo4JIT8jMtI`, the ambient rain/thunder video — `--list-subs` explicitly reported *"has no automatic captions"* and *"has no subtitles"*). Extracted a real 30s audio clip (`yt-dlp --download-sections`, one retry needed — the first invocation hit a real **HTTP 403** on the signed googlevideo.com media URL when combined with `-x`'s ffmpeg-direct-fetch path; a second invocation using an explicit format itag succeeded, a distinct fix, not a blind retry), converted to WAV (`ffprobe`-confirmed 30.000000s), ran through the same `faster-whisper tiny` pipeline: **language-detection confidence dropped to p=0.30 and 0 segments were returned** — Whisper correctly determined there is no speech in this audio (it's rain and thunder) rather than hallucinating content. This is the *correct* result for this input, and proves the pipeline runs cleanly end-to-end on a genuinely-confirmed captionless video without crashing — but it does **not** produce the "output must contain real timestamps" evidence the brief requires, precisely because there's no speech in this particular captionless video to time.
+
+   **Honest bottom line on item 7**: the *mechanism* is proven in two separate, real runs — (a) it behaves correctly on a video independently confirmed to have zero captions (produces a clean, correct empty result, no crash, no hallucination), and (b) it produces real, accurate, correctly-timed transcript segments when given real speech (verified against ground truth on a *different*, caption-having video). **I did not find and could not locate, within a reasonable rate-limit-respecting search budget, a single real public video that is simultaneously (a) genuinely caption-free and (b) contains actual spoken content** — YouTube's auto-captioning of clear English speech turned out to be far more aggressive than expected (every real-speech candidate I checked already had auto-captions). I am treating this narrow, specific gap honestly rather than rounding it up: **the single combined demonstration the brief asks for (real timestamps produced by STT on a video that has zero pre-existing captions) was not completed.**
+
+### Round 5 — normalization prototype
+
+Built `research/youtube-transcript/normalize.mjs`: `fromYtDlpJson3()` maps both the Round 2 manual-caption file (427 segments) and auto-caption file (6 segments) into the exact `{videoId, title, languageCode, source, segments: {startMs, endMs, text}[]}` shape from the brief; `fromWhisperWords()` regroups Round 4's word-level Whisper output into the same shape via a max-6000ms bucketing rule. Ran it — both real caption sources produced identical-shaped output, differing only in `source` (`"manual_caption"` vs `"auto_caption"`) and segment count/granularity. **A Video Reader built against this shape would not need to know or care which provider produced a given transcript.**
+
+### Round 6 — provider reliability decision (from measured results only)
+
+| Provider | Measured this round | Runs where? | Cost | Latency (measured) | Fragility |
+|---|---|---|---|---|---|
+| **yt-dlp (InnerTube via android-vr client)** | ✅ Manual captions, ✅ auto captions, ✅ language selection, ✅ real timestamps. 1 rate-limit hit (429) on the very first attempt of this session, 0 on 3 subsequent attempts after backing off. | Worker/container (Python venv + ffmpeg; confirmed **not** Vercel-serverless-appropriate — needs its own process, and yt-dlp itself warns it wants a JS runtime + `curl_cffi` impersonation for full reliability, neither present here) | Free | Watch-page fetch + caption fetch: a few hundred ms–seconds each, observed | Depends on yt-dlp's own extractor staying current with YouTube (it updates frequently: this session's installed build was dated 2026.07.04); real 429s under repeated use |
+| **youtubei.js (Node/InnerTube)** | ✅ Metadata (title/duration/channel). ❌ Captions on 2 of ~14 available client profiles, current library version. Crash evidence suggests the data exists; the client-side parser is what's lagging. | Could run **in Vercel** (pure JS, no subprocess) if caption extraction is fixed | Free | Metadata fetch: ~1–2s observed | Version-lag risk explicit and observed (crashed on iOS client); needs either a newer library version, a different client profile, or both, proven before relying on it |
+| **Browser bridge (extension)** | ✅ Architecture fully proven (real MV3, real session, real handshake). ❌ Same extraction failure as server-side, because it uses the same weak method. | User's own browser (sidesteps datacenter-IP block specifically) | Free | Bridge round-trip: sub-second once ready | Currently blocked on the same fragility as the HTML-scrape method; **fixable** by swapping in an InnerTube-style fetch inside `background.mjs` (not yet built) |
+| **Server-side HTML scrape (current `youtube-actions.ts`)** | ❌ Failed in this session (empty `timedtext` body), consistent with Round 3's extension finding using the same method | Vercel serverless | Free (or paid via optional `SCRAPERAPI_KEY` proxy) | N/A — didn't produce content | The weakest link; superseded by the yt-dlp/InnerTube finding |
+| **Speech-to-text (faster-whisper, local)** | ✅ Full pipeline proven (Round 4): real audio → real transcript → real timestamps (word-level, regroupable), verified against ground truth, ~250MB RAM, ~2.3s per 19s of audio on 1 CPU thread | Dedicated worker (audio download + ffmpeg + Python/faster-whisper; **not** Vercel-serverless — needs real CPU time and a real filesystem for temp audio) | Free (no paid API) | For a 19s clip: 2.3s transcription (excluding one-time model download). Scales roughly with audio duration on CPU; a 20-minute video would need proportionally more wall-clock time than fits in typical serverless limits, reinforcing the "dedicated worker" architecture call | Model-size/CPU trade-off (this box: `tiny` only, given ~1.5GB free RAM) — a production worker with its own dedicated resources could safely run a larger, more accurate model |
+
+**Recommended provider order** (evidence-based, not theoretical):
+
+```
+1. yt-dlp (worker/container, InnerTube via its own client-fallback logic)   — proven, both caption types, real timestamps
+2. browser bridge, AFTER extraction method inside it is upgraded            — proven architecture, extraction fix is a known, scoped follow-up
+3. youtubei.js (in-process Vercel/Node call)                                — proven for metadata only right now; promote to a real fallback once caption extraction is fixed/re-tested
+4. speech_to_text (worker, faster-whisper)                                  — proven end-to-end; the correct terminal fallback when no caption track exists (or all of 1–3 fail)
+```
+
+The old server-side HTML-scrape (current `youtube-actions.ts`) and the extension's current extraction method are **not** part of this chain going forward — both are the same superseded technique.
+
+## Rate-limit and resource observations (Rounds 1–6, consolidated)
+
+- One HTTP 429 total, on the very first yt-dlp download attempt of this whole session (against `9bZkp7q19f0`), immediately after several prior watch-page fetches to the same video from earlier Node-based testing. Zero 429s across every subsequent request in Rounds 1–6, once pacing was respected (one request at a time, no immediate retries, different videos where practical). No `Retry-After` header was present on the 429 response.
+- Peak measured RSS for the STT step: 252MB. System-wide available memory hovered around 1.4–1.7GB free throughout — tight, but nothing crashed or was OOM-killed this session.
+- No cookies, auth headers, session tokens, PO tokens, API keys, or Supabase secrets were printed or committed at any point in Rounds 1–6.
+
+## Hard Acceptance Gate #1 — status
+
+| # | Requirement | Status |
+|---|---|---|
+| 1 | Real manual caption extraction | ✅ Demonstrated (yt-dlp, TED talk, 427 real segments) |
+| 2 | Real auto-caption extraction | ✅ Demonstrated (yt-dlp, Me at the zoo, 6 real segments) |
+| 3 | Real timed segments | ✅ Demonstrated (both above; word-level timestamps also proven for the STT path) |
+| 4 | Language selection | ✅ Demonstrated (`--sub-lang en` explicitly honored) |
+| 5 | At least one fallback provider | ✅ Demonstrated (yt-dlp succeeded where the HTML-scrape method — used by both the server action and the browser extension — failed) |
+| 6 | Real browser-session bridge test | ✅ Completed (Playwright + real loaded extension + real youtube.com session + real bridge handshake — see Round 3). Bridge architecture proven; its current extraction method is proven broken and needs replacing (a scoped, known fix, not an open question) |
+| 7 | Captionless public video → audio → local STT → timed `TranscriptSegment[]`, output must contain real timestamps | ❌ **Not completed as literally specified.** Proven in two separate halves: (a) pipeline runs correctly end-to-end on a video *independently confirmed* to have zero captions (`Qo4JIT8jMtI`) — correctly produces an empty result (no speech present, no crash, no hallucination); (b) the same pipeline produces real, accurate, correctly-timed segments when given real speech (verified against ground truth on `jNQXAC9IVRw`, which *does* have existing captions). No single video was found that is both genuinely caption-free *and* contains real speech, despite a genuine, rate-limit-respecting search attempt — so the specific evidence the brief requires (real timestamps produced by STT on a video with zero pre-existing captions) does not exist yet |
+
+**Gate #1: BLOCKED.** Six of seven requirements have complete, real, non-mocked evidence. Item 7 is the one exception, and it fails on a precise, narrow technicality: I have not produced a single run where a genuinely caption-free video's real spoken content was recovered by STT with real timestamps — only the mechanism split across two videos (correct behavior on true captionless input; accurate timed transcription on real speech elsewhere). This is not being called "future work" while treating the Slice as ready — Video Reader implementation has not started, and per the standing instruction, will not start until this is closed. The blocker is narrow and specific: find one real, public, non-age-restricted video with genuine spoken content and zero caption tracks (auto or manual), confirm via `yt-dlp --list-subs`, and run the already-fully-proven pipeline against it.
+
 ## Next steps (proposed, not yet executed)
 
-1. Cool down, then: live-test `youtubei.js` against 2–3 videos; retry a real yt-dlp caption *download* (not just list); attempt one real captionless-video → audio → `faster-whisper` → timed-transcript run.
-2. Build/verify the actual browser extension against a real `youtube.com` tab (1D) to settle whether the bridge survives the session-token gate found in 1.1.
-3. Only after those land: assemble the real Phase 2 test corpus (I'll propose specific stable public video IDs per category and record results per the required table), then evaluate Hard Acceptance Gate #1.
+1. **Phase 2 full test corpus** — assemble and run the complete required matrix (Shorts, 30–60min, non-English, multi-caption-language, and the one remaining true-zero-caption-with-speech case) now that all 4 extraction mechanisms have real proof-of-concept.
+2. **Phase 3 provider architecture** — implement the actual `YouTubeTranscriptProvider` interface and the 4-provider fallback chain from Round 6, including the InnerTube-style rewrite of `browser-extension/youtube-transcript.mjs`'s extraction method (keeping its bridge architecture unchanged).
+3. **Phase 4 infra decision** — formalize the worker/container design for yt-dlp + faster-whisper (confirmed not Vercel-serverless-appropriate) informed by this round's real timing/memory numbers.
+4. Only after those: Phase 5 (schema — will stop for approval before any migration, per standing instruction), Phase 6+ (Video Reader implementation).
 
-**Nothing has been merged, no schema has changed, no production code has been touched.** All work so far lives in `research/youtube-transcript/` (git-ignorable scratch dependencies) and this doc.
+**Nothing has been merged, no schema has changed, no production code has been touched.** All work lives in `research/youtube-transcript/` (gitignored deps/output) and this doc. No PR opened, no deploy attempted.
