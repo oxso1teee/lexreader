@@ -23,6 +23,17 @@ function formatDuration(seconds: number | null): string {
   return `${minutes} мин`;
 }
 
+// M3 Slice 10 (task #279): a vocab_activation mission exists to push words toward
+// learning_state='active' — but only Type (or Context Gap, tagged practice_mode:'type') counts
+// as strong-recall evidence toward that (state-engine.ts). The review flow's default Cards mode
+// is self-graded, weak evidence — completing the whole mission there would never actually
+// activate anything. Type mode always has playable content for any flashcard (unlike Context
+// Gap, which needs a saved context sentence), so it's the safe, universal choice here.
+function targetedReviewUrl(missionType: MissionType, wordIds: string[], missionId: string): string {
+  const mode = missionType === "vocab_activation" ? "&mode=type" : "";
+  return `/brain/all/review?wordIds=${wordIds.join(",")}&missionId=${missionId}${mode}`;
+}
+
 export default function MissionScreen({
   mission: initialMission,
   initialAttempt,
@@ -58,14 +69,14 @@ export default function MissionScreen({
     if (TARGETED_TYPES.has(result.mission.mission_type)) {
       const payload = result.mission.payload_json as unknown as TargetedMissionPayload;
       const wordIds = payload.wordIds ?? [];
-      router.push(`/brain/all/review?wordIds=${wordIds.join(",")}&missionId=${result.mission.id}`);
+      router.push(targetedReviewUrl(result.mission.mission_type, wordIds, result.mission.id));
     }
   }
 
   function handleContinueTargeted() {
     const payload = mission.payload_json as unknown as TargetedMissionPayload;
     const wordIds = payload.wordIds ?? [];
-    router.push(`/brain/all/review?wordIds=${wordIds.join(",")}&missionId=${mission.id}`);
+    router.push(targetedReviewUrl(mission.mission_type, wordIds, mission.id));
   }
 
   async function handleDismiss() {

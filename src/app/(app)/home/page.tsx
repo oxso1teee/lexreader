@@ -91,7 +91,7 @@ export default async function HomePage() {
       .lt("percent_read", 96)
       .order("last_read_at", { ascending: false })
       .limit(1),
-    getOrGenerateActiveMissions(supabase, profile.id),
+    getOrGenerateActiveMissions(supabase, profile.id, profile.target_language),
     getOrCreateSettingsSafe(supabase, profile.id),
     supabase
       .from("language_recommendations")

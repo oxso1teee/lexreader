@@ -94,7 +94,7 @@ export default function MultipleChoiceMode({
     const grade = isCorrect ? 2 : 0;
     setTally((t) => (isCorrect ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 }));
     startTransition(() => {
-      void reviewWord(card.flashcardId, grade);
+      void reviewWord(card.flashcardId, grade, "choice");
     });
   }
 

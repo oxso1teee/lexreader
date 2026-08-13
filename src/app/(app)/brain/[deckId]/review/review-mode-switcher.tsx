@@ -7,12 +7,14 @@ import ReviewSession, { type ReviewCard } from "./review-session";
 import MultipleChoiceMode from "./multiple-choice-mode";
 import TypeWordMode from "./type-word-mode";
 import MatchPairsMode from "./match-pairs-mode";
+import ContextGapMode from "./context-gap-mode";
 
 const MODES = [
   { value: "cards", label: "Карточки" },
   { value: "choice", label: "Выбор" },
   { value: "type", label: "Напечатать" },
   { value: "match", label: "Пары" },
+  { value: "context", label: "Контекст" },
 ] as const;
 
 type Mode = (typeof MODES)[number]["value"];
@@ -142,6 +144,7 @@ export default function ReviewModeSwitcher({
         <TypeWordMode key="type" cards={cards} studyDirection={direction} missionId={missionId} />
       )}
       {mode === "match" && <MatchPairsMode key="match" cards={cards} missionId={missionId} />}
+      {mode === "context" && <ContextGapMode key="context" cards={cards} missionId={missionId} />}
     </div>
   );
 }

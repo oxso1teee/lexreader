@@ -179,7 +179,7 @@ export async function getSkillStateAction(pathSlug: PathSlug, skillKey: string):
   const [progress, languageTwinSignal, missions] = await Promise.all([
     getOrCreateSkillProgress(supabase, profile.id, path.slug, path.version, skillKey),
     getSkillLanguageTwinSignal(supabase, profile.id, skill.category),
-    getOrGenerateActiveMissions(supabase, profile.id),
+    getOrGenerateActiveMissions(supabase, profile.id, profile.target_language),
   ]);
   const matchingMission = findMatchingMissionForSkill(missions, skill);
   return { path, stage, skill, progress, languageTwinSignal, matchingMissionId: matchingMission?.id ?? null };

@@ -298,13 +298,18 @@ export async function recomputeLanguageTwin(
     .eq("owner_id", userId)
     .eq("language", language);
 
+  // M3 Slice 10 (task #279): "Активный словарь" already claims "то, что реально вспоминаешь"
+  // (language-twin/page.tsx) — flashcards.learning_state='active' is exactly that claim made
+  // real: 2+ genuine typed-recall successes with <=1 recent failure (state-engine.ts), not this
+  // reading-tap-derived proxy (level>=3 required zero actual review evidence). Same "prefer the
+  // real evidence-based source over the closest available proxy" upgrade already applied
+  // elsewhere in this slice (state-update.ts replacing a static flag).
   const { count: observedActiveVocabulary } = await supabase
-    .from("vocabulary_items")
+    .from("flashcards")
     .select("id", { count: "exact", head: true })
     .eq("owner_id", userId)
     .eq("language", language)
-    .gte("level", 3)
-    .not("flashcard_id", "is", null);
+    .eq("learning_state", "active");
 
   const allGradesForAccuracy = patterns.flatMap((p) =>
     ((p.metadata_json as { words?: { accuracy: number }[] }).words ?? []).map((w) => w.accuracy),

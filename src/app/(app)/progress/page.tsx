@@ -116,6 +116,8 @@ export default async function ProgressPage({
     languageTwinState,
     missionWeekStats,
     activePathState,
+    { count: familiarWords },
+    { count: activeWords },
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -227,6 +229,24 @@ export default async function ProgressPage({
     // the same "completed this week" stat.
     getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date())),
     getActivePathStateAction(),
+    // M3 Slice 10 (task #280): learning_state is evidence-based (state-engine.ts) — a genuinely
+    // different, more honest signal than the vocabulary_items.level counts above, which only
+    // reflect a reading tap, never a real recall attempt. Two counts only (not all 5 states):
+    // "familiar"/"active" are the two that tell an honest, encouraging story without turning this
+    // into a second dashboard — matches the same "compact only" rule already used for the Learning
+    // Paths card above.
+    supabase
+      .from("flashcards")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language)
+      .eq("learning_state", "familiar"),
+    supabase
+      .from("flashcards")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", profile.id)
+      .eq("language", profile.target_language)
+      .eq("learning_state", "active"),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -392,6 +412,8 @@ export default async function ProgressPage({
         <div className="grid grid-cols-2 gap-3">
           <StatCard value={cardsCreated} label="Карточек создано" color="blue" />
           <StatCard value={answersGiven} label="Ответов дано" color="red" />
+          <StatCard value={familiarWords ?? 0} label="Почти закреплены" color="orange" />
+          <StatCard value={activeWords ?? 0} label="Активно вспоминаются" color="green" />
         </div>
       </div>
 

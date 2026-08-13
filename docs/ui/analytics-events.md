@@ -38,8 +38,8 @@ no event fires that isn't in this table.
 | `review_card_graded` | `review-session.tsx`, `grade()` | `grade` (`0`\|`1`\|`2`\|`3`) |
 | `review_undo_used` | `review-session.tsx`, `undo()`, only after server confirms the undo | *(none)* |
 | `review_session_completed` | `review-session.tsx`, `grade()`, last-card branch | `count` (session total) |
-| `vocabulary_viewed` | `brain/vocabulary/vocabulary-browser.tsx` (mount, client) | `initial_tab` (`words`\|`phrases`\|`decks`) |
-| `vocabulary_filter_changed` | same file — tab switch, bucket chip, deck select, sort select, "only from reading" checkbox | `filter_type` (`tab`\|`bucket`\|`deck`\|`sort`\|`source_only`), `value` (enum, or `all`/`specific` for `deck`) |
+| `vocabulary_viewed` | `brain/vocabulary/vocabulary-browser.tsx` (mount, client) | `initial_tab` (M3 Slice 10 — now the initial `VocabFilter` value: `all`\|`word`\|`phrase`\|`new`\|`learning`\|`familiar`\|`active`\|`due`) |
+| `vocabulary_filter_changed` | same file — filter chip, deck select, sort select, "only from reading" checkbox | `filter_type` (M3 Slice 10 — now `vocab_filter`\|`deck`\|`sort`\|`source_only`), `value` (enum, or `all`/`specific` for `deck`) |
 | `vocabulary_bulk_action_used` | same file — bulk mark-known/move/delete/export | `action` (`mark_known`\|`move`\|`delete`\|`export`) |
 | `deck_opened` | `brain/[deckId]/deck-analytics.tsx` (mount, client) | `deck_type` (`default`\|`starter`\|`custom`), `card_count` |
 | `deck_create_started` | `brain/new-deck-modal.tsx`, open-button click, when not at the free-tier limit | *(none)* |
@@ -209,3 +209,34 @@ are computed server-side only (`src/app/onboarding/placement/actions.ts`,
 a range for the server to just log back. Verified by
 `e2e/placement-privacy.spec.ts`, using the same forbidden-key regex +
 non-vacuous-call-count idiom as `learning-paths-privacy.spec.ts`.
+
+## M3 Slice 10 — Vocabulary & Phrase System v2
+
+No new `track()` events were added — the vocabulary rebuild (item_type,
+learning_state, practice_mode, the Context Gap practice mode, the Word/Phrase
+Detail route) reuses the existing `vocabulary_viewed`/`vocabulary_filter_changed`/
+`vocabulary_bulk_action_used` events above and the existing zero-analytics
+convention already established for Choice/Type/Match review modes (only Cards
+mode fires `review_*` events; Context Gap follows the same pattern, no new
+per-answer event). What changed is the **closed enum vocabulary** several
+existing event properties now draw from — all still enums/counts, never
+saved word/phrase/context text:
+
+- `vocabulary_viewed`'s `initial_tab` and `vocabulary_filter_changed`'s
+  `value` (when `filter_type: "vocab_filter"`) — `all`\|`word`\|`phrase`\|
+  `new`\|`learning`\|`familiar`\|`active`\|`due` (`VocabFilter`,
+  `vocabulary-browser.tsx`).
+- `review_card_graded`'s `grade` is unchanged (`0`-`3`); the underlying
+  `practice_mode` (`cards`\|`choice`\|`type`\|`match`) that now accompanies
+  every review write (`review_log.practice_mode`) is a DB column only —
+  never sent to PostHog, since which UI mode was used isn't needed for any
+  product analytics question yet and reduces surface area to keep closed.
+- The new Missions fallback candidate (`familiar_vocab_ready`, task #279)
+  reuses the existing `mission_*` events unchanged — same `mission_type`
+  enum (`vocab_activation`, pre-existing), no new event.
+
+Never sent, same as every prior slice: word/phrase text, translation,
+context sentence, deck name. Verified by `e2e/vocabulary-privacy.spec.ts`
+(same forbidden-key regex + non-vacuous-call-count idiom as
+`missions-privacy.spec.ts`), scanning `vocabulary-browser.tsx`,
+`detail-view.tsx`, and `context-gap-mode.tsx`.

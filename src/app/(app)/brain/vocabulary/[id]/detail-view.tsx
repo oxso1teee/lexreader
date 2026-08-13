@@ -108,7 +108,7 @@ export default function VocabularyItemDetail({
           <span className="rounded-full bg-caramel/15 px-2 py-0.5 text-xs font-medium text-[var(--color-caramel-text)]">
             {LEARNING_STATE_LABEL[detail.learningState]}
           </span>
-          <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs text-black/50 dark:bg-white/10 dark:text-white/50">
+          <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
             {SOURCE_LABEL[detail.sourceType]}
           </span>
         </div>

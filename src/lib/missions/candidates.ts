@@ -17,8 +17,9 @@ function patternWordIds(pattern: Pick<PatternRow, "metadata_json">): string[] {
 // half). Every candidate here traces to a real row a user can see
 // elsewhere in the product (Language Twin patterns, their own diagnostic
 // history) — nothing is invented for the sake of having something to show.
-export async function fetchMissionCandidates(supabase: SupabaseServerClient, userId: string): Promise<MissionCandidateInput[]> {
+export async function fetchMissionCandidates(supabase: SupabaseServerClient, userId: string, language: string): Promise<MissionCandidateInput[]> {
   const candidates: MissionCandidateInput[] = [];
+  let hasActivationGapCandidate = false;
 
   const { data: patternsData } = await supabase
     .from("language_error_patterns")
@@ -32,6 +33,7 @@ export async function fetchMissionCandidates(supabase: SupabaseServerClient, use
       const wordIds = patternWordIds(pattern);
       if (wordIds.length === 0) continue;
       candidates.push(buildCandidate(pattern, "vocab_activation", "activation_gap", wordIds.slice(0, 5)));
+      hasActivationGapCandidate = true;
       continue;
     }
     if (pattern.category === "review_recall") {
@@ -53,6 +55,15 @@ export async function fetchMissionCandidates(supabase: SupabaseServerClient, use
 
   candidates.push(...(await fetchDiagnosticFollowupCandidates(supabase, userId)));
   candidates.push(...(await fetchPhraseActivationCandidate(supabase, userId)));
+  // M3 Slice 10 (task #279): activation_gap requires BOTH a reading-level-4 tap AND a narrow
+  // review-accuracy window — real, but a narrow intersection that misses most words (manually
+  // added, imported, or never read at all). learning_state='familiar' is Slice 10's own broader,
+  // more direct "ready to push toward active" signal, computed for every word/phrase regardless
+  // of origin — only used here as a fallback so a user is never shown two differently-sourced
+  // "Активация словаря" missions at once (hasActivationGapCandidate guards that).
+  if (!hasActivationGapCandidate) {
+    candidates.push(...(await fetchFamiliarVocabCandidate(supabase, userId, language)));
+  }
 
   return candidates;
 }
@@ -160,6 +171,52 @@ async function fetchPhraseActivationCandidate(supabase: SupabaseServerClient, us
       updatedAt: latestOccurredAt,
       title: "Сохранённые фразы",
       reasonKey: "phrase_activation",
+      wordIds,
+    },
+  ];
+}
+
+// M3 Slice 10 (task #279): fallback vocab_activation source, only used when no activation_gap
+// language_error_pattern already covers this (see the caller above) — familiar words came from
+// real recognition-tier evidence (Cards/Choice/Match, state-engine.ts), so pushing one toward a
+// genuine typed-recall success via a mission is exactly the same "close the gap" idea
+// activation_gap already expresses, just sourced directly from learning_state instead of a
+// reading-tap intersection.
+async function fetchFamiliarVocabCandidate(
+  supabase: SupabaseServerClient,
+  userId: string,
+  language: string,
+): Promise<MissionCandidateInput[]> {
+  const { data: rows } = await supabase
+    .from("flashcards")
+    .select("id, learning_state_updated_at")
+    .eq("owner_id", userId)
+    .eq("language", language)
+    .eq("learning_state", "familiar")
+    .order("learning_state_updated_at", { ascending: false, nullsFirst: false })
+    .limit(5);
+  const wordIds = (rows ?? []).map((r) => r.id);
+  if (wordIds.length === 0) return [];
+
+  const latestUpdatedAt = rows?.[0]?.learning_state_updated_at ?? new Date().toISOString();
+  return [
+    {
+      missionType: "vocab_activation",
+      sourcePatternId: null,
+      sourceRecommendationId: null,
+      // Learning Paths' topic/vocabulary skills are tagged category:"activation" (no dedicated
+      // vocabulary category exists — plan doc §5) and find their "Практиковать" CTA target via
+      // findMatchingMissionForSkill()'s skill_category match (mission-match.ts). Setting this to
+      // "activation" — same as the pattern-derived candidate above — is what makes this fallback
+      // actually reachable from a topic skill page, not just from Missions itself.
+      skillCategory: "activation",
+      severity: wordIds.length >= 3 ? "medium" : "low",
+      confidence: "medium",
+      trend: "flat",
+      evidenceCount: wordIds.length,
+      updatedAt: latestUpdatedAt,
+      title: "Слова почти закреплены",
+      reasonKey: "familiar_vocab_ready",
       wordIds,
     },
   ];

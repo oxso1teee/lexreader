@@ -14,7 +14,7 @@ const PATH = "/missions";
 export async function getActiveMissionsAction(): Promise<MissionRow[]> {
   const profile = await requireProfile();
   const supabase = await createClient();
-  return getOrGenerateActiveMissions(supabase, profile.id);
+  return getOrGenerateActiveMissions(supabase, profile.id, profile.target_language);
 }
 
 // Ownership check for every mission-scoped action below: RLS already makes

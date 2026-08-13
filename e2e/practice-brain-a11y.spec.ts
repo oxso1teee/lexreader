@@ -71,13 +71,17 @@ test("Vocabulary has no serious/critical axe violations on mobile (390px)", asyn
   expect(seriousViolations(results), JSON.stringify(seriousViolations(results), null, 2)).toEqual([]);
 });
 
-test("Item Details sheet has no serious/critical axe violations", async ({ page }) => {
+test("Word/Phrase Detail page has no serious/critical axe violations", async ({ page }) => {
   await login(page);
   await page.goto("/brain/vocabulary");
   // "birds" is seeded (supabase/seed.sql) and kept due by e2e/global-setup.ts
   // (ensureDueCard), so it always exists on the default account regardless
-  // of what other e2e runs added.
-  await page.getByText("birds", { exact: true }).click();
+  // of what other e2e runs added — but a long-lived local dev DB accumulates
+  // several duplicate "birds" flashcards across repeated runs (plan doc §6:
+  // duplicates are a known, deliberately-not-cleaned-up reality). .first()
+  // is correct here, not a workaround: any duplicate exercises the same real
+  // Word/Phrase Detail route (M3 Slice 10) this test actually checks.
+  await page.getByText("birds", { exact: true }).first().click();
   await expect(page.getByText("Статус повторения")).toBeVisible({ timeout: 10_000 });
 
   const results = await new AxeBuilder({ page }).include("body").analyze();
