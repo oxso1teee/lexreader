@@ -21,7 +21,7 @@ test("deriveVocabularyState: a single typed success does not over-promote to act
 
 test("deriveVocabularyState: two typed successes with no failures promotes to active", () => {
   const state = deriveVocabularyState({
-    recentReviews: reviews([3, "type"], [2, "cards"]),
+    recentReviews: reviews([3, "type"], [2, "type"]),
     intervalDays: 5,
     fsrsStability: null,
   });
@@ -30,14 +30,14 @@ test("deriveVocabularyState: two typed successes with no failures promotes to ac
 
 test("deriveVocabularyState: active tolerates one failure in the window (hysteresis)", () => {
   const state = deriveVocabularyState({
-    recentReviews: reviews([0, "type"], [3, "type"], [2, "cards"]),
+    recentReviews: reviews([0, "type"], [3, "type"], [2, "type"]),
     intervalDays: 5,
     fsrsStability: null,
   });
   assert.equal(state, "active");
 });
 
-test("deriveVocabularyState: active demotes one tier (not to learning) when failures exceed one — 2 real recall successes are still real evidence", () => {
+test("deriveVocabularyState: active demotes one tier (not to learning) when failures exceed one — 1 real typed success is still real evidence", () => {
   const state = deriveVocabularyState({
     recentReviews: reviews([0, "type"], [0, "cards"], [3, "type"], [2, "cards"]),
     intervalDays: 5,
@@ -50,6 +50,25 @@ test("deriveVocabularyState: active demotes one tier (not to learning) when fail
 test("deriveVocabularyState: two recognition-only successes (choice/match) is familiar, not active", () => {
   const state = deriveVocabularyState({
     recentReviews: reviews([2, "choice"], [2, "match"]),
+    intervalDays: 3,
+    fsrsStability: null,
+  });
+  assert.equal(state, "familiar");
+});
+
+test("deriveVocabularyState: Cards mode is weak/ambiguous evidence — success never promotes to active by itself, even many of them", () => {
+  const state = deriveVocabularyState({
+    recentReviews: reviews([3, "cards"], [3, "cards"], [3, "cards"], [3, "cards"]),
+    intervalDays: 3,
+    fsrsStability: null,
+  });
+  assert.notEqual(state, "active");
+  assert.equal(state, "familiar");
+});
+
+test("deriveVocabularyState: one strong typed success plus weak Cards evidence is familiar, not active (only Type counts toward active)", () => {
+  const state = deriveVocabularyState({
+    recentReviews: reviews([3, "type"], [3, "cards"], [3, "cards"]),
     intervalDays: 3,
     fsrsStability: null,
   });
@@ -123,7 +142,8 @@ test("deriveVocabularyState: null-mode reviews still count toward failures and t
 
 test("deriveVocabularyState: only the most recent EVIDENCE_WINDOW (6) reviews are considered", () => {
   // 7th-oldest review is a single old failure that should be pushed out of the window entirely,
-  // leaving 6 clean typed successes — still active, not demoted by evidence outside the window.
+  // leaving 3 clean typed successes within the window — still active, not demoted by evidence
+  // outside the window.
   const state = deriveVocabularyState({
     recentReviews: reviews(
       [3, "type"],

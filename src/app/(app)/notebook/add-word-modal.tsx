@@ -93,14 +93,14 @@ export default function AddWordModal({
 
         <div className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-black/50 dark:text-white/50">Слово</span>
+            <span className="text-black/50 dark:text-white/50">Слово или фраза</span>
             <div className="flex items-center gap-1 rounded-lg border border-black/15 pr-1 focus-within:border-black/40 dark:border-white/20 dark:focus-within:border-white/40">
               <input
                 type="text"
                 autoFocus
                 value={headword}
                 onChange={(e) => setHeadword(e.target.value)}
-                placeholder="Например: serendipity"
+                placeholder="Например: serendipity или figure out"
                 className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none"
               />
               <MicButton lang={sourceLang} onResult={(text) => setHeadword(text)} />

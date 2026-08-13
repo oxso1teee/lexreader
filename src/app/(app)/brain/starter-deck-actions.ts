@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { translateText } from "@/lib/translate";
 import { STARTER_DECKS, type StarterLevel } from "@/lib/starter-decks";
+import { findOrCreateFlashcard } from "@/lib/vocabulary/save";
 
 // Переводим на лету через тот же MyMemory-пайплайн, что и остальное
 // приложение — партиями по 8, чтобы уложиться в разумное время ответа
@@ -95,40 +96,34 @@ export async function addStarterDeck(level: StarterLevel): Promise<AddStarterDec
   const rows = def.words
     .map((word, i) => ({ word, translation: translations[i] }))
     .filter((r): r is { word: string; translation: string } => Boolean(r.translation))
-    .filter((r) => isPlausibleTranslation(r.word, r.translation, profile.native_language))
-    .map((r) => ({
-      deck_id: deck.id,
-      owner_id: profile.id,
-      front: r.word,
-      back: r.translation,
-      language: profile.target_language,
-      is_starter: true,
-    }));
+    .filter((r) => isPlausibleTranslation(r.word, r.translation, profile.native_language));
 
   if (rows.length === 0) {
     await supabase.from("decks").delete().eq("id", deck.id);
     return { ok: false, error: "Не удалось перевести слова. Попробуй ещё раз позже." };
   }
 
-  const { data: inserted, error: cardsError } = await supabase
-    .from("flashcards")
-    .insert(rows)
-    .select("id");
-  if (cardsError) {
-    await supabase.from("decks").delete().eq("id", deck.id);
-    return { ok: false, error: "Не удалось добавить карточки. Попробуй ещё раз." };
+  // M3 Slice 10 (brief Phase B §7) — starter decks previously had NO per-word dedup at all
+  // (Phase A audit finding): re-adding a starter deck, or a starter word the user already had
+  // from Reader/manual/import, silently created a duplicate flashcard every time. Routed
+  // through the shared service now — an existing compatible flashcard (any source) is reused
+  // instead, exactly like every other save path.
+  // Deliberately not tracking a created-vs-reused count for a user-facing message here: even
+  // when every word already existed as a flashcard elsewhere, the deck itself is still a real,
+  // useful grouping (existing words now organized under it) — kept, never deleted for that
+  // reason alone.
+  for (const r of rows) {
+    await findOrCreateFlashcard(supabase, {
+      ownerId: profile.id,
+      language: profile.target_language,
+      front: r.word,
+      back: r.translation,
+      itemType: "word",
+      sourceType: "starter_deck",
+      deckId: deck.id,
+      isStarter: true,
+    });
   }
-
-  const { data: settings } = await supabase
-    .from("srs_settings")
-    .select("starting_ease")
-    .eq("owner_id", profile.id)
-    .maybeSingle();
-  const startingEase = settings?.starting_ease ?? 2.5;
-
-  await supabase
-    .from("srs_state")
-    .insert((inserted ?? []).map((c) => ({ flashcard_id: c.id, ease_factor: startingEase })));
 
   revalidatePath("/brain");
   return { ok: true };

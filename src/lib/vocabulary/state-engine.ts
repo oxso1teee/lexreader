@@ -25,8 +25,13 @@ const EVIDENCE_WINDOW = 6;
 const MAINTENANCE_MIN_REVIEWS = 5;
 const MAINTENANCE_MIN_INTERVAL_DAYS = 60;
 const MAINTENANCE_MIN_FSRS_STABILITY = 60;
-const RECALL_MODES: readonly PracticeMode[] = ["cards", "type"];
-const RECOGNITION_MODES: readonly PracticeMode[] = ["choice", "match"];
+// Only Type is real production evidence: the user reproduces the answer from nothing.
+// Cards is self-graded honesty, not verified production — real, but ambiguous — so it's
+// grouped with Choice/Match (recognition-among-options) as "weak" evidence, never alone
+// enough to promote to `active`. This matches the explicit product decision: multiple
+// choice (or Cards) must never promote a word to active on its own.
+const STRONG_RECALL_MODES: readonly PracticeMode[] = ["type"];
+const WEAK_EVIDENCE_MODES: readonly PracticeMode[] = ["cards", "choice", "match"];
 const SUCCESS_GRADE_THRESHOLD = 2;
 
 function isSuccess(review: ReviewSignal): boolean {
@@ -47,13 +52,15 @@ export function deriveVocabularyState(signals: VocabularySignals): LearningState
     return "maintenance";
   }
 
-  const recallSuccesses = window.filter((r) => r.mode !== null && RECALL_MODES.includes(r.mode) && isSuccess(r)).length;
-  if (recallSuccesses >= 2 && failures <= 1) return "active";
-
-  const recognitionSuccesses = window.filter(
-    (r) => r.mode !== null && RECOGNITION_MODES.includes(r.mode) && isSuccess(r),
+  const strongRecallSuccesses = window.filter(
+    (r) => r.mode !== null && STRONG_RECALL_MODES.includes(r.mode) && isSuccess(r),
   ).length;
-  if (recognitionSuccesses >= 2 || recallSuccesses >= 1) return "familiar";
+  if (strongRecallSuccesses >= 2 && failures <= 1) return "active";
+
+  const weakEvidenceSuccesses = window.filter(
+    (r) => r.mode !== null && WEAK_EVIDENCE_MODES.includes(r.mode) && isSuccess(r),
+  ).length;
+  if (weakEvidenceSuccesses >= 2 || strongRecallSuccesses >= 1) return "familiar";
 
   return "learning";
 }

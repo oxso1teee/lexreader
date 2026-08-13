@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { hasFreeDeckRoom, hasFreeFlashcardRoom } from "@/lib/subscription";
-import { partitionByExistingFront } from "@/lib/flashcard-dedup";
+import { hasFreeDeckRoom } from "@/lib/subscription";
+import { findOrCreateFlashcard } from "@/lib/vocabulary/save";
 
 export interface DeckFormState {
   error?: string;
@@ -111,52 +111,42 @@ export async function importFlashcards(deckId: string, cards: ImportCard[]) {
 
   const rows = cards
     .filter((c) => c.front.trim() && c.back.trim())
-    .map((c) => ({
-      deck_id: deckId,
-      owner_id: profile.id,
-      front: c.front.trim(),
-      back: c.back.trim(),
-      notes: c.notes?.trim() || null,
-      language: deck.language,
-    }));
+    .map((c) => ({ front: c.front.trim(), back: c.back.trim(), notes: c.notes?.trim() || null }));
   if (rows.length === 0) return { ok: false, error: "Нет карточек для импорта." };
 
-  // M3 Slice 4 §13: validateCards() в import-cards.ts уже дедуплицирует
-  // ВНУТРИ одного файла — но ничего не проверяло против уже сохранённых
-  // карточек, так что повторный импорт того же (или пересекающегося) файла
-  // молча создавал дубликаты. Не блокируем импорт целиком — пропускаем
-  // только сами дубликаты и честно отчитываемся о них (§15: "duplicate
-  // summary; skipped duplicates").
-  const { newRows, skippedDuplicates } = await partitionByExistingFront(
-    supabase,
-    profile.id,
-    deck.language,
-    rows,
-  );
-  if (newRows.length === 0) {
+  // M3 Slice 10 (brief Phase B §7) — routed through the same normalized_key + item_type dedup
+  // service every other save path now uses, instead of the CSV-import-specific bulk pre-check
+  // this used to run. Behavior preserved from §13/§15: still never blocks the whole import on a
+  // duplicate, still reports a skipped count — via the shared service instead of a parallel
+  // implementation of the same idea.
+  let createdCount = 0;
+  let skippedDuplicates = 0;
+  let paywallHit = false;
+  for (const row of rows) {
+    const result = await findOrCreateFlashcard(supabase, {
+      ownerId: profile.id,
+      language: deck.language,
+      front: row.front,
+      back: row.back,
+      sourceType: "import_bulk",
+      deckId,
+      notes: row.notes,
+    });
+    if (!result.ok) {
+      if (result.paywall) paywallHit = true;
+      continue;
+    }
+    if (result.created) createdCount++;
+    else skippedDuplicates++;
+  }
+
+  if (createdCount === 0) {
+    if (paywallHit) return { ok: false, paywall: true, skippedDuplicates };
     return { ok: false, error: "Все карточки уже есть в словаре.", skippedDuplicates };
   }
-
-  if (!(await hasFreeFlashcardRoom(supabase, profile.id, newRows.length))) {
-    return { ok: false, paywall: true };
-  }
-
-  const { data: inserted, error } = await supabase.from("flashcards").insert(newRows).select("id");
-  if (error) return { ok: false, error: "Не удалось импортировать карточки. Попробуй ещё раз." };
-
-  const settings = await supabase
-    .from("srs_settings")
-    .select("starting_ease")
-    .eq("owner_id", profile.id)
-    .maybeSingle();
-  const startingEase = settings.data?.starting_ease ?? 2.5;
-
-  await supabase.from("srs_state").insert(
-    (inserted ?? []).map((c) => ({ flashcard_id: c.id, ease_factor: startingEase })),
-  );
 
   revalidatePath(`/brain/${deckId}`);
   revalidatePath("/brain");
   revalidatePath("/brain/vocabulary");
-  return { ok: true, count: newRows.length, skippedDuplicates };
+  return { ok: true, count: createdCount, skippedDuplicates };
 }

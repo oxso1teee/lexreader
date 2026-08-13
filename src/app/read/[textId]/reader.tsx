@@ -234,6 +234,8 @@ export default function Reader({
         vocabId: result.id,
         level: result.level,
         seenCount: result.seenCount,
+        alreadyKnown: (result.seenCount ?? 1) > 1,
+        contextAdded: result.contextAdded,
       });
     } catch (e) {
       setPopup({
@@ -282,6 +284,8 @@ export default function Reader({
       vocabId: result.id,
       level: result.level,
       seenCount: result.seenCount,
+      alreadyKnown: (result.seenCount ?? 1) > 1,
+      contextAdded: result.contextAdded,
     });
   }
 
@@ -309,8 +313,10 @@ export default function Reader({
       setPopup({ ...popup, paywall: result.paywall, error: result.paywall ? undefined : result.error });
       return;
     }
-    track("phrase_saved");
-    setPopup({ ...popup, saved: true });
+    // M3 Slice 10 — only a genuinely new phrase counts as "saved" for analytics; a repeat
+    // save of an already-known phrase just attaches a new context, not a new phrase.
+    if (!result.alreadyExisted) track("phrase_saved");
+    setPopup({ ...popup, saved: true, alreadyKnown: result.alreadyExisted, contextAdded: result.contextAdded });
   }
 
   function handleSpeak(text: string) {

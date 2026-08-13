@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { touchStreak } from "@/lib/streak";
 import { statusFromLevel, KNOWN_LEVEL } from "@/lib/word-level";
-import { saveVocabularyItem, escapeIlike, type UpsertWordResult } from "@/lib/vocabulary";
-import { hasFreeFlashcardRoom, hasFreeDeckRoom } from "@/lib/subscription";
+import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
+import { findOrCreateFlashcard } from "@/lib/vocabulary/save";
 import { addXp } from "@/lib/xp-actions";
 import { recordEvidence } from "@/lib/language-twin/evidence";
 import type { ReaderPrefs } from "./reader-prefs";
@@ -77,6 +77,11 @@ export interface AddPhraseResult {
   ok: boolean;
   paywall?: boolean;
   error?: string;
+  /** M3 Slice 10 — true when this phrase was already saved before this call (Reader shows
+   *  "Уже изучается" instead of a fresh "saved" confirmation). */
+  alreadyExisted?: boolean;
+  /** true when a genuinely new context occurrence was recorded (new or existing phrase). */
+  contextAdded?: boolean;
 }
 
 export async function addPhraseToDefaultDeck(input: {
@@ -99,93 +104,44 @@ export async function addPhraseToDefaultDeck(input: {
     .single();
   if (!profile) return { ok: false, error: "Профиль не найден." };
 
-  // M3 Slice 3: раньше повторный выбор той же фразы создавал новую карточку
-  // каждый раз — здесь дедуп по тому же принципу, что и у слов в
-  // saveVocabularyItem() (owner_id + language + front без учёта регистра).
-  const { data: existingCard } = await supabase
-    .from("flashcards")
-    .select("id")
-    .eq("owner_id", user.id)
-    .eq("language", profile.target_language)
-    .ilike("front", escapeIlike(input.front))
-    .maybeSingle();
-  if (existingCard) {
-    return { ok: true };
-  }
-
-  if (!(await hasFreeFlashcardRoom(supabase, user.id))) {
-    return { ok: false, paywall: true };
-  }
-
-  // Найдено при повторном аудите: у колод появилась колонка language (см.
-  // миграцию 0018) — "главная" колода теперь одна на язык. Если пользователь
-  // переключил target_language и ещё не открывал Мозг для нового языка, для
-  // него ещё нет главной колоды — создаём её здесь же, а не показываем ошибку.
-  let { data: deck } = await supabase
-    .from("decks")
-    .select("id")
-    .eq("owner_id", user.id)
-    .eq("is_default", true)
-    .eq("language", profile.target_language)
-    .maybeSingle();
-
-  if (!deck) {
-    if (!(await hasFreeDeckRoom(supabase, user.id))) {
-      return { ok: false, paywall: true };
-    }
-    const { data: createdDeck, error: createError } = await supabase
-      .from("decks")
-      .insert({
-        owner_id: user.id,
-        name: "Основная колода",
-        is_default: true,
-        language: profile.target_language,
-      })
-      .select("id")
-      .single();
-    if (createError || !createdDeck) {
-      return { ok: false, error: "Не удалось создать основную колоду." };
-    }
-    deck = createdDeck;
-  }
-
-  const { data: card, error } = await supabase
-    .from("flashcards")
-    .insert({
-      deck_id: deck.id,
-      owner_id: user.id,
-      front: input.front,
-      back: input.back,
-      language: profile.target_language,
-      context_sentence: input.contextSentence,
-      context_translation: input.contextTranslation,
-      source_text_id: input.textId,
-    })
-    .select("id")
-    .single();
-  if (error || !card) return { ok: false, error: "Не удалось добавить карточку. Попробуй ещё раз." };
-
-  const { data: settings } = await supabase
-    .from("srs_settings")
-    .select("starting_ease")
-    .eq("owner_id", user.id)
-    .maybeSingle();
-
-  await supabase
-    .from("srs_state")
-    .insert({ flashcard_id: card.id, ease_factor: settings?.starting_ease ?? 2.5 });
-
-  await recordEvidence(supabase, {
-    userId: user.id,
-    evidenceType: "phrase_saved",
-    sourceType: "flashcard",
-    sourceId: card.id,
-    result: "new_phrase",
-    confidence: "low",
+  // M3 Slice 10 (brief Phase B §4/§5) — routed through the shared dedup service
+  // (normalized_key + owner + language + item_type='phrase') instead of a standalone ilike
+  // check: an existing phrase is now reused and gets this occurrence appended as a new
+  // context (deduped against identical text) rather than silently no-op'd.
+  const result = await findOrCreateFlashcard(supabase, {
+    ownerId: user.id,
+    language: profile.target_language,
+    front: input.front,
+    back: input.back,
+    itemType: "phrase",
+    sourceType: "reader",
+    context: input.contextSentence
+      ? {
+          text: input.contextSentence,
+          translation: input.contextTranslation,
+          sourceTextId: input.textId,
+          sourceType: "reader",
+        }
+      : null,
   });
+  if (!result.ok) {
+    return { ok: false, paywall: result.paywall, error: result.error };
+  }
+
+  if (result.created) {
+    await recordEvidence(supabase, {
+      userId: user.id,
+      evidenceType: "phrase_saved",
+      sourceType: "flashcard",
+      sourceId: result.flashcardId!,
+      result: "new_phrase",
+      confidence: "low",
+    });
+  }
 
   revalidatePath("/brain");
-  return { ok: true };
+  revalidatePath("/brain/vocabulary");
+  return { ok: true, alreadyExisted: !result.created, contextAdded: result.contextAdded };
 }
 
 export async function finishReading(input: {
