@@ -55,7 +55,7 @@ export default function TypeWordMode({
     setResult(isCorrect ? "correct" : "wrong");
     setTally((t) => (isCorrect ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 }));
     startTransition(() => {
-      void reviewWord(card.flashcardId, isCorrect ? 2 : 0);
+      void reviewWord(card.flashcardId, isCorrect ? 2 : 0, "type");
     });
   }
 

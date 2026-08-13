@@ -12,7 +12,7 @@ const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 // is inserted individually so a unique-fingerprint conflict on one
 // candidate never blocks the others, and the final read is always the
 // authoritative post-insert state rather than the just-generated draft.
-export async function getOrGenerateActiveMissions(supabase: SupabaseServerClient, userId: string): Promise<MissionRow[]> {
+export async function getOrGenerateActiveMissions(supabase: SupabaseServerClient, userId: string, language: string): Promise<MissionRow[]> {
   const active = await fetchActiveMissions(supabase, userId);
 
   const hasStarted = active.some((m) => m.status === "started");
@@ -22,7 +22,7 @@ export async function getOrGenerateActiveMissions(supabase: SupabaseServerClient
   if (active.length > 0 && (hasStarted || !isStale)) return active;
 
   const [candidates, history] = await Promise.all([
-    fetchMissionCandidates(supabase, userId),
+    fetchMissionCandidates(supabase, userId, language),
     fetchMissionHistory(supabase, userId),
   ]);
   const drafts = generateMissionDrafts(candidates, history);

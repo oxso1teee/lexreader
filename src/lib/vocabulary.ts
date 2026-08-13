@@ -1,9 +1,10 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
-import { getPlan, FREE_DAILY_WORD_LIMIT, hasFreeDeckRoom, hasFreeFlashcardRoom } from "@/lib/subscription";
+import { getPlan, FREE_DAILY_WORD_LIMIT } from "@/lib/subscription";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 import { addXp } from "@/lib/xp-actions";
 import { recordEvidence } from "@/lib/language-twin/evidence";
 import { escapeIlike } from "./ilike";
+import { findOrCreateFlashcard } from "./vocabulary/save";
 
 export { escapeIlike };
 
@@ -14,6 +15,9 @@ export interface UpsertWordResult {
   id?: string;
   level?: number;
   seenCount?: number;
+  /** M3 Slice 10 — true when this exact context sentence was newly recorded (either on first
+   *  save, or appended to an already-known word/flashcard from a new occurrence). */
+  contextAdded?: boolean;
 }
 
 function todayStartUtc(): string {
@@ -25,11 +29,13 @@ function todayStartUtc(): string {
 
 // Слова из чтения и Мозг раньше жили как два не связанных друг с другом
 // раздела — слово из Тетради никогда не попадало в настоящее интервальное
-// повторение. Теперь каждое новое слово сразу получает карточку в колоде по
-// умолчанию пользователя. Best-effort: если места в бесплатном тарифе на
-// колоду/карточку не осталось — слово всё равно сохраняется для чтения, но
-// молча остаётся вне повторения (никогда не блокируем сохранение из-за этого).
-async function linkToDefaultDeck(
+// повторение. Теперь каждое новое слово сразу получает карточку (переиспользуя
+// уже существующую совместимую карточку, если такая есть — M3 Slice 10,
+// findOrCreateFlashcard) в колоде по умолчанию пользователя. Best-effort: если
+// места в бесплатном тарифе на колоду/карточку не осталось — слово всё равно
+// сохраняется для чтения, но молча остаётся вне повторения (никогда не
+// блокируем сохранение из-за этого).
+async function linkToFlashcard(
   supabase: SupabaseServerClient,
   userId: string,
   vocabularyItemId: string,
@@ -38,57 +44,30 @@ async function linkToDefaultDeck(
     translation: string;
     contextSentence: string | null;
     contextTranslation: string | null;
-    photoUrl: string | null;
     textId: string | null;
     language: string;
   },
-): Promise<void> {
-  if (!(await hasFreeFlashcardRoom(supabase, userId))) return;
+): Promise<boolean> {
+  const result = await findOrCreateFlashcard(supabase, {
+    ownerId: userId,
+    language: input.language,
+    front: input.headword,
+    back: input.translation,
+    itemType: "word",
+    sourceType: input.textId ? "reader" : "manual",
+    context: input.contextSentence
+      ? {
+          text: input.contextSentence,
+          translation: input.contextTranslation,
+          sourceTextId: input.textId,
+          sourceType: input.textId ? "reader" : "manual",
+        }
+      : null,
+  });
+  if (!result.ok || !result.flashcardId) return false;
 
-  let { data: deck } = await supabase
-    .from("decks")
-    .select("id")
-    .eq("owner_id", userId)
-    .eq("is_default", true)
-    .eq("language", input.language)
-    .maybeSingle();
-
-  if (!deck) {
-    if (!(await hasFreeDeckRoom(supabase, userId))) return;
-    const { data: createdDeck } = await supabase
-      .from("decks")
-      .insert({ owner_id: userId, name: "Основная колода", is_default: true, language: input.language })
-      .select("id")
-      .single();
-    if (!createdDeck) return;
-    deck = createdDeck;
-  }
-
-  const { data: card } = await supabase
-    .from("flashcards")
-    .insert({
-      deck_id: deck.id,
-      owner_id: userId,
-      front: input.headword,
-      back: input.translation,
-      photo_url: input.photoUrl,
-      context_sentence: input.contextSentence,
-      context_translation: input.contextTranslation,
-      source_text_id: input.textId,
-      language: input.language,
-    })
-    .select("id")
-    .single();
-  if (!card) return;
-
-  const { data: settings } = await supabase
-    .from("srs_settings")
-    .select("starting_ease")
-    .eq("owner_id", userId)
-    .maybeSingle();
-
-  await supabase.from("srs_state").insert({ flashcard_id: card.id, ease_factor: settings?.starting_ease ?? 2.5 });
-  await supabase.from("vocabulary_items").update({ flashcard_id: card.id }).eq("id", vocabularyItemId);
+  await supabase.from("vocabulary_items").update({ flashcard_id: result.flashcardId }).eq("id", vocabularyItemId);
+  return result.contextAdded ?? false;
 }
 
 export async function saveVocabularyItem(
@@ -108,7 +87,7 @@ export async function saveVocabularyItem(
   // в одну запись.
   const { data: existing } = await supabase
     .from("vocabulary_items")
-    .select("id, level, seen_count")
+    .select("id, level, seen_count, flashcard_id")
     .eq("owner_id", userId)
     .eq("language", input.language)
     .ilike("headword", escapeIlike(input.headword))
@@ -120,7 +99,30 @@ export async function saveVocabularyItem(
       .update({ seen_count: existing.seen_count + 1 })
       .eq("id", existing.id);
     if (error) return { ok: false, error: error.message };
-    return { ok: true, id: existing.id, level: existing.level, seenCount: existing.seen_count + 1 };
+
+    // M3 Slice 10 (brief Phase B §5) — a repeat save from a new sentence used to silently
+    // discard the context entirely; now it's appended as a real new occurrence for the
+    // already-linked flashcard (deduped against identical text by findOrCreateFlashcard).
+    let contextAdded = false;
+    if (existing.flashcard_id && input.contextSentence) {
+      const result = await findOrCreateFlashcard(supabase, {
+        ownerId: userId,
+        language: input.language,
+        front: input.headword,
+        back: input.translation,
+        itemType: "word",
+        sourceType: input.textId ? "reader" : "manual",
+        context: {
+          text: input.contextSentence,
+          translation: input.contextTranslation,
+          sourceTextId: input.textId,
+          sourceType: input.textId ? "reader" : "manual",
+        },
+      });
+      contextAdded = result.ok ? (result.contextAdded ?? false) : false;
+    }
+
+    return { ok: true, id: existing.id, level: existing.level, seenCount: existing.seen_count + 1, contextAdded };
   }
 
   const plan = await getPlan(supabase, userId);
@@ -150,12 +152,11 @@ export async function saveVocabularyItem(
     .single();
   if (error || !created) return { ok: false, error: "Не удалось сохранить слово. Попробуй ещё раз." };
 
-  await linkToDefaultDeck(supabase, userId, created.id, {
+  const contextAdded = await linkToFlashcard(supabase, userId, created.id, {
     headword: input.headword,
     translation: input.translation,
     contextSentence: input.contextSentence,
     contextTranslation: input.contextTranslation,
-    photoUrl: null,
     textId: input.textId,
     language: input.language,
   });
@@ -177,5 +178,5 @@ export async function saveVocabularyItem(
     confidence: "low",
   });
 
-  return { ok: true, id: created.id, level: created.level, seenCount: created.seen_count };
+  return { ok: true, id: created.id, level: created.level, seenCount: created.seen_count, contextAdded };
 }

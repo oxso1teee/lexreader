@@ -14,10 +14,14 @@ import { addXp } from "@/lib/xp-actions";
 import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
 import { recomputeLanguageTwin } from "@/lib/language-twin/recompute";
 import type { PatternCategory, PatternStatus, Trend } from "@/lib/language-twin/types";
+import { recomputeAndPersistLearningState } from "@/lib/vocabulary/state-update";
+import type { PracticeMode } from "@/lib/vocabulary/state-engine";
+import { buildContextGapBlank } from "@/lib/vocabulary/context-gap";
 
 export async function reviewWord(
   flashcardId: string,
   grade: 0 | 1 | 2 | 3,
+  mode: PracticeMode = "cards",
 ): Promise<{ reviewLogId: string | null }> {
   const supabase = await createClient();
   const {
@@ -195,6 +199,7 @@ export async function reviewWord(
     .insert({
       flashcard_id: flashcardId,
       grade,
+      practice_mode: mode,
       previous_legacy_state_json: previousLegacyState,
       next_legacy_state_json: nextLegacyState,
       ...(usedFsrsColumns
@@ -212,9 +217,75 @@ export async function reviewWord(
   await touchStreak(supabase, user.id);
   await checkAndAwardAchievements(supabase, user.id, cardLanguage);
   await addXp(supabase, user.id, 1);
+  // M3 Slice 10 (brief §27): the scheduler write above already succeeded and is what matters —
+  // this supplemental derived-state recompute must never turn a successful review into a thrown
+  // error, so it's a fire-and-forget call into a function that swallows its own failures.
+  await recomputeAndPersistLearningState(supabase, flashcardId);
   revalidatePath("/brain");
   revalidatePath("/progress");
   return { reviewLogId: logRow?.id ?? null };
+}
+
+// M3 Slice 10 (brief Phase C §14, task #277) — data side of the Context Gap practice mode: given
+// the flashcard ids already loaded for this review session, finds which ones have a saved
+// vocabulary_contexts sentence where the front word/phrase appears exactly once (see
+// buildContextGapBlank — anything ambiguous is simply excluded, never guessed at). Deliberately
+// a separate lazy fetch, not part of the CARD_FIELDS select in page.tsx: the other four modes
+// never need context text, and eagerly joining it onto every due card would be real, unnecessary
+// weight on every review-session load.
+export interface ContextGapCard {
+  flashcardId: string;
+  front: string;
+  before: string;
+  blanked: string;
+  after: string;
+  contextTranslation: string | null;
+}
+
+export async function getContextGapCards(flashcardIds: string[]): Promise<ContextGapCard[]> {
+  if (flashcardIds.length === 0) return [];
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const [{ data: cards }, { data: contexts }] = await Promise.all([
+    supabase.from("flashcards").select("id, front").eq("owner_id", user.id).in("id", flashcardIds),
+    supabase
+      .from("vocabulary_contexts")
+      .select("flashcard_id, context_text, context_translation")
+      .in("flashcard_id", flashcardIds)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const contextsByCard = new Map<string, { context_text: string; context_translation: string | null }[]>();
+  for (const c of contexts ?? []) {
+    const list = contextsByCard.get(c.flashcard_id) ?? [];
+    list.push({ context_text: c.context_text, context_translation: c.context_translation });
+    contextsByCard.set(c.flashcard_id, list);
+  }
+
+  const result: ContextGapCard[] = [];
+  for (const card of cards ?? []) {
+    // Most-recently-added context first (same ordering as the Detail page) — if several
+    // contexts exist, use the first one that yields an unambiguous blank rather than the oldest.
+    for (const ctx of contextsByCard.get(card.id) ?? []) {
+      const blank = buildContextGapBlank(card.front, ctx.context_text);
+      if (blank) {
+        result.push({
+          flashcardId: card.id,
+          front: card.front,
+          before: blank.before,
+          blanked: blank.blanked,
+          after: blank.after,
+          contextTranslation: ctx.context_translation,
+        });
+        break;
+      }
+    }
+  }
+  return result;
 }
 
 // M3 Slice 4 §8: отменяет ровно последнюю оценку этой карточки — проверяет

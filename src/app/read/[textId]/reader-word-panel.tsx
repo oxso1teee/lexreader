@@ -16,6 +16,10 @@ export interface Popup {
   level?: number;
   seenCount?: number;
   saved?: boolean;
+  /** M3 Slice 10 — true when this word/phrase already existed before this exact occurrence. */
+  alreadyKnown?: boolean;
+  /** true when this exact sentence was newly recorded as a context (vs. already stored). */
+  contextAdded?: boolean;
 }
 
 // M3 Slice 3: shared content for both the desktop side panel and the mobile
@@ -112,6 +116,11 @@ export default function ReaderWordPanel({
               {!popup.isPhrase && popup.level !== undefined && (
                 <p className="mt-1 text-sm text-[var(--text-secondary)]">
                   {WORD_LEVELS[popup.level].label} · Видел {popup.seenCount}×
+                </p>
+              )}
+              {popup.alreadyKnown && (
+                <p className="mt-1 text-sm font-medium text-[var(--color-forest-text)]">
+                  Уже изучается{popup.contextAdded ? " — новый контекст сохранён" : ""}
                 </p>
               )}
               <p className="mt-2 text-xs text-[var(--text-secondary)]">

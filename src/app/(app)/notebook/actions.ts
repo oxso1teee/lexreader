@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { KNOWN_LEVEL } from "@/lib/word-level";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
+import { findOrCreateFlashcard } from "@/lib/vocabulary/save";
+import { deriveItemType } from "@/lib/vocabulary/item-type";
 import { recordEvidence } from "@/lib/language-twin/evidence";
 
 export async function deleteWord(id: string) {
@@ -78,6 +80,30 @@ export async function addManualWord(input: {
   // P0-АУДИТ 3.9: слово без текста-источника помечаем текущим изучаемым
   // языком профиля — иначе не смогли бы его потом ни к одному языку отнести.
   const profile = await requireProfile();
+
+  // M3 Slice 10 (brief Phase B §6) — a manually-typed PHRASE never goes through
+  // vocabulary_items (same invariant Reader phrase-save already relies on, confirmed sound in
+  // the Phase A audit) — it goes straight to the shared flashcard service instead, tagged
+  // item_type='phrase', sourceType='manual'. Only a genuine single word uses the
+  // vocabulary_items-backed path (Notebook/Language-Twin activation-gap compatibility).
+  if (deriveItemType(headword) === "phrase") {
+    const result = await findOrCreateFlashcard(supabase, {
+      ownerId: user.id,
+      language: profile.target_language,
+      front: headword,
+      back: translation,
+      itemType: "phrase",
+      sourceType: "manual",
+      context: input.note?.trim()
+        ? { text: input.note.trim(), translation: null, sourceTextId: null, sourceType: "manual" }
+        : null,
+    });
+    if (!result.ok) return { ok: false, error: result.error, paywall: result.paywall };
+    revalidatePath("/notebook");
+    revalidatePath("/brain");
+    revalidatePath("/brain/vocabulary");
+    return { ok: true, id: result.flashcardId, contextAdded: result.contextAdded };
+  }
 
   const result = await saveVocabularyItem(supabase, user.id, {
     textId: null,

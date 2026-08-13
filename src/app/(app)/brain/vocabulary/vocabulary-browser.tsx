@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import type { VocabularyRow, SchedulerBucket } from "@/lib/vocabulary-list";
+import Link from "next/link";
+import type { VocabularyRow } from "@/lib/vocabulary-list";
 import { bulkMoveToDeck, bulkMarkKnown, bulkDeleteFlashcards } from "./actions";
 import NewDeckModal from "../new-deck-modal";
 import ImportModal from "../import-modal";
 import DeckList from "../deck-list";
 import StarterDeckCard from "../starter-deck-card";
 import { STARTER_DECKS } from "@/lib/starter-decks";
-import ItemDetailsSheet from "./item-details-sheet";
 import { track } from "@/lib/posthog-client";
 
-type Tab = "words" | "phrases" | "decks";
-type BucketFilter = "all" | SchedulerBucket;
+type Section = "vocabulary" | "decks";
+// M3 Slice 10 (brief Phase B §1) — one compact filter row combining both axes the brief asks
+// for (item type, and learning state/due) into a single, explicit 8-option list rather than two
+// separate control groups — matches "compact filters... do not add 20 filters."
+type VocabFilter = "all" | "word" | "phrase" | "new" | "learning" | "familiar" | "active" | "due";
 type SortKey = "recent" | "alpha" | "due" | "hardest" | "most-reviewed";
 
 interface DeckSummary {
@@ -26,12 +29,15 @@ interface DeckSummary {
   knownCount: number;
 }
 
-const BUCKET_LABELS: Record<BucketFilter, string> = {
+const FILTER_LABELS: Record<VocabFilter, string> = {
   all: "Все",
-  due: "К повторению",
+  word: "Слова",
+  phrase: "Фразы",
   new: "Новые",
-  learning: "Учу",
-  known: "Знаю",
+  learning: "Изучаются",
+  familiar: "Знакомые",
+  active: "Активные",
+  due: "К повторению",
 };
 
 const SORT_LABELS: Record<SortKey, string> = {
@@ -41,6 +47,21 @@ const SORT_LABELS: Record<SortKey, string> = {
   hardest: "Сначала сложные",
   "most-reviewed": "Больше всего повторений",
 };
+
+function matchesFilter(row: VocabularyRow, filter: VocabFilter): boolean {
+  switch (filter) {
+    case "all":
+      return true;
+    case "word":
+      return row.itemType === "word";
+    case "phrase":
+      return row.itemType === "phrase";
+    case "due":
+      return row.schedulerBucket === "due";
+    default:
+      return row.learningState === filter;
+  }
+}
 
 function matchesQuery(row: VocabularyRow, q: string): boolean {
   const needle = q.toLowerCase();
@@ -77,37 +98,29 @@ export default function VocabularyBrowser({
   showStarterDecks: boolean;
   addedStarterTitles: string[];
 }) {
-  const [tab, setTab] = useState<Tab>("words");
+  const [section, setSection] = useState<Section>("vocabulary");
   const [query, setQuery] = useState("");
-  const [bucketFilter, setBucketFilter] = useState<BucketFilter>("all");
+  const [filter, setFilter] = useState<VocabFilter>("all");
   const [deckFilter, setDeckFilter] = useState<string>("all");
   const [sourceOnly, setSourceOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>("recent");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [detailsItem, setDetailsItem] = useState<VocabularyRow | null>(null);
   const [moveTargetDeck, setMoveTargetDeck] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  // M3 Slice 4 §16: mount only — initial_tab отражает состояние по умолчанию
-  // ("words"), а не то, что выбрал пользователь (это уже покрыто
-  // vocabulary_filter_changed ниже).
   useEffect(() => {
-    track("vocabulary_viewed", { initial_tab: tab });
+    track("vocabulary_viewed", { initial_tab: filter });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // M3 Slice 4 §16: filter_type — enum названия контрола, value — сам
-  // enum-выбор или "all"/"specific" для колоды (никогда id/имя колоды,
-  // текст поиска или названия слов/фраз).
   function trackFilterChange(filterType: string, value: string) {
     track("vocabulary_filter_changed", { filter_type: filterType, value });
   }
 
   const filtered = useMemo(() => {
-    const base = rows.filter((r) => (tab === "words" ? !r.isPhrase : r.isPhrase));
-    const byBucket = bucketFilter === "all" ? base : base.filter((r) => r.schedulerBucket === bucketFilter);
-    const byDeck = deckFilter === "all" ? byBucket : byBucket.filter((r) => r.deckId === deckFilter);
+    const byFilter = rows.filter((r) => matchesFilter(r, filter));
+    const byDeck = deckFilter === "all" ? byFilter : byFilter.filter((r) => r.deckId === deckFilter);
     const bySource = sourceOnly ? byDeck.filter((r) => r.sourceTextId) : byDeck;
     const byQuery = query.trim() ? bySource.filter((r) => matchesQuery(r, query.trim())) : bySource;
 
@@ -129,7 +142,7 @@ export default function VocabularyBrowser({
           return b.createdAt.localeCompare(a.createdAt);
       }
     });
-  }, [rows, tab, bucketFilter, deckFilter, sourceOnly, query, sort]);
+  }, [rows, filter, deckFilter, sourceOnly, query, sort]);
 
   const selectedRows = filtered.filter((r) => selectedIds.has(r.flashcardId));
   const canMarkKnown =
@@ -202,27 +215,26 @@ export default function VocabularyBrowser({
   return (
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex gap-2 border-b border-black/10 dark:border-white/10">
-        {(["words", "phrases", "decks"] as const).map((t) => (
+        {(["vocabulary", "decks"] as const).map((s) => (
           <button
-            key={t}
+            key={s}
             type="button"
             onClick={() => {
-              setTab(t);
+              setSection(s);
               clearSelection();
-              trackFilterChange("tab", t);
             }}
             className={`-mb-px flex min-h-11 items-center gap-1 border-b-2 px-2 text-sm font-medium transition-colors ${
-              tab === t
+              section === s
                 ? "border-black text-black dark:border-white dark:text-white"
                 : "border-transparent text-[var(--text-secondary)] hover:text-black/70 dark:hover:text-white/70"
             }`}
           >
-            {t === "words" ? "🔤 Слова" : t === "phrases" ? "💬 Фразы" : "📚 Колоды"}
+            {s === "vocabulary" ? "Словарь" : "📚 Колоды"}
           </button>
         ))}
       </div>
 
-      {tab === "decks" ? (
+      {section === "decks" ? (
         <div className="flex flex-col gap-3">
           <div className="flex gap-2">
             <NewDeckModal deckCount={newDeckCount} atLimit={newDeckAtLimit} />
@@ -245,30 +257,35 @@ export default function VocabularyBrowser({
         </div>
       ) : (
         <>
+          <label htmlFor="vocabulary-search" className="sr-only">
+            Поиск слов и фраз
+          </label>
           <input
+            id="vocabulary-search"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={tab === "words" ? "Поиск слов..." : "Поиск фраз..."}
+            placeholder="Поиск слов и фраз..."
             className="w-full rounded-lg border border-black/15 bg-card px-4 py-2.5 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
           />
 
-          <div className="flex flex-wrap gap-2">
-            {(Object.keys(BUCKET_LABELS) as BucketFilter[]).map((b) => (
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Фильтр словаря">
+            {(Object.keys(FILTER_LABELS) as VocabFilter[]).map((f) => (
               <button
-                key={b}
+                key={f}
                 type="button"
+                aria-pressed={filter === f}
                 onClick={() => {
-                  setBucketFilter(b);
-                  trackFilterChange("bucket", b);
+                  setFilter(f);
+                  trackFilterChange("vocab_filter", f);
                 }}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                  bucketFilter === b
+                className={`focus-ring min-h-9 rounded-full border px-3 py-1.5 text-xs font-medium ${
+                  filter === f
                     ? "border-caramel bg-caramel/15 text-[var(--color-caramel-text)]"
                     : "border-black/10 text-black/60 dark:border-white/15 dark:text-white/60"
                 }`}
               >
-                {BUCKET_LABELS[b]}
+                {FILTER_LABELS[f]}
               </button>
             ))}
           </div>
@@ -371,17 +388,15 @@ export default function VocabularyBrowser({
 
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10 text-center">
-              <p className="text-2xl">{tab === "words" ? "🔤" : "💬"}</p>
+              <p className="text-2xl">🔤</p>
               <p className="font-medium">
-                {query || bucketFilter !== "all" || deckFilter !== "all" || sourceOnly
+                {query || filter !== "all" || deckFilter !== "all" || sourceOnly
                   ? "Ничего не найдено по этим условиям"
-                  : tab === "words"
-                    ? "Пока нет сохранённых слов"
-                    : "Пока нет сохранённых фраз"}
+                  : "Пока нет слов и фраз"}
               </p>
-              {!query && bucketFilter === "all" && deckFilter === "all" && !sourceOnly && (
+              {!query && filter === "all" && deckFilter === "all" && !sourceOnly && (
                 <p className="max-w-xs text-sm text-[var(--text-secondary)]">
-                  Сохраняй слова и фразы прямо во время чтения — тапни по слову в тексте.
+                  Сохраняй слова и фразы прямо во время чтения — тапни по слову в тексте — или добавь вручную.
                 </p>
               )}
             </div>
@@ -399,44 +414,51 @@ export default function VocabularyBrowser({
                     aria-label={`Выбрать «${r.front}»`}
                     className="h-4 w-4 shrink-0"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setDetailsItem(r)}
-                    className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
+                  <Link
+                    href={`/brain/vocabulary/${r.flashcardId}`}
+                    className="focus-ring flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{r.front}</p>
+                      <p className="truncate font-medium">
+                        {r.isPhrase && <span aria-hidden="true">💬 </span>}
+                        {r.front}
+                      </p>
                       <p className="truncate text-sm text-[var(--text-secondary)]">
                         {r.back} · {r.deckName}
+                        {r.contextCount > 0 && ` · ${r.contextCount} контекст${r.contextCount === 1 ? "" : "а"}`}
                       </p>
                     </div>
-                    <SchedulerBadge bucket={r.schedulerBucket} />
-                  </button>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <LearningStateBadge state={r.learningState} />
+                      {r.schedulerBucket === "due" && <DueBadge />}
+                    </div>
+                  </Link>
                 </div>
               ))}
             </div>
           )}
         </>
       )}
-
-      {detailsItem && (
-        <ItemDetailsSheet
-          item={detailsItem}
-          decks={decks.map((d) => ({ id: d.id, name: d.name }))}
-          onClose={() => setDetailsItem(null)}
-        />
-      )}
     </div>
   );
 }
 
-function SchedulerBadge({ bucket }: { bucket: SchedulerBucket }) {
-  const config: Record<SchedulerBucket, { label: string; className: string }> = {
+function LearningStateBadge({ state }: { state: VocabularyRow["learningState"] }) {
+  const config: Record<VocabularyRow["learningState"], { label: string; className: string }> = {
     new: { label: "Новое", className: "bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60" },
-    due: { label: "К повторению", className: "bg-caramel/15 text-[var(--color-caramel-text)]" },
     learning: { label: "Учу", className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" },
-    known: { label: "Знаю", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" },
+    familiar: { label: "Знакомое", className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" },
+    active: { label: "Активное", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" },
+    maintenance: { label: "Поддерживается", className: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300" },
   };
-  const c = config[bucket];
+  const c = config[state];
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${c.className}`}>{c.label}</span>;
+}
+
+function DueBadge() {
+  return (
+    <span className="shrink-0 rounded-full bg-caramel/15 px-2 py-0.5 text-[11px] font-medium text-[var(--color-caramel-text)]">
+      К повторению
+    </span>
+  );
 }

@@ -12,7 +12,7 @@ import MissionsSubHeader from "./sub-header";
 export default async function MissionsPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
-  const missions = await getOrGenerateActiveMissions(supabase, profile.id);
+  const missions = await getOrGenerateActiveMissions(supabase, profile.id, profile.target_language);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">

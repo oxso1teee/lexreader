@@ -89,7 +89,7 @@ export default function MatchPairsMode({
       const grade = struggledIds.has(wordId) ? 0 : 2;
       setTally((t) => (grade === 2 ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 }));
       startTransition(() => {
-        void reviewWord(wordId, grade);
+        void reviewWord(wordId, grade, "match");
       });
       setSelectedWord(null);
       setSelectedTranslation(null);

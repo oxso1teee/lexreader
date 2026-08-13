@@ -136,6 +136,11 @@ async function ensureDueCard(supabase: any, userId: string) {
     .maybeSingle();
   if (profileError) console.error("[ensureDueCard] find profile failed:", profileError);
 
+  // M3 Slice 10 (task #281, found while running the new vocabulary-privacy e2e spec):
+  // flashcards.normalized_key (migration 0041) is NOT NULL with no default — item_type/
+  // source_type both have real defaults ('word'/'manual'), normalized_key does not. This raw
+  // insert predates that migration and silently failed on a fresh (supabase db reset) database
+  // once the column landed, same shape as the pre-existing decks.language bug documented above.
   const { data: inserted, error: insertError } = await supabase
     .from("flashcards")
     .insert({
@@ -144,6 +149,7 @@ async function ensureDueCard(supabase: any, userId: string) {
       front: "birds",
       back: "птицы",
       language: profile?.target_language ?? "en",
+      normalized_key: "birds",
     })
     .select("id")
     .single();

@@ -241,7 +241,7 @@ export default function ReviewSession({
       navigator.vibrate(15);
     }
     startTransition(async () => {
-      const { reviewLogId } = await reviewWord(card.flashcardId, value);
+      const { reviewLogId } = await reviewWord(card.flashcardId, value, "cards");
       track("review_card_graded", { grade: value });
       gradedIdsRef.current = [...gradedIdsRef.current, card.flashcardId];
       setLastGraded(

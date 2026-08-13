@@ -12,13 +12,22 @@ import { isLearned } from "./srs.ts";
 // vs фраза — то же самое клиентское правило, что и в Reader (reader.tsx:390,
 // `text.includes(" ")`), не отдельная колонка схемы.
 export type SchedulerBucket = "new" | "due" | "learning" | "known";
+export type ItemType = "word" | "phrase";
+export type LearningState = "new" | "learning" | "familiar" | "active" | "maintenance";
+export type SourceType = "reader" | "manual" | "import_bulk" | "starter_deck" | "mission" | "path";
 
 export interface VocabularyRow {
   flashcardId: string;
   front: string;
   back: string;
   notes: string | null;
+  /** M3 Slice 10 — sourced from the real flashcards.item_type column, not the front.includes(" ") heuristic. */
   isPhrase: boolean;
+  itemType: ItemType;
+  learningState: LearningState;
+  sourceType: SourceType;
+  /** Count only — full context text/translations are lazy-loaded on the detail page, never here. */
+  contextCount: number;
   contextSentence: string | null;
   contextTranslation: string | null;
   photoUrl: string | null;
@@ -47,6 +56,9 @@ interface FlashcardRow {
   front: string;
   back: string;
   notes: string | null;
+  item_type: ItemType;
+  learning_state: LearningState;
+  source_type: SourceType;
   context_sentence: string | null;
   context_translation: string | null;
   photo_url: string | null;
@@ -76,11 +88,11 @@ export async function getVocabularyRows(
   ownerId: string,
   language: string,
 ): Promise<VocabularyRow[]> {
-  const [{ data: cards }, { data: vocabItems }, { data: logs }] = await Promise.all([
+  const [{ data: cards }, { data: vocabItems }, { data: logs }, { data: contexts }] = await Promise.all([
     supabase
       .from("flashcards")
       .select(
-        "id, front, back, notes, context_sentence, context_translation, photo_url, source_text_id, created_at, deck_id, decks(name, is_default, is_starter), srs_state(due_at, first_reviewed_at, repetitions, interval_days, ease_factor), texts(title)",
+        "id, front, back, notes, item_type, learning_state, source_type, context_sentence, context_translation, photo_url, source_text_id, created_at, deck_id, decks(name, is_default, is_starter), srs_state(due_at, first_reviewed_at, repetitions, interval_days, ease_factor), texts(title)",
       )
       .eq("owner_id", ownerId)
       .eq("language", language),
@@ -96,6 +108,14 @@ export async function getVocabularyRows(
     supabase
       .from("review_log")
       .select("flashcard_id, grade, flashcards!inner(owner_id, language)")
+      .eq("flashcards.owner_id", ownerId)
+      .eq("flashcards.language", language),
+    // M3 Slice 10 — count only (flashcard_id, a uuid), never context text/translation here:
+    // the list view must stay a summary query (plan doc §51/brief §21) — full context content
+    // is lazy-loaded on the detail page.
+    supabase
+      .from("vocabulary_contexts")
+      .select("flashcard_id, flashcards!inner(owner_id, language)")
       .eq("flashcards.owner_id", ownerId)
       .eq("flashcards.language", language),
   ]);
@@ -114,6 +134,11 @@ export async function getVocabularyRows(
     accuracyByFlashcard.set(log.flashcard_id, acc);
   }
 
+  const contextCountByFlashcard = new Map<string, number>();
+  for (const ctx of contexts ?? []) {
+    contextCountByFlashcard.set(ctx.flashcard_id, (contextCountByFlashcard.get(ctx.flashcard_id) ?? 0) + 1);
+  }
+
   return ((cards ?? []) as unknown as FlashcardRow[]).flatMap((row) => {
     const deck = one(row.decks);
     const srs = one(row.srs_state);
@@ -127,7 +152,11 @@ export async function getVocabularyRows(
         front: row.front,
         back: row.back,
         notes: row.notes,
-        isPhrase: row.front.includes(" "),
+        isPhrase: row.item_type === "phrase",
+        itemType: row.item_type,
+        learningState: row.learning_state,
+        sourceType: row.source_type,
+        contextCount: contextCountByFlashcard.get(row.id) ?? 0,
         contextSentence: row.context_sentence,
         contextTranslation: row.context_translation,
         photoUrl: row.photo_url,

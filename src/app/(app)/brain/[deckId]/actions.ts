@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { hasFreeFlashcardRoom } from "@/lib/subscription";
 import { findDuplicateFlashcardId } from "@/lib/flashcard-dedup";
+import { deriveItemType, normalizeVocabularyKey } from "@/lib/vocabulary/item-type";
 
 export interface AddCardState {
   error?: string;
@@ -47,6 +48,13 @@ export async function addFlashcard(
     return { paywall: true };
   }
 
+  // M3 Slice 10 (task #282, found via the full e2e run): flashcards.normalized_key
+  // (migration 0041) is NOT NULL with no default — this raw insert predates that migration and
+  // was silently failing every single-card add through this form (this deck page's own flow,
+  // never migrated to findOrCreateFlashcard() in Phase B — see save.ts's header comment). Kept
+  // the existing findDuplicateFlashcardId() reject-with-error behavior above unchanged (a real,
+  // separate UX contract from findOrCreateFlashcard()'s silent-reuse) — only the insert itself
+  // needed the three new columns.
   const { data: card, error } = await supabase
     .from("flashcards")
     .insert({
@@ -56,6 +64,9 @@ export async function addFlashcard(
       back,
       notes: notes || null,
       language: deck.language,
+      item_type: deriveItemType(front),
+      normalized_key: normalizeVocabularyKey(front),
+      source_type: "manual",
     })
     .select("id")
     .single();

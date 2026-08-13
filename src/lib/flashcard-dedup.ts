@@ -30,21 +30,3 @@ export async function findDuplicateFlashcardId(
     .maybeSingle();
   return data?.id ?? null;
 }
-
-/** Splits rows into never-seen-before vs. duplicates of an existing flashcard (same owner+language). */
-export async function partitionByExistingFront<T extends { front: string }>(
-  supabase: SupabaseServerClient,
-  ownerId: string,
-  language: string,
-  rows: T[],
-): Promise<{ newRows: T[]; skippedDuplicates: number }> {
-  const { data: existing } = await supabase
-    .from("flashcards")
-    .select("front")
-    .eq("owner_id", ownerId)
-    .eq("language", language);
-  const existingFronts = new Set((existing ?? []).map((f) => normalizeFront(f.front)));
-
-  const newRows = rows.filter((r) => !existingFronts.has(normalizeFront(r.front)));
-  return { newRows, skippedDuplicates: rows.length - newRows.length };
-}

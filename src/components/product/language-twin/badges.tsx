@@ -104,6 +104,7 @@ const REASON_LABEL: Record<string, string> = {
   maintenance: "Паттерн уже улучшился — короткая проверка, чтобы закрепить",
   diagnostic_followup: "Слабое место по результатам мини-диагностики",
   phrase_activation: "Сохранённые фразы ещё не закрепились в памяти",
+  familiar_vocab_ready: "Ты узнаёшь эти слова, осталось закрепить активным вспоминанием",
 };
 
 export function reasonLabel(reasonKey: string): string {
