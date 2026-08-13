@@ -82,6 +82,12 @@ export interface AddPhraseResult {
   alreadyExisted?: boolean;
   /** true when a genuinely new context occurrence was recorded (new or existing phrase). */
   contextAdded?: boolean;
+  /** M3 Slice 11 (plan doc §2, Practice Bridge) — lets the phrase panel show the real
+   *  learning_state and route straight into a targeted review, same as words. */
+  flashcardId?: string;
+  deckId?: string;
+  learningState?: string;
+  contextCount?: number;
 }
 
 export async function addPhraseToDefaultDeck(input: {
@@ -139,9 +145,27 @@ export async function addPhraseToDefaultDeck(input: {
     });
   }
 
+  const { data: flashcard } = await supabase
+    .from("flashcards")
+    .select("deck_id, learning_state")
+    .eq("id", result.flashcardId!)
+    .maybeSingle();
+  const { count: contextCount } = await supabase
+    .from("vocabulary_contexts")
+    .select("id", { count: "exact", head: true })
+    .eq("flashcard_id", result.flashcardId!);
+
   revalidatePath("/brain");
   revalidatePath("/brain/vocabulary");
-  return { ok: true, alreadyExisted: !result.created, contextAdded: result.contextAdded };
+  return {
+    ok: true,
+    alreadyExisted: !result.created,
+    contextAdded: result.contextAdded,
+    flashcardId: result.flashcardId,
+    deckId: flashcard?.deck_id,
+    learningState: flashcard?.learning_state,
+    contextCount: contextCount ?? 0,
+  };
 }
 
 export async function finishReading(input: {

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { WORD_LEVELS } from "@/lib/types";
+import { LEARNING_STATE_LABEL } from "@/lib/vocabulary/learning-state-label";
+import type { LearningState } from "@/lib/vocabulary-list";
 
 export interface Popup {
   isPhrase: boolean;
@@ -20,6 +22,12 @@ export interface Popup {
   alreadyKnown?: boolean;
   /** true when this exact sentence was newly recorded as a context (vs. already stored). */
   contextAdded?: boolean;
+  /** M3 Slice 11 (plan doc §2, Practice Bridge) — the real flashcard behind this word/phrase,
+   *  so the panel can show actual learning_state and route straight into a targeted review. */
+  flashcardId?: string;
+  deckId?: string;
+  learningState?: LearningState;
+  contextCount?: number;
 }
 
 // M3 Slice 3: shared content for both the desktop side panel and the mobile
@@ -36,12 +44,14 @@ export default function ReaderWordPanel({
   onSpeak,
   onSetLevel,
   onAddPhrase,
+  onPracticeClick,
   onClose,
 }: {
   popup: Popup;
   manualTranslation: string;
   onManualTranslationChange: (value: string) => void;
   onManualTranslationSubmit: () => void;
+  onPracticeClick?: () => void;
   onSpeak: (text: string) => void;
   onSetLevel: (level: 0 | 1 | 2 | 3 | 4) => void;
   onAddPhrase: () => void;
@@ -123,6 +133,22 @@ export default function ReaderWordPanel({
                   Уже изучается{popup.contextAdded ? " — новый контекст сохранён" : ""}
                 </p>
               )}
+              {popup.flashcardId && popup.learningState && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-caramel/15 px-2 py-0.5 text-xs font-medium text-[var(--color-caramel-text)]">
+                    {LEARNING_STATE_LABEL[popup.learningState]}
+                  </span>
+                  {!!popup.contextCount && popup.contextCount > 1 && (
+                    <span className="text-xs text-[var(--text-secondary)]">{popup.contextCount} контекста</span>
+                  )}
+                  <Link
+                    href={`/brain/vocabulary/${popup.flashcardId}`}
+                    className="focus-ring text-xs font-semibold text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+                  >
+                    Подробнее →
+                  </Link>
+                </div>
+              )}
               <p className="mt-2 text-xs text-[var(--text-secondary)]">
                 💬 Подробное объяснение в контексте пока недоступно — нет AI-провайдера для этого. Показан
                 только словарный перевод и исходное предложение.
@@ -183,6 +209,16 @@ export default function ReaderWordPanel({
             </button>
           )}
         </div>
+      )}
+
+      {popup.flashcardId && popup.deckId && (
+        <Link
+          href={`/brain/${popup.deckId}/review?wordIds=${popup.flashcardId}`}
+          onClick={onPracticeClick}
+          className="focus-ring flex min-h-11 items-center justify-center rounded-lg border border-[var(--border-strong)] text-sm font-bold text-[var(--color-forest-text)]"
+        >
+          Практика →
+        </Link>
       )}
     </div>
   );

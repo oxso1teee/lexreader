@@ -240,3 +240,31 @@ context sentence, deck name. Verified by `e2e/vocabulary-privacy.spec.ts`
 (same forbidden-key regex + non-vacuous-call-count idiom as
 `missions-privacy.spec.ts`), scanning `vocabulary-browser.tsx`,
 `detail-view.tsx`, and `context-gap-mode.tsx`.
+
+## M3 Slice 11 — Reader v2
+
+One new event for the Practice Bridge, plus a documentation backfill: the
+Reader events below (`reader_opened` through `word_marked_known`) already
+existed in `reader.tsx` since Slice 3 but were never added to this table —
+caught while auditing the file for this slice, listed here now rather than
+left undocumented.
+
+| Event | Fired from | Properties |
+|---|---|---|
+| `reader_practice_cta_clicked` | `reader.tsx`, `handlePracticeClick()` — the word/phrase panel's "Практика →" link | `is_phrase` (bool), `learning_state` (`new`\|`learning`\|`familiar`\|`active`\|`maintenance`) |
+| `reader_opened` | `reader.tsx` (mount) | `has_chapter` (bool) |
+| `reader_mode_changed` | `reader.tsx`, `changeMode()` | `mode` (`assisted`\|`focus`\|`parallel`\|`listening`) |
+| `parallel_mode_opened` | `reader.tsx`, `changeMode()`, only when entering Parallel | *(none)* |
+| `listening_started` | `reader.tsx`, `ReaderListening`'s play handler | *(none)* |
+| `reader_settings_changed` | `reader.tsx`, `updateReaderPrefs()` | *(none)* |
+| `chapter_changed` | `reader.tsx`, `goPrevChapter`/`goNextChapter` | `direction` (`prev`\|`next`) |
+| `word_panel_opened` | `reader.tsx`, `runLookup()` | `is_phrase` (bool) |
+| `word_saved` | `reader.tsx`, `runLookup()`/`handleManualTranslation()`, only on a genuinely new word (`seenCount === 1`) | *(none)* |
+| `phrase_saved` | `reader.tsx`, `handleAddPhrase()`, only on a genuinely new phrase (not a repeat-context save) | *(none)* |
+| `word_marked_known` | `reader.tsx`, `handleSetLevel(4)` | *(none)* |
+
+Never sent: word/phrase text, translation, context sentence, deck id/name.
+`learning_state` is a closed enum from the real `flashcards.learning_state`
+column (Slice 10), same enum already sent by no other Reader event — not a
+new category of exposure. `is_phrase`/`has_chapter`/`mode`/`direction` are
+all booleans or closed enums.

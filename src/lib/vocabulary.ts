@@ -18,6 +18,12 @@ export interface UpsertWordResult {
   /** M3 Slice 10 — true when this exact context sentence was newly recorded (either on first
    *  save, or appended to an already-known word/flashcard from a new occurrence). */
   contextAdded?: boolean;
+  /** M3 Slice 11 (plan doc §2, Practice Bridge) — the real flashcard this word is linked to,
+   *  so Reader can show its actual learning_state and route straight into a targeted review. */
+  flashcardId?: string;
+  deckId?: string;
+  learningState?: string;
+  contextCount?: number;
 }
 
 function todayStartUtc(): string {
@@ -35,6 +41,72 @@ function todayStartUtc(): string {
 // места в бесплатном тарифе на колоду/карточку не осталось — слово всё равно
 // сохраняется для чтения, но молча остаётся вне повторения (никогда не
 // блокируем сохранение из-за этого).
+interface FlashcardLinkInfo {
+  contextAdded: boolean;
+  flashcardId: string;
+  deckId: string;
+  learningState: string;
+  contextCount: number;
+}
+
+// M3 Slice 11 (plan doc §2) — reads back deck_id/learning_state/context count right after
+// find-or-create so callers (Reader's word panel) can show the real Practice Bridge state
+// without a second round trip from the client.
+async function fetchFlashcardLinkInfo(
+  supabase: SupabaseServerClient,
+  flashcardId: string,
+  contextAdded: boolean,
+): Promise<FlashcardLinkInfo> {
+  const [{ data: flashcard }, { count }] = await Promise.all([
+    supabase.from("flashcards").select("deck_id, learning_state").eq("id", flashcardId).maybeSingle(),
+    supabase.from("vocabulary_contexts").select("id", { count: "exact", head: true }).eq("flashcard_id", flashcardId),
+  ]);
+  return {
+    contextAdded,
+    flashcardId,
+    deckId: flashcard?.deck_id ?? "",
+    learningState: flashcard?.learning_state ?? "new",
+    contextCount: count ?? 0,
+  };
+}
+
+// M3 Slice 11 (plan doc §2) — the repeat-save branch of saveVocabularyItem: append a new
+// context occurrence to the already-linked flashcard when the sentence is genuinely new,
+// otherwise just read back its current state. Kept separate from linkToFlashcard (which only
+// runs on first save) since this one skips the deck/normalized_key resolution entirely.
+async function refreshExistingLink(
+  supabase: SupabaseServerClient,
+  userId: string,
+  flashcardId: string,
+  input: {
+    headword: string;
+    translation: string;
+    contextSentence: string | null;
+    contextTranslation: string | null;
+    textId: string | null;
+    language: string;
+  },
+): Promise<FlashcardLinkInfo | null> {
+  if (!input.contextSentence) return fetchFlashcardLinkInfo(supabase, flashcardId, false);
+
+  const result = await findOrCreateFlashcard(supabase, {
+    ownerId: userId,
+    language: input.language,
+    front: input.headword,
+    back: input.translation,
+    itemType: "word",
+    sourceType: input.textId ? "reader" : "manual",
+    context: {
+      text: input.contextSentence,
+      translation: input.contextTranslation,
+      sourceTextId: input.textId,
+      sourceType: input.textId ? "reader" : "manual",
+    },
+  });
+  if (!result.ok || !result.flashcardId) return null;
+  return fetchFlashcardLinkInfo(supabase, result.flashcardId, result.contextAdded ?? false);
+}
+
 async function linkToFlashcard(
   supabase: SupabaseServerClient,
   userId: string,
@@ -47,7 +119,7 @@ async function linkToFlashcard(
     textId: string | null;
     language: string;
   },
-): Promise<boolean> {
+): Promise<FlashcardLinkInfo | null> {
   const result = await findOrCreateFlashcard(supabase, {
     ownerId: userId,
     language: input.language,
@@ -64,10 +136,10 @@ async function linkToFlashcard(
         }
       : null,
   });
-  if (!result.ok || !result.flashcardId) return false;
+  if (!result.ok || !result.flashcardId) return null;
 
   await supabase.from("vocabulary_items").update({ flashcard_id: result.flashcardId }).eq("id", vocabularyItemId);
-  return result.contextAdded ?? false;
+  return fetchFlashcardLinkInfo(supabase, result.flashcardId, result.contextAdded ?? false);
 }
 
 export async function saveVocabularyItem(
@@ -103,26 +175,37 @@ export async function saveVocabularyItem(
     // M3 Slice 10 (brief Phase B §5) — a repeat save from a new sentence used to silently
     // discard the context entirely; now it's appended as a real new occurrence for the
     // already-linked flashcard (deduped against identical text by findOrCreateFlashcard).
-    let contextAdded = false;
-    if (existing.flashcard_id && input.contextSentence) {
-      const result = await findOrCreateFlashcard(supabase, {
-        ownerId: userId,
-        language: input.language,
-        front: input.headword,
-        back: input.translation,
-        itemType: "word",
-        sourceType: input.textId ? "reader" : "manual",
-        context: {
-          text: input.contextSentence,
-          translation: input.contextTranslation,
-          sourceTextId: input.textId,
-          sourceType: input.textId ? "reader" : "manual",
-        },
-      });
-      contextAdded = result.ok ? (result.contextAdded ?? false) : false;
-    }
+    // M3 Slice 11 (plan doc §2) — also self-heals a missing link (older row from before this
+    // dual-write existed) so the Practice Bridge works for every saved word, not just new ones.
+    const link = existing.flashcard_id
+      ? await refreshExistingLink(supabase, userId, existing.flashcard_id, {
+          headword: input.headword,
+          translation: input.translation,
+          contextSentence: input.contextSentence,
+          contextTranslation: input.contextTranslation,
+          textId: input.textId,
+          language: input.language,
+        })
+      : await linkToFlashcard(supabase, userId, existing.id, {
+          headword: input.headword,
+          translation: input.translation,
+          contextSentence: input.contextSentence,
+          contextTranslation: input.contextTranslation,
+          textId: input.textId,
+          language: input.language,
+        });
 
-    return { ok: true, id: existing.id, level: existing.level, seenCount: existing.seen_count + 1, contextAdded };
+    return {
+      ok: true,
+      id: existing.id,
+      level: existing.level,
+      seenCount: existing.seen_count + 1,
+      contextAdded: link?.contextAdded ?? false,
+      flashcardId: link?.flashcardId,
+      deckId: link?.deckId,
+      learningState: link?.learningState,
+      contextCount: link?.contextCount,
+    };
   }
 
   const plan = await getPlan(supabase, userId);
@@ -152,7 +235,7 @@ export async function saveVocabularyItem(
     .single();
   if (error || !created) return { ok: false, error: "Не удалось сохранить слово. Попробуй ещё раз." };
 
-  const contextAdded = await linkToFlashcard(supabase, userId, created.id, {
+  const link = await linkToFlashcard(supabase, userId, created.id, {
     headword: input.headword,
     translation: input.translation,
     contextSentence: input.contextSentence,
@@ -178,5 +261,15 @@ export async function saveVocabularyItem(
     confidence: "low",
   });
 
-  return { ok: true, id: created.id, level: created.level, seenCount: created.seen_count, contextAdded };
+  return {
+    ok: true,
+    id: created.id,
+    level: created.level,
+    seenCount: created.seen_count,
+    contextAdded: link?.contextAdded ?? false,
+    flashcardId: link?.flashcardId,
+    deckId: link?.deckId,
+    learningState: link?.learningState,
+    contextCount: link?.contextCount,
+  };
 }

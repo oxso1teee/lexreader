@@ -6,16 +6,10 @@ import Link from "next/link";
 import { track } from "@/lib/posthog-client";
 import { bulkMoveToDeck, bulkMarkKnown, bulkDeleteFlashcards } from "../actions";
 import { updateFlashcard, type UpdateCardState } from "../../[deckId]/actions";
+import { LEARNING_STATE_LABEL } from "@/lib/vocabulary/learning-state-label";
 import type { VocabularyDetail } from "./page";
 
 const ITEM_TYPE_LABEL = { word: "🔤 Слово", phrase: "💬 Фраза" } as const;
-const LEARNING_STATE_LABEL = {
-  new: "Новое",
-  learning: "Учу",
-  familiar: "Знакомое",
-  active: "Активное",
-  maintenance: "Поддерживается",
-} as const;
 const SOURCE_LABEL = {
   reader: "Из чтения",
   manual: "Добавлено вручную",

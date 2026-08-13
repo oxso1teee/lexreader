@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
+import type { LearningState } from "@/lib/vocabulary-list";
 import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
 import { hasSavedReaderPrefs, parseReaderPrefs } from "./reader-prefs";
 import Reader from "./reader";
@@ -29,7 +30,7 @@ export default async function ReadPage({
     await Promise.all([
       supabase
         .from("vocabulary_items")
-        .select("id, headword, level, seen_count")
+        .select("id, headword, level, seen_count, flashcard_id")
         .eq("owner_id", profile.id)
         .eq("language", text.language),
       supabase
@@ -65,9 +66,51 @@ export default async function ReadPage({
         }
       : null;
 
-  const wordLevels: Record<string, { id: string; level: number; seenCount: number }> = {};
+  // M3 Slice 11 (plan doc §2, Practice Bridge) — vocabulary_items.flashcard_id already links
+  // every reading word to its real flashcard (migration 0028, populated by
+  // saveVocabularyItem→linkToFlashcard). No new schema: joining it here is what lets the
+  // reading surface finally show the *real* learning_state (Slice 10) instead of only the
+  // legacy self-reported 0-4 level.
+  const flashcardIds = (savedWords ?? [])
+    .map((w) => w.flashcard_id)
+    .filter((id): id is string => Boolean(id));
+  const [{ data: linkedFlashcards }, { data: contextRows }] =
+    flashcardIds.length > 0
+      ? await Promise.all([
+          supabase.from("flashcards").select("id, learning_state, deck_id").in("id", flashcardIds),
+          supabase.from("vocabulary_contexts").select("flashcard_id").in("flashcard_id", flashcardIds),
+        ])
+      : [{ data: [] as { id: string; learning_state: string; deck_id: string }[] }, { data: [] as { flashcard_id: string }[] }];
+
+  const flashcardById = new Map((linkedFlashcards ?? []).map((f) => [f.id, f]));
+  const contextCountByFlashcard = new Map<string, number>();
+  for (const row of contextRows ?? []) {
+    contextCountByFlashcard.set(row.flashcard_id, (contextCountByFlashcard.get(row.flashcard_id) ?? 0) + 1);
+  }
+
+  const wordLevels: Record<
+    string,
+    {
+      id: string;
+      level: number;
+      seenCount: number;
+      flashcardId: string | null;
+      deckId: string | null;
+      learningState: LearningState | null;
+      contextCount: number;
+    }
+  > = {};
   for (const w of savedWords ?? []) {
-    wordLevels[w.headword.toLowerCase()] = { id: w.id, level: w.level, seenCount: w.seen_count };
+    const flashcard = w.flashcard_id ? flashcardById.get(w.flashcard_id) : undefined;
+    wordLevels[w.headword.toLowerCase()] = {
+      id: w.id,
+      level: w.level,
+      seenCount: w.seen_count,
+      flashcardId: w.flashcard_id,
+      deckId: flashcard?.deck_id ?? null,
+      learningState: (flashcard?.learning_state as LearningState | undefined) ?? null,
+      contextCount: w.flashcard_id ? (contextCountByFlashcard.get(w.flashcard_id) ?? 0) : 0,
+    };
   }
 
   const uniqueTokens = new Set<string>();
