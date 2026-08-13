@@ -11,9 +11,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-pip python3-venv ffmpeg curl ca-certificates unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Deno, for yt-dlp's own signature-challenge solving.
+# Deno, for yt-dlp's own signature-challenge solving. Installed to /opt (not
+# the default $HOME/.deno, which would land under /root and be unreadable
+# once we drop to a non-root user below).
+ENV DENO_INSTALL=/opt/deno
 RUN curl -fsSL https://deno.land/install.sh | sh -s -- -y \
-    && ln -s /root/.deno/bin/deno /usr/local/bin/deno
+    && ln -s /opt/deno/bin/deno /usr/local/bin/deno
 
 # yt-dlp as a standalone binary (pinned build, matches how this project's
 # dev environment already runs it -- update deliberately, not automatically,
@@ -37,9 +40,18 @@ COPY src ./src
 
 # Pre-bake the tiny Whisper model into the image (§12: avoids a runtime
 # HuggingFace Hub dependency and the ~60s cold-start download observed in
-# research). This runs the model loader once at build time so
-# faster-whisper's local cache is already warm inside the image layer.
+# research). Cached to /opt/hf-cache (not the default ~/.cache/huggingface,
+# which would land under /root and be unreadable once we drop to a
+# non-root user below) so the non-root user can read the pre-baked model.
+ENV HF_HOME=/opt/hf-cache
 RUN /opt/whisper-venv/bin/python -c "from faster_whisper import WhisperModel; WhisperModel('tiny', device='cpu', compute_type='int8')"
+
+# Run as a non-root user -- yt-dlp/ffmpeg/whisper only ever need to write to
+# os.tmpdir() (world-writable by default) and read the app/model files
+# below, nothing here needs root.
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin worker \
+    && chown -R worker:worker /app "$HF_HOME"
+USER worker
 
 ENV PORT=8080
 ENV WHISPER_MODEL=tiny

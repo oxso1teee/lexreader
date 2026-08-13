@@ -157,4 +157,28 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
       console.warn("WARNING: WORKER_SHARED_SECRET is not set -- all /ingest requests will be rejected.");
     }
   });
+
+  // Graceful shutdown: deploy platforms (Fly/Railway/Render) send SIGTERM
+  // before killing the container. STT jobs can run for minutes, so we stop
+  // accepting new connections and let in-flight jobs finish naturally
+  // instead of dropping them mid-transcription -- but still force-exit
+  // after a bounded grace period so a stuck job can't block a deploy
+  // forever.
+  const SHUTDOWN_GRACE_MS = 30_000;
+  let shuttingDown = false;
+  function shutdown(signal) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: "shutdown_start", signal, inFlightJobs }));
+    server.close(() => {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), event: "shutdown_complete", signal }));
+      process.exit(0);
+    });
+    setTimeout(() => {
+      console.warn(JSON.stringify({ ts: new Date().toISOString(), event: "shutdown_forced", signal, inFlightJobs }));
+      process.exit(1);
+    }, SHUTDOWN_GRACE_MS).unref();
+  }
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
