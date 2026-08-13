@@ -252,11 +252,111 @@ Web research first (per instruction), then a strict, budgeted 10-candidate empir
 
 **Cleanup**: all temporary audio/video artifacts from prior rounds (`jNQXAC9IVRw.audio.wav` 3.6MB, `Qo4JIT8jMtI.captionless.wav` 960KB, `Qo4JIT8jMtI.raw.webm` 333KB, and the Playwright extension browser profile) were deleted from `research/youtube-transcript/out/`. Retained: the two small real caption samples used as ground truth (`iG9CE55wbtY.manual.en.json3`, 59KB; `jNQXAC9IVRw.en.json3`, 918 bytes) — both were already gitignored (`research/**/out`) and were never staged for commit; no large media has ever entered git history for this Slice.
 
-### Hard Acceptance Gate #1 — final status for this round
+### Round 7 verdict (superseded below — kept for the record)
 
-**HARD ACCEPTANCE GATE #1: BLOCKED.**
+Six of seven requirements were fully demonstrated with real, non-mocked evidence. Item 7 — a single combined run of `real captionless video with speech → STT → non-empty timed TranscriptSegment[]` — was not achieved via natural search. Round 8 below closes this with a different, explicitly-labeled kind of proof.
 
-Six of seven requirements remain fully demonstrated with real, non-mocked evidence (manual captions, auto captions, timed segments, language selection, fallback provider, real browser-session bridge test). Item 7 — a single combined run of `real captionless video with speech → STT → non-empty timed TranscriptSegment[]` — was not achieved this round either, despite a good-faith, budget-respecting, web-research-informed search. The blocker is unchanged in kind but now has much stronger evidence behind it: on current YouTube, essentially all real spoken-word content, regardless of size, obscurity, or triviality, already carries automatic captions in dozens of languages. Per the standing instruction, the Slice does not proceed to Video Reader implementation while this gate is blocked.
+## Round 8 — controlled failure-injection proof of the STT fallback path
+
+**This is not a claim that a naturally captionless spoken video was found. It was not.** Round 7 already demonstrated, with real evidence across 10 budgeted candidates, that natural search for such a video is impractical on current YouTube (auto-captions cover essentially all detectable public speech, down to a 6-second, 5,178-view "mic check" clip). This round instead proves the piece of *engineering* that was still unverified: that a real provider-fallback **dispatcher** — not a person manually running Whisper from a shell — correctly detects exhausted/failed caption providers and automatically selects `speech_to_text`, and that the STT path it selects produces a real, correct, non-empty, validly-timed transcript.
+
+### Step 1–2: the dispatcher
+
+Built `research/youtube-transcript/provider-chain.mjs`: a real `PROVIDER_CHAIN` array of six providers (`manual_caption`, `auto_caption`, `innertube`, `browser_bridge`, `yt_dlp_caption`, `speech_to_text`), iterated by a real `dispatchTranscript()` function that `try/catch`es each provider in order and only proceeds to the next on failure — the same control flow a production `YouTubeTranscriptProvider` chain would use. The first five providers are real async functions that **genuinely throw** (not skipped by an `if`, not stubbed out of the chain — they're in the array and get called):
+
+- `manual_caption` / `auto_caption` / `yt_dlp_caption`: injected failures, explicitly labeled in their error messages as injected (not a claim of natural absence — this video does have real captions, confirmed in Round 2).
+- `innertube`: its failure message is not arbitrary — it reflects Round 1's **real, measured** failure (youtubei.js v18.0.0 returning HTTP 400 from `get_transcript` on two client profiles this session).
+- `browser_bridge`: fails because no live browser/extension session is attached to this dispatcher run (the bridge *architecture* was separately proven working end-to-end in Round 3; this specific test just has nothing attached).
+
+Only `speech_to_text` is real, unstubbed, end-to-end logic: it shells out to `yt-dlp -x --audio-format wav` for a genuine audio extraction from `https://www.youtube.com/watch?v=jNQXAC9IVRw`, then spawns `whisper-venv/bin/python whisper_transcribe_json.py` (a small script wrapping `faster-whisper` with `word_timestamps=True, vad_filter=True`) as a real subprocess, parses its JSON stdout, and regroups word-level timestamps into ≤6000ms display segments — the same normalization approach proven in Round 5, now living inside the actual provider rather than a separate research-only function. **No caption payload is read, fetched, or referenced anywhere in this function.**
+
+### Step 3: real run output
+
+```
+Provider attempt order and outcomes:
+  manual_caption: failed — manual_caption: no usable manual caption track (injected...)
+  auto_caption: failed — auto_caption: no usable automatic caption track (injected)
+  innertube: failed — innertube: transcript endpoint unavailable — consistent with Round 1's REAL failure (...)
+  browser_bridge: failed — browser_bridge: no live extension session available in this dispatcher run (...)
+  yt_dlp_caption: failed — yt_dlp_caption: no usable caption result (injected)
+  speech_to_text: success
+
+Dispatcher selected source: speech_to_text
+Audio extraction: 4760ms
+Whisper model load: 1.58s, transcribe: 2.67s
+Detected language: en (p=0.95)
+Segment count: 4
+```
+
+First 5 normalized segments (4 total — fewer than 5 exist):
+```
+[0 -> 5720]     "All right so here we are one of the elephant's cool thing,"
+[5980 -> 10820] "what these guys expect is that they have really, really, really, long,"
+[11180 -> 15360] "and that's cool and"
+[15360 -> 18480] "that's pretty much all it is to say."
+```
+
+**Assertions (all programmatically checked in the script, not eyeballed):**
+- caption providers (5 of 6) all failed: **true**
+- dispatcher selected `speech_to_text`: **true**
+- non-empty segments: **true**
+- all timestamps valid (`endMs > startMs`, `startMs >= 0`): **true**
+- all segments have real, non-empty text: **true**
+- `ALL ASSERTIONS PASS: true`
+
+### Step 4: ground-truth sanity check (captions used *only* for post-hoc verification, never as STT input)
+
+The real auto-captions for this video were downloaded independently in Round 2 and were never read by `speechToTextProvider()`. Side by side:
+
+| STT output (this run) | Real ground-truth captions (Round 2, yt-dlp) |
+|---|---|
+| `[0→5720]` "All right so here we are one of the elephant's cool thing," | `[1200→3360]` "All right, so here we are, in front of the elephants" / `[5318→7974]` "the cool thing about these guys is that they have really..." |
+| `[5980→10820]` "what these guys expect is that they have really, really, really, long," | `[7974→12616]` "really really long trunks" |
+| `[11180→15360]` "and that's cool and" | `[12616→14367]` "and that's cool" |
+| `[15360→18480]` "that's pretty much all it is to say." | `[16881→18881]` "and that's pretty much all there is to say" |
+
+Content, topic, and speech order match closely — the `tiny` model merges/garbles a few words (drops "trunks," misreads "in front of the elephants" as "one of the elephant's") exactly as expected for the smallest Whisper model, and correctly does not transcribe the non-verbal `"(baaaaaaaaaaahhh!!)"` elephant sound as words. Timestamps land in the same overall neighborhood throughout (0–18,480ms vs. 1,200–18,881ms), same relative ordering. This is real transcription of the real audio — not hallucination.
+
+### Step 5: retained — real captionless/no-speech safety evidence (Round 4, unchanged)
+
+`Qo4JIT8jMtI` (ambient rain/thunder, independently confirmed via `yt-dlp --list-subs`: zero manual, zero automatic captions) — real audio extracted, real STT executed, **zero segments returned**, no hallucinated speech. This remains the evidence that the terminal fallback handles genuinely captionless, genuinely non-speech input safely rather than fabricating content.
+
+### Step 6: provider chain (recorded from Step 1–3 above)
+
+```
+manual_caption   → fail (injected)
+auto_caption     → fail (injected)
+innertube        → fail (real failure signature from Round 1)
+browser_bridge   → unavailable (no attached session)
+yt_dlp_caption   → fail (injected)
+speech_to_text   → PASS — real audio, real transcript, real timestamps
+```
+
+### Step 7: revised Gate #1 status
+
+**Natural-world evidence** (Round 7, unchanged):
+- 10-candidate search budget exhausted.
+- Every candidate with meaningful spoken content already had automatic captions.
+- One genuinely captionless video was found (`Qo4JIT8jMtI`) but contains no speech.
+
+**Engineering fallback evidence** (Round 8, new):
+- Caption-provider failure was injected deterministically across 5 real chain entries, one of which reflects an actually-measured real failure (`innertube`).
+- The complete `YouTube URL → audio extraction → local STT → timed transcript` path succeeded through a real dispatcher, not a manual shell invocation.
+- The dispatcher selected `speech_to_text` automatically, with no human intervention picking the provider.
+- Output was verified against independent, real, previously-downloaded captions — confirming genuine transcription, not hallucination.
+
+**HARD ACCEPTANCE GATE #1: PASS — via controlled failure-injection proof for STT fallback.**
+
+**Retained limitation, explicitly**: **No naturally captionless public spoken video was found within the defined search budget.** This is acceptable and remains documented — the natural-world evidence (Round 7) and the engineering evidence (Round 8) are two different kinds of proof, kept distinct rather than conflated. Video Reader implementation still has not started; per the standing instruction, that requires a separate go-ahead.
+
+### Step 8: final provider-chain recommendation (unchanged conclusion, now on firmer ground)
+
+Ranked strictly by what has been *proven*, not by which architecture looks more elegant:
+
+1. **`yt_dlp_caption`** — the only fully-proven real caption provider (Round 2: both manual and auto captions, real timestamps, explicit language selection, no rate-limit issues once paced). Runs in a worker/container, not Vercel serverless.
+2. **`browser_bridge`** — architecture fully proven end-to-end (Round 3: real extension, real session, real handshake); its current *extraction method* is proven broken and needs the same InnerTube-style fix `yt_dlp_caption` already benefits from. Not promoted above `yt_dlp_caption` since its extraction logic isn't fixed yet.
+3. **`innertube` (youtubei.js)** — metadata fetch proven reliable; caption/transcript fetch proven **broken** on 2 client profiles this session (real HTTP 400s, real parser crashes). Kept below `yt_dlp_caption` deliberately — it is not being promoted on architectural elegance alone while its actual caption-fetch capability remains unproven.
+4. **`speech_to_text`** — proven correct as the terminal fallback (Round 4 + Round 8): real audio in, real timed transcript out, safe on genuinely non-speech input, dispatcher-selectable automatically.
 
 ## Next steps (proposed, not yet executed)
 
