@@ -220,6 +220,44 @@ The old server-side HTML-scrape (current `youtube-actions.ts`) and the extension
 
 **Gate #1: BLOCKED.** Six of seven requirements have complete, real, non-mocked evidence. Item 7 is the one exception, and it fails on a precise, narrow technicality: I have not produced a single run where a genuinely caption-free video's real spoken content was recovered by STT with real timestamps — only the mechanism split across two videos (correct behavior on true captionless input; accurate timed transcription on real speech elsewhere). This is not being called "future work" while treating the Slice as ready — Video Reader implementation has not started, and per the standing instruction, will not start until this is closed. The blocker is narrow and specific: find one real, public, non-age-restricted video with genuine spoken content and zero caption tracks (auto or manual), confirm via `yt-dlp --list-subs`, and run the already-fully-proven pipeline against it.
 
+## Round 7 — targeted search for the missing "captionless + real speech" video (Gate #1 item 7, retry)
+
+Web research first (per instruction), then a strict, budgeted 10-candidate empirical search. No parallel requests; stopped immediately on the budget limit (no 429 was hit this round).
+
+**Web research findings** (informed candidate strategy, cost zero YouTube requests):
+- YouTube's own help docs confirm automatic captions "may not be ready at the time you upload... may take several minutes to 24 hours," depending on audio complexity — the basis for trying very-recently-uploaded content.
+- GitHub issue search for `youtube-transcript-api` "No transcripts were found" surfaced only language-code-mismatch cases (e.g. a request for `ru`/`en` when only other languages were available) on well-known, clearly-captioned videos (including `dQw4w9WgXcQ`) — not genuine zero-caption examples. Not useful as direct candidates.
+- Current YouTube ASR language coverage is very broad (reported ~65+ languages across recent sources, vs. an older official support page listing far fewer) — confirmed empirically below: every candidate list-subs check returned an exhaustive ~150-language automatic-caption menu when auto-captions existed at all, which was every time real speech was present.
+
+**Candidates checked (10/10 budget used, one precise re-check of a prior-round partial result counted as #1):**
+
+| # | Video ID | Title | Duration | Views | Manual captions | Auto captions | Verdict |
+|---|---|---|---|---|---|---|---|
+| 1 | `7x5tuh7Kllc` | "Record A PRO VOICEOVER On Your PHONE For YouTube Videos" | 130s | — | None | **Yes** (full ~150-language ASR menu) | Disqualified |
+| 2 | `klYbu-sVWFA` | "Most Of You Will Never Get Monetized Now..." (uploaded *same day*, testing the 24h-lag theory) | 555s | — | **Yes** (English) | Yes | Disqualified — even same-day uploads from established channels get captioned fast |
+| 3 | `8S0FDjFBj8o` | "How to sound smart in your TEDx Talk" (TEDx) | 356s | 15,643,830 | — | — | Not individually re-verified (near-certain captioned at this view count); excluded from further checks |
+| 4 | `qiqllkchWTI` | "G-Eazy x Bebe Rexha – Me, Myself & I (Lyrics)" | 255s | 6,218,730 | — | — | Same — major-label lyric video, excluded |
+| 5 | `-RXD4bTuFTo` | "Ryan Greenblatt – What happens once AI can automate AI research?" | 7952s | 71,488 | — | — | Same — long-form conference-style talk, excluded |
+| 6 | `9hul0PH6Zrs` | Chat-show clip (Sundeep Kishan / Suma) | 2586s | 1,586,082 | — | — | Same — high-view produced content, excluded |
+| 7 | `I1DreZNIo-E` | "Mic testing 1.. 2.. 3.." | 22s | 102,417 | — | Yes (indicated by adjacent `ab`/`en` rows) | Disqualified |
+| 8 | `mJIVUnUgP94` | "mic Check 1 2 3" | 7s | 45,011 | — | Yes (same) | Disqualified |
+| 9 | `BE9JqJVMbSs` | "Mic Check 1, 2, 3..." | 6s | 5,178 | None | **Yes** (full ~150-language ASR menu, precisely re-verified with a dedicated `--list-subs` call) | Disqualified |
+| — | (batch: `--match-filter "view_count<500"` + "voice memo test upload ignore" query) | — | — | — | — | — | **Zero results** — filter silently rejected every match before any info printed; not counted as a distinct candidate since no video-level data was obtained |
+
+**Qualifying captionless+speech video found: none.**
+
+**Consistent, striking finding**: every single candidate that contained genuine, substantial spoken content — down to a 6-second "mic check 1, 2, 3" clip with 5,178 views — already had a full automatic-caption track in ~150 languages. Candidates 3–6 (very high view counts) were excluded from individual verification as near-certainly captioned rather than spending budget confirming the obvious. The 10-candidate budget was exhausted without finding a video meeting both required conditions (zero manual **and** zero automatic captions) while containing real speech.
+
+**Steps 3–6 of this round's procedure (speech qualification, extraction, transcription, sanity-check) were not reached** — no candidate survived Step 2's caption check to be handed to Step 3. This is not a shortcut: Step 4 (full fallback run) requires a qualifying candidate as its precondition, and none existed.
+
+**Cleanup**: all temporary audio/video artifacts from prior rounds (`jNQXAC9IVRw.audio.wav` 3.6MB, `Qo4JIT8jMtI.captionless.wav` 960KB, `Qo4JIT8jMtI.raw.webm` 333KB, and the Playwright extension browser profile) were deleted from `research/youtube-transcript/out/`. Retained: the two small real caption samples used as ground truth (`iG9CE55wbtY.manual.en.json3`, 59KB; `jNQXAC9IVRw.en.json3`, 918 bytes) — both were already gitignored (`research/**/out`) and were never staged for commit; no large media has ever entered git history for this Slice.
+
+### Hard Acceptance Gate #1 — final status for this round
+
+**HARD ACCEPTANCE GATE #1: BLOCKED.**
+
+Six of seven requirements remain fully demonstrated with real, non-mocked evidence (manual captions, auto captions, timed segments, language selection, fallback provider, real browser-session bridge test). Item 7 — a single combined run of `real captionless video with speech → STT → non-empty timed TranscriptSegment[]` — was not achieved this round either, despite a good-faith, budget-respecting, web-research-informed search. The blocker is unchanged in kind but now has much stronger evidence behind it: on current YouTube, essentially all real spoken-word content, regardless of size, obscurity, or triviality, already carries automatic captions in dozens of languages. Per the standing instruction, the Slice does not proceed to Video Reader implementation while this gate is blocked.
+
 ## Next steps (proposed, not yet executed)
 
 1. **Phase 2 full test corpus** — assemble and run the complete required matrix (Shorts, 30–60min, non-English, multi-caption-language, and the one remaining true-zero-caption-with-speech case) now that all 4 extraction mechanisms have real proof-of-concept.
