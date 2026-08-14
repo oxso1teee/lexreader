@@ -4,7 +4,20 @@
 // unit-testable (see wait-for-value.mjs for why this can't literally be
 // imported into the real content script). Mirror this exact algorithm there
 // if you change it here.
-export function createCaptureStore() {
+//
+// Lifecycle bug (M3 Slice 12 RC #3) — real-browser network evidence proved
+// YouTube's own autoplay/up-next machinery fires genuine
+// /api/timedtext?fmt=json3 requests for a DIFFERENT, unrelated video while
+// our extraction tab is still open on the video we're extracting (observed:
+// a request for a wholly different videoId landed ~300ms after our own
+// video's request, well before any navigation happened on our tab). The
+// store used to key purely on `lang|kind`, so a same-key capture from that
+// unrelated video could silently overwrite or be returned as a match for
+// the video actually being extracted. `expectedVideoId` closes that gap:
+// every write and read is scoped to one specific video, so a capture for
+// any other video is never stored and never returned, regardless of key
+// collisions.
+export function createCaptureStore(expectedVideoId) {
   const captures = new Map();
 
   return {
@@ -15,6 +28,7 @@ export function createCaptureStore() {
     // in isolation rather than only "true because nothing violates it yet".
     set(detail) {
       if (!detail || !detail.bodyText) return false;
+      if (expectedVideoId && detail.videoId && detail.videoId !== expectedVideoId) return false;
       const key = `${detail.lang ?? ""}|${detail.kind ?? ""}`;
       captures.set(key, detail);
       return true;

@@ -53,11 +53,23 @@
     chrome.runtime.sendMessage(
       {
         type: "LEXREADER_YOUTUBE_TRANSCRIPT_REQUEST",
+        // Lifecycle bug (M3 Slice 12 RC #3): requestId was validated above
+        // but never actually forwarded here -- background.mjs and
+        // everything downstream had zero visibility into which logical
+        // request was in flight, making it impossible to tell a late/stale
+        // result apart from the current one. Forwarding it is what lets the
+        // rest of the chain log and reason per-request.
+        requestId: message.requestId,
         url: message.url,
         targetLanguage: message.targetLanguage,
       },
       (response) => {
         if (chrome.runtime.lastError) {
+          console.debug("[LexReader:diag] response sent to LexReader", {
+            requestId: message.requestId,
+            ok: false,
+            error: "extension_not_connected",
+          });
           postToPage({
             type: "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE",
             requestId: message.requestId,
@@ -68,6 +80,12 @@
           return;
         }
 
+        // Never log transcript contents (Phase 1) -- ok/error only.
+        console.debug("[LexReader:diag] response sent to LexReader", {
+          requestId: message.requestId,
+          ok: Boolean(response?.ok),
+          error: response?.error ?? null,
+        });
         postToPage({
           type: "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE",
           requestId: message.requestId,

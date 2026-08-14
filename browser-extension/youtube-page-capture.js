@@ -45,6 +45,7 @@
       const meta = parseTimedtextMeta(urlString);
       if (meta && meta.fmt === "json3") {
         console.debug("[LexReader:diag] timedtext observed (fetch)", {
+          videoId: meta.videoId,
           lang: meta.lang,
           kind: meta.kind,
           httpStatus: response.status,
@@ -55,6 +56,7 @@
         // disrupted -- we only ever observe, never intercept/replace.
         const bodyText = await response.clone().text();
         console.debug("[LexReader:diag] timedtext body (fetch)", {
+          videoId: meta.videoId,
           lang: meta.lang,
           kind: meta.kind,
           bodyLength: bodyText?.length ?? 0,
@@ -83,6 +85,7 @@
       this.addEventListener("load", () => {
         try {
           console.debug("[LexReader:diag] timedtext observed (xhr)", {
+            videoId: meta.videoId,
             lang: meta.lang,
             kind: meta.kind,
             httpStatus: this.status,

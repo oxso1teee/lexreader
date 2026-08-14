@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:import": "node --experimental-strip-types --test src/lib/import-cards.test.ts",
-    "test:extension": "node --test browser-extension/youtube-transcript.test.mjs browser-extension/background.test.mjs",
+    "test:extension": "node --test browser-extension/*.test.mjs",
     "test:srs": "node --experimental-strip-types --test src/lib/srs.test.ts",
     "test:fsrs": "node --experimental-strip-types --test src/lib/fsrs.test.ts src/lib/fsrs-flags.test.ts",
     "test:csp": "node --experimental-strip-types --test src/lib/posthog-csp.test.ts next.config.test.ts",
