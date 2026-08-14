@@ -9,6 +9,13 @@ test("extractVideoId supports normal, short and Shorts URLs", () => {
   assert.equal(extractVideoId("https://example.com/watch?v=abcDEF_123-"), null);
 });
 
+test("extractVideoId ignores the #lexreader-extraction marker background.mjs appends to created tabs (RC extraction bug)", () => {
+  assert.equal(
+    extractVideoId("https://www.youtube.com/watch?v=abcDEF_123-#lexreader-extraction"),
+    "abcDEF_123-",
+  );
+});
+
 test("parseJson3Segments combines fragments and fills a missing duration", () => {
   const segments = parseJson3Segments({
     events: [

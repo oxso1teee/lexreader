@@ -34,8 +34,18 @@ export function isAllowedSender(sender) {
   }
 }
 
+// RC extraction bug (M3 Slice 12 RC): a video short enough that YouTube's own
+// autoplay-next can fire before/during our extraction window (confirmed real,
+// non-Playwright evidence: the exact recommended smoke-test video, 19s,
+// auto-advanced to a different video within ~10-20s of load) silently swaps
+// the tab's video context out from under us mid-extraction. The
+// #lexreader-extraction marker is read by youtube-page-capture.js
+// (document_start, MAIN world) to know this specific tab was created by us
+// for extraction only -- never for a tab the user already had open and may
+// be actually watching -- and to hold the video paused for the extraction
+// window so it can never run to completion and autoplay away.
 export function canonicalWatchUrl(videoId) {
-  return `https://www.youtube.com/watch?v=${videoId}`;
+  return `https://www.youtube.com/watch?v=${videoId}#lexreader-extraction`;
 }
 
 export function withTimeout(promise, ms, onTimeoutError) {
@@ -88,21 +98,26 @@ async function extractYoutubeTranscript(rawUrl, targetLanguage) {
   if (!videoId) {
     return { ok: false, error: "unsupported_video", message: "Не распознана ссылка на YouTube-видео." };
   }
+  console.debug("[LexReader:diag] extraction started", { videoId, targetLanguage });
 
   const existingTab = await findExistingTab(videoId);
   let tabId = existingTab?.id ?? null;
   let createdTab = false;
+  console.debug("[LexReader:diag] tab resolution", { videoId, tabId, reusedExisting: !!existingTab });
 
   try {
     if (tabId == null) {
       const tab = await chrome.tabs.create({ url: canonicalWatchUrl(videoId), active: true });
       tabId = tab.id;
       createdTab = true;
-      await withTimeout(
-        waitForTabReady(tabId),
-        TAB_READY_TIMEOUT_MS,
-        new Error("youtube_page_not_open"),
-      );
+      console.debug("[LexReader:diag] tab created", { videoId, tabId });
+      try {
+        await withTimeout(waitForTabReady(tabId), TAB_READY_TIMEOUT_MS, new Error("youtube_tab_timeout"));
+        console.debug("[LexReader:diag] tab ready reached", { videoId, tabId, ready: true });
+      } catch (readyError) {
+        console.debug("[LexReader:diag] tab ready reached", { videoId, tabId, ready: false });
+        throw readyError;
+      }
     }
 
     const response = await withTimeout(
@@ -110,6 +125,14 @@ async function extractYoutubeTranscript(rawUrl, targetLanguage) {
       EXTRACTION_TIMEOUT_MS,
       new Error("extraction_failed"),
     );
+    console.debug("[LexReader:diag] extraction response", {
+      videoId,
+      tabId,
+      ok: !!response?.ok,
+      error: response?.ok ? null : (response?.error ?? "extraction_failed"),
+      segmentSourceLang: response?.capture?.lang ?? null,
+      segmentSourceKind: response?.capture?.kind ?? null,
+    });
 
     if (!response?.ok) {
       return { ok: false, error: response?.error ?? "extraction_failed", message: "Не удалось получить субтитры этого видео." };
@@ -123,16 +146,23 @@ async function extractYoutubeTranscript(rawUrl, targetLanguage) {
       kind: response.capture.kind,
       bodyText: response.capture.bodyText,
     });
+    console.debug("[LexReader:diag] parsed transcript", { videoId, segmentCount: transcript.segments.length });
 
     return { ok: true, transcript };
   } catch (error) {
     // Never surface raw internal error text to the caller (§8/§11) -- map
-    // to one of a small set of known, safe error codes.
+    // to one of a small set of known, safe error codes. youtube_tab_timeout
+    // is an internal-only distinction (RC extraction bug, Phase 8) folded
+    // into youtube_page_not_open at the boundary -- the UI copy is the same
+    // either way, but the two are logged distinctly above.
     const code = error instanceof Error ? error.message : "extraction_failed";
+    const externalCode = code === "youtube_tab_timeout" ? "youtube_page_not_open" : code;
     const knownCodes = new Set(["youtube_page_not_open", "extraction_failed", "transcript_unavailable"]);
+    const finalCode = knownCodes.has(externalCode) ? externalCode : "extraction_failed";
+    console.debug("[LexReader:diag] extraction failed", { videoId, tabId, internalCode: code, finalCode });
     return {
       ok: false,
-      error: knownCodes.has(code) ? code : "extraction_failed",
+      error: finalCode,
       message: "Не удалось получить субтитры этого видео.",
     };
   } finally {

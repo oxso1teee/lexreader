@@ -43,10 +43,22 @@
     try {
       const urlString = typeof input === "string" ? input : input?.url;
       const meta = parseTimedtextMeta(urlString);
+      if (meta && meta.fmt === "json3") {
+        console.debug("[LexReader:diag] timedtext observed (fetch)", {
+          lang: meta.lang,
+          kind: meta.kind,
+          httpStatus: response.status,
+        });
+      }
       if (meta && meta.fmt === "json3" && response.ok) {
         // Clone so YouTube's own consumption of the real response is never
         // disrupted -- we only ever observe, never intercept/replace.
         const bodyText = await response.clone().text();
+        console.debug("[LexReader:diag] timedtext body (fetch)", {
+          lang: meta.lang,
+          kind: meta.kind,
+          bodyLength: bodyText?.length ?? 0,
+        });
         if (bodyText && bodyText.length > 0) {
           emit({ type: "timedtext", ...meta, bodyText });
         }
@@ -70,6 +82,12 @@
     if (meta && meta.fmt === "json3") {
       this.addEventListener("load", () => {
         try {
+          console.debug("[LexReader:diag] timedtext observed (xhr)", {
+            lang: meta.lang,
+            kind: meta.kind,
+            httpStatus: this.status,
+            bodyLength: this.responseText?.length ?? 0,
+          });
           if (this.status >= 200 && this.status < 300 && this.responseText) {
             emit({ type: "timedtext", ...meta, bodyText: this.responseText });
           }
@@ -80,6 +98,31 @@
     }
     return originalXhrSend.apply(this, args);
   };
+
+  // RC extraction bug (M3 Slice 12 RC): a video short enough to run to
+  // completion before/during our extraction window lets YouTube's own
+  // autoplay-next feature navigate the tab to a different video (real,
+  // observed evidence in a non-automated browser: the exact recommended
+  // smoke-test video, 19s, autoplayed to an unrelated video within ~10-20s
+  // of load), silently swapping the tab's video context out from under an
+  // in-flight extraction. Only engaged on tabs *we* created for extraction
+  // (marked via the #lexreader-extraction URL fragment in
+  // background.mjs's canonicalWatchUrl) -- never on a tab the user already
+  // had open, which they may be actually watching. Pausing does not affect
+  // the automatic default-track timedtext request: that fires on player/
+  // caption-track initialization, not on playback progress (confirmed:
+  // Gate #2C's own research already established it fires "on normal video
+  // load, no click needed").
+  if (location.hash.includes("lexreader-extraction")) {
+    const pauseIfPlaying = () => {
+      const video = document.querySelector("video");
+      if (video && !video.paused) video.pause();
+    };
+    const guardInterval = setInterval(pauseIfPlaying, 300);
+    // Bounded to comfortably cover the extraction window (background.mjs's
+    // OVERALL_TIMEOUT_MS) -- never guards forever.
+    setTimeout(() => clearInterval(guardInterval), 40_000);
+  }
 
   // ytInitialPlayerResponse is set by YouTube's own inline <script> after
   // document_start (when this file's matches condition executes) — poll
@@ -92,6 +135,11 @@
     const tracks = pr?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
     if (pr?.videoDetails?.videoId) {
       clearInterval(poll);
+      console.debug("[LexReader:diag] player metadata ready", {
+        videoId: pr.videoDetails.videoId,
+        lengthSeconds: pr.videoDetails.lengthSeconds,
+        trackCount: Array.isArray(tracks) ? tracks.length : 0,
+      });
       emit({
         type: "metadata",
         videoId: pr.videoDetails.videoId,
@@ -103,6 +151,7 @@
       });
     } else if (attempts >= maxAttempts) {
       clearInterval(poll);
+      console.debug("[LexReader:diag] player metadata poll timed out");
     }
   }, 250);
 })();

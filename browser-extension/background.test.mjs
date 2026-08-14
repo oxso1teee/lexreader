@@ -41,8 +41,14 @@ test("isAllowedSender rejects a missing or malformed sender URL", () => {
   assert.equal(isAllowedSender(undefined), false);
 });
 
-test("canonicalWatchUrl builds a plain youtube.com watch URL from a video ID", () => {
-  assert.equal(canonicalWatchUrl("abcDEF_123-"), "https://www.youtube.com/watch?v=abcDEF_123-");
+test("canonicalWatchUrl builds a youtube.com watch URL with the extraction marker", () => {
+  // RC extraction bug: the marker is what youtube-page-capture.js checks to
+  // decide whether to hold the video paused for the extraction window --
+  // only ever on tabs we created ourselves.
+  assert.equal(
+    canonicalWatchUrl("abcDEF_123-"),
+    "https://www.youtube.com/watch?v=abcDEF_123-#lexreader-extraction",
+  );
 });
 
 test("withTimeout resolves normally when the promise settles before the deadline", async () => {
