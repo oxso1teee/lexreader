@@ -151,7 +151,9 @@ export { server };
 // from WORKDIR /app) while import.meta.url is always absolute, so both must
 // be resolved to the same absolute form before comparing.
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
-  server.listen(PORT, () => {
+  // Explicit 0.0.0.0 -- Render (and most container platforms) require
+  // binding to all interfaces, not just localhost, to route inbound traffic.
+  server.listen(PORT, "0.0.0.0", () => {
     console.log(`youtube-ingestion worker listening on :${PORT}`);
     if (!WORKER_SECRET) {
       console.warn("WARNING: WORKER_SHARED_SECRET is not set -- all /ingest requests will be rejected.");
