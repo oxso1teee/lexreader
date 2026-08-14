@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { hasFreeTextRoom, resolveCollectionAssignment } from "./actions";
 import { runYoutubeImport } from "@/lib/youtube-ingestion/service";
-import { ErrorCategory, type ImportOutcome } from "@/lib/youtube-ingestion/types";
+import { assertValidTranscriptResult, MalformedTranscriptError } from "@/lib/youtube-ingestion/validate-transcript";
+import { ErrorCategory, type ImportOutcome, type TranscriptResult } from "@/lib/youtube-ingestion/types";
 import { log } from "@/lib/log";
 
 // The one entry point the import form calls for the new worker-backed
@@ -51,6 +52,77 @@ function toState(outcome: ImportOutcome): StartYoutubeImportState {
   // polling UI exists yet (Video Reader is a later checkpoint), so this
   // surfaces as a plain retry-later message rather than a live status.
   return { error: "Импорт этого видео уже выполняется. Попробуй обновить страницу через минуту." };
+}
+
+/**
+ * Persists a transcript the browser extension already extracted (M3 Slice
+ * 12 Gate #2C -- browser bridge is now the primary path, see
+ * docs/ui/m3-slice12-gate2c-*.md). The extension only acquires the
+ * transcript; this is the one place that writes it to the DB, reusing the
+ * exact same dedup/state-machine/persistence logic as the worker path by
+ * handing runYoutubeImport() a synchronous callWorker that just wraps the
+ * already-fetched result -- no import logic is duplicated (§9 of the brief).
+ */
+export async function startYoutubeImportFromBrowserAction(
+  transcript: unknown,
+  formData: FormData,
+): Promise<StartYoutubeImportState> {
+  let validated: TranscriptResult;
+  try {
+    assertValidTranscriptResult(transcript);
+    validated = transcript;
+  } catch (err) {
+    log.import({ kind: "youtube", outcome: "error", reason: "browser_payload_invalid" });
+    return {
+      error:
+        err instanceof MalformedTranscriptError
+          ? "Расширение вернуло некорректные субтитры."
+          : "Не удалось получить субтитры через расширение.",
+    };
+  }
+
+  const profile = await requireProfile();
+  const supabase = await createClient();
+
+  if (!(await hasFreeTextRoom(supabase, profile.id))) {
+    return { paywall: true };
+  }
+
+  const collectionAssignment = await resolveCollectionAssignment(
+    supabase,
+    profile.id,
+    profile.target_language,
+    formData,
+  );
+  if ("error" in collectionAssignment) {
+    return { error: collectionAssignment.error };
+  }
+
+  const start = Date.now();
+  try {
+    const outcome = await runYoutubeImport(
+      supabase,
+      profile.id,
+      `https://www.youtube.com/watch?v=${validated.videoId}`,
+      profile.target_language,
+      async () => ({
+        ok: true,
+        transcript: validated,
+        attempts: [{ provider: "browser_bridge", outcome: "success" }],
+        ingestionDurationMs: Date.now() - start,
+      }),
+      collectionAssignment,
+    );
+    if (outcome.status === "failed") {
+      log.import({ kind: "youtube", outcome: "error", reason: outcome.error ?? "unknown" });
+    } else if (outcome.status === "ready") {
+      log.import({ kind: "youtube", outcome: "success", reason: "browser_bridge" });
+    }
+    return toState(outcome);
+  } catch {
+    log.import({ kind: "youtube", outcome: "error", reason: "unexpected_exception" });
+    return { error: "Не удалось импортировать видео. Попробуй ещё раз." };
+  }
 }
 
 export async function startYoutubeImportAction(

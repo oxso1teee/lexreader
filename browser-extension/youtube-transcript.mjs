@@ -1,3 +1,9 @@
+// Canonical browser-side transcript construction (M3 Slice 12 Gate #2C).
+// The network layer lives in youtube-page-capture.js/youtube-content-relay.js
+// -- this file only does pure parsing/normalization of an already-captured
+// real YouTube response, matching the shared TranscriptResult contract from
+// src/lib/youtube-ingestion/types.ts exactly (segments use `text`, not the
+// old `body` field the pre-Gate-#2C bridge used).
 const MAX_SEGMENTS = 10_000;
 const MAX_TRANSCRIPT_LENGTH = 200_000;
 
@@ -37,92 +43,8 @@ function decodeEntities(text) {
   });
 }
 
-function extractJsonValueAfterKey(source, key, opening, closing) {
-  const keyIndex = source.indexOf(`"${key}"`);
-  if (keyIndex === -1) return null;
-
-  const start = source.indexOf(opening, keyIndex + key.length + 2);
-  if (start === -1) return null;
-
-  let depth = 0;
-  let inString = false;
-  let escaped = false;
-  for (let index = start; index < source.length; index++) {
-    const char = source[index];
-    if (inString) {
-      if (escaped) escaped = false;
-      else if (char === "\\") escaped = true;
-      else if (char === '"') inString = false;
-      continue;
-    }
-
-    if (char === '"') {
-      inString = true;
-      continue;
-    }
-    if (char === opening) depth++;
-    if (char === closing) {
-      depth--;
-      if (depth === 0) return source.slice(start, index + 1);
-    }
-  }
-  return null;
-}
-
-export function extractCaptionTracks(html) {
-  const rawTracks = extractJsonValueAfterKey(html, "captionTracks", "[", "]");
-  if (!rawTracks) return [];
-
-  try {
-    const tracks = JSON.parse(rawTracks);
-    return Array.isArray(tracks)
-      ? tracks.filter(
-          (track) =>
-            track &&
-            typeof track.baseUrl === "string" &&
-            typeof track.languageCode === "string",
-        )
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function extractTitle(html, videoId) {
-  const rawVideoDetails = extractJsonValueAfterKey(html, "videoDetails", "{", "}");
-  if (rawVideoDetails) {
-    try {
-      const details = JSON.parse(rawVideoDetails);
-      if (typeof details.title === "string" && details.title.trim()) {
-        return details.title.trim().slice(0, 300);
-      }
-    } catch {
-      // Fallback to the meta title below.
-    }
-  }
-
-  const metaTitle = html.match(/<meta\s+name=["']title["']\s+content=["']([^"']*)["']/i);
-  return metaTitle ? decodeEntities(metaTitle[1]).trim().slice(0, 300) : `YouTube ${videoId}`;
-}
-
-function selectCaptionTrack(tracks, targetLanguage) {
-  const target = String(targetLanguage ?? "").toLowerCase();
-  const baseTarget = target.split("-")[0];
-  const matching = tracks.filter((track) => {
-    const language = track.languageCode.toLowerCase();
-    return language === target || language.split("-")[0] === baseTarget;
-  });
-
-  return (
-    matching.find((track) => track.kind !== "asr") ??
-    matching[0] ??
-    tracks.find((track) => track.kind !== "asr") ??
-    tracks[0]
-  );
-}
-
-function cleanSegmentBody(body) {
-  return decodeEntities(String(body ?? "")).replace(/\s+/g, " ").trim();
+function cleanSegmentText(value) {
+  return decodeEntities(String(value ?? "")).replace(/\s+/g, " ").trim();
 }
 
 export function parseJson3Segments(payload) {
@@ -132,14 +54,14 @@ export function parseJson3Segments(payload) {
   for (const event of events) {
     const startMs = Number(event?.tStartMs);
     const durationMs = Number(event?.dDurationMs);
-    const body = cleanSegmentBody(
+    const text = cleanSegmentText(
       Array.isArray(event?.segs) ? event.segs.map((segment) => segment?.utf8 ?? "").join("") : "",
     );
-    if (!Number.isFinite(startMs) || startMs < 0 || !body) continue;
+    if (!Number.isFinite(startMs) || startMs < 0 || !text) continue;
     rawSegments.push({
       startMs: Math.round(startMs),
       durationMs: Number.isFinite(durationMs) && durationMs > 0 ? Math.round(durationMs) : 0,
-      body,
+      text,
     });
   }
 
@@ -151,30 +73,8 @@ export function parseJson3Segments(payload) {
         : nextStart && nextStart > segment.startMs
           ? nextStart
           : segment.startMs + 2_000;
-    return { startMs: segment.startMs, endMs, body: segment.body };
+    return { startMs: segment.startMs, endMs, text: segment.text };
   });
-}
-
-function parseXmlAttribute(attributes, name) {
-  const match = attributes.match(new RegExp(`${name}=["']([\\d.]+)["']`));
-  return match ? Number(match[1]) : null;
-}
-
-export function parseTimedTextSegments(xml) {
-  const segments = [];
-  for (const match of xml.matchAll(/<text\s+([^>]*)>([\s\S]*?)<\/text>/g)) {
-    const start = parseXmlAttribute(match[1], "start");
-    const duration = parseXmlAttribute(match[1], "dur") ?? 2;
-    const body = cleanSegmentBody(match[2].replace(/<[^>]+>/g, ""));
-    if (!Number.isFinite(start) || start < 0 || !body) continue;
-    const startMs = Math.round(start * 1_000);
-    segments.push({
-      startMs,
-      endMs: startMs + Math.max(1, Math.round(duration * 1_000)),
-      body,
-    });
-  }
-  return segments;
 }
 
 function enforceTranscriptLimits(segments) {
@@ -187,66 +87,43 @@ function enforceTranscriptLimits(segments) {
 
   let totalLength = 0;
   for (const segment of segments) {
-    totalLength += segment.body.length + 1;
+    totalLength += segment.text.length + 1;
     if (totalLength > MAX_TRANSCRIPT_LENGTH) {
       throw new Error("Субтитры этого видео слишком длинные для импорта.");
     }
   }
 }
 
-export async function fetchYoutubeTranscript(
-  rawUrl,
-  targetLanguage,
-  fetchImpl = globalThis.fetch,
-) {
-  const videoId = extractVideoId(rawUrl);
+/**
+ * Builds the canonical TranscriptResult from an already-captured, real
+ * YouTube timedtext response (json3 body text) plus the page metadata
+ * captured alongside it. Throws on malformed/empty input rather than
+ * silently producing a partial transcript -- callers must treat a thrown
+ * error as extraction failure, never as "zero segments is fine."
+ */
+export function buildTranscriptResult({ videoId, title, lengthSeconds, lang, kind, bodyText }) {
   if (!videoId || !/^[\w-]{6,20}$/.test(videoId)) {
-    throw new Error("Не распознана ссылка на YouTube-видео.");
+    throw new Error("Не распознан ID видео.");
   }
 
-  const watchResponse = await fetchImpl(`https://www.youtube.com/watch?v=${videoId}`, {
-    credentials: "include",
-    cache: "no-store",
-    signal: AbortSignal.timeout(20_000),
-  });
-  if (!watchResponse.ok) {
-    throw new Error(`YouTube не открыл видео (HTTP ${watchResponse.status}).`);
-  }
-
-  const html = await watchResponse.text();
-  const tracks = extractCaptionTracks(html);
-  if (tracks.length === 0) {
-    throw new Error(
-      "У видео нет открытых субтитров. Для видео без субтитров позже добавим отдельное распознавание аудио.",
-    );
-  }
-
-  const track = selectCaptionTrack(tracks, targetLanguage);
-  const captionUrl = new URL(track.baseUrl, "https://www.youtube.com");
-  captionUrl.searchParams.set("fmt", "json3");
-
-  const captionResponse = await fetchImpl(captionUrl.toString(), {
-    credentials: "include",
-    cache: "no-store",
-    signal: AbortSignal.timeout(20_000),
-  });
-  if (!captionResponse.ok) {
-    throw new Error(`YouTube не отдал субтитры (HTTP ${captionResponse.status}).`);
-  }
-
-  const captionBody = await captionResponse.text();
-  let segments = [];
+  let payload;
   try {
-    segments = parseJson3Segments(JSON.parse(captionBody));
+    payload = JSON.parse(bodyText);
   } catch {
-    segments = parseTimedTextSegments(captionBody);
+    throw new Error("YouTube вернул повреждённые субтитры.");
   }
+
+  const segments = parseJson3Segments(payload);
   enforceTranscriptLimits(segments);
+
+  const durationMs = Number.isFinite(Number(lengthSeconds)) ? Math.round(Number(lengthSeconds) * 1000) : undefined;
 
   return {
     videoId,
-    title: extractTitle(html, videoId),
-    languageCode: track.languageCode,
+    title: title ? String(title).trim().slice(0, 300) : `YouTube ${videoId}`,
+    languageCode: lang || "und",
+    durationMs,
+    source: kind === "asr" ? "auto_caption" : "manual_caption",
     segments,
   };
 }

@@ -3,12 +3,8 @@
 import { useActionState, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { track } from "@/lib/posthog-client";
-import {
-  saveBrowserYoutubeTranscript,
-  type BrowserYoutubeTranscript,
-  type YoutubeImportState,
-} from "../youtube-actions";
-import { startYoutubeImportAction } from "../youtube-import-actions";
+import { startYoutubeImportFromBrowserAction, type StartYoutubeImportState } from "../youtube-import-actions";
+import type { TranscriptResult } from "@/lib/youtube-ingestion/types";
 import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
@@ -22,14 +18,26 @@ interface BridgeResponse {
   type: "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE";
   requestId: string;
   ok: boolean;
-  transcript?: BrowserYoutubeTranscript;
+  transcript?: TranscriptResult;
   error?: string;
+  message?: string;
 }
+
+// Typed failure codes from background.mjs/youtube-content-relay.js (M3
+// Slice 12 Gate #2C §11) mapped to honest, specific Russian copy -- never
+// shown as a raw internal error string.
+const BRIDGE_ERROR_MESSAGES: Record<string, string> = {
+  extension_not_connected: "LexReader Bridge отключён. Перезапусти расширение и обнови страницу.",
+  transcript_unavailable: "У этого видео нет доступных субтитров.",
+  youtube_page_not_open: "Не удалось открыть страницу видео на YouTube. Попробуй ещё раз.",
+  extraction_failed: "Не удалось получить субтитры с YouTube. Попробуй ещё раз.",
+  unsupported_video: "Не распознана ссылка на YouTube-видео.",
+};
 
 function requestTranscriptFromBridge(
   url: string,
   targetLanguage: string,
-): Promise<BrowserYoutubeTranscript> {
+): Promise<TranscriptResult> {
   return new Promise((resolve, reject) => {
     const requestId = crypto.randomUUID();
     const timeout = window.setTimeout(() => {
@@ -52,7 +60,8 @@ function requestTranscriptFromBridge(
       window.clearTimeout(timeout);
       window.removeEventListener("message", handleResponse);
       if (!data.ok || !data.transcript) {
-        reject(new Error(data.error || "Не удалось получить субтитры через расширение."));
+        const code = data.error ?? "extraction_failed";
+        reject(new Error(BRIDGE_ERROR_MESSAGES[code] ?? data.message ?? "Не удалось получить субтитры через расширение."));
         return;
       }
       resolve(data.transcript);
@@ -110,26 +119,27 @@ export default function YoutubeImportForm({
   }, []);
 
   const importAction = useCallback(
-    async (previousState: YoutubeImportState, formData: FormData): Promise<YoutubeImportState> => {
+    async (_previousState: StartYoutubeImportState, formData: FormData): Promise<StartYoutubeImportState> => {
       track("material_add_started", { source: "youtube" });
 
+      // Browser extension is the primary (and, for the zero-cost build,
+      // only) YouTube ingestion path -- see docs/ui/m3-slice12-gate2c
+      // report. We deliberately do NOT fall back to the parked
+      // server-worker path here: it isn't deployed anywhere reachable, and
+      // silently trying it would only ever surface a confusing
+      // "worker unavailable" error instead of the honest "install the
+      // extension" prompt already shown below.
       if (bridgeStatus !== "ready") {
-        const result = await startYoutubeImportAction(previousState, formData);
-        if (result.redirectTo) {
-          track("material_add_succeeded", { source: "youtube" });
-          router.push(result.redirectTo);
-        } else if (result.paywall) {
-          track("material_add_failed", { source: "youtube", reason: "limit" });
-        } else if (result.error) {
-          track("material_add_failed", { source: "youtube", reason: "validation_or_server" });
-        }
-        return result;
+        track("material_add_failed", { source: "youtube", reason: "extension_not_installed" });
+        return {
+          error: "Для импорта YouTube-видео нужно расширение LexReader Bridge — см. подсказку ниже.",
+        };
       }
 
       const url = String(formData.get("url") ?? "").trim();
       try {
         const transcript = await requestTranscriptFromBridge(url, targetLanguage);
-        const result = await saveBrowserYoutubeTranscript(transcript, formData);
+        const result = await startYoutubeImportFromBrowserAction(transcript, formData);
         if (result.redirectTo) {
           track("material_add_succeeded", { source: "youtube" });
           router.push(result.redirectTo);
@@ -149,7 +159,7 @@ export default function YoutubeImportForm({
     [bridgeStatus, router, targetLanguage],
   );
 
-  const [state, formAction, pending] = useActionState<YoutubeImportState, FormData>(
+  const [state, formAction, pending] = useActionState<StartYoutubeImportState, FormData>(
     importAction,
     {},
   );
@@ -182,19 +192,18 @@ export default function YoutubeImportForm({
         aria-live="polite"
       >
         {bridgeStatus === "checking" && "Проверяем браузерный мост…"}
-        {bridgeStatus === "ready" &&
-          "LexReader Bridge подключён — YouTube не сможет заблокировать запрос по IP Vercel."}
+        {bridgeStatus === "ready" && "LexReader Bridge подключён."}
         {bridgeStatus === "missing" && (
           <>
-            Браузерный мост не найден. Попробуем серверный импорт. Для стабильной работы{" "}
+            Для импорта нужно расширение LexReader Bridge.{" "}
             <a
               href="/lexreader-youtube-bridge.zip"
               download
               className="focus-ring font-semibold text-[var(--color-caramel-text)] underline underline-offset-2"
             >
-              скачай LexReader Bridge
+              Скачай его
             </a>
-            , распакуй архив и добавь папку через chrome://extensions.
+            , распакуй архив и добавь папку через chrome://extensions, затем обнови страницу.
           </>
         )}
       </p>
@@ -206,7 +215,7 @@ export default function YoutubeImportForm({
       )}
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || bridgeStatus !== "ready"}
         className="focus-ring min-h-11 rounded-full bg-[var(--color-forest)] px-5 py-3 font-bold text-white transition-colors hover:bg-[var(--color-forest-deep)] disabled:opacity-50"
       >
         {pending ? "Получаем субтитры…" : "Импортировать субтитры"}

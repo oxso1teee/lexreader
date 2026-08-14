@@ -4,12 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { hasFreeTextRoom, getCollections } from "../actions";
 import AddTextTabs from "./add-text-tabs";
 
-// P0-АУДИТ (раздел 4): импорт по URL/YouTube делает до двух последовательных
-// внешних запросов по 10 сек каждый — без явного maxDuration был риск
-// упереться в лимит выполнения функции на Vercel раньше, чем сработает наш
-// собственный AbortSignal.timeout, и получить generic 504 вместо понятной
-// ошибки. Поднято до 45: запрос страницы видео YouTube через ScraperAPI
-// (см. youtube-actions.ts) сам по себе может занимать до 20 сек.
+// P0-АУДИТ (раздел 4): импорт по URL делает до двух последовательных внешних
+// запросов по 10 сек каждый — без явного maxDuration был риск упереться в
+// лимит выполнения функции на Vercel раньше, чем сработает наш собственный
+// AbortSignal.timeout, и получить generic 504 вместо понятной ошибки.
 export const maxDuration = 45;
 
 export default async function NewTextPage() {

@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
   "name": "LexReader YouTube Bridge",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Загружает субтитры YouTube через браузер пользователя и передаёт их в LexReader.",
-  "permissions": [],
+  "permissions": [
+    "tabs"
+  ],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://youtube.com/*"
@@ -23,6 +25,29 @@
       ],
       "js": [
         "lexreader-bridge.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/watch*",
+        "https://youtube.com/watch*"
+      ],
+      "js": [
+        "youtube-page-capture.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/watch*",
+        "https://youtube.com/watch*"
+      ],
+      "js": [
+        "youtube-content-relay.js"
       ],
       "run_at": "document_start",
       "all_frames": false

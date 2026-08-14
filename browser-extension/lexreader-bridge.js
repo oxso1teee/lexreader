@@ -53,7 +53,8 @@
             type: "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE",
             requestId: message.requestId,
             ok: false,
-            error: "LexReader Bridge отключён. Перезапусти расширение и обнови страницу.",
+            error: "extension_not_connected",
+            message: "LexReader Bridge отключён. Перезапусти расширение и обнови страницу.",
           });
           return;
         }
@@ -64,6 +65,7 @@
           ok: Boolean(response?.ok),
           transcript: response?.transcript,
           error: response?.error,
+          message: response?.message,
         });
       },
     );
