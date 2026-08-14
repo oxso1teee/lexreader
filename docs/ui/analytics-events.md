@@ -268,3 +268,21 @@ Never sent: word/phrase text, translation, context sentence, deck id/name.
 column (Slice 10), same enum already sent by no other Reader event — not a
 new category of exposure. `is_phrase`/`has_chapter`/`mode`/`direction` are
 all booleans or closed enums.
+
+## M3 Slice 12 Gate #3 — Video Reader
+
+Video Reader (`watch-player.tsx`) reuses Reader v2's exact word/phrase
+interaction code, so `word_panel_opened`/`word_saved`/`phrase_saved`/
+`reader_practice_cta_clicked` now also fire from there — same event names
+(not duplicated as new video-specific events), each carrying a new
+`surface: "video"` property so the two contexts stay distinguishable in
+PostHog without doubling the event list.
+
+| Event | Fired from | Properties |
+|---|---|---|
+| `video_reader_opened` | `watch-player.tsx` (mount) | `has_resume` (bool), `segment_count` (number) |
+
+`segment_count` is a real transcript length, not user content — same
+risk class as `card_count` (Slice 4) or `has_chapter` (Slice 11).
+`has_resume` is a boolean. No word/phrase text, translation, video title,
+or timestamp is ever sent.

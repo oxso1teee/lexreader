@@ -4,7 +4,7 @@ import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 import { addXp } from "@/lib/xp-actions";
 import { recordEvidence } from "@/lib/language-twin/evidence";
 import { escapeIlike } from "./ilike";
-import { findOrCreateFlashcard } from "./vocabulary/save";
+import { findOrCreateFlashcard, type ContextSourceType } from "./vocabulary/save";
 
 export { escapeIlike };
 
@@ -24,6 +24,17 @@ export interface UpsertWordResult {
   deckId?: string;
   learningState?: string;
   contextCount?: number;
+}
+
+// M3 Slice 12 Gate #3 — a context carrying a video timestamp is provenance 'video' regardless
+// of textId (video texts are still "reader-adjacent" for flashcards.source_type, but their
+// per-occurrence context is distinctly timestamped, unlike plain reading).
+function deriveContextSourceType(
+  textId: string | null,
+  sourceTimestampMs: number | null | undefined,
+): ContextSourceType {
+  if (sourceTimestampMs != null) return "video";
+  return textId ? "reader" : "manual";
 }
 
 function todayStartUtc(): string {
@@ -85,10 +96,12 @@ async function refreshExistingLink(
     contextTranslation: string | null;
     textId: string | null;
     language: string;
+    sourceTimestampMs?: number | null;
   },
 ): Promise<FlashcardLinkInfo | null> {
   if (!input.contextSentence) return fetchFlashcardLinkInfo(supabase, flashcardId, false);
 
+  const contextSourceType = deriveContextSourceType(input.textId, input.sourceTimestampMs);
   const result = await findOrCreateFlashcard(supabase, {
     ownerId: userId,
     language: input.language,
@@ -100,7 +113,8 @@ async function refreshExistingLink(
       text: input.contextSentence,
       translation: input.contextTranslation,
       sourceTextId: input.textId,
-      sourceType: input.textId ? "reader" : "manual",
+      sourceType: contextSourceType,
+      sourceTimestampMs: input.sourceTimestampMs ?? null,
     },
   });
   if (!result.ok || !result.flashcardId) return null;
@@ -118,8 +132,10 @@ async function linkToFlashcard(
     contextTranslation: string | null;
     textId: string | null;
     language: string;
+    sourceTimestampMs?: number | null;
   },
 ): Promise<FlashcardLinkInfo | null> {
+  const contextSourceType = deriveContextSourceType(input.textId, input.sourceTimestampMs);
   const result = await findOrCreateFlashcard(supabase, {
     ownerId: userId,
     language: input.language,
@@ -132,7 +148,8 @@ async function linkToFlashcard(
           text: input.contextSentence,
           translation: input.contextTranslation,
           sourceTextId: input.textId,
-          sourceType: input.textId ? "reader" : "manual",
+          sourceType: contextSourceType,
+          sourceTimestampMs: input.sourceTimestampMs ?? null,
         }
       : null,
   });
@@ -152,6 +169,8 @@ export async function saveVocabularyItem(
     contextSentence: string | null;
     contextTranslation: string | null;
     language: string;
+    /** M3 Slice 12 Gate #3 — video playback position (ms) when saving from Video Reader. */
+    sourceTimestampMs?: number | null;
   },
 ): Promise<UpsertWordResult> {
   // P0-АУДИТ 3.9: дедуп и апдейт теперь тоже скопированы по языку — иначе
@@ -185,6 +204,7 @@ export async function saveVocabularyItem(
           contextTranslation: input.contextTranslation,
           textId: input.textId,
           language: input.language,
+          sourceTimestampMs: input.sourceTimestampMs,
         })
       : await linkToFlashcard(supabase, userId, existing.id, {
           headword: input.headword,
@@ -193,6 +213,7 @@ export async function saveVocabularyItem(
           contextTranslation: input.contextTranslation,
           textId: input.textId,
           language: input.language,
+          sourceTimestampMs: input.sourceTimestampMs,
         });
 
     return {
@@ -242,6 +263,7 @@ export async function saveVocabularyItem(
     contextTranslation: input.contextTranslation,
     textId: input.textId,
     language: input.language,
+    sourceTimestampMs: input.sourceTimestampMs,
   });
 
   // Раздел 5.2 промта: точка входа общая для читалки/ручного добавления/

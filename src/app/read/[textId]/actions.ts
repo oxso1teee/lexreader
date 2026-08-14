@@ -16,6 +16,8 @@ export async function upsertWord(input: {
   translation: string;
   contextSentence: string;
   contextTranslation: string | null;
+  /** M3 Slice 12 Gate #3 — video playback position (ms) when saving from Video Reader. */
+  sourceTimestampMs?: number | null;
 }): Promise<UpsertWordResult> {
   const supabase = await createClient();
   const {
@@ -39,6 +41,7 @@ export async function upsertWord(input: {
     contextSentence: input.contextSentence,
     contextTranslation: input.contextTranslation,
     language: text.language,
+    sourceTimestampMs: input.sourceTimestampMs,
   });
   if (result.ok) {
     revalidatePath("/notebook");
@@ -96,6 +99,8 @@ export async function addPhraseToDefaultDeck(input: {
   back: string;
   contextSentence: string | null;
   contextTranslation: string | null;
+  /** M3 Slice 12 Gate #3 — video playback position (ms) when saving from Video Reader. */
+  sourceTimestampMs?: number | null;
 }): Promise<AddPhraseResult> {
   const supabase = await createClient();
   const {
@@ -126,7 +131,8 @@ export async function addPhraseToDefaultDeck(input: {
           text: input.contextSentence,
           translation: input.contextTranslation,
           sourceTextId: input.textId,
-          sourceType: "reader",
+          sourceType: input.sourceTimestampMs != null ? "video" : "reader",
+          sourceTimestampMs: input.sourceTimestampMs ?? null,
         }
       : null,
   });

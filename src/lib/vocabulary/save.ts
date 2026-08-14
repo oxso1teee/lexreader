@@ -10,13 +10,16 @@ import { deriveItemType, normalizeVocabularyKey, type ItemType } from "./item-ty
 // before this slice are never touched here — this only prevents new ones.
 
 export type VocabularySourceType = "reader" | "manual" | "import_bulk" | "starter_deck" | "mission" | "path";
-export type ContextSourceType = "reader" | "manual" | "import";
+export type ContextSourceType = "reader" | "manual" | "import" | "video";
 
 export interface VocabularyContextInput {
   text: string;
   translation: string | null;
   sourceTextId: string | null;
   sourceType: ContextSourceType;
+  /** M3 Slice 12 Gate #3 — video playback position (ms) this context was captured at,
+   *  null/undefined for every non-video context (migration 0043). */
+  sourceTimestampMs?: number | null;
 }
 
 export interface FindOrCreateFlashcardInput {
@@ -92,6 +95,7 @@ async function appendContextIfNew(
     context_translation: context.translation,
     source_text_id: context.sourceTextId,
     source_type: context.sourceType,
+    source_timestamp_ms: context.sourceTimestampMs ?? null,
   });
   return !error;
 }

@@ -1,22 +1,42 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
+import type { TranscriptSourceTag } from "@/lib/types";
 import { log } from "@/lib/log";
-import { upsertWord, setWordLevel, finishReading, updateTextProgress } from "@/app/read/[textId]/actions";
+import { track } from "@/lib/posthog-client";
+import { findActiveSegmentIndex, formatTimestamp } from "@/lib/video-reader/segment-lookup";
+import {
+  upsertWord,
+  setWordLevel,
+  addPhraseToDefaultDeck,
+  finishReading,
+  updateTextProgress,
+} from "@/app/read/[textId]/actions";
+import ReaderWordPanel, { type Popup } from "@/app/read/[textId]/reader-word-panel";
 
 interface YTPlayerInstance {
   getCurrentTime(): number;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
 }
 
+interface YTPlayerReadyEvent {
+  target: YTPlayerInstance;
+}
+
+interface YTPlayerErrorEvent {
+  data: number;
+}
+
 interface YTPlayerOptions {
   videoId: string;
+  playerVars?: Record<string, number | string>;
   events?: {
-    onReady?: (event: { target: YTPlayerInstance }) => void;
+    onReady?: (event: YTPlayerReadyEvent) => void;
+    onError?: (event: YTPlayerErrorEvent) => void;
   };
 }
 
@@ -38,35 +58,36 @@ interface WordLevelInfo {
   id: string;
   level: number;
   seenCount: number;
+  flashcardId: string | null;
+  deckId: string | null;
+  learningState: Popup["learningState"] | null;
+  contextCount: number;
 }
 
-interface Popup {
-  text: string;
-  sentence: string;
-  loading: boolean;
-  wordTranslation?: string;
-  sentenceTranslation?: string | null;
-  error?: string;
-  paywall?: boolean;
-  vocabId?: string;
-  level?: number;
-  seenCount?: number;
-}
+// P0-АУДИТ (YT player onError, docs §2 codes): https://developers.google.com/youtube/iframe_api_reference#onError
+const PLAYER_ERROR_MESSAGE: Record<number, string> = {
+  2: "YouTube не смог загрузить это видео.",
+  5: "Плеер YouTube не смог воспроизвести это видео в этом браузере.",
+  100: "Это видео удалено или недоступно.",
+  101: "Автор этого видео запретил встраивание на сторонние сайты.",
+  150: "Автор этого видео запретил встраивание на сторонние сайты.",
+};
 
-const VISIBLE_BEFORE = 2;
-const VISIBLE_AFTER = 3;
+const TRANSCRIPT_SOURCE_LABEL: Record<TranscriptSourceTag, string> = {
+  manual_caption: "Субтитры автора",
+  auto_caption: "Автоматические субтитры",
+  innertube: "Автоматические субтитры",
+  browser_bridge: "Импортировано из браузера",
+  yt_dlp_caption: "Субтитры",
+  speech_to_text: "Расшифровка речи",
+};
 
-function findActiveIndex(segments: Segment[], currentPrev: number, tMs: number): number {
-  for (let i = 0; i < segments.length; i++) {
-    if (tMs >= segments[i].startMs && tMs < segments[i].endMs) return i;
-  }
-  let idx = currentPrev;
-  for (let i = 0; i < segments.length; i++) {
-    if (segments[i].startMs <= tMs) idx = i;
-    else break;
-  }
-  return idx;
-}
+// Non-fighting auto-scroll (Phase 3): while the user is following along we keep the active
+// line centered; the moment they scroll manually we back off and offer a way back in instead
+// of fighting their scroll on every tick. isAutoScrollingRef distinguishes "we just scrolled"
+// from "the user just scrolled" for the same native scroll event.
+const AUTO_SCROLL_SETTLE_MS = 700;
+const POLL_INTERVAL_MS = 300;
 
 export default function WatchPlayer({
   textId,
@@ -76,6 +97,10 @@ export default function WatchPlayer({
   sourceLang,
   targetLang,
   wordLevels,
+  initialActiveIndex,
+  durationSeconds,
+  transcriptSource,
+  processingStatus,
 }: {
   textId: string;
   title: string;
@@ -84,26 +109,38 @@ export default function WatchPlayer({
   sourceLang: string;
   targetLang: string;
   wordLevels: Record<string, WordLevelInfo>;
+  initialActiveIndex: number;
+  durationSeconds: number | null;
+  transcriptSource: TranscriptSourceTag | null;
+  processingStatus: "pending" | "processing" | "ready" | "failed";
 }) {
   const router = useRouter();
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const activeSegRef = useRef<HTMLDivElement | null>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const isAutoScrollingRef = useRef(false);
+  const autoScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [activeIndex, setActiveIndex] = useState(initialActiveIndex);
+  const [followMode, setFollowMode] = useState(true);
   const [levels, setLevels] = useState(wordLevels);
   const [popup, setPopup] = useState<Popup | null>(null);
   const [manualTranslation, setManualTranslation] = useState("");
-  const [playerError, setPlayerError] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
+  const [playerError, setPlayerError] = useState<string | null>(null);
   const [wordsLookedUp, setWordsLookedUp] = useState(0);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
 
-  // Найдено при повторном аудите: Watch Mode вообще не писал в
-  // reading_sessions/text_progress/streak — просмотр видео не давал ничего
-  // ни статистике, ни прогресс-бару в Библиотеке, ни стрику. Заводим ту же
-  // механику, что уже работает в текстовом ридере (reader.tsx).
+  const [selection, setSelection] = useState<{ si: number; start: number; end: number } | null>(null);
+  const [boundaryHint, setBoundaryHint] = useState(false);
+  const pressRef = useRef<{ timer: ReturnType<typeof setTimeout>; fired: boolean; si: number } | null>(null);
+  const pointerHandledRef = useRef(false);
+
   const startedAt = useRef<number | null>(null);
   useEffect(() => {
     startedAt.current = Date.now();
+    track("video_reader_opened", { has_resume: initialActiveIndex > 0, segment_count: segments.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -123,18 +160,34 @@ export default function WatchPlayer({
       router.push("/library");
     } catch {
       setFinishing(false);
-      setFinishError("Не удалось сохранить сессию чтения. Попробуй ещё раз.");
+      setFinishError("Не удалось сохранить сессию просмотра. Попробуй ещё раз.");
     }
   }
 
-  // P0-АУДИТ 3.19: раньше не было ни onerror, ни таймаута — если скрипт
-  // YouTube API блокировался (adblock/файрвол/CSP), видео-блок оставался
-  // чёрным навсегда без единого объяснения пользователю.
+  // Phase 2 — real YT IFrame Player, fixed onReady race (the pre-Gate-#3 version started
+  // polling getCurrentTime() on a bare timer right after construction, with no guarantee the
+  // player was actually ready yet). onReady is now the single source of truth for "player
+  // usable"; polling/resume-seek only ever start from inside it.
   useEffect(() => {
     let cancelled = false;
     function createPlayer() {
       if (!window.YT || cancelled) return;
-      playerRef.current = new window.YT.Player("yt-player", { videoId });
+      playerRef.current = new window.YT.Player("yt-player", {
+        videoId,
+        events: {
+          onReady: (event) => {
+            if (cancelled) return;
+            setPlayerReady(true);
+            if (initialActiveIndex > 0 && segments[initialActiveIndex]) {
+              event.target.seekTo(segments[initialActiveIndex].startMs / 1000, true);
+            }
+          },
+          onError: (event) => {
+            if (cancelled) return;
+            setPlayerError(PLAYER_ERROR_MESSAGE[event.data] ?? "Не удалось воспроизвести это видео.");
+          },
+        },
+      });
     }
 
     if (window.YT?.Player) {
@@ -143,11 +196,13 @@ export default function WatchPlayer({
     }
 
     const timeout = setTimeout(() => {
-      if (!cancelled && !window.YT?.Player) setPlayerError(true);
+      if (!cancelled && !window.YT?.Player) {
+        setPlayerError(
+          "Не удалось загрузить видеоплеер YouTube. Проверь соединение или отключи блокировщик рекламы — субтитры ниже всё равно доступны для чтения.",
+        );
+      }
     }, 10_000);
 
-    // P0-АУДИТ (раздел 5): раньше тег вставлялся заново при каждом монтировании
-    // компонента, даже если предыдущий уже грузится — теперь переиспользуем.
     let tag = document.querySelector<HTMLScriptElement>('script[src="https://www.youtube.com/iframe_api"]');
     if (!tag) {
       tag = document.createElement("script");
@@ -155,41 +210,72 @@ export default function WatchPlayer({
       document.body.appendChild(tag);
     }
     tag.onerror = () => {
-      if (!cancelled) setPlayerError(true);
+      if (!cancelled) {
+        setPlayerError(
+          "Не удалось загрузить видеоплеер YouTube. Проверь соединение или отключи блокировщик рекламы — субтитры ниже всё равно доступны для чтения.",
+        );
+      }
     };
+    const previousReady = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
       clearTimeout(timeout);
       createPlayer();
+      previousReady?.();
     };
 
     return () => {
       cancelled = true;
       clearTimeout(timeout);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId]);
 
   useEffect(() => {
+    if (!playerReady) return;
     const interval = setInterval(() => {
       const player = playerRef.current;
       if (!player || typeof player.getCurrentTime !== "function") return;
       const tMs = player.getCurrentTime() * 1000;
-      setActiveIndex((prev) => findActiveIndex(segments, prev, tMs));
-    }, 300);
+      setActiveIndex((prev) => findActiveSegmentIndex(segments, tMs, prev));
+    }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [segments]);
+  }, [segments, playerReady]);
+
+  // Non-fighting auto-scroll: only follow while followMode is on; a manual scroll (any scroll
+  // event we didn't just cause ourselves) turns it off until the user opts back in.
+  useEffect(() => {
+    if (!followMode) return;
+    isAutoScrollingRef.current = true;
+    activeSegRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (autoScrollTimeoutRef.current) clearTimeout(autoScrollTimeoutRef.current);
+    autoScrollTimeoutRef.current = setTimeout(() => {
+      isAutoScrollingRef.current = false;
+    }, AUTO_SCROLL_SETTLE_MS);
+  }, [activeIndex, followMode]);
 
   useEffect(() => {
-    activeSegRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [activeIndex]);
+    function onScroll() {
+      if (isAutoScrollingRef.current) return;
+      setFollowMode(false);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   function handleSeek(startMs: number) {
     playerRef.current?.seekTo(startMs / 1000, true);
+    setFollowMode(true);
   }
 
-  async function handleWordTap(text: string, sentence: string) {
-    setPopup({ text, sentence, loading: true });
+  function resumeFollowing() {
+    setFollowMode(true);
+  }
+
+  async function runLookup(text: string, sentence: string, sentenceTimestampMs: number, isPhrase: boolean) {
+    setPopup({ isPhrase, text, sentence, loading: true });
     setManualTranslation("");
     setWordsLookedUp((n) => n + 1);
+    track("word_panel_opened", { is_phrase: isPhrase, surface: "video" });
 
     try {
       const res = await fetch("/api/translate", {
@@ -200,16 +286,30 @@ export default function WatchPlayer({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Ошибка перевода");
 
+      if (isPhrase) {
+        setPopup({
+          isPhrase,
+          text,
+          sentence,
+          loading: false,
+          wordTranslation: data.wordTranslation,
+          sentenceTranslation: data.sentenceTranslation,
+        });
+        return;
+      }
+
       const result = await upsertWord({
         textId,
         headword: text,
         translation: data.wordTranslation,
         contextSentence: sentence,
         contextTranslation: data.sentenceTranslation,
+        sourceTimestampMs: sentenceTimestampMs,
       });
 
       if (!result.ok) {
         setPopup({
+          isPhrase,
           text,
           sentence,
           loading: false,
@@ -220,16 +320,23 @@ export default function WatchPlayer({
         return;
       }
 
+      if (result.seenCount === 1) track("word_saved", { surface: "video" });
+
       setLevels((s) => ({
         ...s,
         [text.toLowerCase()]: {
           id: result.id!,
           level: result.level ?? 0,
           seenCount: result.seenCount ?? 1,
+          flashcardId: result.flashcardId ?? null,
+          deckId: result.deckId ?? null,
+          learningState: (result.learningState as WordLevelInfo["learningState"]) ?? null,
+          contextCount: result.contextCount ?? 0,
         },
       }));
 
       setPopup({
+        isPhrase,
         text,
         sentence,
         loading: false,
@@ -238,9 +345,16 @@ export default function WatchPlayer({
         vocabId: result.id,
         level: result.level,
         seenCount: result.seenCount,
+        alreadyKnown: (result.seenCount ?? 1) > 1,
+        contextAdded: result.contextAdded,
+        flashcardId: result.flashcardId,
+        deckId: result.deckId,
+        learningState: result.learningState as Popup["learningState"],
+        contextCount: result.contextCount,
       });
     } catch (e) {
       setPopup({
+        isPhrase,
         text,
         sentence,
         loading: false,
@@ -249,9 +363,16 @@ export default function WatchPlayer({
     }
   }
 
+  const popupTimestampRef = useRef<number | null>(null);
+
   async function handleManualTranslation() {
     if (!popup || !manualTranslation.trim()) return;
     const translation = manualTranslation.trim();
+
+    if (popup.isPhrase) {
+      setPopup({ ...popup, error: undefined, wordTranslation: translation });
+      return;
+    }
 
     const result = await upsertWord({
       textId,
@@ -259,17 +380,23 @@ export default function WatchPlayer({
       translation,
       contextSentence: popup.sentence,
       contextTranslation: null,
+      sourceTimestampMs: popupTimestampRef.current,
     });
     if (!result.ok) {
       setPopup({ ...popup, paywall: result.paywall, error: undefined });
       return;
     }
+    if (result.seenCount === 1) track("word_saved", { surface: "video" });
     setLevels((s) => ({
       ...s,
       [popup.text.toLowerCase()]: {
         id: result.id!,
         level: result.level ?? 0,
         seenCount: result.seenCount ?? 1,
+        flashcardId: result.flashcardId ?? null,
+        deckId: result.deckId ?? null,
+        learningState: (result.learningState as WordLevelInfo["learningState"]) ?? null,
+        contextCount: result.contextCount ?? 0,
       },
     }));
     setPopup({
@@ -279,6 +406,12 @@ export default function WatchPlayer({
       vocabId: result.id,
       level: result.level,
       seenCount: result.seenCount,
+      alreadyKnown: (result.seenCount ?? 1) > 1,
+      contextAdded: result.contextAdded,
+      flashcardId: result.flashcardId,
+      deckId: result.deckId,
+      learningState: result.learningState as Popup["learningState"],
+      contextCount: result.contextCount,
     });
   }
 
@@ -292,178 +425,310 @@ export default function WatchPlayer({
     await setWordLevel(popup.vocabId, level);
   }
 
-  const from = Math.max(0, activeIndex - VISIBLE_BEFORE);
-  const to = Math.min(segments.length, activeIndex + VISIBLE_AFTER);
-  const visibleSegments = segments.slice(from, to);
+  async function handleAddPhrase() {
+    if (!popup?.wordTranslation) return;
+    const result = await addPhraseToDefaultDeck({
+      textId,
+      front: popup.text,
+      back: popup.wordTranslation,
+      contextSentence: popup.sentence,
+      contextTranslation: popup.sentenceTranslation ?? null,
+      sourceTimestampMs: popupTimestampRef.current,
+    });
+    if (!result.ok) {
+      setPopup({ ...popup, paywall: result.paywall, error: result.paywall ? undefined : result.error });
+      return;
+    }
+    if (!result.alreadyExisted) track("phrase_saved", { surface: "video" });
+    setPopup({
+      ...popup,
+      saved: true,
+      alreadyKnown: result.alreadyExisted,
+      contextAdded: result.contextAdded,
+      flashcardId: result.flashcardId,
+      deckId: result.deckId,
+      learningState: result.learningState as Popup["learningState"],
+      contextCount: result.contextCount,
+    });
+  }
+
+  function handlePracticeClick() {
+    track("reader_practice_cta_clicked", {
+      is_phrase: popup?.isPhrase,
+      learning_state: popup?.learningState,
+      surface: "video",
+    });
+  }
+
+  function handleSpeak(text: string) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = sourceLang;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Phase 12 — tokenize each caption line once, not on every render/tick.
+  const segmentTokens = useMemo(() => segments.map((seg) => tokenizeSentence(seg.body)), [segments]);
+
+  function onPointerDownWord(si: number, ti: number) {
+    setBoundaryHint(false);
+    const timer = setTimeout(() => {
+      if (pressRef.current) {
+        pressRef.current.fired = true;
+        setSelection({ si, start: ti, end: ti });
+      }
+    }, 450);
+    pressRef.current = { timer, fired: false, si };
+  }
+
+  function onPointerEnterWord(si: number, ti: number) {
+    if (!pressRef.current?.fired) return;
+    if (pressRef.current.si === si) {
+      setBoundaryHint(false);
+      setSelection((sel) => (sel && sel.si === si ? { ...sel, end: ti } : sel));
+    } else {
+      setBoundaryHint(true);
+    }
+  }
+
+  function onPointerUpWord(si: number, ti: number, tokenText: string, sentence: string, timestampMs: number) {
+    pointerHandledRef.current = true;
+    const press = pressRef.current;
+    if (press) clearTimeout(press.timer);
+    setBoundaryHint(false);
+
+    if (press?.fired) {
+      setSelection((sel) => {
+        if (sel && sel.si === si) {
+          const lo = Math.min(sel.start, sel.end);
+          const hi = Math.max(sel.start, sel.end);
+          const tokens = segmentTokens[si];
+          const phraseText = tokens
+            .slice(lo, hi + 1)
+            .map((t) => t.text)
+            .join("")
+            .trim();
+          popupTimestampRef.current = timestampMs;
+          if (phraseText.includes(" ")) {
+            runLookup(phraseText, sentence, timestampMs, true);
+          } else {
+            runLookup(phraseText || tokenText, sentence, timestampMs, false);
+          }
+        }
+        return null;
+      });
+    } else if (!selection) {
+      popupTimestampRef.current = timestampMs;
+      runLookup(tokenText, sentence, timestampMs, false);
+    }
+    pressRef.current = null;
+  }
+
+  function onClickWord(tokenText: string, sentence: string, timestampMs: number) {
+    if (pointerHandledRef.current) {
+      pointerHandledRef.current = false;
+      return;
+    }
+    popupTimestampRef.current = timestampMs;
+    runLookup(tokenText, sentence, timestampMs, false);
+  }
+
+  function isTokenSelected(si: number, ti: number): boolean {
+    if (!selection || selection.si !== si) return false;
+    const lo = Math.min(selection.start, selection.end);
+    const hi = Math.max(selection.start, selection.end);
+    return ti >= lo && ti <= hi;
+  }
+
+  const activeSegment = segments[activeIndex] as Segment | undefined;
+  const totalLabel = durationSeconds != null ? formatTimestamp(durationSeconds * 1000) : null;
+  const sourceLabel = transcriptSource ? TRANSCRIPT_SOURCE_LABEL[transcriptSource] : null;
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-hidden">
-      <header className="flex shrink-0 items-center gap-3 border-b border-black/10 bg-background/95 px-4 py-3 backdrop-blur dark:border-white/10">
-        <Link href="/library" className="shrink-0 text-sm font-medium text-caramel">
-          ← Библиотека
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-medium">{title}</h1>
-          <p className="text-xs text-black/40 dark:text-white/40">{wordsLookedUp}w</p>
+    <div className="relative flex min-h-screen flex-1 flex-col bg-[#f7f4ee] dark:bg-background">
+      <header className="sticky top-0 z-10 border-b border-black/[0.07] bg-[#f7f4ee]/95 backdrop-blur-xl dark:border-white/10 dark:bg-background/95">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
+          <Link
+            href="/library"
+            aria-label="Библиотека"
+            className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+          >
+            <span aria-hidden="true">←</span>
+            <span className="hidden sm:inline" aria-hidden="true">
+              Библиотека
+            </span>
+          </Link>
+          <div className="min-w-0 flex-1 text-center">
+            <h1 className="truncate text-base font-bold tracking-[-0.01em] sm:text-lg">{title}</h1>
+            <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">
+              {[sourceLabel, totalLabel, `просмотрено слов: ${wordsLookedUp}`].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleFinish}
+            disabled={finishing}
+            aria-label="Завершить просмотр"
+            className="focus-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white/70 text-black/50 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-500 disabled:opacity-50 dark:border-white/15 dark:bg-white/10 dark:text-white/60"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
+              <path strokeLinecap="round" d="m7 7 10 10M17 7 7 17" />
+            </svg>
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleFinish}
-          disabled={finishing}
-          aria-label="Завершить просмотр"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-red-400 text-red-500 disabled:opacity-50"
-        >
-          ✕
-        </button>
       </header>
 
       {finishError && (
-        <div className="px-4 pt-2 text-center text-sm text-red-600 dark:text-red-400">{finishError}</div>
-      )}
-
-      <div className="flex h-[40dvh] w-full shrink-0 items-center justify-center bg-black">
-        {playerError ? (
-          <p className="px-6 text-center text-sm text-white/70">
-            Не удалось загрузить видеоплеер YouTube. Проверь соединение или отключи блокировщик
-            рекламы для этого сайта — субтитры ниже всё равно доступны для чтения.
-          </p>
-        ) : (
-          <div id="yt-player" className="h-full w-full" />
-        )}
-      </div>
-
-      {segments.length === 0 ? (
-        <p className="px-5 py-6 text-sm text-black/50 dark:text-white/50">
-          Субтитры для этого видео ещё не загружены.
-        </p>
-      ) : (
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          {visibleSegments.map((seg, i) => {
-            const idx = from + i;
-            const isActive = idx === activeIndex;
-            return (
-              <div
-                key={seg.id}
-                ref={isActive ? activeSegRef : undefined}
-                onClick={() => handleSeek(seg.startMs)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleSeek(seg.startMs);
-                  }
-                }}
-                className={`mb-2 cursor-pointer rounded-lg px-3 py-2 transition-colors ${
-                  isActive
-                    ? "bg-caramel/10 text-lg font-medium"
-                    : "text-black/40 hover:bg-black/5 dark:text-white/40 dark:hover:bg-white/5"
-                }`}
-              >
-                {tokenizeSentence(seg.body).map((tok, ti) => {
-                  if (!tok.isWord) return <span key={ti}>{tok.text}</span>;
-                  const info = levels[tok.text.toLowerCase()];
-                  const levelColor = info ? WORD_LEVELS[info.level]?.color : undefined;
-                  return (
-                    <button
-                      key={ti}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleWordTap(tok.text, seg.body);
-                      }}
-                      style={{ backgroundColor: levelColor ? `${levelColor}33` : undefined }}
-                      className="touch-none select-none rounded px-0.5 [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
-                    >
-                      {tok.text}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
+        <div className="px-4 pt-2 text-center text-sm text-[var(--color-danger)]" role="alert">
+          {finishError}
         </div>
       )}
 
-      {popup && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-black/10 bg-card p-5 shadow-2xl dark:border-white/10">
-          <div className="mx-auto flex max-w-2xl flex-col gap-3">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-lg font-semibold">{popup.text}</p>
-                {popup.loading ? (
-                  <p className="text-black/50 dark:text-white/50">Переводим…</p>
-                ) : popup.paywall ? (
-                  <p className="text-black/60 dark:text-white/60">
-                    Бесплатный лимит слов на сегодня исчерпан.{" "}
-                    <Link href="/pricing?reason=words" className="text-caramel underline">
-                      Смотреть Premium
-                    </Link>
-                  </p>
-                ) : popup.error ? (
-                  <div className="mt-1 rounded-lg bg-red-50 p-3 dark:bg-red-950/40">
-                    <p className="text-sm text-red-600 dark:text-red-400">{popup.error}</p>
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        type="text"
-                        value={manualTranslation}
-                        onChange={(e) => setManualTranslation(e.target.value)}
-                        placeholder="Впиши перевод вручную"
-                        className="min-w-0 flex-1 rounded border border-black/15 px-2 py-1 text-sm dark:border-white/20"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleManualTranslation}
-                        disabled={!manualTranslation.trim()}
-                        className="shrink-0 text-sm font-medium text-caramel disabled:opacity-40"
-                      >
-                        + Добавить перевод
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-black/80 dark:text-white/80">{popup.wordTranslation}</p>
-                    {popup.level !== undefined && (
-                      <p className="mt-1 text-sm text-black/50 dark:text-white/50">
-                        {WORD_LEVELS[popup.level].label} · Видел {popup.seenCount}×
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setPopup(null)}
-                aria-label="Закрыть"
-                className="shrink-0 text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            {popup.vocabId && (
-              <div>
-                <p className="mb-1 text-xs font-medium text-black/50 dark:text-white/50">
-                  Уровень знания
-                </p>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {WORD_LEVELS.map((l) => (
-                    <button
-                      key={l.level}
-                      type="button"
-                      onClick={() => handleSetLevel(l.level as 0 | 1 | 2 | 3 | 4)}
-                      style={{
-                        backgroundColor: popup.level === l.level ? l.color : `${l.color}33`,
-                      }}
-                      className="flex min-h-11 items-center justify-center rounded-lg text-sm font-medium"
-                    >
-                      {l.level}
-                    </button>
-                  ))}
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-4 py-5 sm:px-6 sm:py-7 lg:flex-row lg:items-start">
+        <main className="flex min-w-0 flex-1 flex-col gap-4">
+          <div className="sticky top-[68px] z-[5] overflow-hidden rounded-2xl bg-black shadow-[0_18px_60px_rgba(80,60,35,0.12)]">
+            <div className="relative aspect-video w-full">
+              {playerError ? (
+                <div className="flex h-full items-center justify-center px-6 text-center">
+                  <p className="text-sm text-white/80">{playerError}</p>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div id="yt-player" className="absolute inset-0 h-full w-full" />
+              )}
+            </div>
+          </div>
+
+          {segments.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[var(--border-strong)] p-6 text-center text-sm text-[var(--text-secondary)]">
+              {processingStatus === "pending" || processingStatus === "processing"
+                ? "Субтитры ещё обрабатываются — попробуй обновить страницу через минуту."
+                : "Транскрипт для этого видео недоступен."}
+            </div>
+          ) : (
+            <div className="relative flex flex-col gap-1 rounded-3xl border border-black/[0.06] bg-white/60 px-3 py-4 dark:border-white/10 dark:bg-white/[0.035] sm:px-5">
+              {segments.map((seg, si) => {
+                const isActive = si === activeIndex;
+                return (
+                  <div
+                    key={seg.id}
+                    ref={isActive ? activeSegRef : undefined}
+                    className={`flex items-start gap-3 rounded-lg px-1 py-1.5 transition-colors ${
+                      isActive ? "bg-[var(--color-forest-tint)]" : ""
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleSeek(seg.startMs)}
+                      aria-label={`Перейти к ${formatTimestamp(seg.startMs)}`}
+                      className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md px-1.5 font-mono text-xs tabular-nums text-[var(--text-secondary)] hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                    >
+                      {formatTimestamp(seg.startMs)}
+                    </button>
+                    <p
+                      onClick={() => handleSeek(seg.startMs)}
+                      className={`min-w-0 flex-1 cursor-pointer py-1.5 leading-relaxed ${
+                        isActive ? "text-base font-medium" : "text-[15px] text-black/60 dark:text-white/60"
+                      }`}
+                    >
+                      {segmentTokens[si].map((tok, ti) => {
+                        if (!tok.isWord) return <span key={ti}>{tok.text}</span>;
+                        const info = levels[tok.text.toLowerCase()];
+                        const levelColor = info ? WORD_LEVELS[info.level]?.color : undefined;
+                        const selected = isTokenSelected(si, ti);
+                        return (
+                          <button
+                            key={ti}
+                            type="button"
+                            onPointerDown={(e) => {
+                              e.stopPropagation();
+                              onPointerDownWord(si, ti);
+                            }}
+                            onPointerEnter={() => onPointerEnterWord(si, ti)}
+                            onPointerUp={(e) => {
+                              e.stopPropagation();
+                              onPointerUpWord(si, ti, tok.text, seg.body, seg.startMs);
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onClickWord(tok.text, seg.body, seg.startMs);
+                            }}
+                            style={{
+                              backgroundColor: selected ? "#a67c5266" : levelColor ? `${levelColor}33` : undefined,
+                            }}
+                            className="focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                          >
+                            {tok.text}
+                          </button>
+                        );
+                      })}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </main>
+
+        {popup ? (
+          <aside className="hidden w-full shrink-0 lg:sticky lg:top-[68px] lg:flex lg:w-[340px] lg:flex-col">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+              <ReaderWordPanel
+                popup={popup}
+                manualTranslation={manualTranslation}
+                onManualTranslationChange={setManualTranslation}
+                onManualTranslationSubmit={handleManualTranslation}
+                onSpeak={handleSpeak}
+                onSetLevel={handleSetLevel}
+                onAddPhrase={handleAddPhrase}
+                onPracticeClick={handlePracticeClick}
+                onClose={() => setPopup(null)}
+              />
+            </div>
+          </aside>
+        ) : (
+          <aside className="hidden w-full shrink-0 lg:sticky lg:top-[68px] lg:flex lg:w-[340px] lg:flex-col">
+            <div className="rounded-2xl border border-dashed border-[var(--border-strong)] p-4 text-center text-sm text-[var(--text-secondary)]">
+              Нажми на слово в субтитрах, чтобы посмотреть перевод
+            </div>
+          </aside>
+        )}
+      </div>
+
+      {boundaryHint && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-20 z-20 flex justify-center px-5">
+          <div className="rounded-full bg-black/80 px-4 py-2 text-xs text-white dark:bg-white/90 dark:text-black">
+            Фразу можно выделить только в пределах одной строки субтитров
+          </div>
+        </div>
+      )}
+
+      {!followMode && activeSegment && (
+        <button
+          type="button"
+          onClick={resumeFollowing}
+          className="focus-ring fixed inset-x-0 bottom-24 z-20 mx-auto flex min-h-11 w-fit items-center gap-1.5 rounded-full bg-[var(--color-forest)] px-4 text-sm font-bold text-white shadow-lg lg:bottom-6"
+        >
+          ↓ Вернуться к текущей строке
+        </button>
+      )}
+
+      {/* Mobile bottom sheet — same ReaderWordPanel content, different chrome */}
+      {popup && (
+        <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl border-t border-black/10 bg-[var(--surface)] p-5 shadow-2xl dark:border-white/10 lg:hidden">
+          <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-[var(--border-strong)]" aria-hidden="true" />
+          <div className="mx-auto max-w-2xl">
+            <ReaderWordPanel
+              popup={popup}
+              manualTranslation={manualTranslation}
+              onManualTranslationChange={setManualTranslation}
+              onManualTranslationSubmit={handleManualTranslation}
+              onSpeak={handleSpeak}
+              onSetLevel={handleSetLevel}
+              onAddPhrase={handleAddPhrase}
+              onPracticeClick={handlePracticeClick}
+              onClose={() => setPopup(null)}
+            />
           </div>
         </div>
       )}
