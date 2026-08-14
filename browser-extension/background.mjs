@@ -4,6 +4,13 @@ const ALLOWED_APP_ORIGINS = new Set([
   "https://lexreader.vercel.app",
   "https://lexreader.app",
   "https://www.lexreader.app",
+  // M3 Slice 12 Gate #3 RC — this specific Preview deployment's unique
+  // per-deploy origin, added explicitly (not a *.vercel.app wildcard) for
+  // this RC's manual smoke test. Every new Preview deploy gets a different
+  // subdomain and needs its own explicit entry the same way — a real,
+  // known cost of exact-match allowlisting over a wildcard, accepted here
+  // because it never trusts an origin the extension author didn't verify.
+  "https://lexreader-focoqdkq7-meeeee4.vercel.app",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ]);

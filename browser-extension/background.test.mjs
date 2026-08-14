@@ -17,6 +17,7 @@ test("isAllowedSender accepts every allowed LexReader origin", () => {
     "https://lexreader.vercel.app/library/new",
     "https://lexreader.app/",
     "https://www.lexreader.app/library/new",
+    "https://lexreader-focoqdkq7-meeeee4.vercel.app/library/new",
     "http://localhost:3000/library/new",
     "http://127.0.0.1:3000/library/new",
   ]) {
