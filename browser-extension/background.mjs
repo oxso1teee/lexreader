@@ -15,6 +15,7 @@ export const ALLOWED_APP_ORIGINS = new Set([
   "https://www.lexreader.app",
   "https://lexreader-focoqdkq7-meeeee4.vercel.app",
   "https://lexreader-mnzvtftfs-meeeee4.vercel.app",
+  "https://lexreader-ctoczfjdx-meeeee4.vercel.app",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ]);
