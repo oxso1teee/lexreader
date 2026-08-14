@@ -95,17 +95,41 @@ function enforceTranscriptLimits(segments) {
 }
 
 /**
- * Builds the canonical TranscriptResult from an already-captured, real
- * YouTube timedtext response (json3 body text) plus the page metadata
- * captured alongside it. Throws on malformed/empty input rather than
- * silently producing a partial transcript -- callers must treat a thrown
- * error as extraction failure, never as "zero segments is fine."
+ * Assembles the canonical TranscriptResult from already-parsed segments
+ * (either from parseJson3Segments, a real network capture, or -- lifecycle
+ * bug #4 -- read directly out of YouTube's own rendered transcript-panel
+ * DOM when the network capture path misses or is too slow for a large
+ * body). Both acquisition paths converge here so validation/limits are
+ * enforced exactly once, in exactly one place. Throws on malformed/empty
+ * input rather than silently producing a partial transcript -- callers
+ * must treat a thrown error as extraction failure, never as "zero segments
+ * is fine."
  */
-export function buildTranscriptResult({ videoId, title, lengthSeconds, lang, kind, bodyText }) {
+export function assembleTranscriptResult({ videoId, title, lengthSeconds, languageCode, source, segments }) {
   if (!videoId || !/^[\w-]{6,20}$/.test(videoId)) {
     throw new Error("Не распознан ID видео.");
   }
 
+  enforceTranscriptLimits(segments);
+
+  const durationMs = Number.isFinite(Number(lengthSeconds)) ? Math.round(Number(lengthSeconds) * 1000) : undefined;
+
+  return {
+    videoId,
+    title: title ? String(title).trim().slice(0, 300) : `YouTube ${videoId}`,
+    languageCode: languageCode || "und",
+    durationMs,
+    source,
+    segments,
+  };
+}
+
+/**
+ * Builds the canonical TranscriptResult from an already-captured, real
+ * YouTube timedtext response (json3 body text) plus the page metadata
+ * captured alongside it.
+ */
+export function buildTranscriptResult({ videoId, title, lengthSeconds, lang, kind, bodyText }) {
   let payload;
   try {
     payload = JSON.parse(bodyText);
@@ -114,16 +138,13 @@ export function buildTranscriptResult({ videoId, title, lengthSeconds, lang, kin
   }
 
   const segments = parseJson3Segments(payload);
-  enforceTranscriptLimits(segments);
 
-  const durationMs = Number.isFinite(Number(lengthSeconds)) ? Math.round(Number(lengthSeconds) * 1000) : undefined;
-
-  return {
+  return assembleTranscriptResult({
     videoId,
-    title: title ? String(title).trim().slice(0, 300) : `YouTube ${videoId}`,
-    languageCode: lang || "und",
-    durationMs,
+    title,
+    lengthSeconds,
+    languageCode: lang,
     source: kind === "asr" ? "auto_caption" : "manual_caption",
     segments,
-  };
+  });
 }

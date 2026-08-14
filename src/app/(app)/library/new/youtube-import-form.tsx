@@ -11,7 +11,12 @@ import CollectionPicker, { type CollectionOption } from "./collection-picker";
 type BridgeStatus = "checking" | "ready" | "missing";
 
 const BRIDGE_SOURCE = "lexreader-youtube-bridge";
-const REQUEST_TIMEOUT_MS = 45_000;
+// Lifecycle bug (M3 Slice 12 RC #4): must stay above background.mjs's own
+// OVERALL_TIMEOUT_MS (50s) plus messaging overhead -- a real captured ASR
+// transcript body can exceed 1MB and take multiple seconds to fetch+read on
+// a real connection, so the whole extension-side budget was extended; the
+// client's own ceiling has to extend with it or it gives up first.
+const REQUEST_TIMEOUT_MS = 58_000;
 
 interface BridgeResponse {
   source: typeof BRIDGE_SOURCE;

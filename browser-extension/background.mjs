@@ -1,4 +1,4 @@
-import { extractVideoId, buildTranscriptResult } from "./youtube-transcript.mjs";
+import { extractVideoId, buildTranscriptResult, assembleTranscriptResult } from "./youtube-transcript.mjs";
 import { createRequestState } from "./request-state.mjs";
 
 // RC bridge-handshake bug (M3 Slice 12 RC): this set MUST stay identical to the
@@ -20,11 +20,19 @@ export const ALLOWED_APP_ORIGINS = new Set([
 ]);
 
 const TAB_READY_TIMEOUT_MS = 12_000;
-const EXTRACTION_TIMEOUT_MS = 18_000;
+// Lifecycle bug (M3 Slice 12 RC #4): extended from 18s. youtube-content-relay.js's
+// own panel-fallback wait alone is now 22s (a real captured ASR body can
+// exceed 1MB and take multiple seconds to fetch+read on a real user's
+// connection -- confirmed: 1.45MB body, 1.2s just to read it in a FAST test
+// environment), plus ~4s default-track wait plus click/render overhead --
+// this must comfortably exceed that whole local budget, not just wrap it
+// tightly.
+const EXTRACTION_TIMEOUT_MS = 32_000;
 // Must stay >= TAB_READY_TIMEOUT_MS + EXTRACTION_TIMEOUT_MS (worst case:
 // both sub-timeouts elapse sequentially) with headroom under the client's
-// own 45s REQUEST_TIMEOUT_MS (youtube-import-form.tsx) for messaging overhead.
-const OVERALL_TIMEOUT_MS = 38_000;
+// own REQUEST_TIMEOUT_MS (youtube-import-form.tsx, also extended alongside
+// this) for messaging overhead.
+const OVERALL_TIMEOUT_MS = 50_000;
 
 export function isAllowedSender(sender) {
   if (!sender?.url) return false;
@@ -171,8 +179,10 @@ export async function extractYoutubeTranscript(rawUrl, targetLanguage, requestId
       ok: !!response?.ok,
       error: response?.ok ? null : (response?.error ?? "extraction_failed"),
       internalReason: response?.internalReason ?? null,
+      acquisitionMethod: response?.ok ? (response?.domSegments ? "dom" : "network") : null,
       segmentSourceLang: response?.capture?.lang ?? null,
       segmentSourceKind: response?.capture?.kind ?? null,
+      domSegmentCount: response?.domSegments?.length ?? null,
     });
 
     if (!response?.ok) {
@@ -181,14 +191,30 @@ export async function extractYoutubeTranscript(rawUrl, targetLanguage, requestId
     }
 
     requestState.transition("captured");
-    const transcript = buildTranscriptResult({
-      videoId,
-      title: response.metadata?.title,
-      lengthSeconds: response.metadata?.lengthSeconds,
-      lang: response.capture.lang,
-      kind: response.capture.kind,
-      bodyText: response.capture.bodyText,
-    });
+    // Lifecycle bug (M3 Slice 12 RC #4): domSegments is content-relay's DOM
+    // extraction fallback -- already-parsed, already-ordered segments read
+    // directly out of YouTube's own rendered transcript panel, used when a
+    // real capture never landed via network interception (see
+    // youtube-content-relay.js's header comment for the two real, confirmed
+    // reasons that can happen). Both paths converge on
+    // assembleTranscriptResult so limits/shape are enforced identically.
+    const transcript = response.domSegments
+      ? assembleTranscriptResult({
+          videoId,
+          title: response.metadata?.title,
+          lengthSeconds: response.metadata?.lengthSeconds,
+          languageCode: targetLanguage,
+          source: "browser_bridge",
+          segments: response.domSegments,
+        })
+      : buildTranscriptResult({
+          videoId,
+          title: response.metadata?.title,
+          lengthSeconds: response.metadata?.lengthSeconds,
+          lang: response.capture.lang,
+          kind: response.capture.kind,
+          bodyText: response.capture.bodyText,
+        });
     log("parsed transcript", requestId, { videoId, segmentCount: transcript.segments.length });
 
     requestState.transition("resolved");
