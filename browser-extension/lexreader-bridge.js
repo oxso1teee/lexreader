@@ -1,9 +1,17 @@
 (() => {
   const SOURCE = "lexreader-youtube-bridge";
+  // RC bridge-handshake bug (M3 Slice 12 RC): this origin set MUST stay identical to
+  // ALLOWED_APP_ORIGINS in background.mjs. MV3 content scripts declared via
+  // manifest.json's content_scripts[].js cannot use a static `import` (only
+  // background.service_worker supports "type": "module"), so this can't be a shared
+  // module — it has to stay a manually-synced duplicate. allowed-origins.test.mjs
+  // parses both files' source and asserts the two sets are identical, specifically so
+  // an update to one without the other fails CI instead of silently reproducing this bug.
   const ALLOWED_ORIGINS = new Set([
     "https://lexreader.vercel.app",
     "https://lexreader.app",
     "https://www.lexreader.app",
+    "https://lexreader-focoqdkq7-meeeee4.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
   ]);

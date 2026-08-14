@@ -1,15 +1,17 @@
 import { extractVideoId, buildTranscriptResult } from "./youtube-transcript.mjs";
 
-const ALLOWED_APP_ORIGINS = new Set([
+// RC bridge-handshake bug (M3 Slice 12 RC): this set MUST stay identical to the
+// ALLOWED_ORIGINS duplicate inside lexreader-bridge.js (a content script, which can't
+// import this file — see the comment there for why). allowed-origins.test.mjs asserts
+// both sets match on every run. This specific Preview deployment's unique per-deploy
+// origin is added explicitly (not a *.vercel.app wildcard) for this RC's manual smoke
+// test; every new Preview deploy needs its own explicit entry the same way — a real,
+// known cost of exact-match allowlisting over a wildcard, accepted because it never
+// trusts an origin the extension author didn't verify.
+export const ALLOWED_APP_ORIGINS = new Set([
   "https://lexreader.vercel.app",
   "https://lexreader.app",
   "https://www.lexreader.app",
-  // M3 Slice 12 Gate #3 RC — this specific Preview deployment's unique
-  // per-deploy origin, added explicitly (not a *.vercel.app wildcard) for
-  // this RC's manual smoke test. Every new Preview deploy gets a different
-  // subdomain and needs its own explicit entry the same way — a real,
-  // known cost of exact-match allowlisting over a wildcard, accepted here
-  // because it never trusts an origin the extension author didn't verify.
   "https://lexreader-focoqdkq7-meeeee4.vercel.app",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
