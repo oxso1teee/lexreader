@@ -12,6 +12,7 @@
     "https://lexreader.app",
     "https://www.lexreader.app",
     "https://lexreader-focoqdkq7-meeeee4.vercel.app",
+    "https://lexreader-mnzvtftfs-meeeee4.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
   ]);
