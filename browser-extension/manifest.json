@@ -50,6 +50,7 @@
         "https://youtube.com/watch*"
       ],
       "js": [
+        "youtube-dom-extractor.js",
         "youtube-content-relay.js"
       ],
       "run_at": "document_start",

@@ -1,100 +1,22 @@
-// Lifecycle bug (M3 Slice 12 RC #3) -- Phase 10 regression tests, exactly
-// the 7 scenarios specified: a single logical request must reach exactly
-// one terminal result, and that result must never be overwritten by a
-// later/stale signal, whether the stale signal is a duplicate, an old
-// timer, or a result belonging to a different (older or newer) request.
-//
-// Two layers are exercised:
-// - createCaptureStore + waitForValue, composed exactly the way
-//   youtube-content-relay.js composes them (that file can't be imported
-//   directly -- see its own header comment for why), covering scenarios
-//   1, 2, 3, 5.
-// - background.mjs's real extractYoutubeTranscript against a mocked
-//   chrome.tabs API, covering scenarios 4 and 7 (cross-request isolation
-//   at the layer that actually owns tabs and sendResponse).
-// Scenario 6 (duplicate terminal callbacks for the same requestId) is
-// covered directly and exhaustively in request-state.test.mjs.
+// Real background.mjs integration against a mocked Chrome tabs API. These
+// tests exercise the production lifecycle owner directly: terminal result
+// isolation, same-target document reload recovery, one cold-page retry, and
+// sequential imports without an extension reload.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createCaptureStore } from "./capture-store.mjs";
-import { waitForValue } from "./wait-for-value.mjs";
 import { createRequestState } from "./request-state.mjs";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Mirrors youtube-content-relay.js's extractTranscript(): try a short
-// default-track wait, and only if that misses/mismatches, take a fallback
-// wait. First non-null result from either wait becomes the final answer;
-// nothing afterward can change it.
-async function simulateExtractTranscript(store, targetLanguage, { defaultWaitMs = 50, fallbackWaitMs = 100 } = {}) {
-  let capture = await waitForValue(() => store.find(targetLanguage), defaultWaitMs, 5);
-  if (!capture) {
-    capture = await waitForValue(() => store.find(targetLanguage), fallbackWaitMs, 5);
-  }
-  return capture ? { ok: true, capture } : { ok: false, error: "transcript_unavailable" };
-}
-
-test("Phase 10 scenario 1: a valid capture landing early is not overwritten by a late timeout on the same wait", async () => {
-  const store = createCaptureStore("videoA");
-  setTimeout(() => store.set({ videoId: "videoA", lang: "en", kind: null, bodyText: "real transcript" }), 20);
-
-  const result = await simulateExtractTranscript(store, "en", { defaultWaitMs: 200, fallbackWaitMs: 100 });
-
-  assert.equal(result.ok, true);
-  assert.equal(result.capture.bodyText, "real transcript");
-});
-
-test("Phase 10 scenario 2: a valid capture is preserved even if an empty/rejected timedtext arrives afterward", async () => {
-  const store = createCaptureStore("videoA");
-  store.set({ videoId: "videoA", lang: "en", kind: null, bodyText: "real transcript" });
-  // An empty body is rejected by the store itself -- this must never be able
-  // to clear or replace the already-valid entry.
-  const rejected = store.set({ videoId: "videoA", lang: "en", kind: null, bodyText: "" });
-
-  assert.equal(rejected, false);
-  const result = await simulateExtractTranscript(store, "en");
-  assert.equal(result.ok, true);
-  assert.equal(result.capture.bodyText, "real transcript");
-});
-
-test("Phase 10 scenario 3: once a request's local flow has produced its answer, a later transcript_unavailable-style signal for a DIFFERENT video cannot override it", async () => {
-  const store = createCaptureStore("videoA");
-  store.set({ videoId: "videoA", lang: "en", kind: null, bodyText: "real transcript for videoA" });
-
-  const result = await simulateExtractTranscript(store, "en");
-  assert.equal(result.ok, true);
-
-  // Simulate a late, unrelated-video "nothing captured" signal arriving --
-  // it must be rejected at the store boundary, never reach findCapture.
-  const stored = store.set({ videoId: "videoB", lang: "en", kind: null, bodyText: "unrelated video" });
-  assert.equal(stored, false);
-  assert.equal(store.find("en").bodyText, "real transcript for videoA");
-});
-
-test("Phase 10 scenario 5: two SUCCESS requests for different videos in sequence are fully isolated from each other", async () => {
-  const storeA = createCaptureStore("videoA");
-  const storeB = createCaptureStore("videoB");
-  storeA.set({ videoId: "videoA", lang: "en", kind: null, bodyText: "transcript A" });
-  storeB.set({ videoId: "videoB", lang: "en", kind: null, bodyText: "transcript B" });
-  // A wrong-video write attempted against either store (as if a single
-  // shared tab/content-script leaked state across the two requests) must be
-  // rejected by both.
-  assert.equal(storeA.set({ videoId: "videoB", lang: "en", kind: null, bodyText: "leak" }), false);
-  assert.equal(storeB.set({ videoId: "videoA", lang: "en", kind: null, bodyText: "leak" }), false);
-
-  const resultA = await simulateExtractTranscript(storeA, "en");
-  const resultB = await simulateExtractTranscript(storeB, "en");
-  assert.equal(resultA.capture.bodyText, "transcript A");
-  assert.equal(resultB.capture.bodyText, "transcript B");
-});
-
 test("Phase 10 scenario 6 (cross-reference): duplicate terminal signals for one request -- see request-state.test.mjs for the exhaustive state-machine coverage; spot-checked here too", () => {
   const state = createRequestState();
-  state.transition("waiting");
-  assert.equal(state.transition("resolved"), true);
-  assert.equal(state.transition("failed"), false, "a late failure must not be able to flip an already-resolved request");
+  state.transition("opening_video");
+  state.transition("opening_transcript");
+  state.transition("dom_collecting");
+  assert.equal(state.settleSuccess(), true);
+  assert.equal(state.settleFailure(), false, "a late failure must not be able to flip an already-resolved request");
   assert.equal(state.state, "resolved");
 });
 
@@ -113,12 +35,14 @@ let nextTabId = 1;
 let mockChromeMessageListeners = [];
 let mockTabs = [];
 let mockSendMessageHandlers = new Map(); // tabId -> (message) => Promise<response>
+let mockUpdateCalls = [];
 
 function installMockChrome() {
   nextTabId = 1;
   mockChromeMessageListeners = [];
   mockTabs = [];
   mockSendMessageHandlers = new Map();
+  mockUpdateCalls = [];
   globalThis.chrome = {
     tabs: {
       async create({ url }) {
@@ -128,14 +52,28 @@ function installMockChrome() {
         // simulate that by firing LEXREADER_PAGE_READY shortly after
         // creation, same as the real extension's youtube-content-relay.js.
         setTimeout(() => {
+          const videoId = new URL(tab.url).searchParams.get("v");
           for (const listener of mockChromeMessageListeners) {
-            listener({ type: "LEXREADER_PAGE_READY" }, { tab: { id: tab.id } });
+            listener({ type: "LEXREADER_PAGE_READY", videoId }, { tab: { id: tab.id } });
           }
         }, 5);
         return tab;
       },
       async query() {
         return mockTabs.slice();
+      },
+      async update(tabId, changes) {
+        const tab = mockTabs.find((candidate) => candidate.id === tabId);
+        if (!tab) throw new Error(`unknown mock tab ${tabId}`);
+        if (changes.url) tab.url = changes.url;
+        mockUpdateCalls.push({ tabId, changes });
+        setTimeout(() => {
+          const videoId = new URL(tab.url).searchParams.get("v");
+          for (const listener of mockChromeMessageListeners) {
+            listener({ type: "LEXREADER_PAGE_READY", videoId }, { tab: { id: tab.id } });
+          }
+        }, 5);
+        return tab;
       },
       async sendMessage(tabId, message) {
         const handler = mockSendMessageHandlers.get(tabId);
@@ -164,7 +102,11 @@ test("Phase 10 scenario 4: a FAILED request for one video does not poison a SUCC
   const { extractYoutubeTranscript } = await import("./background.mjs");
   const { createRequestState: freshState } = await import("./request-state.mjs");
 
-  mockSendMessageHandlers.set(1, async () => ({ ok: false, error: "transcript_unavailable", internalReason: "timedtext_not_observed" }));
+  const modesA = [];
+  mockSendMessageHandlers.set(1, async (message) => {
+    modesA.push(message.mode);
+    return { ok: false, error: "transcript_unavailable", internalReason: `${message.mode}_unavailable` };
+  });
   const resultA = await extractYoutubeTranscript(
     "https://www.youtube.com/watch?v=videoA",
     "en",
@@ -172,8 +114,18 @@ test("Phase 10 scenario 4: a FAILED request for one video does not poison a SUCC
     freshState(),
   );
   assert.equal(resultA.ok, false);
+  assert.deepEqual(modesA, ["dom", "network"]);
 
-  mockSendMessageHandlers.set(2, async () => ({ ok: true, capture: { lang: "en", kind: null, bodyText: JSON.stringify({ events: [{ tStartMs: 0, dDurationMs: 1000, segs: [{ utf8: "hello" }] }] }) }, metadata: { title: "Video B", lengthSeconds: "10" } }));
+  const modesB = [];
+  mockSendMessageHandlers.set(2, async (message) => {
+    modesB.push(message.mode);
+    return {
+      ok: true,
+      domSegments: [{ startMs: 0, endMs: 1_000, text: "hello" }],
+      metadata: { title: "Video B", lengthSeconds: "10" },
+      diagnostics: { acquisitionSource: "dom" },
+    };
+  });
   const resultB = await extractYoutubeTranscript(
     "https://www.youtube.com/watch?v=videoB",
     "en",
@@ -182,6 +134,7 @@ test("Phase 10 scenario 4: a FAILED request for one video does not poison a SUCC
   );
   assert.equal(resultB.ok, true);
   assert.equal(resultB.transcript.videoId, "videoB");
+  assert.deepEqual(modesB, ["dom"], "DOM success must prevent the network fallback from starting");
 });
 
 test("Phase 10 scenario 7: an old request's result arriving after a newer request has already started must not overwrite the newer request's state", async () => {
@@ -191,10 +144,10 @@ test("Phase 10 scenario 7: an old request's result arriving after a newer reques
 
   // Old request (tab 1, videoOld): its content-script response is slow.
   mockSendMessageHandlers.set(1, () => new Promise((resolve) => {
-    setTimeout(() => resolve({ ok: true, capture: { lang: "en", kind: null, bodyText: JSON.stringify({ events: [{ tStartMs: 0, dDurationMs: 1000, segs: [{ utf8: "stale old data" }] }] }) }, metadata: { title: "Old", lengthSeconds: "5" } }), 60);
+    setTimeout(() => resolve({ ok: true, domSegments: [{ startMs: 0, endMs: 1_000, text: "stale old data" }], metadata: { title: "Old", lengthSeconds: "5" }, diagnostics: { acquisitionSource: "dom" } }), 60);
   }));
   // New request (tab 2, videoNew): resolves fast.
-  mockSendMessageHandlers.set(2, async () => ({ ok: true, capture: { lang: "en", kind: null, bodyText: JSON.stringify({ events: [{ tStartMs: 0, dDurationMs: 1000, segs: [{ utf8: "fresh new data" }] }] }) }, metadata: { title: "New", lengthSeconds: "5" } }));
+  mockSendMessageHandlers.set(2, async () => ({ ok: true, domSegments: [{ startMs: 0, endMs: 1_000, text: "fresh new data" }], metadata: { title: "New", lengthSeconds: "5" }, diagnostics: { acquisitionSource: "dom" } }));
 
   const oldState = freshState();
   const newState = freshState();
@@ -211,4 +164,83 @@ test("Phase 10 scenario 7: an old request's result arriving after a newer reques
   assert.equal(oldResult.ok, true);
   assert.equal(oldResult.transcript.videoId, "videoOld", "the old request's own result still resolves to ITS OWN video -- each request is independently tab-scoped, so neither can ever be handed the other's data");
   assert.notEqual(oldResult.transcript.segments[0].text, "fresh new data");
+});
+
+test("same-target document reload resumes DOM collection in the original lifecycle", async () => {
+  installMockChrome();
+  const { extractYoutubeTranscript } = await import("./background.mjs");
+  const { createRequestState: freshState } = await import("./request-state.mjs");
+  const messages = [];
+  let domAttempts = 0;
+
+  mockSendMessageHandlers.set(1, async (message) => {
+    messages.push(message.type === "LEXREADER_PAGE_RELAY_PING" ? "ping" : message.mode);
+    if (message.type === "LEXREADER_PAGE_RELAY_PING") {
+      return { ok: true, videoId: "videoReloaded" };
+    }
+    domAttempts += 1;
+    if (domAttempts === 1) {
+      throw new Error("A listener indicated an asynchronous response but the message channel closed before a response was received");
+    }
+    return {
+      ok: true,
+      domSegments: [{ startMs: 0, endMs: 4_000, text: "survived reload" }],
+      metadata: { title: "Reloaded", lengthSeconds: "4" },
+      diagnostics: { acquisitionSource: "dom" },
+    };
+  });
+
+  const state = freshState();
+  const result = await extractYoutubeTranscript(
+    "https://www.youtube.com/watch?v=videoReloaded",
+    "en",
+    "req-reload",
+    state,
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.transcript.segments[0].text, "survived reload");
+  assert.deepEqual(messages, ["dom", "ping", "dom"]);
+  assert.equal(state.state, "cleaned");
+});
+
+test("a cold unhydrated YouTube document gets one exact-video DOM retry", async () => {
+  installMockChrome();
+  const { extractYoutubeTranscript } = await import("./background.mjs");
+  const { createRequestState: freshState } = await import("./request-state.mjs");
+  let domAttempts = 0;
+
+  mockSendMessageHandlers.set(1, async (message) => {
+    if (message.mode !== "dom") throw new Error(`unexpected mode ${message.mode}`);
+    domAttempts += 1;
+    if (domAttempts === 1) {
+      return {
+        ok: false,
+        error: "transcript_unavailable",
+        internalReason: "dom_panel_or_rows_unavailable",
+        diagnostics: { metadataAvailable: false, watchMetadataPresent: false },
+      };
+    }
+    return {
+      ok: true,
+      domSegments: [{ startMs: 0, endMs: 4_000, text: "hydrated after retry" }],
+      metadata: { title: "Hydrated", lengthSeconds: "4" },
+      diagnostics: { acquisitionSource: "dom" },
+    };
+  });
+
+  const state = freshState();
+  const result = await extractYoutubeTranscript(
+    "https://www.youtube.com/watch?v=coldVideo",
+    "en",
+    "req-cold",
+    state,
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(domAttempts, 2);
+  assert.equal(mockUpdateCalls.length, 1);
+  assert.match(mockUpdateCalls[0].changes.url, /v=coldVideo/);
+  assert.equal(result.transcript.segments[0].text, "hydrated after retry");
+  assert.equal(state.state, "cleaned");
 });

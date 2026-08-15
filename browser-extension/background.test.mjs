@@ -10,7 +10,7 @@ globalThis.chrome = {
   runtime: { onMessage: { addListener: () => {} } },
 };
 
-const { isAllowedSender, canonicalWatchUrl, withTimeout } = await import("./background.mjs");
+const { isAllowedSender, canonicalWatchUrl, withTimeout, EMERGENCY_TIMEOUT_MS } = await import("./background.mjs");
 
 test("isAllowedSender accepts every allowed LexReader origin", () => {
   for (const url of [
@@ -19,6 +19,7 @@ test("isAllowedSender accepts every allowed LexReader origin", () => {
     "https://www.lexreader.app/library/new",
     "https://lexreader-focoqdkq7-meeeee4.vercel.app/library/new",
     "https://lexreader-mnzvtftfs-meeeee4.vercel.app/library/new",
+    "https://lexreader-ctoczfjdx-meeeee4.vercel.app/library/new",
     "http://localhost:3000/library/new",
     "http://127.0.0.1:3000/library/new",
   ]) {
@@ -47,8 +48,19 @@ test("canonicalWatchUrl builds a youtube.com watch URL with the extraction marke
   // only ever on tabs we created ourselves.
   assert.equal(
     canonicalWatchUrl("abcDEF_123-"),
-    "https://www.youtube.com/watch?v=abcDEF_123-#lexreader-extraction",
+    "https://www.youtube.com/watch?v=abcDEF_123-&autoplay=0#lexreader-extraction",
   );
+});
+
+test("canonicalWatchUrl marks literal DOM-only runs so MAIN-world network capture stays disabled", () => {
+  assert.equal(
+    canonicalWatchUrl("PolmvqSxnbc", { domOnly: true }),
+    "https://www.youtube.com/watch?v=PolmvqSxnbc&autoplay=0#lexreader-extraction-dom-only",
+  );
+});
+
+test("the only global extraction ceiling is a large emergency timeout", () => {
+  assert.equal(EMERGENCY_TIMEOUT_MS, 90_000);
 });
 
 test("withTimeout resolves normally when the promise settles before the deadline", async () => {

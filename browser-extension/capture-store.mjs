@@ -1,9 +1,8 @@
 // RC extraction bug (M3 Slice 12 RC) — the capture cache/lookup algorithm
 // behind youtube-content-relay.js's `captures` Map + findCapture(). Kept as
-// a standalone, DOM/chrome-free module purely so the algorithm is
-// unit-testable (see wait-for-value.mjs for why this can't literally be
-// imported into the real content script). Mirror this exact algorithm there
-// if you change it here.
+// a standalone, DOM/chrome-free module so exact-video rejection remains
+// unit-testable. MV3 classic content scripts cannot import it directly, so
+// changes here must remain synchronized with the relay implementation.
 //
 // Lifecycle bug (M3 Slice 12 RC #3) — real-browser network evidence proved
 // YouTube's own autoplay/up-next machinery fires genuine

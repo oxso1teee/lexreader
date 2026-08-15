@@ -63,6 +63,10 @@
         requestId: message.requestId,
         url: message.url,
         targetLanguage: message.targetLanguage,
+        // Debug/proof-only switch. In this mode background opens a tab whose
+        // MAIN-world capture script does not patch fetch/XHR at all, and it
+        // never invokes the network fallback phase.
+        domOnly: message.domOnly === true,
       },
       (response) => {
         if (chrome.runtime.lastError) {
@@ -92,11 +96,32 @@
           requestId: message.requestId,
           ok: Boolean(response?.ok),
           transcript: response?.transcript,
+          diagnostics: response?.diagnostics,
           error: response?.error,
           message: response?.message,
         });
       },
     );
+  });
+
+  // Request-scoped extraction progress forwarded by background.mjs from the
+  // temporary YouTube tab. The terminal result still uses the single
+  // sendResponse callback above; progress can never settle or overwrite it.
+  chrome.runtime.onMessage.addListener((message) => {
+    if (
+      message?.type !== "LEXREADER_EXTRACTION_PROGRESS" ||
+      typeof message.requestId !== "string" ||
+      typeof message.stage !== "string"
+    ) {
+      return false;
+    }
+    postToPage({
+      type: "LEXREADER_YOUTUBE_EXTRACTION_PROGRESS",
+      requestId: message.requestId,
+      stage: message.stage,
+      details: message.details,
+    });
+    return false;
   });
 
   announceReady();

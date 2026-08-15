@@ -12,10 +12,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { extractVideoId, assembleTranscriptResult } from "./youtube-transcript.mjs";
-import { buildSegmentsFromDomRows } from "./dom-transcript.mjs";
+await import("./youtube-dom-extractor.js");
+const { createAccumulator } = globalThis.LexReaderYoutubeDomExtractor;
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function buildSegmentsFromDomRows(rows) {
+  const accumulator = createAccumulator();
+  accumulator.addRows(rows);
+  return accumulator.toSegments();
 }
 
 // --- Scenario 4: #lexreader-extraction must never leak into videoId parsing ---
@@ -121,6 +124,7 @@ let mockChromeMessageListeners = [];
 let mockTabs = [];
 let mockSendMessageHandlers = new Map();
 let mockRemoveCallOrder = [];
+let mockEventOrder = [];
 
 function installMockChrome() {
   nextTabId = 1;
@@ -128,14 +132,16 @@ function installMockChrome() {
   mockTabs = [];
   mockSendMessageHandlers = new Map();
   mockRemoveCallOrder = [];
+  mockEventOrder = [];
   globalThis.chrome = {
     tabs: {
       async create({ url }) {
         const tab = { id: nextTabId++, url };
         mockTabs.push(tab);
         setTimeout(() => {
+          const videoId = new URL(url).searchParams.get("v");
           for (const listener of mockChromeMessageListeners) {
-            listener({ type: "LEXREADER_PAGE_READY" }, { tab: { id: tab.id } });
+            listener({ type: "LEXREADER_PAGE_READY", videoId }, { tab: { id: tab.id } });
           }
         }, 5);
         return tab;
@@ -149,6 +155,7 @@ function installMockChrome() {
         return handler(message);
       },
       async remove(tabId) {
+        mockEventOrder.push("tab_removed");
         mockRemoveCallOrder.push(tabId);
         mockTabs = mockTabs.filter((t) => t.id !== tabId);
       },
@@ -166,19 +173,23 @@ function installMockChrome() {
   };
 }
 
-test("Phase 10 scenario 1: network capture missing, DOM fallback rows present -> extraction succeeds via background.mjs's real code path", async () => {
+test("DOM-primary integration: DOM rows present -> extraction succeeds without invoking network fallback", async () => {
   installMockChrome();
   const { extractYoutubeTranscript } = await import("./background.mjs");
   const { createRequestState } = await import("./request-state.mjs");
 
-  mockSendMessageHandlers.set(1, async () => ({
+  const modes = [];
+  mockSendMessageHandlers.set(1, async (message) => {
+    modes.push(message.mode);
+    return ({
     ok: true,
     domSegments: [
       { startMs: 190000, endMs: 197000, text: "real transcript line at 3:10" },
       { startMs: 197000, endMs: 201000, text: "real transcript line at 3:17" },
     ],
     metadata: { title: "Robinson Crusoe || Learn English through Stories", lengthSeconds: "6994" },
-  }));
+    });
+  });
 
   const result = await extractYoutubeTranscript(
     "https://www.youtube.com/watch?v=PolmvqSxnbc",
@@ -191,9 +202,10 @@ test("Phase 10 scenario 1: network capture missing, DOM fallback rows present ->
   assert.equal(result.transcript.source, "browser_bridge");
   assert.equal(result.transcript.segments.length, 2);
   assert.equal(result.transcript.segments[0].text, "real transcript line at 3:10");
+  assert.deepEqual(modes, ["dom"], "a valid DOM result must prevent network fallback from being called");
 });
 
-test("Phase 10 scenario 6: DOM-sourced success is fully assembled and the response is queued before the tab-removal call fires", async () => {
+test("DOM-primary integration: terminal payload is delivered before temporary-tab cleanup", async () => {
   installMockChrome();
   const { extractYoutubeTranscript } = await import("./background.mjs");
   const { createRequestState } = await import("./request-state.mjs");
@@ -209,6 +221,7 @@ test("Phase 10 scenario 6: DOM-sourced success is fully assembled and the respon
     "en",
     "req-dom-6",
     createRequestState(),
+    { deliver: () => { mockEventOrder.push("payload_delivered"); } },
   );
 
   // The function only returns AFTER transcript assembly succeeds (source
@@ -219,8 +232,8 @@ test("Phase 10 scenario 6: DOM-sourced success is fully assembled and the respon
   // of being torn down mid-read, since it was already copied into `result`.
   assert.equal(result.ok, true);
   assert.equal(result.transcript.segments[0].text, "row");
-  await sleep(20);
   assert.deepEqual(mockRemoveCallOrder, [1], "the created tab must still be removed exactly once, after the result was already assembled");
+  assert.deepEqual(mockEventOrder, ["payload_delivered", "tab_removed"]);
 });
 
 test("Phase 10 scenario 7: zero DOM rows AND no valid network capture -> transcript_unavailable is the only correct outcome", async () => {
@@ -228,11 +241,15 @@ test("Phase 10 scenario 7: zero DOM rows AND no valid network capture -> transcr
   const { extractYoutubeTranscript } = await import("./background.mjs");
   const { createRequestState } = await import("./request-state.mjs");
 
-  mockSendMessageHandlers.set(1, async () => ({
-    ok: false,
-    error: "transcript_unavailable",
-    internalReason: "timedtext_not_observed",
-  }));
+  const modes = [];
+  mockSendMessageHandlers.set(1, async (message) => {
+    modes.push(message.mode);
+    return {
+      ok: false,
+      error: "transcript_unavailable",
+      internalReason: message.mode === "dom" ? "dom_timestamped_rows_unavailable" : "network_capture_unavailable",
+    };
+  });
 
   const result = await extractYoutubeTranscript(
     "https://www.youtube.com/watch?v=PolmvqSxnbc",
@@ -243,4 +260,5 @@ test("Phase 10 scenario 7: zero DOM rows AND no valid network capture -> transcr
 
   assert.equal(result.ok, false);
   assert.equal(result.error, "transcript_unavailable");
+  assert.deepEqual(modes, ["dom", "network"]);
 });

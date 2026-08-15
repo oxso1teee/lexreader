@@ -1,14 +1,9 @@
 import { extractVideoId, buildTranscriptResult, assembleTranscriptResult } from "./youtube-transcript.mjs";
 import { createRequestState } from "./request-state.mjs";
 
-// RC bridge-handshake bug (M3 Slice 12 RC): this set MUST stay identical to the
-// ALLOWED_ORIGINS duplicate inside lexreader-bridge.js (a content script, which can't
-// import this file — see the comment there for why). allowed-origins.test.mjs asserts
-// both sets match on every run. This specific Preview deployment's unique per-deploy
-// origin is added explicitly (not a *.vercel.app wildcard) for this RC's manual smoke
-// test; every new Preview deploy needs its own explicit entry the same way — a real,
-// known cost of exact-match allowlisting over a wildcard, accepted because it never
-// trusts an origin the extension author didn't verify.
+// Exact-match allowlist. allowed-origins.test.mjs keeps this synchronized
+// with lexreader-bridge.js and manifest.json; broad *.vercel.app trust is
+// intentionally forbidden.
 export const ALLOWED_APP_ORIGINS = new Set([
   "https://lexreader.vercel.app",
   "https://lexreader.app",
@@ -20,20 +15,10 @@ export const ALLOWED_APP_ORIGINS = new Set([
   "http://127.0.0.1:3000",
 ]);
 
-const TAB_READY_TIMEOUT_MS = 12_000;
-// Lifecycle bug (M3 Slice 12 RC #4): extended from 18s. youtube-content-relay.js's
-// own panel-fallback wait alone is now 22s (a real captured ASR body can
-// exceed 1MB and take multiple seconds to fetch+read on a real user's
-// connection -- confirmed: 1.45MB body, 1.2s just to read it in a FAST test
-// environment), plus ~4s default-track wait plus click/render overhead --
-// this must comfortably exceed that whole local budget, not just wrap it
-// tightly.
-const EXTRACTION_TIMEOUT_MS = 32_000;
-// Must stay >= TAB_READY_TIMEOUT_MS + EXTRACTION_TIMEOUT_MS (worst case:
-// both sub-timeouts elapse sequentially) with headroom under the client's
-// own REQUEST_TIMEOUT_MS (youtube-import-form.tsx, also extended alongside
-// this) for messaging overhead.
-const OVERALL_TIMEOUT_MS = 50_000;
+const TAB_READY_TIMEOUT_MS = 15_000;
+// This is the one global safety ceiling. Normal DOM collection is governed
+// by scroll/row progress and stable exhaustion, never by a 10-20 second race.
+export const EMERGENCY_TIMEOUT_MS = 90_000;
 
 export function isAllowedSender(sender) {
   if (!sender?.url) return false;
@@ -44,18 +29,9 @@ export function isAllowedSender(sender) {
   }
 }
 
-// RC extraction bug (M3 Slice 12 RC): a video short enough that YouTube's own
-// autoplay-next can fire before/during our extraction window (confirmed real,
-// non-Playwright evidence: the exact recommended smoke-test video, 19s,
-// auto-advanced to a different video within ~10-20s of load) silently swaps
-// the tab's video context out from under us mid-extraction. The
-// #lexreader-extraction marker is read by youtube-page-capture.js
-// (document_start, MAIN world) to know this specific tab was created by us
-// for extraction only -- never for a tab the user already had open and may
-// be actually watching -- and to hold the video paused for the extraction
-// window so it can never run to completion and autoplay away.
-export function canonicalWatchUrl(videoId) {
-  return `https://www.youtube.com/watch?v=${videoId}#lexreader-extraction`;
+export function canonicalWatchUrl(videoId, { domOnly = false } = {}) {
+  const marker = domOnly ? "lexreader-extraction-dom-only" : "lexreader-extraction";
+  return `https://www.youtube.com/watch?v=${videoId}&autoplay=0#${marker}`;
 }
 
 export function withTimeout(promise, ms, onTimeoutError) {
@@ -74,39 +50,19 @@ export function withTimeout(promise, ms, onTimeoutError) {
   });
 }
 
-// Lifecycle bug (M3 Slice 12 RC #3): tabs we ourselves created for
-// extraction are tracked here permanently (for the lifetime of this service
-// worker instance) and are NEVER treated as a reusable "existing tab" for a
-// later request, even if our own cleanup (chrome.tabs.remove in the
-// `finally` below) somehow failed to run -- e.g. the service worker was
-// torn down mid-extraction, a real MV3 risk since a bare setTimeout does
-// not keep a service worker alive. Without this, a leaked extraction tab
-// that YouTube's own autoplay-next has since navigated to some other video
-// could be silently "reused" by a completely unrelated later request for
-// that other video, handed to a stale content-script instance whose
-// captures are scoped (see youtube-content-relay.js) to the ORIGINAL video
-// the tab was created for -- silently breaking that later request.
-const extractionTabIds = new Set();
-
-async function findExistingTab(videoId) {
-  const tabs = await chrome.tabs.query({ url: ["https://www.youtube.com/watch*", "https://youtube.com/watch*"] });
-  return tabs.find((tab) => tab.url && extractVideoId(tab.url) === videoId && !extractionTabIds.has(tab.id)) ?? null;
+function log(event, requestId, extra = {}) {
+  console.debug(`[LexReader:diag] ${event}`, { requestId, ...extra });
 }
 
-/**
- * Waits for this specific tab's content script to announce itself ready.
- * Returns a promise with an attached `.cleanup()` so the caller can always
- * remove the onMessage listener, even on the timeout path -- lifecycle bug
- * (M3 Slice 12 RC #3): the old version only ever removed the listener
- * inside the success callback, so every tab-ready timeout leaked one
- * permanently-registered chrome.runtime.onMessage listener for the rest of
- * this service worker's lifetime.
- */
-function waitForTabReady(tabId) {
+function waitForTabReady(tabId, videoId) {
   let listener;
   const promise = new Promise((resolve) => {
     listener = (message, sender) => {
-      if (sender.tab?.id === tabId && message?.type === "LEXREADER_PAGE_READY") {
+      if (
+        sender.tab?.id === tabId &&
+        message?.type === "LEXREADER_PAGE_READY" &&
+        message.videoId === videoId
+      ) {
         resolve();
       }
     };
@@ -116,145 +72,312 @@ function waitForTabReady(tabId) {
   return promise;
 }
 
-async function extractFromTab(tabId, targetLanguage, requestId) {
-  return await chrome.tabs.sendMessage(tabId, { type: "LEXREADER_EXTRACT_FROM_PAGE", targetLanguage, requestId });
+async function sendAcquisitionCommand(tabId, { requestId, videoId, targetLanguage, mode }) {
+  return await chrome.tabs.sendMessage(tabId, {
+    type: "LEXREADER_EXTRACT_FROM_PAGE",
+    requestId,
+    videoId,
+    targetLanguage,
+    mode,
+  });
 }
 
-function log(event, requestId, extra) {
-  console.debug(`[LexReader:diag] ${event}`, { requestId, ...extra });
+function isClosedMessageChannel(error) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /message channel closed|receiving end does not exist|could not establish connection/i.test(message);
+}
+
+function shortDelay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForExactRelay(tabId, videoId, requestState, timeoutMs = 12_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline && !requestState.isTerminal) {
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, { type: "LEXREADER_PAGE_RELAY_PING" });
+      if (response?.ok && response.videoId === videoId) return true;
+    } catch {
+      // A replacement document may exist before its isolated content script
+      // has loaded. Retry only within this bounded reload-recovery window.
+    }
+    await shortDelay(200);
+  }
+  return false;
+}
+
+async function sendDomCommandWithReloadRecovery(
+  tabId,
+  command,
+  requestState,
+  onReload,
+) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await sendAcquisitionCommand(tabId, command);
+    } catch (error) {
+      if (!isClosedMessageChannel(error) || attempt === 2 || requestState.isTerminal) throw error;
+      await onReload(attempt + 1);
+      const ready = await waitForExactRelay(tabId, command.videoId, requestState);
+      if (!ready) throw error;
+    }
+  }
+  throw new Error("youtube_relay_unavailable");
+}
+
+async function cancelAcquisition(tabId, requestId) {
+  if (tabId == null) return;
+  await chrome.tabs.sendMessage(tabId, { type: "LEXREADER_CANCEL_EXTRACTION", requestId }).catch(() => {});
+}
+
+function shouldRetryColdDomPage(response) {
+  return (
+    response?.internalReason === "dom_panel_or_rows_unavailable" &&
+    response?.diagnostics?.metadataAvailable === false &&
+    response?.diagnostics?.watchMetadataPresent === false
+  );
+}
+
+function safeFailure(error = "extraction_failed", message = "Не удалось получить субтитры этого видео.", diagnostics) {
+  return { ok: false, error, message, ...(diagnostics ? { diagnostics } : {}) };
+}
+
+function mapInternalError(error) {
+  const code = error instanceof Error ? error.message : "extraction_failed";
+  if (code === "youtube_tab_timeout") return "youtube_page_not_open";
+  if (code === "emergency_timeout") return "extraction_failed";
+  return new Set(["youtube_page_not_open", "extraction_failed", "transcript_unavailable"]).has(code)
+    ? code
+    : "extraction_failed";
+}
+
+function assembleDomTranscript(videoId, targetLanguage, response) {
+  return assembleTranscriptResult({
+    videoId,
+    title: response.metadata?.title,
+    lengthSeconds: response.metadata?.lengthSeconds,
+    languageCode: targetLanguage,
+    source: "browser_bridge",
+    segments: response.domSegments,
+  });
+}
+
+function assembleNetworkTranscript(videoId, response) {
+  return buildTranscriptResult({
+    videoId,
+    title: response.metadata?.title,
+    lengthSeconds: response.metadata?.lengthSeconds,
+    lang: response.capture.lang,
+    kind: response.capture.kind,
+    bodyText: response.capture.bodyText,
+  });
+}
+
+// requestId -> { youtubeTabId, originTabId, videoId }. Progress from a
+// YouTube tab is forwarded only when every identifier matches this exact
+// active request. A late observer from request A therefore cannot update the
+// progress UI for request B, even if a tab id were ever reused by Chrome.
+const requestContexts = new Map();
+
+async function forwardProgress(originTabId, requestId, stage, details = {}) {
+  if (originTabId == null) return;
+  await chrome.tabs.sendMessage(originTabId, {
+    type: "LEXREADER_EXTRACTION_PROGRESS",
+    requestId,
+    stage,
+    details,
+  }).catch(() => {});
 }
 
 /**
- * Real extraction: finds or opens a real youtube.com tab (so the page's own
- * JS can generate a valid pot-authenticated caption request -- see
- * youtube-page-capture.js for why this can't be done with a bare fetch),
- * asks its content script to observe/trigger a real transcript capture,
- * and normalizes the result. Never invents data on failure.
+ * Owns the complete lifecycle for one logical import and delivers exactly one
+ * terminal payload. `deliver` runs before temporary-tab removal; Chrome has
+ * copied the response toward the LexReader content script before cleanup can
+ * tear down the YouTube page.
  */
-// Exported for lifecycle regression testing (Phase 10, M3 Slice 12 RC #3) --
-// drives the real extraction flow end-to-end against a mocked chrome.tabs
-// API so "first valid result wins" can be verified against the actual
-// production code path, not just the abstract state machine in isolation.
-export async function extractYoutubeTranscript(rawUrl, targetLanguage, requestId, requestState) {
-  requestState.transition("waiting");
+export async function extractYoutubeTranscript(
+  rawUrl,
+  targetLanguage,
+  requestId,
+  requestState,
+  {
+    domOnly = false,
+    originTabId = null,
+    deliver = () => {},
+    emergencyTimeoutMs = EMERGENCY_TIMEOUT_MS,
+  } = {},
+) {
   const videoId = extractVideoId(rawUrl);
-  if (!videoId) {
-    requestState.transition("failed");
-    requestState.transition("cleaned");
-    return { ok: false, error: "unsupported_video", message: "Не распознана ссылка на YouTube-видео." };
+  let tabId = null;
+  let terminalResult = null;
+  let emergencyReject;
+  const emergency = new Promise((_, reject) => {
+    emergencyReject = reject;
+  });
+
+  async function progress(stage, details = {}) {
+    log("progress", requestId, { videoId, stage, ...details });
+    await forwardProgress(originTabId, requestId, stage, details);
   }
-  log("extraction started", requestId, { videoId, targetLanguage });
 
-  const existingTab = await findExistingTab(videoId);
-  let tabId = existingTab?.id ?? null;
-  let createdTab = false;
-  log("tab resolution", requestId, { videoId, tabId, reusedExisting: !!existingTab });
-
-  try {
-    if (tabId == null) {
-      const tab = await chrome.tabs.create({ url: canonicalWatchUrl(videoId), active: true });
-      tabId = tab.id;
-      createdTab = true;
-      extractionTabIds.add(tabId);
-      log("tab created", requestId, { videoId, tabId });
-      const readyPromise = waitForTabReady(tabId);
-      try {
-        await withTimeout(readyPromise, TAB_READY_TIMEOUT_MS, new Error("youtube_tab_timeout"));
-        log("tab ready reached", requestId, { videoId, tabId, ready: true });
-      } catch (readyError) {
-        log("tab ready reached", requestId, { videoId, tabId, ready: false });
-        throw readyError;
-      } finally {
-        readyPromise.cleanup();
-      }
+  async function extractionFlow() {
+    if (!videoId) {
+      requestState.settleFailure();
+      return safeFailure("unsupported_video", "Не распознана ссылка на YouTube-видео.");
     }
 
-    const response = await withTimeout(
-      extractFromTab(tabId, targetLanguage, requestId),
-      EXTRACTION_TIMEOUT_MS,
-      new Error("extraction_failed"),
+    requestState.transition("opening_video");
+    await progress("opening_video");
+    const tab = await chrome.tabs.create({ url: canonicalWatchUrl(videoId, { domOnly }), active: true });
+    tabId = tab.id;
+    requestContexts.set(requestId, { youtubeTabId: tabId, originTabId, videoId });
+    log("temporary tab created", requestId, { videoId, tabId, domOnly });
+
+    const readyPromise = waitForTabReady(tabId, videoId);
+    try {
+      await withTimeout(readyPromise, TAB_READY_TIMEOUT_MS, new Error("youtube_tab_timeout"));
+    } finally {
+      readyPromise.cleanup();
+    }
+
+    requestState.transition("opening_transcript");
+    await progress("opening_transcript");
+    requestState.transition("dom_collecting");
+    const domCommand = { requestId, videoId, targetLanguage, mode: "dom" };
+    let domResponse = await sendDomCommandWithReloadRecovery(
+      tabId,
+      domCommand,
+      requestState,
+      async (reloadAttempt) => {
+        log("same-video relay reload detected", requestId, { videoId, tabId, reloadAttempt });
+        await progress("opening_transcript", { reloadAttempt });
+      },
     );
-    log("extraction response", requestId, {
+
+    if (shouldRetryColdDomPage(domResponse)) {
+      requestState.transition("dom_retrying");
+      await progress("opening_video", { coldPageRetry: 1 });
+      const retryReady = waitForTabReady(tabId, videoId);
+      try {
+        await chrome.tabs.update(tabId, { url: canonicalWatchUrl(videoId, { domOnly }), active: true });
+        await withTimeout(retryReady, TAB_READY_TIMEOUT_MS, new Error("youtube_tab_timeout"));
+      } finally {
+        retryReady.cleanup();
+      }
+      requestState.transition("opening_transcript");
+      await progress("opening_transcript", { coldPageRetry: 1 });
+      requestState.transition("dom_collecting");
+      domResponse = await sendDomCommandWithReloadRecovery(
+        tabId,
+        domCommand,
+        requestState,
+        async (reloadAttempt) => {
+          log("same-video relay reload detected after cold-page retry", requestId, {
+            videoId,
+            tabId,
+            reloadAttempt,
+          });
+          await progress("opening_transcript", { coldPageRetry: 1, reloadAttempt });
+        },
+      );
+    }
+    log("DOM acquisition returned", requestId, {
       videoId,
       tabId,
-      ok: !!response?.ok,
-      error: response?.ok ? null : (response?.error ?? "extraction_failed"),
-      internalReason: response?.internalReason ?? null,
-      acquisitionMethod: response?.ok ? (response?.domSegments ? "dom" : "network") : null,
-      segmentSourceLang: response?.capture?.lang ?? null,
-      segmentSourceKind: response?.capture?.kind ?? null,
-      domSegmentCount: response?.domSegments?.length ?? null,
+      ok: Boolean(domResponse?.ok),
+      reason: domResponse?.internalReason ?? null,
+      diagnostics: domResponse?.diagnostics ?? null,
     });
 
-    if (!response?.ok) {
-      requestState.transition("failed");
-      return { ok: false, error: response?.error ?? "extraction_failed", message: "Не удалось получить субтитры этого видео." };
+    if (domResponse?.ok) {
+      const transcript = assembleDomTranscript(videoId, targetLanguage, domResponse);
+      if (!requestState.settleSuccess()) throw new Error("stale_dom_success");
+      await progress("ready", { acquisitionSource: "dom", uniqueSegments: transcript.segments.length });
+      return { ok: true, transcript, diagnostics: domResponse.diagnostics };
     }
 
-    requestState.transition("captured");
-    // Lifecycle bug (M3 Slice 12 RC #4): domSegments is content-relay's DOM
-    // extraction fallback -- already-parsed, already-ordered segments read
-    // directly out of YouTube's own rendered transcript panel, used when a
-    // real capture never landed via network interception (see
-    // youtube-content-relay.js's header comment for the two real, confirmed
-    // reasons that can happen). Both paths converge on
-    // assembleTranscriptResult so limits/shape are enforced identically.
-    const transcript = response.domSegments
-      ? assembleTranscriptResult({
-          videoId,
-          title: response.metadata?.title,
-          lengthSeconds: response.metadata?.lengthSeconds,
-          languageCode: targetLanguage,
-          source: "browser_bridge",
-          segments: response.domSegments,
-        })
-      : buildTranscriptResult({
-          videoId,
-          title: response.metadata?.title,
-          lengthSeconds: response.metadata?.lengthSeconds,
-          lang: response.capture.lang,
-          kind: response.capture.kind,
-          bodyText: response.capture.bodyText,
-        });
-    log("parsed transcript", requestId, { videoId, segmentCount: transcript.segments.length });
-
-    requestState.transition("resolved");
-    return { ok: true, transcript };
-  } catch (error) {
-    // Never surface raw internal error text to the caller (§8/§11) -- map
-    // to one of a small set of known, safe error codes. youtube_tab_timeout
-    // is an internal-only distinction (RC extraction bug, Phase 8) folded
-    // into youtube_page_not_open at the boundary -- the UI copy is the same
-    // either way, but the two are logged distinctly above.
-    const code = error instanceof Error ? error.message : "extraction_failed";
-    const externalCode = code === "youtube_tab_timeout" ? "youtube_page_not_open" : code;
-    const knownCodes = new Set(["youtube_page_not_open", "extraction_failed", "transcript_unavailable"]);
-    const finalCode = knownCodes.has(externalCode) ? externalCode : "extraction_failed";
-    log("extraction failed", requestId, { videoId, tabId, internalCode: code, finalCode });
-    requestState.transition("failed");
-    return {
-      ok: false,
-      error: finalCode,
-      message: "Не удалось получить субтитры этого видео.",
-    };
-  } finally {
-    // Lifecycle bug (M3 Slice 12 RC #3), Phase 4: capture is already copied
-    // into `transcript`/the response object above BEFORE this runs, so tab
-    // teardown can never race a still-in-flight read of the captured data --
-    // only the tab itself (no longer needed either way) is torn down here.
-    if (createdTab && tabId != null) {
-      chrome.tabs.remove(tabId).catch(() => {});
+    requestState.transition("dom_failed");
+    if (domOnly) {
+      requestState.settleFailure();
+      return safeFailure(
+        "transcript_unavailable",
+        "DOM-only extraction could not obtain a complete transcript.",
+        domResponse?.diagnostics,
+      );
     }
-    requestState.transition("cleaned");
-    log("request cleaned", requestId, { videoId, tabId });
+
+    requestState.transition("network_fallback");
+    await progress("network_fallback", { domReason: domResponse?.internalReason ?? "unknown" });
+    const networkResponse = await sendAcquisitionCommand(tabId, {
+      requestId,
+      videoId,
+      targetLanguage,
+      mode: "network",
+    });
+    log("network fallback returned", requestId, {
+      videoId,
+      tabId,
+      ok: Boolean(networkResponse?.ok),
+      reason: networkResponse?.internalReason ?? null,
+    });
+
+    if (networkResponse?.ok) {
+      const transcript = assembleNetworkTranscript(videoId, networkResponse);
+      if (!requestState.settleSuccess()) throw new Error("stale_network_success");
+      await progress("ready", { acquisitionSource: "network", uniqueSegments: transcript.segments.length });
+      return { ok: true, transcript, diagnostics: networkResponse.diagnostics };
+    }
+
+    requestState.settleFailure();
+    return safeFailure("transcript_unavailable", "У этого видео нет доступных субтитров.", domResponse?.diagnostics);
   }
+
+  requestState.startEmergencyTimer(emergencyTimeoutMs, () => {
+    log("emergency ceiling reached", requestId, { videoId, tabId, emergencyTimeoutMs });
+    void cancelAcquisition(tabId, requestId);
+    emergencyReject(new Error("emergency_timeout"));
+  });
+
+  try {
+    terminalResult = await Promise.race([extractionFlow(), emergency]);
+  } catch (error) {
+    const finalCode = mapInternalError(error);
+    requestState.settleFailure();
+    terminalResult = safeFailure(
+      finalCode,
+      finalCode === "extraction_failed"
+        ? "Извлечение субтитров заняло слишком много времени."
+        : "Не удалось получить субтитры этого видео.",
+    );
+    log("extraction failed", requestId, {
+      videoId,
+      tabId,
+      internalCode: error instanceof Error ? error.message : "unknown",
+      finalCode,
+    });
+  }
+
+  try {
+    // Mandatory ordering: assembled terminal payload -> delivery toward
+    // LexReader -> only then close the temporary YouTube tab.
+    await deliver(terminalResult);
+    log("terminal payload delivered toward LexReader", requestId, {
+      videoId,
+      tabId,
+      ok: terminalResult.ok,
+      acquisitionSource: terminalResult.diagnostics?.acquisitionSource ?? null,
+    });
+  } finally {
+    requestState.cancelEmergency();
+    if (tabId != null) await chrome.tabs.remove(tabId).catch(() => {});
+    requestContexts.delete(requestId);
+    requestState.transition("cleaned");
+    log("request cleaned", requestId, { videoId, tabId, finalState: requestState.state });
+  }
+
+  return terminalResult;
 }
 
-// Lifecycle bug (M3 Slice 12 RC #3): one entry per in-flight/recently-settled
-// request, purely to make "first valid result wins" an explicit, logged
-// guarantee at this layer too (chrome.runtime's own sendResponse already
-// only honors the first call per message natively -- this is the same
-// invariant, made visible and testable rather than only incidentally true).
 const requestStates = new Map();
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -263,39 +386,38 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
-  if (
-    message?.type !== "LEXREADER_YOUTUBE_TRANSCRIPT_REQUEST" ||
-    !isAllowedSender(sender)
-  ) {
+  if (message?.type === "LEXREADER_EXTRACTION_PROGRESS") {
+    const context = requestContexts.get(message.requestId);
+    if (
+      !context ||
+      sender.tab?.id !== context.youtubeTabId ||
+      message.videoId !== context.videoId
+    ) return false;
+    void forwardProgress(context.originTabId, message.requestId, message.stage, message.details);
+    return false;
+  }
+
+  if (message?.type !== "LEXREADER_YOUTUBE_TRANSCRIPT_REQUEST" || !isAllowedSender(sender)) {
     return false;
   }
 
   const requestId = typeof message.requestId === "string" ? message.requestId : `unlabeled-${Date.now()}`;
+  if (requestStates.has(requestId)) {
+    sendResponse(safeFailure("extraction_failed", "Этот запрос уже выполняется."));
+    return false;
+  }
+
   const requestState = createRequestState();
   requestStates.set(requestId, requestState);
-  log("request received", requestId, {});
+  log("request received", requestId, { originTabId: sender.tab?.id ?? null, domOnly: message.domOnly === true });
 
-  const timeoutFallback = { ok: false, error: "extraction_failed", message: "Извлечение субтитров заняло слишком много времени." };
-  withTimeout(extractYoutubeTranscript(message.url, message.targetLanguage, requestId, requestState), OVERALL_TIMEOUT_MS, timeoutFallback)
-    .then((result) => {
-      sendResponse(result);
-    })
-    .catch((reason) => {
-      // The inner extraction promise never actually rejects on its own
-      // paths (extractYoutubeTranscript always returns, never throws past
-      // its own try/catch) -- this catch only fires for OVERALL_TIMEOUT_MS's
-      // own timeout, which the inner call's `requestState` never sees, so
-      // mark it failed here explicitly (a no-op if the inner call already
-      // reached a terminal state first -- first valid result still wins).
-      requestState.transition("waiting");
-      requestState.transition("failed");
-      requestState.transition("cleaned");
-      log("overall timeout", requestId, {});
-      sendResponse(reason?.ok === false ? reason : timeoutFallback);
-    })
-    .finally(() => {
-      requestStates.delete(requestId);
-    });
+  extractYoutubeTranscript(message.url, message.targetLanguage, requestId, requestState, {
+    domOnly: message.domOnly === true,
+    originTabId: sender.tab?.id ?? null,
+    deliver: (result) => sendResponse(result),
+  }).finally(() => {
+    requestStates.delete(requestId);
+  });
 
   return true;
 });

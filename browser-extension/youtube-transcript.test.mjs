@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { extractVideoId, parseJson3Segments, buildTranscriptResult } from "./youtube-transcript.mjs";
+import {
+  extractVideoId,
+  parseJson3Segments,
+  buildTranscriptResult,
+  normalizeCanonicalSegments,
+} from "./youtube-transcript.mjs";
 
 test("extractVideoId supports normal, short and Shorts URLs", () => {
   assert.equal(extractVideoId("https://www.youtube.com/watch?v=abcDEF_123-"), "abcDEF_123-");
@@ -64,8 +69,31 @@ test("buildTranscriptResult produces the canonical shape from a real-shaped capt
   assert.equal(result.source, "manual_caption");
   assert.deepEqual(result.segments, [
     { startMs: 1_200, endMs: 3_360, text: "All right, so here we are" },
-    { startMs: 3_360, endMs: 4_860, text: "in front of the elephants" },
+    { startMs: 3_360, endMs: 7_360, text: "in front of the elephants" },
   ]);
+});
+
+test("normalizeCanonicalSegments is shared final normalization: order, dedupe, clean, and derive end times", () => {
+  assert.deepEqual(
+    normalizeCanonicalSegments([
+      { startMs: 5_000, endMs: 99_000, text: " second  line " },
+      { startMs: 1_000, endMs: 2_000, text: "first &amp; line" },
+      { startMs: 1_000, endMs: 3_000, text: "first &amp; line" },
+      { startMs: -1, endMs: 2_000, text: "invalid" },
+    ]),
+    [
+      { startMs: 1_000, endMs: 5_000, text: "first & line" },
+      { startMs: 5_000, endMs: 9_000, text: "second line" },
+    ],
+  );
+});
+
+test("normalizeCanonicalSegments does not stretch an obviously incomplete final row to video duration", () => {
+  const [segment] = normalizeCanonicalSegments(
+    [{ startMs: 180_000, endMs: 181_000, text: "minute three" }],
+    116 * 60_000,
+  );
+  assert.equal(segment.endMs, 184_000);
 });
 
 test("buildTranscriptResult tags auto-generated captions (kind=asr) as auto_caption", () => {

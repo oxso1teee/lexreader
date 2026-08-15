@@ -47,6 +47,58 @@ function cleanSegmentText(value) {
   return decodeEntities(String(value ?? "")).replace(/\s+/g, " ").trim();
 }
 
+function finalSegmentToleranceMs(durationMs) {
+  if (!Number.isFinite(durationMs) || durationMs <= 0) return null;
+  if (durationMs <= 60_000) return Math.max(5_000, Math.round(durationMs * 0.35));
+  if (durationMs <= 600_000) return Math.max(15_000, Math.min(60_000, Math.round(durationMs * 0.12)));
+  return Math.max(60_000, Math.min(300_000, Math.round(durationMs * 0.05)));
+}
+
+/**
+ * One canonical segment normalizer shared by DOM-primary and network-
+ * fallback acquisition. It validates, orders, deduplicates, and derives all
+ * end times from the next strictly-later start. The final segment uses video
+ * duration only when its start is already plausibly near the end; an
+ * incomplete transcript can therefore never be disguised as one segment
+ * spanning the rest of a long video.
+ */
+export function normalizeCanonicalSegments(input, durationMs) {
+  const seen = new Set();
+  const parsed = [];
+  let sequence = 0;
+  for (const segment of Array.isArray(input) ? input : []) {
+    const startMs = Number(segment?.startMs);
+    const text = cleanSegmentText(segment?.text);
+    if (!Number.isFinite(startMs) || startMs < 0 || !text) continue;
+    const roundedStart = Math.round(startMs);
+    const key = `${roundedStart}|${text}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    parsed.push({ startMs: roundedStart, text, sequence: sequence++ });
+  }
+  parsed.sort((a, b) => a.startMs - b.startMs || a.sequence - b.sequence);
+
+  const numericDuration = Number(durationMs);
+  return parsed.map((segment, index) => {
+    let nextStart = null;
+    for (let nextIndex = index + 1; nextIndex < parsed.length; nextIndex += 1) {
+      if (parsed[nextIndex].startMs > segment.startMs) {
+        nextStart = parsed[nextIndex].startMs;
+        break;
+      }
+    }
+
+    let endMs = nextStart ?? segment.startMs + 4_000;
+    if (index === parsed.length - 1 && Number.isFinite(numericDuration) && numericDuration > segment.startMs) {
+      const tolerance = finalSegmentToleranceMs(numericDuration);
+      if (tolerance != null && segment.startMs + tolerance >= numericDuration) {
+        endMs = Math.round(numericDuration);
+      }
+    }
+    return { startMs: segment.startMs, endMs, text: segment.text };
+  });
+}
+
 export function parseJson3Segments(payload) {
   const events = Array.isArray(payload?.events) ? payload.events : [];
   const rawSegments = [];
@@ -110,9 +162,9 @@ export function assembleTranscriptResult({ videoId, title, lengthSeconds, langua
     throw new Error("Не распознан ID видео.");
   }
 
-  enforceTranscriptLimits(segments);
-
   const durationMs = Number.isFinite(Number(lengthSeconds)) ? Math.round(Number(lengthSeconds) * 1000) : undefined;
+  const normalizedSegments = normalizeCanonicalSegments(segments, durationMs);
+  enforceTranscriptLimits(normalizedSegments);
 
   return {
     videoId,
@@ -120,7 +172,7 @@ export function assembleTranscriptResult({ videoId, title, lengthSeconds, langua
     languageCode: languageCode || "und",
     durationMs,
     source,
-    segments,
+    segments: normalizedSegments,
   };
 }
 
