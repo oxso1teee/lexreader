@@ -10,6 +10,14 @@ import { log } from "@/lib/log";
 import { track } from "@/lib/posthog-client";
 import { findActiveSegmentIndex, formatTimestamp } from "@/lib/video-reader/segment-lookup";
 import {
+  YOUTUBE_PLAYER_LOADING,
+  classifyYouTubePlayerError,
+  getTranscriptNavigation,
+  getYouTubePlayerFallback,
+  youtubeApiUnavailableState,
+  type YouTubePlayerState,
+} from "@/lib/video-reader/youtube-player-state";
+import {
   upsertWord,
   setWordLevel,
   addPhraseToDefaultDeck,
@@ -64,15 +72,6 @@ interface WordLevelInfo {
   contextCount: number;
 }
 
-// P0-АУДИТ (YT player onError, docs §2 codes): https://developers.google.com/youtube/iframe_api_reference#onError
-const PLAYER_ERROR_MESSAGE: Record<number, string> = {
-  2: "YouTube не смог загрузить это видео.",
-  5: "Плеер YouTube не смог воспроизвести это видео в этом браузере.",
-  100: "Это видео удалено или недоступно.",
-  101: "Автор этого видео запретил встраивание на сторонние сайты.",
-  150: "Автор этого видео запретил встраивание на сторонние сайты.",
-};
-
 const TRANSCRIPT_SOURCE_LABEL: Record<TranscriptSourceTag, string> = {
   manual_caption: "Субтитры автора",
   auto_caption: "Автоматические субтитры",
@@ -126,8 +125,8 @@ export default function WatchPlayer({
   const [levels, setLevels] = useState(wordLevels);
   const [popup, setPopup] = useState<Popup | null>(null);
   const [manualTranslation, setManualTranslation] = useState("");
-  const [playerReady, setPlayerReady] = useState(false);
-  const [playerError, setPlayerError] = useState<string | null>(null);
+  const [playerState, setPlayerState] = useState<YouTubePlayerState>(YOUTUBE_PLAYER_LOADING);
+  const playerReady = playerState.status === "ready";
   const [wordsLookedUp, setWordsLookedUp] = useState(0);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
@@ -209,17 +208,25 @@ export default function WatchPlayer({
       if (!window.YT || cancelled) return;
       playerRef.current = new window.YT.Player("yt-player", {
         videoId,
+        playerVars: {
+          origin: window.location.origin,
+        },
         events: {
           onReady: (event) => {
             if (cancelled) return;
-            setPlayerReady(true);
+            setPlayerState({ status: "ready" });
             if (initialActiveIndex > 0 && segments[initialActiveIndex]) {
               event.target.seekTo(segments[initialActiveIndex].startMs / 1000, true);
             }
           },
           onError: (event) => {
             if (cancelled) return;
-            setPlayerError(PLAYER_ERROR_MESSAGE[event.data] ?? "Не удалось воспроизвести это видео.");
+            const nextState = classifyYouTubePlayerError(event.data);
+            setPlayerState(nextState);
+            track("youtube_player_error", {
+              error_code: event.data,
+              player_state: nextState.status,
+            });
           },
         },
       });
@@ -232,9 +239,7 @@ export default function WatchPlayer({
 
     const timeout = setTimeout(() => {
       if (!cancelled && !window.YT?.Player) {
-        setPlayerError(
-          "Не удалось загрузить видеоплеер YouTube. Проверь соединение или отключи блокировщик рекламы — субтитры ниже всё равно доступны для чтения.",
-        );
+        setPlayerState(youtubeApiUnavailableState());
       }
     }, 10_000);
 
@@ -246,9 +251,7 @@ export default function WatchPlayer({
     }
     tag.onerror = () => {
       if (!cancelled) {
-        setPlayerError(
-          "Не удалось загрузить видеоплеер YouTube. Проверь соединение или отключи блокировщик рекламы — субтитры ниже всё равно доступны для чтения.",
-        );
+        setPlayerState(youtubeApiUnavailableState());
       }
     };
     const previousReady = window.onYouTubeIframeAPIReady;
@@ -298,8 +301,13 @@ export default function WatchPlayer({
   }, []);
 
   function handleSeek(startMs: number) {
-    playerRef.current?.seekTo(startMs / 1000, true);
-    setFollowMode(true);
+    const navigation = getTranscriptNavigation("line", playerState, videoId, startMs);
+    if (navigation.kind === "seek") {
+      playerRef.current?.seekTo(navigation.seconds, true);
+      setFollowMode(true);
+    } else if (navigation.kind === "external") {
+      window.open(navigation.url, "_blank", "noopener,noreferrer");
+    }
   }
 
   function resumeFollowing() {
@@ -579,6 +587,7 @@ export default function WatchPlayer({
   const activeSegment = segments[activeIndex] as Segment | undefined;
   const totalLabel = durationSeconds != null ? formatTimestamp(durationSeconds * 1000) : null;
   const sourceLabel = transcriptSource ? TRANSCRIPT_SOURCE_LABEL[transcriptSource] : null;
+  const playerFallback = getYouTubePlayerFallback(playerState, videoId);
 
   return (
     <div className="relative flex min-h-screen flex-1 flex-col bg-[#f7f4ee] dark:bg-background">
@@ -624,9 +633,31 @@ export default function WatchPlayer({
         <main className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="sticky top-[68px] z-[5] overflow-hidden rounded-2xl bg-black shadow-[0_18px_60px_rgba(80,60,35,0.12)]">
             <div className="relative aspect-video w-full">
-              {playerError ? (
-                <div className="flex h-full items-center justify-center px-6 text-center">
-                  <p className="text-sm text-white/80">{playerError}</p>
+              {playerFallback ? (
+                <div
+                  className="flex h-full flex-col items-center justify-center px-6 text-center sm:px-10"
+                  data-player-state={playerState.status}
+                  data-testid="youtube-player-fallback"
+                  role="status"
+                >
+                  <div
+                    className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-xl text-white"
+                    aria-hidden="true"
+                  >
+                    ↗
+                  </div>
+                  <h2 className="text-base font-bold text-white sm:text-lg">{playerFallback.title}</h2>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/70">
+                    {playerFallback.description}
+                  </p>
+                  <a
+                    href={playerFallback.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="focus-ring mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-bold text-black transition hover:bg-white/90"
+                  >
+                    {playerFallback.actionLabel}
+                  </a>
                 </div>
               ) : (
                 <div id="yt-player" className="absolute inset-0 h-full w-full" />
