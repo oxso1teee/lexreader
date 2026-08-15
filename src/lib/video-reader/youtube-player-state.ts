@@ -26,6 +26,21 @@ export interface YouTubePlayerFallback {
 
 export const YOUTUBE_PLAYER_LOADING: YouTubePlayerState = { status: "loading" };
 
+export function isTerminalYouTubePlayerState(playerState: YouTubePlayerState): boolean {
+  return (
+    playerState.status === "embed_forbidden" ||
+    playerState.status === "video_unavailable" ||
+    playerState.status === "player_error"
+  );
+}
+
+export function transitionYouTubePlayerState(
+  current: YouTubePlayerState,
+  next: YouTubePlayerState,
+): YouTubePlayerState {
+  return isTerminalYouTubePlayerState(current) ? current : next;
+}
+
 export function classifyYouTubePlayerError(errorCode: number): YouTubePlayerState {
   if (errorCode === 101 || errorCode === 150) {
     return { status: "embed_forbidden", errorCode };

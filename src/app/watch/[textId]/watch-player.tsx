@@ -14,9 +14,11 @@ import {
   classifyYouTubePlayerError,
   getTranscriptNavigation,
   getYouTubePlayerFallback,
+  transitionYouTubePlayerState,
   youtubeApiUnavailableState,
   type YouTubePlayerState,
 } from "@/lib/video-reader/youtube-player-state";
+import { YouTubePlayerViewport } from "@/lib/video-reader/youtube-player-viewport";
 import {
   upsertWord,
   setWordLevel,
@@ -27,6 +29,7 @@ import {
 import ReaderWordPanel, { type Popup } from "@/app/read/[textId]/reader-word-panel";
 
 interface YTPlayerInstance {
+  destroy(): void;
   getCurrentTime(): number;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
 }
@@ -37,6 +40,7 @@ interface YTPlayerReadyEvent {
 
 interface YTPlayerErrorEvent {
   data: number;
+  target: YTPlayerInstance;
 }
 
 interface YTPlayerOptions {
@@ -89,6 +93,13 @@ const AUTO_SCROLL_SETTLE_MS = 700;
 const POLL_INTERVAL_MS = 300;
 const WATCH_DIAGNOSTIC_STORAGE_KEY = "lexreader:youtube-import-watch-diagnostic";
 
+function emitYouTubePlayerDiagnostic(
+  event: string,
+  metadata: Record<string, number | string | boolean | null>,
+) {
+  console.debug(`[LexReader:diag] ${event}`, metadata);
+}
+
 export default function WatchPlayer({
   textId,
   title,
@@ -116,6 +127,9 @@ export default function WatchPlayer({
 }) {
   const router = useRouter();
   const playerRef = useRef<YTPlayerInstance | null>(null);
+  const playerTerminalRef = useRef(false);
+  const playerConstructedAtRef = useRef<number | null>(null);
+  const previousPlayerStatusRef = useRef<YouTubePlayerState["status"]>(YOUTUBE_PLAYER_LOADING.status);
   const activeSegRef = useRef<HTMLDivElement | null>(null);
   const isAutoScrollingRef = useRef(false);
   const autoScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -142,6 +156,45 @@ export default function WatchPlayer({
     track("video_reader_opened", { has_resume: initialActiveIndex > 0, segment_count: segments.length });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const previousStatus = previousPlayerStatusRef.current;
+    const elapsedMs =
+      playerConstructedAtRef.current === null ? null : Math.round(performance.now() - playerConstructedAtRef.current);
+    emitYouTubePlayerDiagnostic("youtube_player_state_transition", {
+      textId,
+      videoId,
+      from: previousStatus,
+      to: playerState.status,
+      elapsedMs,
+    });
+    previousPlayerStatusRef.current = playerState.status;
+
+    const fallback = getYouTubePlayerFallback(playerState, videoId);
+    if (!fallback) return;
+    emitYouTubePlayerDiagnostic("youtube_player_fallback_resolved", {
+      textId,
+      videoId,
+      playerState: playerState.status,
+      elapsedMs,
+    });
+    const frame = window.requestAnimationFrame(() => {
+      const fallbackElement = document.querySelector('[data-testid="youtube-player-fallback"]');
+      const iframePresent = Boolean(document.querySelector("iframe#yt-player, #yt-player iframe"));
+      emitYouTubePlayerDiagnostic("youtube_player_fallback_rendered", {
+        textId,
+        videoId,
+        playerState: playerState.status,
+        visible: Boolean(fallbackElement),
+        iframePresent,
+        elapsedMs:
+          playerConstructedAtRef.current === null
+            ? null
+            : Math.round(performance.now() - playerConstructedAtRef.current),
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [playerState, textId, videoId]);
 
   useEffect(() => {
     const stored = window.sessionStorage.getItem(WATCH_DIAGNOSTIC_STORAGE_KEY);
@@ -204,8 +257,27 @@ export default function WatchPlayer({
   // usable"; polling/resume-seek only ever start from inside it.
   useEffect(() => {
     let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    let readyHandler: (() => void) | null = null;
+    let previousReady: (() => void) | undefined;
+    playerTerminalRef.current = false;
+    previousPlayerStatusRef.current = YOUTUBE_PLAYER_LOADING.status;
+
+    const existingScript = document.querySelector<HTMLScriptElement>('script[src="https://www.youtube.com/iframe_api"]');
+    emitYouTubePlayerDiagnostic("youtube_api_script_present", {
+      textId,
+      videoId,
+      present: Boolean(existingScript),
+      apiReady: Boolean(window.YT?.Player),
+    });
+
+    function transitionPlayer(nextState: YouTubePlayerState) {
+      setPlayerState((current) => transitionYouTubePlayerState(current, nextState));
+    }
+
     function createPlayer() {
       if (!window.YT || cancelled) return;
+      playerConstructedAtRef.current = performance.now();
       playerRef.current = new window.YT.Player("yt-player", {
         videoId,
         playerVars: {
@@ -213,57 +285,82 @@ export default function WatchPlayer({
         },
         events: {
           onReady: (event) => {
-            if (cancelled) return;
-            setPlayerState({ status: "ready" });
+            const elapsedMs = Math.round(performance.now() - (playerConstructedAtRef.current ?? performance.now()));
+            emitYouTubePlayerDiagnostic("youtube_player_on_ready", { textId, videoId, elapsedMs });
+            if (cancelled || playerTerminalRef.current) return;
+            transitionPlayer({ status: "ready" });
             if (initialActiveIndex > 0 && segments[initialActiveIndex]) {
               event.target.seekTo(segments[initialActiveIndex].startMs / 1000, true);
             }
           },
           onError: (event) => {
             if (cancelled) return;
+            const elapsedMs = Math.round(performance.now() - (playerConstructedAtRef.current ?? performance.now()));
+            emitYouTubePlayerDiagnostic("youtube_player_on_error", { textId, videoId, elapsedMs });
+            emitYouTubePlayerDiagnostic("youtube_player_error_code", {
+              textId,
+              videoId,
+              errorCode: event.data,
+              elapsedMs,
+            });
             const nextState = classifyYouTubePlayerError(event.data);
-            setPlayerState(nextState);
+            playerTerminalRef.current = true;
+            transitionPlayer(nextState);
             track("youtube_player_error", {
               error_code: event.data,
               player_state: nextState.status,
             });
+            queueMicrotask(() => {
+              const failedPlayer = event.target ?? playerRef.current;
+              failedPlayer?.destroy();
+              if (playerRef.current === failedPlayer) playerRef.current = null;
+            });
           },
         },
       });
+      emitYouTubePlayerDiagnostic("youtube_player_constructed", { textId, videoId, elapsedMs: 0 });
     }
 
     if (window.YT?.Player) {
       createPlayer();
-      return;
-    }
+    } else {
+      timeout = setTimeout(() => {
+        if (!cancelled && !window.YT?.Player) {
+          playerTerminalRef.current = true;
+          transitionPlayer(youtubeApiUnavailableState());
+        }
+      }, 10_000);
 
-    const timeout = setTimeout(() => {
-      if (!cancelled && !window.YT?.Player) {
-        setPlayerState(youtubeApiUnavailableState());
+      let tag = existingScript;
+      if (!tag) {
+        tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
       }
-    }, 10_000);
-
-    let tag = document.querySelector<HTMLScriptElement>('script[src="https://www.youtube.com/iframe_api"]');
-    if (!tag) {
-      tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.body.appendChild(tag);
+      tag.onerror = () => {
+        if (!cancelled) {
+          playerTerminalRef.current = true;
+          transitionPlayer(youtubeApiUnavailableState());
+        }
+      };
+      previousReady = window.onYouTubeIframeAPIReady;
+      readyHandler = () => {
+        if (timeout) clearTimeout(timeout);
+        emitYouTubePlayerDiagnostic("youtube_api_ready_callback", { textId, videoId, elapsedMs: null });
+        createPlayer();
+        previousReady?.();
+      };
+      window.onYouTubeIframeAPIReady = readyHandler;
     }
-    tag.onerror = () => {
-      if (!cancelled) {
-        setPlayerState(youtubeApiUnavailableState());
-      }
-    };
-    const previousReady = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      clearTimeout(timeout);
-      createPlayer();
-      previousReady?.();
-    };
 
     return () => {
       cancelled = true;
-      clearTimeout(timeout);
+      if (timeout) clearTimeout(timeout);
+      if (readyHandler && window.onYouTubeIframeAPIReady === readyHandler) {
+        window.onYouTubeIframeAPIReady = previousReady;
+      }
+      playerRef.current?.destroy();
+      playerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId]);
@@ -633,35 +730,33 @@ export default function WatchPlayer({
         <main className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="sticky top-[68px] z-[5] overflow-hidden rounded-2xl bg-black shadow-[0_18px_60px_rgba(80,60,35,0.12)]">
             <div className="relative aspect-video w-full">
-              {playerFallback ? (
-                <div
-                  className="flex h-full flex-col items-center justify-center px-6 text-center sm:px-10"
-                  data-player-state={playerState.status}
-                  data-testid="youtube-player-fallback"
-                  role="status"
-                >
-                  <div
-                    className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-xl text-white"
-                    aria-hidden="true"
-                  >
-                    ↗
-                  </div>
-                  <h2 className="text-base font-bold text-white sm:text-lg">{playerFallback.title}</h2>
-                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/70">
-                    {playerFallback.description}
-                  </p>
-                  <a
-                    href={playerFallback.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="focus-ring mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-bold text-black transition hover:bg-white/90"
-                  >
-                    {playerFallback.actionLabel}
-                  </a>
-                </div>
-              ) : (
-                <div id="yt-player" className="absolute inset-0 h-full w-full" />
-              )}
+              <YouTubePlayerViewport
+                fallback={Boolean(playerFallback)}
+                playerState={playerState.status}
+              >
+                {playerFallback ? (
+                  <>
+                    <div
+                      className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-xl text-white"
+                      aria-hidden="true"
+                    >
+                      ↗
+                    </div>
+                    <h2 className="text-base font-bold text-white sm:text-lg">{playerFallback.title}</h2>
+                    <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/70">
+                      {playerFallback.description}
+                    </p>
+                    <a
+                      href={playerFallback.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="focus-ring mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-bold text-black transition hover:bg-white/90"
+                    >
+                      {playerFallback.actionLabel}
+                    </a>
+                  </>
+                ) : null}
+              </YouTubePlayerViewport>
             </div>
           </div>
 

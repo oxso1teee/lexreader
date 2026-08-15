@@ -1,15 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createElement } from "react";
+import { parseHTML } from "linkedom";
 import {
   canonicalYouTubeUrl,
   classifyYouTubePlayerError,
   getTranscriptNavigation,
   getYouTubePlayerFallback,
+  transitionYouTubePlayerState,
   youtubeApiUnavailableState,
   youtubeTimestampUrl,
   type YouTubePlayerState,
 } from "./youtube-player-state.ts";
+import { YouTubePlayerViewport } from "./youtube-player-viewport.ts";
 
 const videoId = "PolmvqSxnbc";
 
@@ -99,18 +103,83 @@ test("loading state neither seeks nor opens an external tab", () => {
   });
 });
 
+test("terminal player error cannot be overwritten by a late onReady callback", () => {
+  const failed = classifyYouTubePlayerError(150);
+  assert.deepEqual(transitionYouTubePlayerState(failed, { status: "ready" }), failed);
+});
+
+test("onError 150 transition removes YouTube's replacement iframe and renders the fallback", async () => {
+  const { window } = parseHTML('<!doctype html><html><body><div id="root"></div></body></html>');
+  Object.defineProperty(window, "location", { configurable: true, value: new URL("http://localhost/") });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  const previousNavigator = globalThis.navigator;
+  const previousActEnvironment = (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean })
+    .IS_REACT_ACT_ENVIRONMENT;
+  Object.defineProperties(globalThis, {
+    window: { configurable: true, value: window },
+    document: { configurable: true, value: window.document },
+    navigator: { configurable: true, value: window.navigator },
+    IS_REACT_ACT_ENVIRONMENT: { configurable: true, value: true },
+  });
+
+  try {
+    const [{ createRoot }, { act }] = await Promise.all([import("react-dom/client"), import("react")]);
+    const rootElement = window.document.querySelector("#root");
+    assert.ok(rootElement);
+    const root = createRoot(rootElement);
+
+    await act(async () => {
+      root.render(createElement(YouTubePlayerViewport, { fallback: false, playerState: "loading" }, null));
+    });
+
+    const playerMount = window.document.querySelector("#yt-player");
+    assert.ok(playerMount);
+    const iframe = window.document.createElement("iframe");
+    iframe.id = "yt-player";
+    playerMount.replaceWith(iframe);
+    assert.equal(window.document.querySelectorAll("iframe#yt-player").length, 1);
+
+    const errorState = classifyYouTubePlayerError(150);
+    const fallback = getYouTubePlayerFallback(errorState, videoId);
+    await act(async () => {
+      root.render(
+        createElement(
+          YouTubePlayerViewport,
+          { fallback: Boolean(fallback), playerState: errorState.status },
+          createElement("span", null, fallback?.title),
+        ),
+      );
+    });
+
+    assert.equal(window.document.querySelector("iframe#yt-player, #yt-player iframe"), null);
+    assert.equal(
+      window.document.querySelector('[data-testid="youtube-player-fallback"]')?.textContent,
+      "Видео нельзя воспроизвести внутри LexReader",
+    );
+    await act(async () => root.unmount());
+  } finally {
+    Object.defineProperties(globalThis, {
+      window: { configurable: true, value: previousWindow },
+      document: { configurable: true, value: previousDocument },
+      navigator: { configurable: true, value: previousNavigator },
+      IS_REACT_ACT_ENVIRONMENT: { configurable: true, value: previousActEnvironment },
+    });
+  }
+});
+
 test("WatchPlayer renders the transcript as a sibling of the player fallback and isolates word clicks", () => {
   const source = readFileSync(
     new URL("../../app/watch/[textId]/watch-player.tsx", import.meta.url),
     "utf8",
   );
-  const fallbackIndex = source.indexOf('data-testid="youtube-player-fallback"');
-  const transcriptSiblingIndex = source.indexOf("\n          {segments.length === 0 ?", fallbackIndex);
+  const viewportIndex = source.indexOf("<YouTubePlayerViewport");
+  const transcriptSiblingIndex = source.indexOf("\n          {segments.length === 0 ?", viewportIndex);
   const wordClickIndex = source.indexOf('onClick={(e) => {\n                              e.stopPropagation();', transcriptSiblingIndex);
 
-  assert.ok(fallbackIndex >= 0, "the explicit player fallback must be rendered");
+  assert.ok(viewportIndex >= 0, "the explicit player viewport must be rendered");
   assert.ok(
-    transcriptSiblingIndex > fallbackIndex,
+    transcriptSiblingIndex > viewportIndex,
     "the transcript must remain outside the player fallback conditional",
   );
   assert.ok(wordClickIndex > transcriptSiblingIndex, "word clicks must stop line-navigation bubbling");
