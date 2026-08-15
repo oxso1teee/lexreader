@@ -88,6 +88,7 @@ const TRANSCRIPT_SOURCE_LABEL: Record<TranscriptSourceTag, string> = {
 // from "the user just scrolled" for the same native scroll event.
 const AUTO_SCROLL_SETTLE_MS = 700;
 const POLL_INTERVAL_MS = 300;
+const WATCH_DIAGNOSTIC_STORAGE_KEY = "lexreader:youtube-import-watch-diagnostic";
 
 export default function WatchPlayer({
   textId,
@@ -142,6 +143,33 @@ export default function WatchPlayer({
     track("video_reader_opened", { has_resume: initialActiveIndex > 0, segment_count: segments.length });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const stored = window.sessionStorage.getItem(WATCH_DIAGNOSTIC_STORAGE_KEY);
+    if (!stored) return;
+    try {
+      const diagnostic = JSON.parse(stored) as {
+        requestId?: string;
+        videoId?: string;
+        redirectTo?: string;
+      };
+      if (
+        typeof diagnostic.requestId === "string" &&
+        diagnostic.redirectTo === window.location.pathname
+      ) {
+        console.debug("[LexReader:diag] final_watch", {
+          requestId: diagnostic.requestId,
+          videoId: diagnostic.videoId ?? videoId,
+          textId,
+          pathname: window.location.pathname,
+          uniqueSegments: segments.length,
+        });
+        window.sessionStorage.removeItem(WATCH_DIAGNOSTIC_STORAGE_KEY);
+      }
+    } catch {
+      window.sessionStorage.removeItem(WATCH_DIAGNOSTIC_STORAGE_KEY);
+    }
+  }, [segments.length, textId, videoId]);
 
   useEffect(() => {
     if (segments.length === 0) return;

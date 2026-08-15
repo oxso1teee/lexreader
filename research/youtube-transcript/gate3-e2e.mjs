@@ -6,7 +6,12 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const extensionPath = path.resolve(__dirname, "../../browser-extension");
-const userDataDir = path.resolve(__dirname, `out/gate3-profile-${Date.now()}`);
+const userDataDir = path.resolve(
+  __dirname,
+  process.argv.includes("--post-success-regression")
+    ? "out/gate3-post-success-profile"
+    : `out/gate3-profile-${Date.now()}`,
+);
 
 const EMAIL = process.argv[2];
 const PASSWORD = process.argv[3];
@@ -15,10 +20,24 @@ if (!EMAIL || !PASSWORD) {
   process.exit(1);
 }
 
-const ONLY_LONG = process.argv[4] === "--only-long";
-const ONLY_SHORT = process.argv[4] === "--only-short";
+const ONLY_LONG = process.argv.includes("--only-long");
+const ONLY_SHORT = process.argv.includes("--only-short");
+const POST_SUCCESS_REGRESSION = process.argv.includes("--post-success-regression");
 const IMPORT_ONLY = process.argv.includes("--import-only");
-const VIDEOS = ONLY_LONG
+const VIDEOS = POST_SUCCESS_REGRESSION
+  ? [
+      {
+        url: "https://youtu.be/PolmvqSxnbc?si=zpbG79LkPxOhWNRM",
+        videoId: "PolmvqSxnbc",
+        label: "real-user short URL (116min, Robinson Crusoe)",
+      },
+      {
+        url: "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+        videoId: "jNQXAC9IVRw",
+        label: "second import without extension reload (19s, Me at the zoo)",
+      },
+    ]
+  : ONLY_LONG
   ? [{ url: "https://www.youtube.com/watch?v=aircAruvnKk", label: "longer (18.7min, 3Blue1Brown)" }]
   : ONLY_SHORT
     ? [{ url: "https://www.youtube.com/watch?v=jNQXAC9IVRw", label: "short (19s, Me at the zoo)" }]
@@ -46,10 +65,25 @@ const context = await chromium.launchPersistentContext(userDataDir, {
 });
 console.log("context launched");
 
+let worker = context.serviceWorkers()[0];
+if (!worker) worker = await context.waitForEvent("serviceworker", { timeout: 15_000 });
+worker.on("console", (message) => {
+  if (message.text().includes("[LexReader:diag]")) console.log("[service-worker]", message.text());
+});
+
+context.on("page", (openedPage) => {
+  openedPage.on("console", (message) => {
+    if (message.text().includes("[LexReader:diag]")) {
+      console.log(openedPage.url().includes("youtube.com") ? "[youtube-tab]" : "[lexreader-tab]", message.text());
+    }
+  });
+});
+
 // Warm-up (Gate #2C finding): a fresh automated profile's first-ever youtube.com visit behaves
 // differently than a real user's already-used browser.
 const warm = await context.newPage();
-await warm.goto("https://www.youtube.com/watch?v=jNQXAC9IVRw", { waitUntil: "commit", timeout: 30000 });
+const warmupVideoId = VIDEOS[0]?.videoId ?? "jNQXAC9IVRw";
+await warm.goto(`https://www.youtube.com/watch?v=${warmupVideoId}`, { waitUntil: "commit", timeout: 30000 });
 const rejectCookies = await warm.waitForFunction(() => [...document.querySelectorAll("button")].find((button) => {
   const label = `${button.getAttribute("aria-label") ?? ""} ${button.textContent ?? ""}`;
   return /Reject all|Reject the use of cookies|Отклонить все/i.test(label);
@@ -72,6 +106,7 @@ if (page.url().includes("/login")) {
 }
 console.log("logged in, url:", page.url());
 
+const lifecycleProof = [];
 for (const video of VIDEOS) {
   console.log(`\n=== Importing ${video.label} ===`);
   await page.goto("http://localhost:3000/library/new", { waitUntil: "domcontentloaded" });
@@ -94,9 +129,36 @@ for (const video of VIDEOS) {
 
   await page.fill("#youtube-import-url", video.url);
   await page.click('button:has-text("Импортировать субтитры")');
-  await page.waitForURL(/\/watch\//, { timeout: 110000 });
+  await Promise.race([
+    page.waitForURL(/\/watch\//, { timeout: 120000 }),
+    page.locator('[role="alert"]').filter({ hasText: /\S/ }).waitFor({ state: "visible", timeout: 120000 }).then(async () => {
+      throw new Error(`import UI error: ${(await page.locator('[role="alert"]').filter({ hasText: /\S/ }).innerText()).trim()}`);
+    }),
+  ]);
   const textId = page.url().split("/watch/")[1];
   console.log("imported, textId:", textId);
+
+  await page.waitForTimeout(500);
+  const tabsAfterImport = await worker.evaluate(async () => await chrome.tabs.query({}));
+  const activeTabs = tabsAfterImport.filter((tab) => tab.active);
+  const activeOrigin = activeTabs.find((tab) => tab.id && tab.url?.includes(`/watch/${textId}`));
+  const stuckExtractionTabs = tabsAfterImport.filter((tab) =>
+    tab.url?.includes("youtube.com/watch") &&
+    (tab.url.includes("lexreader-extraction") || (video.videoId && tab.url.includes(`v=${video.videoId}`))),
+  );
+  if (!activeOrigin) {
+    throw new Error(`origin tab was not active at /watch/${textId}: ${JSON.stringify(activeTabs)}`);
+  }
+  if (stuckExtractionTabs.length > 0) {
+    throw new Error(`temporary YouTube tab remained open: ${JSON.stringify(stuckExtractionTabs)}`);
+  }
+  console.log("TAB_LIFECYCLE=" + JSON.stringify({
+    textId,
+    videoId: video.videoId ?? null,
+    originActive: true,
+    activeOriginTabId: activeOrigin.id,
+    temporaryYoutubeTabClosed: true,
+  }));
 
   const [{ data: persistedText, error: textError }, { count: persistedSegmentCount, error: segmentsError }] = await Promise.all([
     supabaseAdmin
@@ -118,6 +180,16 @@ for (const video of VIDEOS) {
     sourceUrl: persistedText.source_url,
     captionSegments: persistedSegmentCount,
   }));
+  lifecycleProof.push({
+    videoId: video.videoId ?? persistedText.source_url?.match(/[?&]v=([^&]+)/)?.[1] ?? null,
+    textId,
+    originActive: true,
+    activeOriginTabId: activeOrigin.id,
+    temporaryYoutubeTabClosed: true,
+    persistedSourceUrl: persistedText.source_url,
+    captionSegments: persistedSegmentCount,
+    finalUrl: page.url(),
+  });
 
   // --- Reader loads, player + transcript render ---
   await page.waitForSelector("iframe#yt-player", { timeout: 15000 });
@@ -190,6 +262,11 @@ for (const video of VIDEOS) {
 
   console.log(`TEXT_ID=${textId}`);
 }
+
+console.log("POST_SUCCESS_E2E_RESULT=" + JSON.stringify({
+  sameExtensionInstance: true,
+  results: lifecycleProof,
+}));
 
 await context.close();
 console.log("\ndone.");

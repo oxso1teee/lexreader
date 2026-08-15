@@ -19,6 +19,7 @@ type ExtractionStage =
   | "ready";
 
 const BRIDGE_SOURCE = "lexreader-youtube-bridge";
+const WATCH_DIAGNOSTIC_STORAGE_KEY = "lexreader:youtube-import-watch-diagnostic";
 // The extension owns one 90-second emergency ceiling. This page-side guard is
 // deliberately larger, so it cannot beat an actively progressing virtualized
 // DOM collection and recreate the former 10-20 second false failure.
@@ -57,6 +58,7 @@ const BRIDGE_ERROR_MESSAGES: Record<string, string> = {
   transcript_unavailable: "У этого видео нет доступных субтитров.",
   youtube_page_not_open: "Не удалось открыть страницу видео на YouTube. Попробуй ещё раз.",
   extraction_failed: "Не удалось получить субтитры с YouTube. Попробуй ещё раз.",
+  origin_delivery_failed: "Готовые субтитры не удалось вернуть во вкладку LexReader. Вкладка YouTube оставлена открытой для диагностики.",
   unsupported_video: "Не распознана ссылка на YouTube-видео.",
 };
 
@@ -64,7 +66,7 @@ function requestTranscriptFromBridge(
   url: string,
   targetLanguage: string,
   onProgress: (stage: ExtractionStage) => void,
-): Promise<TranscriptResult> {
+): Promise<{ transcript: TranscriptResult; requestId: string }> {
   return new Promise((resolve, reject) => {
     const requestId = crypto.randomUUID();
     const timeout = window.setTimeout(() => {
@@ -101,7 +103,12 @@ function requestTranscriptFromBridge(
         reject(new Error(BRIDGE_ERROR_MESSAGES[code] ?? data.message ?? "Не удалось получить субтитры через расширение."));
         return;
       }
-      resolve(data.transcript);
+      console.debug("[LexReader:diag] lexreader_page_received_success", {
+        requestId,
+        videoId: data.transcript.videoId,
+        uniqueSegments: data.transcript.segments.length,
+      });
+      resolve({ transcript: data.transcript, requestId });
     }
 
     window.addEventListener("message", handleResponse);
@@ -177,16 +184,45 @@ export default function YoutubeImportForm({
       const url = String(formData.get("url") ?? "").trim();
       try {
         setExtractionStage("opening_video");
-        const transcript = await requestTranscriptFromBridge(url, targetLanguage, setExtractionStage);
+        const { transcript, requestId } = await requestTranscriptFromBridge(url, targetLanguage, setExtractionStage);
         setExtractionStage("importing");
-        const result = await startYoutubeImportFromBrowserAction(transcript, formData);
+        console.debug("[LexReader:diag] lexreader_import_request_started", {
+          requestId,
+          videoId: transcript.videoId,
+          uniqueSegments: transcript.segments.length,
+        });
+        const result = await startYoutubeImportFromBrowserAction(transcript, formData, requestId);
         if (result.redirectTo) {
           setExtractionStage("ready");
           track("material_add_succeeded", { source: "youtube" });
+          console.debug("[LexReader:diag] lexreader_persistence_success", {
+            requestId,
+            videoId: transcript.videoId,
+            redirectTo: result.redirectTo,
+          });
+          window.sessionStorage.setItem(WATCH_DIAGNOSTIC_STORAGE_KEY, JSON.stringify({
+            requestId,
+            videoId: transcript.videoId,
+            redirectTo: result.redirectTo,
+          }));
+          console.debug("[LexReader:diag] redirect_started", {
+            requestId,
+            redirectTo: result.redirectTo,
+          });
           router.push(result.redirectTo);
         } else if (result.paywall) {
+          console.debug("[LexReader:diag] lexreader_persistence_failure", {
+            requestId,
+            videoId: transcript.videoId,
+            reason: "paywall",
+          });
           track("material_add_failed", { source: "youtube", reason: "limit" });
         } else if (result.error) {
+          console.debug("[LexReader:diag] lexreader_persistence_failure", {
+            requestId,
+            videoId: transcript.videoId,
+            reason: "server_action_error",
+          });
           track("material_add_failed", { source: "youtube", reason: "validation_or_server" });
         }
         return result;

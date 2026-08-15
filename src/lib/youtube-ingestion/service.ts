@@ -5,7 +5,11 @@ import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { extractVideoId } from "./video-id.ts";
 import { callIngestionWorker, WorkerUnavailableError, type WorkerIngestResponse } from "./worker-client.ts";
 import { assertValidTranscriptResult, MalformedTranscriptError } from "./validate-transcript.ts";
-import { MAX_VIDEO_DURATION_SECONDS, MAX_IMPORTS_PER_USER_PER_HOUR } from "./limits.ts";
+import {
+  MAX_BROWSER_BRIDGE_VIDEO_DURATION_SECONDS,
+  MAX_VIDEO_DURATION_SECONDS,
+  MAX_IMPORTS_PER_USER_PER_HOUR,
+} from "./limits.ts";
 import { ErrorCategory, type ImportOutcome, type ErrorCategoryValue } from "./types.ts";
 
 const DEFAULT_TARGET_LANGUAGE = "en";
@@ -154,7 +158,10 @@ async function runImportPipeline(
   }
 
   const { transcript } = response;
-  if (transcript.durationMs && transcript.durationMs / 1000 > MAX_VIDEO_DURATION_SECONDS) {
+  const maximumDurationSeconds = transcript.source === "browser_bridge"
+    ? MAX_BROWSER_BRIDGE_VIDEO_DURATION_SECONDS
+    : MAX_VIDEO_DURATION_SECONDS;
+  if (transcript.durationMs && transcript.durationMs / 1000 > maximumDurationSeconds) {
     await markFailed(supabase, textId, ErrorCategory.VIDEO_TOO_LONG);
     return { textId, status: "failed", stage: null, error: ErrorCategory.VIDEO_TOO_LONG };
   }

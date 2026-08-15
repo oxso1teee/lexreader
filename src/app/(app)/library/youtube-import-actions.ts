@@ -38,6 +38,10 @@ const USER_FACING_MESSAGE: Record<string, string> = {
   [ErrorCategory.STORAGE_FAILED]: "Не удалось сохранить импортированное видео. Попробуй ещё раз.",
 };
 
+function lifecycleDiagnostic(event: string, requestId: string, metadata: Record<string, unknown> = {}) {
+  console.info(`[LexReader:diag] ${event}`, { requestId, ...metadata });
+}
+
 function toState(outcome: ImportOutcome): StartYoutubeImportState {
   if (outcome.status === "ready") {
     return { redirectTo: outcome.readyRoute };
@@ -66,12 +70,15 @@ function toState(outcome: ImportOutcome): StartYoutubeImportState {
 export async function startYoutubeImportFromBrowserAction(
   transcript: unknown,
   formData: FormData,
+  requestId = "unknown",
 ): Promise<StartYoutubeImportState> {
+  lifecycleDiagnostic("lexreader_persistence_started", requestId);
   let validated: TranscriptResult;
   try {
     assertValidTranscriptResult(transcript);
     validated = transcript;
   } catch (err) {
+    lifecycleDiagnostic("lexreader_persistence_failure", requestId, { reason: "browser_payload_invalid" });
     log.import({ kind: "youtube", outcome: "error", reason: "browser_payload_invalid" });
     return {
       error:
@@ -85,6 +92,7 @@ export async function startYoutubeImportFromBrowserAction(
   const supabase = await createClient();
 
   if (!(await hasFreeTextRoom(supabase, profile.id))) {
+    lifecycleDiagnostic("lexreader_persistence_failure", requestId, { reason: "paywall" });
     return { paywall: true };
   }
 
@@ -95,6 +103,7 @@ export async function startYoutubeImportFromBrowserAction(
     formData,
   );
   if ("error" in collectionAssignment) {
+    lifecycleDiagnostic("lexreader_persistence_failure", requestId, { reason: "collection_assignment" });
     return { error: collectionAssignment.error };
   }
 
@@ -114,12 +123,25 @@ export async function startYoutubeImportFromBrowserAction(
       collectionAssignment,
     );
     if (outcome.status === "failed") {
+      lifecycleDiagnostic("lexreader_persistence_failure", requestId, {
+        videoId: validated.videoId,
+        reason: outcome.error ?? "unknown",
+      });
       log.import({ kind: "youtube", outcome: "error", reason: outcome.error ?? "unknown" });
     } else if (outcome.status === "ready") {
+      lifecycleDiagnostic("lexreader_persistence_success", requestId, {
+        videoId: validated.videoId,
+        uniqueSegments: validated.segments.length,
+        redirectTo: outcome.readyRoute,
+      });
       log.import({ kind: "youtube", outcome: "success", reason: "browser_bridge" });
     }
     return toState(outcome);
   } catch {
+    lifecycleDiagnostic("lexreader_persistence_failure", requestId, {
+      videoId: validated.videoId,
+      reason: "unexpected_exception",
+    });
     log.import({ kind: "youtube", outcome: "error", reason: "unexpected_exception" });
     return { error: "Не удалось импортировать видео. Попробуй ещё раз." };
   }

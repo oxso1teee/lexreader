@@ -149,6 +149,56 @@ test("a successful import creates exactly one texts row and persists segments, t
   assert.equal(supabase._captionSegments.length, 1);
 });
 
+test("a complete 116-minute browser-bridge transcript persists without raising the worker cost cap", async () => {
+  const supabase = makeFakeSupabase();
+  const response = okTranscriptResponse({
+    transcript: {
+      videoId: "PolmvqSxnbc",
+      title: "Robinson Crusoe",
+      languageCode: "en",
+      durationMs: 6_993_000,
+      source: "browser_bridge",
+      segments: [{ startMs: 0, endMs: 6_993_000, text: "complete browser transcript" }],
+    },
+  });
+  const outcome = await runYoutubeImport(
+    supabase,
+    "user-1",
+    "https://youtu.be/PolmvqSxnbc?si=share-token",
+    "en",
+    async () => response,
+  );
+
+  assert.equal(outcome.status, "ready");
+  assert.equal(supabase._texts[0].youtube_duration_seconds, 6_993);
+  assert.equal(supabase._captionSegments.length, 1);
+});
+
+test("the original 60-minute cap remains enforced for worker-acquired transcripts", async () => {
+  const supabase = makeFakeSupabase();
+  const response = okTranscriptResponse({
+    transcript: {
+      videoId: "abcDEF_123-",
+      title: "Long worker video",
+      languageCode: "en",
+      durationMs: 6_993_000,
+      source: "auto_caption",
+      segments: [{ startMs: 0, endMs: 6_993_000, text: "worker transcript" }],
+    },
+  });
+  const outcome = await runYoutubeImport(
+    supabase,
+    "user-1",
+    "https://www.youtube.com/watch?v=abcDEF_123-",
+    "en",
+    async () => response,
+  );
+
+  assert.equal(outcome.status, "failed");
+  assert.equal(outcome.error, ErrorCategory.VIDEO_TOO_LONG);
+  assert.equal(supabase._captionSegments.length, 0);
+});
+
 test("duplicate import (same user, same video) reuses the existing ready row -- no second row, no second worker call", async () => {
   const supabase = makeFakeSupabase();
   await runYoutubeImport(supabase, "user-1", "https://www.youtube.com/watch?v=abcDEF_123-", "en", async () => okTranscriptResponse());
