@@ -1,10 +1,12 @@
 import { chromium } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const extensionPath = path.resolve(__dirname, "../../browser-extension");
-const userDataDir = path.resolve(__dirname, "out/gate3-profile");
+const userDataDir = path.resolve(__dirname, `out/gate3-profile-${Date.now()}`);
 
 const EMAIL = process.argv[2];
 const PASSWORD = process.argv[3];
@@ -14,12 +16,25 @@ if (!EMAIL || !PASSWORD) {
 }
 
 const ONLY_LONG = process.argv[4] === "--only-long";
+const ONLY_SHORT = process.argv[4] === "--only-short";
+const IMPORT_ONLY = process.argv.includes("--import-only");
 const VIDEOS = ONLY_LONG
   ? [{ url: "https://www.youtube.com/watch?v=aircAruvnKk", label: "longer (18.7min, 3Blue1Brown)" }]
+  : ONLY_SHORT
+    ? [{ url: "https://www.youtube.com/watch?v=jNQXAC9IVRw", label: "short (19s, Me at the zoo)" }]
   : [
       { url: "https://www.youtube.com/watch?v=jNQXAC9IVRw", label: "short (19s, Me at the zoo)" },
       { url: "https://www.youtube.com/watch?v=aircAruvnKk", label: "longer (18.7min, 3Blue1Brown)" },
     ];
+
+const env = Object.fromEntries(
+  readFileSync(path.resolve(__dirname, "../../.env.local"), "utf8")
+    .split("\n")
+    .map((line) => line.match(/^([A-Z_]+)=(.*)$/))
+    .filter(Boolean)
+    .map((match) => [match[1], match[2]]),
+);
+const supabaseAdmin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 const context = await chromium.launchPersistentContext(userDataDir, {
   headless: false,
@@ -34,8 +49,13 @@ console.log("context launched");
 // Warm-up (Gate #2C finding): a fresh automated profile's first-ever youtube.com visit behaves
 // differently than a real user's already-used browser.
 const warm = await context.newPage();
-await warm.goto("https://www.youtube.com/watch?v=jNQXAC9IVRw", { waitUntil: "domcontentloaded", timeout: 30000 });
-await warm.waitForTimeout(1500);
+await warm.goto("https://www.youtube.com/watch?v=jNQXAC9IVRw", { waitUntil: "commit", timeout: 30000 });
+const rejectCookies = await warm.waitForFunction(() => [...document.querySelectorAll("button")].find((button) => {
+  const label = `${button.getAttribute("aria-label") ?? ""} ${button.textContent ?? ""}`;
+  return /Reject all|Reject the use of cookies|Отклонить все/i.test(label);
+}) ?? null, null, { timeout: 25_000 }).catch(() => null);
+if (rejectCookies) await rejectCookies.evaluate((button) => button.click());
+await warm.waitForTimeout(1000);
 await warm.close();
 
 const page = await context.newPage();
@@ -74,15 +94,41 @@ for (const video of VIDEOS) {
 
   await page.fill("#youtube-import-url", video.url);
   await page.click('button:has-text("Импортировать субтитры")');
-  await page.waitForURL(/\/watch\//, { timeout: 60000 });
+  await page.waitForURL(/\/watch\//, { timeout: 110000 });
   const textId = page.url().split("/watch/")[1];
   console.log("imported, textId:", textId);
+
+  const [{ data: persistedText, error: textError }, { count: persistedSegmentCount, error: segmentsError }] = await Promise.all([
+    supabaseAdmin
+      .from("texts")
+      .select("id, source_type, source_url")
+      .eq("id", textId)
+      .single(),
+    supabaseAdmin
+      .from("caption_segments")
+      .select("id", { count: "exact", head: true })
+      .eq("text_id", textId),
+  ]);
+  if (textError || segmentsError || !persistedText || !persistedSegmentCount) {
+    throw new Error(`persistence verification failed: ${textError?.message ?? segmentsError?.message ?? "no caption rows"}`);
+  }
+  console.log("DB_PERSISTENCE=" + JSON.stringify({
+    textId,
+    sourceType: persistedText.source_type,
+    sourceUrl: persistedText.source_url,
+    captionSegments: persistedSegmentCount,
+  }));
 
   // --- Reader loads, player + transcript render ---
   await page.waitForSelector("iframe#yt-player", { timeout: 15000 });
   console.log("yt-player iframe present");
   const segCount = await page.locator('p[class*="leading-relaxed"]').count();
   console.log("rendered transcript rows:", segCount);
+
+  if (IMPORT_ONLY) {
+    console.log(`TEXT_ID=${textId}`);
+    continue;
+  }
 
   // --- click-to-seek on the 2nd (or last, for short videos) segment ---
   const seekIdx = Math.min(2, segCount - 1);

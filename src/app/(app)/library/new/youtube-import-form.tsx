@@ -9,23 +9,44 @@ import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
 type BridgeStatus = "checking" | "ready" | "missing";
+type ExtractionStage =
+  | "opening_video"
+  | "opening_transcript"
+  | "reading_transcript"
+  | "collecting_segments"
+  | "network_fallback"
+  | "importing"
+  | "ready";
 
 const BRIDGE_SOURCE = "lexreader-youtube-bridge";
-// Lifecycle bug (M3 Slice 12 RC #4): must stay above background.mjs's own
-// OVERALL_TIMEOUT_MS (50s) plus messaging overhead -- a real captured ASR
-// transcript body can exceed 1MB and take multiple seconds to fetch+read on
-// a real connection, so the whole extension-side budget was extended; the
-// client's own ceiling has to extend with it or it gives up first.
-const REQUEST_TIMEOUT_MS = 58_000;
+// The extension owns one 90-second emergency ceiling. This page-side guard is
+// deliberately larger, so it cannot beat an actively progressing virtualized
+// DOM collection and recreate the former 10-20 second false failure.
+const REQUEST_TIMEOUT_MS = 105_000;
 
-interface BridgeResponse {
-  source: typeof BRIDGE_SOURCE;
-  type: "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE";
-  requestId: string;
-  ok: boolean;
+interface BridgeMessage {
+  source?: string;
+  type?: string;
+  requestId?: string;
+  ok?: boolean;
   transcript?: TranscriptResult;
   error?: string;
   message?: string;
+  stage?: string;
+}
+
+const EXTRACTION_STAGE_MESSAGES: Record<ExtractionStage, string> = {
+  opening_video: "Открываем видео…",
+  opening_transcript: "Открываем расшифровку YouTube…",
+  reading_transcript: "Читаем расшифровку…",
+  collecting_segments: "Собираем субтитры по всему видео…",
+  network_fallback: "Проверяем резервный источник субтитров…",
+  importing: "Сохраняем текст и субтитры…",
+  ready: "Субтитры готовы.",
+};
+
+function isExtractionStage(stage: string): stage is ExtractionStage {
+  return stage in EXTRACTION_STAGE_MESSAGES;
 }
 
 // Typed failure codes from background.mjs/youtube-content-relay.js (M3
@@ -42,6 +63,7 @@ const BRIDGE_ERROR_MESSAGES: Record<string, string> = {
 function requestTranscriptFromBridge(
   url: string,
   targetLanguage: string,
+  onProgress: (stage: ExtractionStage) => void,
 ): Promise<TranscriptResult> {
   return new Promise((resolve, reject) => {
     const requestId = crypto.randomUUID();
@@ -52,15 +74,25 @@ function requestTranscriptFromBridge(
 
     function handleResponse(event: MessageEvent<unknown>) {
       if (event.source !== window || event.origin !== window.location.origin) return;
-      const data = event.data as Partial<BridgeResponse> | null;
+      const data = event.data as BridgeMessage | null;
       if (
         !data ||
         data.source !== BRIDGE_SOURCE ||
-        data.type !== "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE" ||
         data.requestId !== requestId
       ) {
         return;
       }
+
+      if (
+        data.type === "LEXREADER_YOUTUBE_EXTRACTION_PROGRESS" &&
+        typeof data.stage === "string" &&
+        isExtractionStage(data.stage)
+      ) {
+        onProgress(data.stage);
+        return;
+      }
+
+      if (data.type !== "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE") return;
 
       window.clearTimeout(timeout);
       window.removeEventListener("message", handleResponse);
@@ -95,6 +127,7 @@ export default function YoutubeImportForm({
 }) {
   const router = useRouter();
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>("checking");
+  const [extractionStage, setExtractionStage] = useState<ExtractionStage | null>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setBridgeStatus("missing"), 1_200);
@@ -143,9 +176,12 @@ export default function YoutubeImportForm({
 
       const url = String(formData.get("url") ?? "").trim();
       try {
-        const transcript = await requestTranscriptFromBridge(url, targetLanguage);
+        setExtractionStage("opening_video");
+        const transcript = await requestTranscriptFromBridge(url, targetLanguage, setExtractionStage);
+        setExtractionStage("importing");
         const result = await startYoutubeImportFromBrowserAction(transcript, formData);
         if (result.redirectTo) {
+          setExtractionStage("ready");
           track("material_add_succeeded", { source: "youtube" });
           router.push(result.redirectTo);
         } else if (result.paywall) {
@@ -155,6 +191,7 @@ export default function YoutubeImportForm({
         }
         return result;
       } catch (error) {
+        setExtractionStage(null);
         track("material_add_failed", { source: "youtube", reason: "bridge_error" });
         return {
           error: error instanceof Error ? error.message : "Не удалось получить субтитры.",
@@ -218,12 +255,19 @@ export default function YoutubeImportForm({
           {state.error}
         </p>
       )}
+      {pending && extractionStage && (
+        <p className="text-sm text-[var(--text-secondary)]" aria-live="polite">
+          {EXTRACTION_STAGE_MESSAGES[extractionStage]}
+        </p>
+      )}
       <button
         type="submit"
         disabled={pending || bridgeStatus !== "ready"}
         className="focus-ring min-h-11 rounded-full bg-[var(--color-forest)] px-5 py-3 font-bold text-white transition-colors hover:bg-[var(--color-forest-deep)] disabled:opacity-50"
       >
-        {pending ? "Получаем субтитры…" : "Импортировать субтитры"}
+        {pending && extractionStage
+          ? EXTRACTION_STAGE_MESSAGES[extractionStage]
+          : "Импортировать субтитры"}
       </button>
     </form>
   );

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "npm run test:import && npm run test:extension && npm run test:srs && npm run test:fsrs && npm run test:csp && npm run test:ui",
     "test:import": "node --experimental-strip-types --test src/lib/import-cards.test.ts",
     "test:extension": "node --test browser-extension/*.test.mjs",
     "test:srs": "node --experimental-strip-types --test src/lib/srs.test.ts",
