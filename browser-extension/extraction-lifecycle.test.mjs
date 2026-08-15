@@ -36,6 +36,7 @@ let mockChromeMessageListeners = [];
 let mockTabs = [];
 let mockSendMessageHandlers = new Map(); // tabId -> (message) => Promise<response>
 let mockUpdateCalls = [];
+let mockWindowUpdateCalls = [];
 
 function installMockChrome() {
   nextTabId = 1;
@@ -43,10 +44,11 @@ function installMockChrome() {
   mockTabs = [];
   mockSendMessageHandlers = new Map();
   mockUpdateCalls = [];
+  mockWindowUpdateCalls = [];
   globalThis.chrome = {
     tabs: {
       async create({ url }) {
-        const tab = { id: nextTabId++, url };
+        const tab = { id: nextTabId++, url, windowId: 1 };
         mockTabs.push(tab);
         // Real content script announces readiness almost immediately --
         // simulate that by firing LEXREADER_PAGE_READY shortly after
@@ -92,6 +94,11 @@ function installMockChrome() {
         removeListener(listener) {
           mockChromeMessageListeners = mockChromeMessageListeners.filter((l) => l !== listener);
         },
+      },
+    },
+    windows: {
+      async update(windowId, changes) {
+        mockWindowUpdateCalls.push({ windowId, changes });
       },
     },
   };
@@ -243,4 +250,61 @@ test("a cold unhydrated YouTube document gets one exact-video DOM retry", async 
   assert.match(mockUpdateCalls[0].changes.url, /v=coldVideo/);
   assert.equal(result.transcript.segments[0].text, "hydrated after retry");
   assert.equal(state.state, "cleaned");
+});
+
+test("request context survives delivery/activation and is deleted only after owned-tab cleanup", async () => {
+  installMockChrome();
+  const {
+    createRequestContext,
+    extractYoutubeTranscript,
+    getRequestContextSnapshot,
+  } = await import("./background.mjs");
+  const { deliverResultAndRestoreOrigin } = await import("./post-success-lifecycle.mjs");
+  const { createRequestState: freshState } = await import("./request-state.mjs");
+
+  const requestId = "req-context-retention";
+  const originTabId = 99;
+  mockTabs.push({ id: originTabId, url: "http://localhost:3000/library/new", windowId: 7 });
+  mockSendMessageHandlers.set(1, async () => ({
+    ok: true,
+    domSegments: [{ startMs: 0, endMs: 4_000, text: "complete" }],
+    metadata: { title: "Complete", lengthSeconds: "4" },
+    diagnostics: { acquisitionSource: "dom", uniqueSegments: 1 },
+  }));
+  mockSendMessageHandlers.set(originTabId, async (message) => ({
+    ok: true,
+    requestId: message.requestId,
+  }));
+
+  const context = createRequestContext({
+    requestId,
+    videoId: "videoContext",
+    originTabId,
+    originWindowId: 7,
+  });
+  const result = await extractYoutubeTranscript(
+    "https://youtu.be/videoContext?si=share-token",
+    "en",
+    requestId,
+    freshState(),
+    {
+      context,
+      async deliver(activeContext, terminalResult, dependencies) {
+        const snapshot = getRequestContextSnapshot(requestId);
+        assert.equal(snapshot?.originTabId, originTabId);
+        assert.equal(snapshot?.youtubeTabId, 1);
+        assert.equal(snapshot?.createdByLexReader, true);
+        return await deliverResultAndRestoreOrigin(activeContext, terminalResult, dependencies);
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.lifecycle.acknowledged, true);
+  assert.equal(result.lifecycle.activated, true);
+  assert.equal(result.lifecycle.temporaryTabClosed, true);
+  assert.equal(getRequestContextSnapshot(requestId), null);
+  assert.deepEqual(mockWindowUpdateCalls, [{ windowId: 7, changes: { focused: true } }]);
+  assert.equal(mockTabs.some((tab) => tab.id === originTabId), true);
+  assert.equal(mockTabs.some((tab) => tab.id === 1), false);
 });

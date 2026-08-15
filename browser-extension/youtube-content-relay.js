@@ -394,6 +394,11 @@
 
     sendProgress(requestId, "collecting_segments", { uniqueSegments: rows.length });
     const durationMs = videoDurationMs();
+    log("dom_collection_started", requestId, {
+      videoId: expectedVideoId,
+      durationMs,
+      initiallyMountedRows: rows.length,
+    });
     let lastProgressAt = 0;
     const collected = await domExtractor.collectFromDocument(document, {
       durationMs,
@@ -409,7 +414,16 @@
     const diagnostics = domPageDiagnostics({
       ...collected.metrics,
     });
-    log("DOM collection complete", requestId, diagnostics);
+    log("dom_collection_completed", requestId, {
+      videoId: expectedVideoId,
+      uniqueSegments: diagnostics.uniqueSegments,
+      firstMs: diagnostics.firstMs,
+      lastMs: diagnostics.lastMs,
+      durationMs: diagnostics.durationMs,
+      completeness: diagnostics.completeness,
+      scrollIterations: diagnostics.scrollIterations,
+      duplicatesDiscarded: diagnostics.duplicatesDiscarded,
+    });
     if (!collected.metrics.completeness.complete) {
       return {
         ok: false,
@@ -500,6 +514,18 @@
 
     executeCommand(message, controller.signal)
       .then((result) => {
+        if (result.ok) {
+          log("content_relay_returning_success", message.requestId, {
+            mode: message.mode,
+            videoId: expectedVideoId,
+            acquisitionSource: result.diagnostics?.acquisitionSource ?? message.mode,
+            uniqueSegments: result.diagnostics?.uniqueSegments ?? result.domSegments?.length ?? 0,
+            firstMs: result.diagnostics?.firstMs ?? null,
+            lastMs: result.diagnostics?.lastMs ?? null,
+            durationMs: result.diagnostics?.durationMs ?? null,
+            completeness: result.diagnostics?.completeness ?? null,
+          });
+        }
         log("acquisition response sent to background", message.requestId, {
           mode: message.mode,
           ok: result.ok,

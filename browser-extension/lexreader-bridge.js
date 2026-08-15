@@ -22,9 +22,22 @@
   ]);
 
   if (!ALLOWED_ORIGINS.has(window.location.origin)) return;
+  const pendingRequests = new Set();
 
   function postToPage(message) {
     window.postMessage({ source: SOURCE, ...message }, window.location.origin);
+  }
+
+  function postTerminalToPage(requestId, result) {
+    postToPage({
+      type: "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE",
+      requestId,
+      ok: Boolean(result?.ok),
+      transcript: result?.transcript,
+      diagnostics: result?.diagnostics,
+      error: result?.error,
+      message: result?.message,
+    });
   }
 
   function announceReady() {
@@ -53,6 +66,7 @@
     ) {
       return;
     }
+    pendingRequests.add(message.requestId);
 
     chrome.runtime.sendMessage(
       {
@@ -73,6 +87,8 @@
       },
       (response) => {
         if (chrome.runtime.lastError) {
+          if (!pendingRequests.has(message.requestId)) return;
+          pendingRequests.delete(message.requestId);
           console.debug("[LexReader:diag] response sent to LexReader", {
             requestId: message.requestId,
             ok: false,
@@ -88,29 +104,56 @@
           return;
         }
 
-        // Never log transcript contents (Phase 1) -- ok/error only.
-        console.debug("[LexReader:diag] response sent to LexReader", {
+        if (response?.deliveredViaTabMessage) {
+          console.debug("[LexReader:diag] background_request_channel_completed", {
+            requestId: message.requestId,
+            lifecycleError: response.lifecycleError ?? null,
+          });
+          return;
+        }
+
+        // Explicit origin delivery failed before the bridge could ACK it.
+        // The original request channel is retained as a diagnostic fallback
+        // so the page gets a distinct error instead of timing out silently.
+        if (!pendingRequests.has(message.requestId)) return;
+        pendingRequests.delete(message.requestId);
+        console.debug("[LexReader:diag] origin_delivery_failed", {
           requestId: message.requestId,
-          ok: Boolean(response?.ok),
-          error: response?.error ?? null,
+          error: response?.error ?? "origin_delivery_failed",
         });
-        postToPage({
-          type: "LEXREADER_YOUTUBE_TRANSCRIPT_RESPONSE",
-          requestId: message.requestId,
-          ok: Boolean(response?.ok),
-          transcript: response?.transcript,
-          diagnostics: response?.diagnostics,
-          error: response?.error,
-          message: response?.message,
-        });
+        postTerminalToPage(message.requestId, response);
       },
     );
   });
 
-  // Request-scoped extraction progress forwarded by background.mjs from the
-  // temporary YouTube tab. The terminal result still uses the single
-  // sendResponse callback above; progress can never settle or overwrite it.
-  chrome.runtime.onMessage.addListener((message) => {
+  // Request-scoped progress and explicit terminal delivery. Terminal payloads
+  // arrive through tabs.sendMessage and are acknowledged synchronously after
+  // forwarding to the page; the original long-lived channel only reports
+  // lifecycle completion or a delivery failure and never duplicates success.
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (
+      message?.type === "LEXREADER_TRANSCRIPT_RESULT" &&
+      typeof message.requestId === "string"
+    ) {
+      if (!pendingRequests.has(message.requestId)) {
+        sendResponse({ ok: false, requestId: message.requestId, error: "stale_request" });
+        return false;
+      }
+      pendingRequests.delete(message.requestId);
+      console.debug(
+        `[LexReader:diag] ${message.result?.ok ? "lexreader_bridge_received_success" : "lexreader_bridge_received_failure"}`,
+        {
+          requestId: message.requestId,
+          ok: Boolean(message.result?.ok),
+          acquisitionSource: message.result?.diagnostics?.acquisitionSource ?? null,
+          uniqueSegments: message.result?.diagnostics?.uniqueSegments ?? message.result?.transcript?.segments?.length ?? 0,
+        },
+      );
+      postTerminalToPage(message.requestId, message.result);
+      sendResponse({ ok: true, requestId: message.requestId });
+      return false;
+    }
+
     if (
       message?.type !== "LEXREADER_EXTRACTION_PROGRESS" ||
       typeof message.requestId !== "string" ||

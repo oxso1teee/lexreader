@@ -1,5 +1,6 @@
 import { extractVideoId, buildTranscriptResult, assembleTranscriptResult } from "./youtube-transcript.mjs";
 import { createRequestState } from "./request-state.mjs";
+import { deliverResultAndRestoreOrigin } from "./post-success-lifecycle.mjs";
 
 // Exact-match allowlist. allowed-origins.test.mjs keeps this synchronized
 // with lexreader-bridge.js and manifest.json; broad *.vercel.app trust is
@@ -176,11 +177,34 @@ function assembleNetworkTranscript(videoId, response) {
   });
 }
 
-// requestId -> { youtubeTabId, originTabId, videoId }. Progress from a
+// requestId -> immutable origin ownership plus the exact YouTube tab created
+// for this extraction. Progress from a
 // YouTube tab is forwarded only when every identifier matches this exact
 // active request. A late observer from request A therefore cannot update the
 // progress UI for request B, even if a tab id were ever reused by Chrome.
 const requestContexts = new Map();
+
+export function createRequestContext({
+  requestId,
+  videoId,
+  originTabId = null,
+  originWindowId = null,
+}) {
+  return {
+    requestId,
+    videoId,
+    originTabId,
+    originWindowId,
+    youtubeTabId: null,
+    youtubeWindowId: null,
+    createdByLexReader: false,
+  };
+}
+
+export function getRequestContextSnapshot(requestId) {
+  const context = requestContexts.get(requestId);
+  return context ? { ...context } : null;
+}
 
 async function forwardProgress(originTabId, requestId, stage, details = {}) {
   if (originTabId == null) return;
@@ -194,9 +218,8 @@ async function forwardProgress(originTabId, requestId, stage, details = {}) {
 
 /**
  * Owns the complete lifecycle for one logical import and delivers exactly one
- * terminal payload. `deliver` runs before temporary-tab removal; Chrome has
- * copied the response toward the LexReader content script before cleanup can
- * tear down the YouTube page.
+ * terminal payload. Post-success ownership is handled only after the origin
+ * bridge explicitly acknowledges the request-scoped payload.
  */
 export async function extractYoutubeTranscript(
   rawUrl,
@@ -206,11 +229,20 @@ export async function extractYoutubeTranscript(
   {
     domOnly = false,
     originTabId = null,
-    deliver = () => {},
+    originWindowId = null,
+    context: suppliedContext = null,
+    deliver = deliverResultAndRestoreOrigin,
     emergencyTimeoutMs = EMERGENCY_TIMEOUT_MS,
   } = {},
 ) {
   const videoId = extractVideoId(rawUrl);
+  const context = suppliedContext ?? createRequestContext({
+    requestId,
+    videoId,
+    originTabId,
+    originWindowId,
+  });
+  requestContexts.set(requestId, context);
   let tabId = null;
   let terminalResult = null;
   let emergencyReject;
@@ -220,7 +252,7 @@ export async function extractYoutubeTranscript(
 
   async function progress(stage, details = {}) {
     log("progress", requestId, { videoId, stage, ...details });
-    await forwardProgress(originTabId, requestId, stage, details);
+    await forwardProgress(context.originTabId, requestId, stage, details);
   }
 
   async function extractionFlow() {
@@ -233,8 +265,18 @@ export async function extractYoutubeTranscript(
     await progress("opening_video");
     const tab = await chrome.tabs.create({ url: canonicalWatchUrl(videoId, { domOnly }), active: true });
     tabId = tab.id;
-    requestContexts.set(requestId, { youtubeTabId: tabId, originTabId, videoId });
-    log("temporary tab created", requestId, { videoId, tabId, domOnly });
+    context.youtubeTabId = tabId;
+    context.youtubeWindowId = tab.windowId ?? null;
+    context.createdByLexReader = true;
+    log("temporary_tab_created", requestId, {
+      videoId,
+      originTabId: context.originTabId,
+      originWindowId: context.originWindowId,
+      youtubeTabId: context.youtubeTabId,
+      youtubeWindowId: context.youtubeWindowId,
+      createdByLexReader: context.createdByLexReader,
+      domOnly,
+    });
 
     const readyPromise = waitForTabReady(tabId, videoId);
     try {
@@ -293,7 +335,28 @@ export async function extractYoutubeTranscript(
     });
 
     if (domResponse?.ok) {
+      log("background_received_success", requestId, {
+        videoId,
+        originTabId: context.originTabId,
+        youtubeTabId: context.youtubeTabId,
+        acquisitionSource: "dom",
+        uniqueSegments: domResponse.diagnostics?.uniqueSegments ?? domResponse.domSegments?.length ?? 0,
+        firstMs: domResponse.diagnostics?.firstMs ?? null,
+        lastMs: domResponse.diagnostics?.lastMs ?? null,
+        durationMs: domResponse.diagnostics?.durationMs ?? null,
+        completeness: domResponse.diagnostics?.completeness ?? null,
+      });
       const transcript = assembleDomTranscript(videoId, targetLanguage, domResponse);
+      log("canonical_transcript_created", requestId, {
+        videoId,
+        originTabId: context.originTabId,
+        youtubeTabId: context.youtubeTabId,
+        acquisitionSource: "dom",
+        uniqueSegments: transcript.segments.length,
+        firstMs: transcript.segments[0]?.startMs ?? null,
+        lastMs: transcript.segments.at(-1)?.startMs ?? null,
+        durationMs: transcript.lengthSeconds ? transcript.lengthSeconds * 1_000 : null,
+      });
       if (!requestState.settleSuccess()) throw new Error("stale_dom_success");
       await progress("ready", { acquisitionSource: "dom", uniqueSegments: transcript.segments.length });
       return { ok: true, transcript, diagnostics: domResponse.diagnostics };
@@ -325,7 +388,23 @@ export async function extractYoutubeTranscript(
     });
 
     if (networkResponse?.ok) {
+      log("background_received_success", requestId, {
+        videoId,
+        originTabId: context.originTabId,
+        youtubeTabId: context.youtubeTabId,
+        acquisitionSource: "network",
+      });
       const transcript = assembleNetworkTranscript(videoId, networkResponse);
+      log("canonical_transcript_created", requestId, {
+        videoId,
+        originTabId: context.originTabId,
+        youtubeTabId: context.youtubeTabId,
+        acquisitionSource: "network",
+        uniqueSegments: transcript.segments.length,
+        firstMs: transcript.segments[0]?.startMs ?? null,
+        lastMs: transcript.segments.at(-1)?.startMs ?? null,
+        durationMs: transcript.lengthSeconds ? transcript.lengthSeconds * 1_000 : null,
+      });
       if (!requestState.settleSuccess()) throw new Error("stale_network_success");
       await progress("ready", { acquisitionSource: "network", uniqueSegments: transcript.segments.length });
       return { ok: true, transcript, diagnostics: networkResponse.diagnostics };
@@ -360,25 +439,68 @@ export async function extractYoutubeTranscript(
     });
   }
 
+  let lifecycle;
   try {
-    // Mandatory ordering: assembled terminal payload -> delivery toward
-    // LexReader -> only then close the temporary YouTube tab.
-    await deliver(terminalResult);
-    log("terminal payload delivered toward LexReader", requestId, {
+    if (Number.isInteger(context.originTabId)) {
+      lifecycle = await deliver(context, terminalResult, {
+        chromeApi: chrome,
+        onEvent(event, metadata, extra) {
+          log(event, requestId, { ...metadata, ...extra });
+        },
+      });
+    } else {
+      // Direct module callers (unit/proof helpers) have no LexReader origin.
+      // They still own tabs created by this function, so clean only those.
+      if (context.createdByLexReader && Number.isInteger(context.youtubeTabId)) {
+        log("temporary_tab_close_started", requestId, { videoId, youtubeTabId: context.youtubeTabId });
+        await chrome.tabs.remove(context.youtubeTabId);
+        log("temporary_tab_closed", requestId, { videoId, youtubeTabId: context.youtubeTabId });
+      }
+      lifecycle = {
+        ok: true,
+        deliverySkipped: true,
+        acknowledged: false,
+        activated: false,
+        temporaryTabClosed: context.createdByLexReader === true,
+      };
+    }
+    if (!lifecycle.ok) {
+      log("post_success_lifecycle_failed", requestId, {
+        videoId,
+        originTabId: context.originTabId,
+        youtubeTabId: context.youtubeTabId,
+        acknowledged: lifecycle.acknowledged,
+        activated: lifecycle.activated,
+        error: lifecycle.error,
+      });
+    }
+  } catch (error) {
+    lifecycle = {
+      ok: false,
+      acknowledged: false,
+      activated: false,
+      temporaryTabClosed: false,
+      error: "post_success_lifecycle_failed",
+    };
+    log("post_success_lifecycle_failed", requestId, {
       videoId,
-      tabId,
-      ok: terminalResult.ok,
-      acquisitionSource: terminalResult.diagnostics?.acquisitionSource ?? null,
+      originTabId: context.originTabId,
+      youtubeTabId: context.youtubeTabId,
+      error: error instanceof Error ? error.message : "unknown",
     });
   } finally {
     requestState.cancelEmergency();
-    if (tabId != null) await chrome.tabs.remove(tabId).catch(() => {});
     requestContexts.delete(requestId);
     requestState.transition("cleaned");
-    log("request cleaned", requestId, { videoId, tabId, finalState: requestState.state });
+    log("request_cleaned", requestId, {
+      videoId,
+      originTabId: context.originTabId,
+      youtubeTabId: context.youtubeTabId,
+      finalState: requestState.state,
+    });
   }
 
-  return terminalResult;
+  return { ...terminalResult, lifecycle };
 }
 
 const requestStates = new Map();
@@ -412,15 +534,60 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   const requestState = createRequestState();
   requestStates.set(requestId, requestState);
-  log("request received", requestId, { originTabId: sender.tab?.id ?? null, domOnly: message.domOnly === true });
+  const context = createRequestContext({
+    requestId,
+    videoId: extractVideoId(message.url),
+    originTabId: sender.tab?.id ?? null,
+    originWindowId: sender.tab?.windowId ?? null,
+  });
+  log("request_received", requestId, {
+    videoId: context.videoId,
+    originTabId: context.originTabId,
+    originWindowId: context.originWindowId,
+    domOnly: message.domOnly === true,
+  });
 
   extractYoutubeTranscript(message.url, message.targetLanguage, requestId, requestState, {
     domOnly: message.domOnly === true,
-    originTabId: sender.tab?.id ?? null,
-    deliver: (result) => sendResponse(result),
-  }).finally(() => {
-    requestStates.delete(requestId);
-  });
+    context,
+  })
+    .then((result) => {
+      if (result.lifecycle?.acknowledged) {
+        // The explicit tabs.sendMessage path already delivered the terminal
+        // payload. This only releases the original long-lived request channel;
+        // the bridge must not post a duplicate result to the page.
+        sendResponse({
+          ok: true,
+          requestId,
+          deliveredViaTabMessage: true,
+          lifecycleError: result.lifecycle.error ?? null,
+        });
+        return;
+      }
+      sendResponse(safeFailure(
+        result.lifecycle?.error ?? "origin_delivery_failed",
+        "Не удалось передать готовые субтитры обратно во вкладку LexReader.",
+        {
+          requestId,
+          videoId: context.videoId,
+          originTabId: context.originTabId,
+          youtubeTabId: context.youtubeTabId,
+          createdByLexReader: context.createdByLexReader,
+        },
+      ));
+    })
+    .catch((error) => {
+      log("request_lifecycle_exception", requestId, {
+        videoId: context.videoId,
+        originTabId: context.originTabId,
+        youtubeTabId: context.youtubeTabId,
+        error: error instanceof Error ? error.message : "unknown",
+      });
+      sendResponse(safeFailure("extraction_failed", "Не удалось завершить импорт субтитров."));
+    })
+    .finally(() => {
+      requestStates.delete(requestId);
+    });
 
   return true;
 });

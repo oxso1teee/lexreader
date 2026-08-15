@@ -30,6 +30,13 @@ test("Phase 10 scenario 4: extractVideoId ignores the #lexreader-extraction mark
   );
 });
 
+test("the real youtu.be share URL normalizes to the same canonical videoId", () => {
+  assert.equal(
+    extractVideoId("https://youtu.be/PolmvqSxnbc?si=zpbG79LkPxOhWNRM"),
+    "PolmvqSxnbc",
+  );
+});
+
 // --- Scenarios 2 & 3: DOM-sourced segments carry no language/kind metadata
 // and must never be rejected on that basis (auto-generated English matches
 // fine, en vs en-US is a non-issue since DOM assembly performs no language
@@ -205,7 +212,7 @@ test("DOM-primary integration: DOM rows present -> extraction succeeds without i
   assert.deepEqual(modes, ["dom"], "a valid DOM result must prevent network fallback from being called");
 });
 
-test("DOM-primary integration: terminal payload is delivered before temporary-tab cleanup", async () => {
+test("DOM-primary integration: canonical result is assembled before direct-call temporary-tab cleanup", async () => {
   installMockChrome();
   const { extractYoutubeTranscript } = await import("./background.mjs");
   const { createRequestState } = await import("./request-state.mjs");
@@ -221,7 +228,6 @@ test("DOM-primary integration: terminal payload is delivered before temporary-ta
     "en",
     "req-dom-6",
     createRequestState(),
-    { deliver: () => { mockEventOrder.push("payload_delivered"); } },
   );
 
   // The function only returns AFTER transcript assembly succeeds (source
@@ -233,7 +239,7 @@ test("DOM-primary integration: terminal payload is delivered before temporary-ta
   assert.equal(result.ok, true);
   assert.equal(result.transcript.segments[0].text, "row");
   assert.deepEqual(mockRemoveCallOrder, [1], "the created tab must still be removed exactly once, after the result was already assembled");
-  assert.deepEqual(mockEventOrder, ["payload_delivered", "tab_removed"]);
+  assert.deepEqual(mockEventOrder, ["tab_removed"]);
 });
 
 test("Phase 10 scenario 7: zero DOM rows AND no valid network capture -> transcript_unavailable is the only correct outcome", async () => {
