@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { track } from "@/lib/posthog-client";
 import { startYoutubeImportFromBrowserAction, type StartYoutubeImportState } from "../youtube-import-actions";
 import type { TranscriptResult } from "@/lib/youtube-ingestion/types";
+import { ImportDiagnosticCode } from "@/lib/youtube-ingestion/types";
+import { transcriptDiagnosticMetadata } from "@/lib/youtube-ingestion/diagnostics";
+import { assertValidTranscriptResult } from "@/lib/youtube-ingestion/validate-transcript";
 import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
 
@@ -103,6 +106,26 @@ function requestTranscriptFromBridge(
         reject(new Error(BRIDGE_ERROR_MESSAGES[code] ?? data.message ?? "Не удалось получить субтитры через расширение."));
         return;
       }
+      const metadata = transcriptDiagnosticMetadata(data.transcript);
+      console.debug("[LexReader:diag] bridge_result_received", {
+        requestId,
+        ...metadata,
+      });
+      try {
+        assertValidTranscriptResult(data.transcript);
+      } catch {
+        console.debug("[LexReader:diag] client_result_validation_failed", {
+          requestId,
+          ...metadata,
+          diagnosticCode: ImportDiagnosticCode.VALIDATION_FAILED,
+        });
+        reject(new Error("Расширение вернуло некорректные субтитры."));
+        return;
+      }
+      console.debug("[LexReader:diag] client_result_validation_passed", {
+        requestId,
+        ...metadata,
+      });
       console.debug("[LexReader:diag] lexreader_page_received_success", {
         requestId,
         videoId: data.transcript.videoId,
@@ -186,6 +209,11 @@ export default function YoutubeImportForm({
         setExtractionStage("opening_video");
         const { transcript, requestId } = await requestTranscriptFromBridge(url, targetLanguage, setExtractionStage);
         setExtractionStage("importing");
+        const transcriptMetadata = transcriptDiagnosticMetadata(transcript);
+        console.debug("[LexReader:diag] import_submit_started", {
+          requestId,
+          ...transcriptMetadata,
+        });
         console.debug("[LexReader:diag] lexreader_import_request_started", {
           requestId,
           videoId: transcript.videoId,
@@ -222,6 +250,7 @@ export default function YoutubeImportForm({
             requestId,
             videoId: transcript.videoId,
             reason: "server_action_error",
+            diagnosticCode: result.diagnosticCode ?? null,
           });
           track("material_add_failed", { source: "youtube", reason: "validation_or_server" });
         }

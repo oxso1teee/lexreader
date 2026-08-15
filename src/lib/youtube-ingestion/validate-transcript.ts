@@ -1,5 +1,14 @@
 import type { TranscriptResult, TranscriptSegment } from "./types.ts";
 
+const TRANSCRIPT_SOURCES = new Set<TranscriptResult["source"]>([
+  "manual_caption",
+  "auto_caption",
+  "innertube",
+  "browser_bridge",
+  "yt_dlp_caption",
+  "speech_to_text",
+]);
+
 // Defense-in-depth trust-boundary check on whatever the worker returns.
 // Deliberately NOT a second normalization pass (the worker already
 // normalizes, per production-architecture.md §11) -- this REJECTS
@@ -35,6 +44,15 @@ export function assertValidTranscriptResult(candidate: unknown): asserts candida
   }
   if (typeof t.languageCode !== "string" || !t.languageCode) {
     throw new MalformedTranscriptError("Transcript missing languageCode");
+  }
+  if (typeof t.source !== "string" || !TRANSCRIPT_SOURCES.has(t.source as TranscriptResult["source"])) {
+    throw new MalformedTranscriptError("Transcript has an invalid source");
+  }
+  if (
+    t.durationMs !== undefined &&
+    (typeof t.durationMs !== "number" || !Number.isFinite(t.durationMs) || t.durationMs <= 0)
+  ) {
+    throw new MalformedTranscriptError("Transcript has an invalid duration");
   }
   if (!Array.isArray(t.segments) || t.segments.length === 0) {
     throw new MalformedTranscriptError("Transcript has no segments");

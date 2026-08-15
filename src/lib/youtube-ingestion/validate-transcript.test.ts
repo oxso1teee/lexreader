@@ -66,7 +66,20 @@ test("rejects segments that are not in ascending start order", () => {
 });
 
 test("accepts every real TranscriptSource value observed from the browser bridge", () => {
-  for (const source of ["manual_caption", "auto_caption", "browser_bridge"]) {
+  for (const source of ["manual_caption", "auto_caption", "innertube", "browser_bridge", "yt_dlp_caption", "speech_to_text"]) {
     assert.doesNotThrow(() => assertValidTranscriptResult({ ...VALID, source }));
   }
+});
+
+test("rejects an unrecognized source so it cannot bypass the source-specific duration rule", () => {
+  assert.throws(
+    () => assertValidTranscriptResult({ ...VALID, source: "browser" }),
+    MalformedTranscriptError,
+  );
+});
+
+test("duration is milliseconds and must be a positive finite value when present", () => {
+  assert.doesNotThrow(() => assertValidTranscriptResult({ ...VALID, durationMs: 6_993_000 }));
+  assert.throws(() => assertValidTranscriptResult({ ...VALID, durationMs: 0 }), MalformedTranscriptError);
+  assert.throws(() => assertValidTranscriptResult({ ...VALID, durationMs: Number.NaN }), MalformedTranscriptError);
 });

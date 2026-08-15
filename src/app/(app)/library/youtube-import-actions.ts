@@ -3,9 +3,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { hasFreeTextRoom, resolveCollectionAssignment } from "./actions";
-import { runYoutubeImport } from "@/lib/youtube-ingestion/service";
+import {
+  runYoutubeImport,
+  YoutubeImportPersistenceError,
+} from "@/lib/youtube-ingestion/service";
 import { assertValidTranscriptResult, MalformedTranscriptError } from "@/lib/youtube-ingestion/validate-transcript";
-import { ErrorCategory, type ImportOutcome, type TranscriptResult } from "@/lib/youtube-ingestion/types";
+import {
+  ErrorCategory,
+  ImportDiagnosticCode,
+  type ImportDiagnosticCodeValue,
+  type ImportOutcome,
+  type TranscriptResult,
+} from "@/lib/youtube-ingestion/types";
+import { transcriptDiagnosticMetadata } from "@/lib/youtube-ingestion/diagnostics";
 import { log } from "@/lib/log";
 
 // The one entry point the import form calls for the new worker-backed
@@ -22,6 +32,7 @@ export interface StartYoutubeImportState {
   error?: string;
   paywall?: boolean;
   redirectTo?: string;
+  diagnosticCode?: ImportDiagnosticCodeValue;
 }
 
 const USER_FACING_MESSAGE: Record<string, string> = {
@@ -47,7 +58,10 @@ function toState(outcome: ImportOutcome): StartYoutubeImportState {
     return { redirectTo: outcome.readyRoute };
   }
   if (outcome.status === "failed") {
-    return { error: outcome.error ? (USER_FACING_MESSAGE[outcome.error] ?? "Не удалось импортировать видео.") : "Не удалось импортировать видео." };
+    return {
+      error: outcome.error ? (USER_FACING_MESSAGE[outcome.error] ?? "Не удалось импортировать видео.") : "Не удалось импортировать видео.",
+      diagnosticCode: outcome.diagnosticCode,
+    };
   }
   // pending/processing -- synchronous MVP (see service.ts's known
   // limitation note): by the time we get here the pipeline has already
@@ -73,26 +87,61 @@ export async function startYoutubeImportFromBrowserAction(
   requestId = "unknown",
 ): Promise<StartYoutubeImportState> {
   lifecycleDiagnostic("lexreader_persistence_started", requestId);
+  const receivedMetadata = transcriptDiagnosticMetadata(transcript);
+  lifecycleDiagnostic("server_action_received", requestId, receivedMetadata);
   let validated: TranscriptResult;
   try {
     assertValidTranscriptResult(transcript);
     validated = transcript;
+    lifecycleDiagnostic("server_result_validation_passed", requestId, receivedMetadata);
   } catch (err) {
-    lifecycleDiagnostic("lexreader_persistence_failure", requestId, { reason: "browser_payload_invalid" });
+    lifecycleDiagnostic("server_result_validation_failed", requestId, {
+      ...receivedMetadata,
+      diagnosticCode: ImportDiagnosticCode.VALIDATION_FAILED,
+    });
+    lifecycleDiagnostic("lexreader_persistence_failure", requestId, {
+      reason: "browser_payload_invalid",
+      diagnosticCode: ImportDiagnosticCode.VALIDATION_FAILED,
+    });
     log.import({ kind: "youtube", outcome: "error", reason: "browser_payload_invalid" });
-    return {
+    const state: StartYoutubeImportState = {
       error:
         err instanceof MalformedTranscriptError
           ? "Расширение вернуло некорректные субтитры."
           : "Не удалось получить субтитры через расширение.",
+      diagnosticCode: ImportDiagnosticCode.VALIDATION_FAILED,
+    };
+    lifecycleDiagnostic("import_action_returned", requestId, {
+      ok: false,
+      diagnosticCode: state.diagnosticCode,
+    });
+    return state;
+  }
+
+  let profile: Awaited<ReturnType<typeof requireProfile>>;
+  let supabase: Awaited<ReturnType<typeof createClient>>;
+  try {
+    profile = await requireProfile();
+    supabase = await createClient();
+  } catch {
+    lifecycleDiagnostic("lexreader_persistence_failure", requestId, {
+      videoId: validated.videoId,
+      reason: "auth_failed",
+      diagnosticCode: ImportDiagnosticCode.AUTH_FAILED,
+    });
+    lifecycleDiagnostic("import_action_returned", requestId, {
+      ok: false,
+      diagnosticCode: ImportDiagnosticCode.AUTH_FAILED,
+    });
+    return {
+      error: "Сессия устарела. Обнови страницу и войди снова.",
+      diagnosticCode: ImportDiagnosticCode.AUTH_FAILED,
     };
   }
 
-  const profile = await requireProfile();
-  const supabase = await createClient();
-
   if (!(await hasFreeTextRoom(supabase, profile.id))) {
     lifecycleDiagnostic("lexreader_persistence_failure", requestId, { reason: "paywall" });
+    lifecycleDiagnostic("import_action_returned", requestId, { ok: false, reason: "paywall" });
     return { paywall: true };
   }
 
@@ -104,11 +153,15 @@ export async function startYoutubeImportFromBrowserAction(
   );
   if ("error" in collectionAssignment) {
     lifecycleDiagnostic("lexreader_persistence_failure", requestId, { reason: "collection_assignment" });
+    lifecycleDiagnostic("import_action_returned", requestId, { ok: false, reason: "collection_assignment" });
     return { error: collectionAssignment.error };
   }
 
   const start = Date.now();
   try {
+    const diagnostic = (event: string, metadata: Record<string, unknown> = {}) => {
+      lifecycleDiagnostic(event, requestId, metadata);
+    };
     const outcome = await runYoutubeImport(
       supabase,
       profile.id,
@@ -121,11 +174,13 @@ export async function startYoutubeImportFromBrowserAction(
         ingestionDurationMs: Date.now() - start,
       }),
       collectionAssignment,
+      diagnostic,
     );
     if (outcome.status === "failed") {
       lifecycleDiagnostic("lexreader_persistence_failure", requestId, {
         videoId: validated.videoId,
         reason: outcome.error ?? "unknown",
+        diagnosticCode: outcome.diagnosticCode,
       });
       log.import({ kind: "youtube", outcome: "error", reason: outcome.error ?? "unknown" });
     } else if (outcome.status === "ready") {
@@ -136,14 +191,37 @@ export async function startYoutubeImportFromBrowserAction(
       });
       log.import({ kind: "youtube", outcome: "success", reason: "browser_bridge" });
     }
-    return toState(outcome);
-  } catch {
+    const state = toState(outcome);
+    lifecycleDiagnostic("import_action_returned", requestId, {
+      ok: Boolean(state.redirectTo),
+      textId: outcome.textId || null,
+      status: outcome.status,
+      diagnosticCode: outcome.diagnosticCode,
+      redirectTo: state.redirectTo ?? null,
+    });
+    return state;
+  } catch (error) {
+    const diagnosticCode = error instanceof YoutubeImportPersistenceError
+      ? error.diagnosticCode
+      : ImportDiagnosticCode.TRANSACTION_FAILED;
+    const databaseCode = error instanceof YoutubeImportPersistenceError
+      ? error.databaseCode
+      : null;
     lifecycleDiagnostic("lexreader_persistence_failure", requestId, {
       videoId: validated.videoId,
-      reason: "unexpected_exception",
+      reason: diagnosticCode,
+      diagnosticCode,
+      databaseCode,
     });
-    log.import({ kind: "youtube", outcome: "error", reason: "unexpected_exception" });
-    return { error: "Не удалось импортировать видео. Попробуй ещё раз." };
+    lifecycleDiagnostic("import_action_returned", requestId, {
+      ok: false,
+      diagnosticCode,
+    });
+    log.import({ kind: "youtube", outcome: "error", reason: diagnosticCode });
+    return {
+      error: "Не удалось импортировать видео. Попробуй ещё раз.",
+      diagnosticCode,
+    };
   }
 }
 

@@ -164,6 +164,13 @@ export default function WatchPlayer({
           pathname: window.location.pathname,
           uniqueSegments: segments.length,
         });
+        console.debug("[LexReader:diag] final_watch_route", {
+          requestId: diagnostic.requestId,
+          videoId: diagnostic.videoId ?? videoId,
+          textId,
+          pathname: window.location.pathname,
+          segmentCount: segments.length,
+        });
         window.sessionStorage.removeItem(WATCH_DIAGNOSTIC_STORAGE_KEY);
       }
     } catch {

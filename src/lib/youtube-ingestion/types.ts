@@ -40,6 +40,34 @@ export const ErrorCategory = {
 
 export type ErrorCategoryValue = (typeof ErrorCategory)[keyof typeof ErrorCategory];
 
+// Safe, request-scoped failure classification for diagnostics. These codes
+// deliberately describe the failing boundary without returning raw Postgres,
+// auth, or transcript data to the browser.
+export const ImportDiagnosticCode = {
+  VALIDATION_FAILED: "validation_failed",
+  DURATION_LIMIT: "duration_limit",
+  RATE_LIMITED: "rate_limited",
+  AUTH_FAILED: "auth_failed",
+  SCHEMA_MISMATCH: "schema_mismatch",
+  TEXT_LOOKUP_FAILED: "text_lookup_failed",
+  TEXT_INSERT_FAILED: "text_insert_failed",
+  TEXT_UPDATE_FAILED: "text_update_failed",
+  CAPTION_INSERT_FAILED: "caption_insert_failed",
+  TRANSACTION_FAILED: "transaction_failed",
+  PERSISTENCE_TIMEOUT: "persistence_timeout",
+  PAYLOAD_TOO_LARGE: "payload_too_large",
+  PAYLOAD_COUNT_MISMATCH: "payload_count_mismatch",
+  DUPLICATE_VIDEO: "duplicate_video",
+} as const;
+
+export type ImportDiagnosticCodeValue =
+  (typeof ImportDiagnosticCode)[keyof typeof ImportDiagnosticCode];
+
+export type ImportDiagnosticSink = (
+  event: string,
+  metadata?: Record<string, unknown>,
+) => void;
+
 export type ProcessingStatus = "pending" | "processing" | "ready" | "failed";
 
 export type ProcessingStage =
@@ -57,5 +85,6 @@ export type ImportOutcome = {
   status: ProcessingStatus;
   stage: ProcessingStage | null;
   error: ErrorCategoryValue | null;
+  diagnosticCode?: ImportDiagnosticCodeValue;
   readyRoute?: string;
 };

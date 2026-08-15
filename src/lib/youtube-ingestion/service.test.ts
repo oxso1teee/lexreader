@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { runYoutubeImport, getYoutubeImportStatus } from "./service.ts";
+import { runYoutubeImport, getYoutubeImportStatus, YoutubeImportPersistenceError } from "./service.ts";
 import type { WorkerIngestResponse } from "./worker-client.ts";
 import { ErrorCategory } from "./types.ts";
 
@@ -13,6 +13,8 @@ function makeFakeSupabase() {
   const captionSegments: Record<string, unknown>[] = [];
   let nextId = 1;
   let forceUniqueViolationOnce = false;
+  let rpcErrorOnce: { code: string; message: string } | null = null;
+  let textLookupErrorOnce: { code: string; message: string } | null = null;
 
   function textsTable() {
     const filters: [string, unknown][] = [];
@@ -60,6 +62,11 @@ function makeFakeSupabase() {
         return builder;
       },
       async maybeSingle() {
+        if (textLookupErrorOnce) {
+          const error = textLookupErrorOnce;
+          textLookupErrorOnce = null;
+          return { data: null, error };
+        }
         return { data: matches()[0] ?? null };
       },
       async single() {
@@ -87,6 +94,41 @@ function makeFakeSupabase() {
     _forceUniqueViolationOnce: () => {
       forceUniqueViolationOnce = true;
     },
+    _failNextRpc(code = "XX000") {
+      rpcErrorOnce = { code, message: "simulated persistence failure" };
+    },
+    _failNextTextLookup(code = "XX000") {
+      textLookupErrorOnce = { code, message: "simulated text lookup failure" };
+    },
+    async rpc(name: string, args: Record<string, unknown>) {
+      assert.equal(name, "persist_youtube_import");
+      if (rpcErrorOnce) {
+        const error = rpcErrorOnce;
+        rpcErrorOnce = null;
+        return { data: null, error };
+      }
+
+      const textId = args.p_text_id as string;
+      const rows = args.p_segments as Record<string, unknown>[];
+      const text = texts.find((row) => row.id === textId);
+      if (!text) return { data: null, error: { code: "42501", message: "not owned" } };
+
+      for (let index = captionSegments.length - 1; index >= 0; index -= 1) {
+        if (captionSegments[index].text_id === textId) captionSegments.splice(index, 1);
+      }
+      captionSegments.push(...rows.map((row) => ({ ...row, text_id: textId })));
+      Object.assign(text, {
+        title: args.p_title,
+        youtube_duration_seconds: args.p_duration_seconds,
+        transcript_source: args.p_transcript_source,
+        language: args.p_language,
+        word_count: args.p_word_count,
+        processing_status: "ready",
+        processing_stage: null,
+        processing_error: null,
+      });
+      return { data: rows.length, error: null };
+    },
     from(table: string) {
       if (table === "texts") return textsTable();
       if (table === "caption_segments") {
@@ -101,6 +143,15 @@ function makeFakeSupabase() {
     },
   };
   return fake as unknown as import("@/lib/supabase/server").SupabaseServerClient & typeof fake;
+}
+
+function makeSegments(count: number, totalDurationMs = 6_993_000) {
+  const stepMs = Math.floor(totalDurationMs / count);
+  return Array.from({ length: count }, (_, index) => ({
+    startMs: index * stepMs,
+    endMs: index === count - 1 ? totalDurationMs : (index + 1) * stepMs,
+    text: `segment ${index} with enough transcript text`,
+  }));
 }
 
 function okTranscriptResponse(overrides: Partial<WorkerIngestResponse & { ok: true }> = {}): WorkerIngestResponse {
@@ -158,7 +209,7 @@ test("a complete 116-minute browser-bridge transcript persists without raising t
       languageCode: "en",
       durationMs: 6_993_000,
       source: "browser_bridge",
-      segments: [{ startMs: 0, endMs: 6_993_000, text: "complete browser transcript" }],
+      segments: makeSegments(973),
     },
   });
   const outcome = await runYoutubeImport(
@@ -171,7 +222,8 @@ test("a complete 116-minute browser-bridge transcript persists without raising t
 
   assert.equal(outcome.status, "ready");
   assert.equal(supabase._texts[0].youtube_duration_seconds, 6_993);
-  assert.equal(supabase._captionSegments.length, 1);
+  assert.equal(supabase._captionSegments.length, 973);
+  assert.equal(supabase._captionSegments[972].segment_index, 972);
 });
 
 test("the original 60-minute cap remains enforced for worker-acquired transcripts", async () => {
@@ -255,6 +307,100 @@ test("a failed import can be retried -- reuses the same row, resets it, runs the
   assert.equal(supabase._texts.length, 1, "retry must not create a second row");
   assert.equal(outcome.status, "ready");
   assert.equal(outcome.textId, "text-existing");
+});
+
+test("a retry atomically reconciles partial captions instead of duplicating or truncating them", async () => {
+  const supabase = makeFakeSupabase();
+  supabase._texts.push({
+    id: "text-partial",
+    owner_id: "user-1",
+    youtube_video_id: "PolmvqSxnbc",
+    processing_status: "failed",
+    processing_stage: null,
+    processing_error: "storage_failed",
+  });
+  supabase._captionSegments.push(
+    ...Array.from({ length: 12 }, (_, index) => ({
+      text_id: "text-partial",
+      start_ms: index * 1000,
+      end_ms: (index + 1) * 1000,
+      body: `partial ${index}`,
+      segment_index: index,
+    })),
+  );
+  const diagnostics: { event: string; metadata: Record<string, unknown> }[] = [];
+
+  const outcome = await runYoutubeImport(
+    supabase,
+    "user-1",
+    "https://youtu.be/PolmvqSxnbc?si=retry",
+    "en",
+    async () => okTranscriptResponse({
+      transcript: {
+        videoId: "PolmvqSxnbc",
+        title: "Robinson Crusoe",
+        languageCode: "en",
+        durationMs: 6_993_000,
+        source: "browser_bridge",
+        segments: makeSegments(973),
+      },
+    }),
+    {},
+    (event, metadata = {}) => diagnostics.push({ event, metadata }),
+  );
+
+  assert.equal(outcome.status, "ready");
+  assert.equal(outcome.textId, "text-partial");
+  assert.equal(supabase._texts.length, 1);
+  assert.equal(supabase._captionSegments.length, 973);
+  assert.deepEqual(
+    diagnostics.filter(({ event }) => event === "transaction_commit_success").map(({ metadata }) => metadata.captionCount),
+    [973],
+  );
+});
+
+test("a persistence RPC failure returns a structured diagnostic and never reports ready", async () => {
+  const supabase = makeFakeSupabase();
+  supabase._failNextRpc("57014");
+  const diagnostics: { event: string; metadata: Record<string, unknown> }[] = [];
+
+  const outcome = await runYoutubeImport(
+    supabase,
+    "user-1",
+    "https://www.youtube.com/watch?v=abcDEF_123-",
+    "en",
+    async () => okTranscriptResponse(),
+    {},
+    (event, metadata = {}) => diagnostics.push({ event, metadata }),
+  );
+
+  assert.equal(outcome.status, "failed");
+  assert.equal(outcome.error, ErrorCategory.STORAGE_FAILED);
+  assert.equal(outcome.diagnosticCode, "persistence_timeout");
+  assert.equal(supabase._texts[0].processing_status, "failed");
+  assert.equal(supabase._captionSegments.length, 0);
+  assert.equal(diagnostics.some(({ event }) => event === "transaction_commit_failed"), true);
+});
+
+test("schema drift at the initial text lookup is surfaced as schema_mismatch", async () => {
+  const supabase = makeFakeSupabase();
+  supabase._failNextTextLookup("42703");
+
+  await assert.rejects(
+    runYoutubeImport(
+      supabase,
+      "user-1",
+      "https://www.youtube.com/watch?v=abcDEF_123-",
+      "en",
+      async () => okTranscriptResponse(),
+    ),
+    (error: unknown) => {
+      assert.equal(error instanceof YoutubeImportPersistenceError, true);
+      assert.equal((error as YoutubeImportPersistenceError).diagnosticCode, "schema_mismatch");
+      assert.equal((error as YoutubeImportPersistenceError).databaseCode, "42703");
+      return true;
+    },
+  );
 });
 
 test("a concurrent duplicate insert (unique-violation race) is handled safely -- no crash, no duplicate row", async () => {

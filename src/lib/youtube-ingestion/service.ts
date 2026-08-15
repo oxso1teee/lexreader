@@ -10,19 +10,78 @@ import {
   MAX_VIDEO_DURATION_SECONDS,
   MAX_IMPORTS_PER_USER_PER_HOUR,
 } from "./limits.ts";
-import { ErrorCategory, type ImportOutcome, type ErrorCategoryValue } from "./types.ts";
+import {
+  ErrorCategory,
+  ImportDiagnosticCode,
+  type ImportDiagnosticCodeValue,
+  type ImportDiagnosticSink,
+  type ImportOutcome,
+  type ErrorCategoryValue,
+} from "./types.ts";
+import { serializedJsonBytes } from "./diagnostics.ts";
 
 const DEFAULT_TARGET_LANGUAGE = "en";
+
+type DatabaseError = { code?: unknown } | null | undefined;
+
+function databaseErrorCode(error: DatabaseError): string | null {
+  return typeof error?.code === "string" ? error.code : null;
+}
+
+function classifyPersistenceError(
+  fallback: ImportDiagnosticCodeValue,
+  error: DatabaseError,
+): ImportDiagnosticCodeValue {
+  const code = databaseErrorCode(error);
+  if (code === "42703" || code === "PGRST204" || code === "PGRST202") {
+    return ImportDiagnosticCode.SCHEMA_MISMATCH;
+  }
+  if (code === "57014" || code === "PGRST003") {
+    return ImportDiagnosticCode.PERSISTENCE_TIMEOUT;
+  }
+  if (code === "413" || code === "PGRST102") {
+    return ImportDiagnosticCode.PAYLOAD_TOO_LARGE;
+  }
+  return fallback;
+}
+
+export class YoutubeImportPersistenceError extends Error {
+  readonly diagnosticCode: ImportDiagnosticCodeValue;
+  readonly databaseCode: string | null;
+
+  constructor(diagnosticCode: ImportDiagnosticCodeValue, error?: DatabaseError) {
+    super(diagnosticCode);
+    this.name = "YoutubeImportPersistenceError";
+    this.diagnosticCode = classifyPersistenceError(diagnosticCode, error);
+    this.databaseCode = databaseErrorCode(error);
+  }
+}
+
+function emitDiagnostic(
+  diagnostic: ImportDiagnosticSink | undefined,
+  event: string,
+  metadata: Record<string, unknown> = {},
+) {
+  diagnostic?.(event, metadata);
+}
 
 async function markFailed(
   supabase: SupabaseServerClient,
   textId: string,
   category: ErrorCategoryValue,
+  diagnostic?: ImportDiagnosticSink,
 ): Promise<void> {
-  await supabase
+  const { error } = await supabase
     .from("texts")
     .update({ processing_status: "failed", processing_stage: null, processing_error: category })
     .eq("id", textId);
+  if (error) {
+    emitDiagnostic(diagnostic, "text_insert_failed", {
+      operation: "mark_failed",
+      diagnosticCode: classifyPersistenceError(ImportDiagnosticCode.TEXT_UPDATE_FAILED, error),
+      databaseCode: databaseErrorCode(error),
+    });
+  }
 }
 
 /**
@@ -37,16 +96,33 @@ async function reserveImportRow(
   videoId: string,
   targetLanguage: string,
   collection: { collectionId?: string | null; collectionOrder?: number | null },
+  diagnostic?: ImportDiagnosticSink,
 ): Promise<{ textId: string; needsWork: boolean; outcome?: ImportOutcome }> {
-  const { data: existing } = await supabase
+  const { data: existing, error: lookupError } = await supabase
     .from("texts")
     .select("id, processing_status, processing_stage, processing_error")
     .eq("owner_id", ownerId)
     .eq("youtube_video_id", videoId)
     .maybeSingle();
 
+  if (lookupError) {
+    const diagnosticCode = classifyPersistenceError(ImportDiagnosticCode.TEXT_LOOKUP_FAILED, lookupError);
+    emitDiagnostic(diagnostic, "text_insert_failed", {
+      operation: "lookup",
+      diagnosticCode,
+      databaseCode: databaseErrorCode(lookupError),
+    });
+    throw new YoutubeImportPersistenceError(diagnosticCode, lookupError);
+  }
+
   if (existing) {
     if (existing.processing_status === "ready") {
+      emitDiagnostic(diagnostic, "text_insert_success", {
+        textId: existing.id,
+        reused: true,
+        existingStatus: "ready",
+        diagnosticCode: ImportDiagnosticCode.DUPLICATE_VIDEO,
+      });
       return {
         textId: existing.id,
         needsWork: false,
@@ -54,6 +130,12 @@ async function reserveImportRow(
       };
     }
     if (existing.processing_status === "pending" || existing.processing_status === "processing") {
+      emitDiagnostic(diagnostic, "text_insert_success", {
+        textId: existing.id,
+        reused: true,
+        existingStatus: existing.processing_status,
+        diagnosticCode: ImportDiagnosticCode.DUPLICATE_VIDEO,
+      });
       return {
         textId: existing.id,
         needsWork: false,
@@ -66,13 +148,29 @@ async function reserveImportRow(
       };
     }
     // failed -- explicit retry: reuse the row, reset it, and proceed.
-    await supabase
+    const { error: resetError } = await supabase
       .from("texts")
       .update({ processing_status: "pending", processing_stage: null, processing_error: null })
       .eq("id", existing.id);
+    if (resetError) {
+      const diagnosticCode = classifyPersistenceError(ImportDiagnosticCode.TEXT_UPDATE_FAILED, resetError);
+      emitDiagnostic(diagnostic, "text_insert_failed", {
+        operation: "reset_failed_import",
+        textId: existing.id,
+        diagnosticCode,
+        databaseCode: databaseErrorCode(resetError),
+      });
+      throw new YoutubeImportPersistenceError(diagnosticCode, resetError);
+    }
+    emitDiagnostic(diagnostic, "text_insert_success", {
+      textId: existing.id,
+      reused: true,
+      existingStatus: "failed",
+    });
     return { textId: existing.id, needsWork: true };
   }
 
+  emitDiagnostic(diagnostic, "text_insert_started", { videoId });
   const { data: inserted, error: insertError } = await supabase
     .from("texts")
     .insert({
@@ -95,13 +193,28 @@ async function reserveImportRow(
     // (owner, video) won the insert first -- re-query and treat as found,
     // never create a duplicate row.
     if (insertError.code === "23505") {
-      const { data: winner } = await supabase
+      const { data: winner, error: winnerError } = await supabase
         .from("texts")
         .select("id, processing_status, processing_stage")
         .eq("owner_id", ownerId)
         .eq("youtube_video_id", videoId)
         .single();
+      if (winnerError) {
+        const diagnosticCode = classifyPersistenceError(ImportDiagnosticCode.TEXT_LOOKUP_FAILED, winnerError);
+        emitDiagnostic(diagnostic, "text_insert_failed", {
+          operation: "duplicate_winner_lookup",
+          diagnosticCode,
+          databaseCode: databaseErrorCode(winnerError),
+        });
+        throw new YoutubeImportPersistenceError(diagnosticCode, winnerError);
+      }
       if (winner) {
+        emitDiagnostic(diagnostic, "text_insert_success", {
+          textId: winner.id,
+          reused: true,
+          existingStatus: winner.processing_status,
+          diagnosticCode: ImportDiagnosticCode.DUPLICATE_VIDEO,
+        });
         return {
           textId: winner.id,
           needsWork: false,
@@ -109,9 +222,19 @@ async function reserveImportRow(
         };
       }
     }
-    throw new Error(`Failed to create import row: ${insertError.message}`);
+    const diagnosticCode = classifyPersistenceError(ImportDiagnosticCode.TEXT_INSERT_FAILED, insertError);
+    emitDiagnostic(diagnostic, "text_insert_failed", {
+      operation: "insert",
+      diagnosticCode,
+      databaseCode: databaseErrorCode(insertError),
+    });
+    throw new YoutubeImportPersistenceError(diagnosticCode, insertError);
   }
 
+  emitDiagnostic(diagnostic, "text_insert_success", {
+    textId: inserted.id,
+    reused: false,
+  });
   return { textId: inserted.id, needsWork: true };
 }
 
@@ -129,23 +252,27 @@ async function runImportPipeline(
   videoId: string,
   targetLanguage: string,
   callWorker: typeof callIngestionWorker,
+  diagnostic?: ImportDiagnosticSink,
 ): Promise<ImportOutcome> {
-  await supabase
+  const { error: processingError } = await supabase
     .from("texts")
     .update({ processing_status: "processing", processing_stage: "validating" })
     .eq("id", textId);
+  if (processingError) {
+    throw new YoutubeImportPersistenceError(ImportDiagnosticCode.TEXT_UPDATE_FAILED, processingError);
+  }
 
   let response: WorkerIngestResponse;
   try {
     response = await callWorker({ videoId, targetLanguage });
   } catch (err) {
     const category = err instanceof WorkerUnavailableError ? ErrorCategory.WORKER_UNAVAILABLE : ErrorCategory.TRANSCRIPTION_FAILED;
-    await markFailed(supabase, textId, category);
+    await markFailed(supabase, textId, category, diagnostic);
     return { textId, status: "failed", stage: null, error: category };
   }
 
   if (!response.ok) {
-    await markFailed(supabase, textId, response.error);
+    await markFailed(supabase, textId, response.error, diagnostic);
     return { textId, status: "failed", stage: null, error: response.error };
   }
 
@@ -153,62 +280,135 @@ async function runImportPipeline(
     assertValidTranscriptResult(response.transcript);
   } catch (err) {
     const category = err instanceof MalformedTranscriptError ? ErrorCategory.STORAGE_FAILED : ErrorCategory.TRANSCRIPTION_FAILED;
-    await markFailed(supabase, textId, category);
-    return { textId, status: "failed", stage: null, error: category };
+    await markFailed(supabase, textId, category, diagnostic);
+    return {
+      textId,
+      status: "failed",
+      stage: null,
+      error: category,
+      diagnosticCode: ImportDiagnosticCode.VALIDATION_FAILED,
+    };
   }
 
   const { transcript } = response;
   const maximumDurationSeconds = transcript.source === "browser_bridge"
     ? MAX_BROWSER_BRIDGE_VIDEO_DURATION_SECONDS
     : MAX_VIDEO_DURATION_SECONDS;
-  if (transcript.durationMs && transcript.durationMs / 1000 > maximumDurationSeconds) {
-    await markFailed(supabase, textId, ErrorCategory.VIDEO_TOO_LONG);
-    return { textId, status: "failed", stage: null, error: ErrorCategory.VIDEO_TOO_LONG };
+  const actualDurationSeconds = transcript.durationMs ? transcript.durationMs / 1000 : null;
+  const acceptedByDuration = actualDurationSeconds === null || actualDurationSeconds <= maximumDurationSeconds;
+  emitDiagnostic(diagnostic, "ingestion_limits_checked", {
+    videoId,
+    transcriptSource: transcript.source,
+    sourceRule: transcript.source === "browser_bridge" ? "browser_bridge_2h" : "worker_stt_60m",
+    effectiveLimitSeconds: maximumDurationSeconds,
+    actualDurationSeconds,
+    accepted: acceptedByDuration,
+  });
+  if (!acceptedByDuration) {
+    await markFailed(supabase, textId, ErrorCategory.VIDEO_TOO_LONG, diagnostic);
+    return {
+      textId,
+      status: "failed",
+      stage: null,
+      error: ErrorCategory.VIDEO_TOO_LONG,
+      diagnosticCode: ImportDiagnosticCode.DURATION_LIMIT,
+    };
   }
 
-  await supabase.from("texts").update({ processing_stage: "saving" }).eq("id", textId);
+  const { error: savingStageError } = await supabase
+    .from("texts")
+    .update({ processing_stage: "saving" })
+    .eq("id", textId);
+  if (savingStageError) {
+    throw new YoutubeImportPersistenceError(ImportDiagnosticCode.TEXT_UPDATE_FAILED, savingStageError);
+  }
 
   const body = transcript.segments.map((s) => s.text).join(" ");
 
-  // Segments first (a single bulk INSERT is atomic at the Postgres level --
-  // either every row lands or none do), THEN flip the row to ready. If this
-  // insert fails, the row simply stays non-ready with no segments attached
-  // -- never "ready" with a partial transcript.
-  const { error: segmentsError } = await supabase.from("caption_segments").insert(
-    transcript.segments.map((seg, index) => ({
-      text_id: textId,
-      start_ms: seg.startMs,
-      end_ms: seg.endMs,
-      body: seg.text,
-      segment_index: index,
-    })),
+  const captionRows = transcript.segments.map((seg, index) => ({
+    start_ms: seg.startMs,
+    end_ms: seg.endMs,
+    body: seg.text,
+    segment_index: index,
+  }));
+  const captionPayloadBytes = serializedJsonBytes(captionRows);
+  emitDiagnostic(diagnostic, "caption_segments_insert_started", {
+    textId,
+    count: captionRows.length,
+    serializedPayloadBytes: captionPayloadBytes,
+  });
+
+  // One owner-scoped Postgres RPC replaces any partial prior rows, inserts
+  // every canonical segment, and flips the text to ready in one transaction.
+  // A failure rolls the whole operation back, so retries are idempotent and
+  // cannot leave a ready text with truncated captions.
+  const { data: insertedCount, error: persistenceError } = await supabase.rpc(
+    "persist_youtube_import",
+    {
+      p_text_id: textId,
+      p_title: transcript.title,
+      p_duration_seconds: transcript.durationMs ? Math.round(transcript.durationMs / 1000) : null,
+      p_transcript_source: transcript.source,
+      p_language: transcript.languageCode,
+      p_word_count: body.split(/\s+/).filter(Boolean).length,
+      p_segments: captionRows,
+    },
   );
 
-  if (segmentsError) {
-    await markFailed(supabase, textId, ErrorCategory.STORAGE_FAILED);
-    return { textId, status: "failed", stage: null, error: ErrorCategory.STORAGE_FAILED };
+  if (persistenceError) {
+    const diagnosticCode = classifyPersistenceError(ImportDiagnosticCode.TRANSACTION_FAILED, persistenceError);
+    emitDiagnostic(diagnostic, "caption_segments_insert_failed", {
+      textId,
+      count: captionRows.length,
+      diagnosticCode: diagnosticCode === ImportDiagnosticCode.TRANSACTION_FAILED
+        ? ImportDiagnosticCode.CAPTION_INSERT_FAILED
+        : diagnosticCode,
+      databaseCode: databaseErrorCode(persistenceError),
+    });
+    emitDiagnostic(diagnostic, "transaction_commit_failed", {
+      textId,
+      diagnosticCode,
+      databaseCode: databaseErrorCode(persistenceError),
+    });
+    await markFailed(supabase, textId, ErrorCategory.STORAGE_FAILED, diagnostic);
+    return {
+      textId,
+      status: "failed",
+      stage: null,
+      error: ErrorCategory.STORAGE_FAILED,
+      diagnosticCode,
+    };
   }
 
-  const { error: finalizeError } = await supabase
-    .from("texts")
-    .update({
-      title: transcript.title,
-      youtube_duration_seconds: transcript.durationMs ? Math.round(transcript.durationMs / 1000) : null,
-      transcript_source: transcript.source,
-      language: transcript.languageCode,
-      word_count: body.split(/\s+/).filter(Boolean).length,
-      processing_status: "ready",
-      processing_stage: null,
-      processing_error: null,
-    })
-    .eq("id", textId);
-
-  if (finalizeError) {
-    // Segments exist but the row never flipped to ready -- stays
-    // "processing" (safe, recoverable), not silently "ready".
-    await markFailed(supabase, textId, ErrorCategory.STORAGE_FAILED);
-    return { textId, status: "failed", stage: null, error: ErrorCategory.STORAGE_FAILED };
+  if (insertedCount !== captionRows.length) {
+    emitDiagnostic(diagnostic, "caption_segments_insert_failed", {
+      textId,
+      expectedCount: captionRows.length,
+      actualCount: insertedCount,
+      diagnosticCode: ImportDiagnosticCode.PAYLOAD_COUNT_MISMATCH,
+    });
+    emitDiagnostic(diagnostic, "transaction_commit_failed", {
+      textId,
+      diagnosticCode: ImportDiagnosticCode.PAYLOAD_COUNT_MISMATCH,
+    });
+    await markFailed(supabase, textId, ErrorCategory.STORAGE_FAILED, diagnostic);
+    return {
+      textId,
+      status: "failed",
+      stage: null,
+      error: ErrorCategory.STORAGE_FAILED,
+      diagnosticCode: ImportDiagnosticCode.PAYLOAD_COUNT_MISMATCH,
+    };
   }
+
+  emitDiagnostic(diagnostic, "caption_segments_insert_success", {
+    textId,
+    count: insertedCount,
+  });
+  emitDiagnostic(diagnostic, "transaction_commit_success", {
+    textId,
+    captionCount: insertedCount,
+  });
 
   return { textId, status: "ready", stage: null, error: null, readyRoute: `/watch/${textId}` };
 }
@@ -229,6 +429,8 @@ export async function runYoutubeImport(
    * feature, unrelated to Slice 12 -- preserved so switching the form's
    * fallback path to this service doesn't regress it). */
   collection: { collectionId?: string | null; collectionOrder?: number | null } = {},
+  /** Optional request-scoped metadata-only diagnostics. */
+  diagnostic?: ImportDiagnosticSink,
 ): Promise<ImportOutcome> {
   const videoId = extractVideoId(rawUrl);
   if (!videoId) {
@@ -236,22 +438,31 @@ export async function runYoutubeImport(
   }
 
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count } = await supabase
+  const { count, error: rateLimitError } = await supabase
     .from("texts")
     .select("id", { count: "exact", head: true })
     .eq("owner_id", ownerId)
     .not("youtube_video_id", "is", null)
     .gte("created_at", oneHourAgo);
+  if (rateLimitError) {
+    throw new YoutubeImportPersistenceError(ImportDiagnosticCode.TEXT_LOOKUP_FAILED, rateLimitError);
+  }
   if ((count ?? 0) >= MAX_IMPORTS_PER_USER_PER_HOUR) {
-    return { textId: "", status: "failed", stage: null, error: ErrorCategory.RATE_LIMITED };
+    return {
+      textId: "",
+      status: "failed",
+      stage: null,
+      error: ErrorCategory.RATE_LIMITED,
+      diagnosticCode: ImportDiagnosticCode.RATE_LIMITED,
+    };
   }
 
-  const reserved = await reserveImportRow(supabase, ownerId, videoId, targetLanguage, collection);
+  const reserved = await reserveImportRow(supabase, ownerId, videoId, targetLanguage, collection, diagnostic);
   if (!reserved.needsWork) {
     return reserved.outcome!;
   }
 
-  return runImportPipeline(supabase, reserved.textId, videoId, targetLanguage, callWorker);
+  return runImportPipeline(supabase, reserved.textId, videoId, targetLanguage, callWorker, diagnostic);
 }
 
 /** Safe, authenticated status read for an existing import (§14). Returns
