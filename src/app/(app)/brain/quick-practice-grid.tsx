@@ -10,6 +10,7 @@ const MODES: { mode: string; icon: string; label: string }[] = [
   { mode: "cards", icon: "🗂", label: "Карточки" },
   { mode: "choice", icon: "🔤", label: "Выбор ответа" },
   { mode: "type", icon: "⌨️", label: "Напечатать" },
+  { mode: "build", icon: "🔡", label: "Собрать слово" },
   { mode: "match", icon: "🧩", label: "Пары" },
 ];
 

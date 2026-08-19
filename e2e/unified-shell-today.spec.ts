@@ -81,7 +81,11 @@ test("no horizontal overflow on Today at 360px", async ({ page }) => {
 test("existing Library route still opens inside the new shell", async ({ page }) => {
   await login(page);
   await page.goto("/library");
-  await expect(page.getByText("Библиотека")).toBeVisible();
+  // Gamified redesign: Library is now also a bottom-nav/sidebar item (the
+  // reference's 6-tab IA), so a bare getByText("Библиотека") now matches
+  // the nav link(s) too, not just the page heading -- scope to the heading
+  // specifically, which is what this test actually verifies.
+  await expect(page.getByRole("heading", { name: "Библиотека" })).toBeVisible();
 });
 
 test("existing Progress route still opens inside the new shell", async ({ page }) => {

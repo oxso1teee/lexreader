@@ -53,3 +53,45 @@ export function SettingsIcon() {
     </IconBase>
   );
 }
+
+// Gamified redesign — new 6-item nav (Home/Path/Missions/Arena/Library/
+// Profile). Same contour-icon convention as above.
+export function PathIcon() {
+  return (
+    <IconBase>
+      <circle cx="6" cy="19" r="2" />
+      <circle cx="18" cy="5" r="2" />
+      <path d="M6 17c0-6 3-9 6-9s6 3 6-3" />
+    </IconBase>
+  );
+}
+
+export function MissionsIcon() {
+  return (
+    <IconBase>
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+    </IconBase>
+  );
+}
+
+export function ArenaIcon() {
+  return (
+    <IconBase>
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+      <path d="M7 5H4a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3" />
+      <path d="M17 5h3a1 1 0 0 1 1 1v2a3 3 0 0 1-3 3" />
+    </IconBase>
+  );
+}
+
+export function ProfileIcon() {
+  return (
+    <IconBase>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+    </IconBase>
+  );
+}

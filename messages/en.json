@@ -2,10 +2,11 @@
   "appShell": {
     "brand": "LexReader",
     "nav": {
-      "today": "Today",
-      "learn": "Learn",
-      "practice": "Practice",
-      "progress": "Progress",
+      "home": "Home",
+      "path": "Path",
+      "missions": "Missions",
+      "arena": "Arena",
+      "library": "Library",
       "profile": "Profile"
     }
   },

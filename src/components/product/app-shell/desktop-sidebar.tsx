@@ -6,11 +6,13 @@ import { track } from "@/lib/posthog-client";
 import { messages } from "@/lib/i18n";
 import { NAV_ITEMS } from "./nav-items";
 
-// docs/ui/current-ui-audit.md §1: до этого компонента desktop-навигации не
-// существовало вообще — bottom nav рендерился одинаково на 1440px и на
-// 360px. Этот sidebar виден только от md: и выше (MobileBottomNav скрыт
-// той же точкой), не копирует мобильную вёрстку 1:1 (вертикальный список
-// с подписями рядом с иконкой, а не колонка иконка-над-текстом).
+// docs/ui/current-ui-audit.md §1: sidebar visible only from md: up
+// (MobileBottomNav hidden at the same breakpoint), not a 1:1 copy of the
+// mobile layout (vertical list with the label next to the icon).
+//
+// Gamified redesign: CSS-variable tokens instead of hardcoded `dark:`
+// utilities, so this follows the explicit theme toggle correctly; active
+// item now uses the cyan primary accent instead of caramel.
 export default function DesktopSidebar({
   planLabel,
 }: {
@@ -20,7 +22,7 @@ export default function DesktopSidebar({
 
   return (
     <aside
-      className="sticky top-0 hidden h-screen w-[var(--container-sidebar)] shrink-0 flex-col border-r border-black/10 bg-card px-3 py-5 md:flex dark:border-white/10"
+      className="sticky top-0 hidden h-screen w-[var(--container-sidebar)] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] px-3 py-5 md:flex"
       aria-label="Боковая навигация"
     >
       <Link href="/home" className="focus-ring mb-6 flex items-center gap-2 px-2 text-lg font-bold tracking-tight">
@@ -39,16 +41,11 @@ export default function DesktopSidebar({
               onClick={() => track("app_nav_clicked", { destination: item.href, viewport_type: "desktop" })}
               className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
-                  ? "bg-caramel/15 text-black dark:text-white"
-                  : "text-black/60 hover:bg-black/5 hover:text-black/90 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white/90"
+                  ? "bg-[var(--color-primary)]/15 text-[var(--foreground)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
               }`}
             >
-              {/* Цвет бренда остаётся на иконке (декоративная графика —
-                  для неё действует другой, более мягкий порог WCAG, не
-                  4.5:1 как для текста) — сам текст пункта меню использует
-                  text-black/white, иначе contrast был 3.16:1 против
-                  требуемых 4.5:1 (найдено axe-core, e2e/unified-shell-a11y.spec.ts). */}
-              <span className={active ? "text-caramel" : ""} aria-hidden="true">
+              <span className={active ? "text-[var(--color-primary)]" : ""} aria-hidden="true">
                 <Icon />
               </span>
               <span>{item.label}</span>
@@ -60,7 +57,7 @@ export default function DesktopSidebar({
       {planLabel && (
         <Link
           href="/settings"
-          className="focus-ring mt-4 truncate rounded-xl border border-black/10 px-3 py-2 text-xs font-medium text-[var(--text-secondary)] dark:border-white/10"
+          className="focus-ring mt-4 truncate rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]"
         >
           {planLabel}
         </Link>

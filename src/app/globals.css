@@ -1,10 +1,47 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
 
+/* Tailwind v4's `dark:` variant defaults to `@media (prefers-color-scheme:
+   dark)`, which would silently disagree with our explicit `data-theme`
+   toggle (e.g. OS-light + user picked dark in-app => CSS vars go dark but
+   every pre-existing `dark:` utility class across ~80 files would stay
+   light). Remap it to the same attribute the toggle/anti-flash script
+   drive (src/lib/theme.ts always stamps data-theme, defaulting from OS
+   preference only when there's no explicit choice yet) so `dark:` and
+   the CSS-variable tokens can never disagree. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Gamified redesign (reference: dark-navy/cyan Duolingo-style app) — dark
+   is now the app's DEFAULT appearance, not just a `prefers-color-scheme`
+   nicety. The previous light (beige/caramel) identity is fully preserved
+   and reachable via the `data-theme="light"` override below (see
+   src/lib/theme.ts + src/components/theme-toggle.tsx) — nothing was
+   deleted, only which one applies by default changed. `data-theme` is
+   stamped on <html> before hydration (see the inline script in
+   src/app/layout.tsx) specifically so there is no flash of the wrong
+   theme. */
 :root {
+  --background: #0a1120;
+  --foreground: #eef2f8;
+  --card: #131d33;
+}
+
+:root[data-theme="light"] {
   --background: #f5f1ea;
   --foreground: #1a1a1a;
   --card: #ffffff;
+}
+
+/* No stored preference yet and the OS prefers light -- honor that for a
+   first paint, same as before this redesign. Once `data-theme` is stamped
+   (dark by default for anyone without a stored choice) this rule stops
+   mattering; it only helps the very first no-JS paint. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --background: #f5f1ea;
+    --foreground: #1a1a1a;
+    --card: #ffffff;
+  }
 }
 
 @theme inline {
@@ -23,14 +60,6 @@
   --color-accent-red: #dc2626;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #14120f;
-    --foreground: #f0ece3;
-    --card: #201d29;
-  }
 }
 
 body {

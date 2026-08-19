@@ -8,6 +8,10 @@ import { recordEvidence } from "@/lib/language-twin/evidence";
 import { recomputeLanguageTwin } from "@/lib/language-twin/recompute";
 import type { EvidenceSourceType } from "@/lib/language-twin/types";
 import type { MissionAttemptRow, MissionRow, MissionType } from "@/lib/missions/types";
+import { missionXpReward } from "@/lib/missions/rewards";
+import { addXp } from "@/lib/xp-actions";
+import { touchStreak } from "@/lib/streak";
+import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 
 const PATH = "/missions";
 
@@ -228,6 +232,16 @@ export async function completeMissionAction(missionId: string, finalCounts?: Mis
     .maybeSingle();
 
   if (claimed) {
+    // Gamified redesign: same "exactly once per attempt" guard already
+    // used for evidence generation above -- Missions never awarded XP
+    // before this (no addXp call anywhere in this file), even though the
+    // redesign's cards show a real "+XP" reward. Same checkpoint pattern
+    // as brain review/reading (touchStreak + checkAndAwardAchievements +
+    // addXp together).
+    await touchStreak(supabase, profile.id);
+    await checkAndAwardAchievements(supabase, profile.id, profile.target_language);
+    await addXp(supabase, profile.id, missionXpReward(mission));
+
     const total = completedAttempt.correct_count + completedAttempt.incorrect_count;
     const ratio = total > 0 ? completedAttempt.correct_count / total : 0;
     const confidence = ratio >= 0.8 ? "high" : ratio >= 0.5 ? "medium" : "low";

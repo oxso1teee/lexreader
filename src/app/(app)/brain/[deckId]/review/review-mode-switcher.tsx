@@ -8,11 +8,13 @@ import MultipleChoiceMode from "./multiple-choice-mode";
 import TypeWordMode from "./type-word-mode";
 import MatchPairsMode from "./match-pairs-mode";
 import ContextGapMode from "./context-gap-mode";
+import WordBuildMode from "./word-build-mode";
 
 const MODES = [
   { value: "cards", label: "Карточки" },
   { value: "choice", label: "Выбор" },
   { value: "type", label: "Напечатать" },
+  { value: "build", label: "Собрать" },
   { value: "match", label: "Пары" },
   { value: "context", label: "Контекст" },
 ] as const;
@@ -142,6 +144,9 @@ export default function ReviewModeSwitcher({
       )}
       {mode === "type" && (
         <TypeWordMode key="type" cards={cards} studyDirection={direction} missionId={missionId} />
+      )}
+      {mode === "build" && (
+        <WordBuildMode key="build" cards={cards} studyDirection={direction} missionId={missionId} />
       )}
       {mode === "match" && <MatchPairsMode key="match" cards={cards} missionId={missionId} />}
       {mode === "context" && <ContextGapMode key="context" cards={cards} missionId={missionId} />}

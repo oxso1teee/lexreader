@@ -4,7 +4,7 @@
 // writes scheduler state — only review outcomes and mode provenance.
 
 export type LearningState = "new" | "learning" | "familiar" | "active" | "maintenance";
-export type PracticeMode = "cards" | "choice" | "type" | "match";
+export type PracticeMode = "cards" | "choice" | "type" | "match" | "build";
 
 export interface ReviewSignal {
   grade: number; // 0-3, matches review_log.grade
@@ -30,8 +30,11 @@ const MAINTENANCE_MIN_FSRS_STABILITY = 60;
 // grouped with Choice/Match (recognition-among-options) as "weak" evidence, never alone
 // enough to promote to `active`. This matches the explicit product decision: multiple
 // choice (or Cards) must never promote a word to active on its own.
+// Build (letter-tile spelling) sits in the same weak-evidence bucket as Cards/Choice/Match:
+// the letters are given, so it's reconstruction-among-options, not free production —
+// closer to recognition than to Type's from-nothing recall.
 const STRONG_RECALL_MODES: readonly PracticeMode[] = ["type"];
-const WEAK_EVIDENCE_MODES: readonly PracticeMode[] = ["cards", "choice", "match"];
+const WEAK_EVIDENCE_MODES: readonly PracticeMode[] = ["cards", "choice", "match", "build"];
 const SUCCESS_GRADE_THRESHOLD = 2;
 
 function isSuccess(review: ReviewSignal): boolean {

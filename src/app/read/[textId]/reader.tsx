@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
@@ -114,7 +114,17 @@ export default function Reader({
   const [manualTranslation, setManualTranslation] = useState("");
   const [readerPrefs, setReaderPrefs] = useReaderPrefs();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [mode, setMode] = useState<ReaderMode>("assisted");
+  // Gamified redesign: Listen Lounge (/listen) deep-links straight into
+  // listening mode via ?mode=listening -- an optional, additive read of
+  // the search param; every existing link (none of which pass it) keeps
+  // opening in "assisted" exactly as before.
+  const searchParams = useSearchParams();
+  const requestedMode = searchParams.get("mode");
+  const initialMode: ReaderMode =
+    requestedMode === "listening" || requestedMode === "focus" || requestedMode === "parallel"
+      ? requestedMode
+      : "assisted";
+  const [mode, setMode] = useState<ReaderMode>(initialMode);
   const [activeListeningIndex, setActiveListeningIndex] = useState<number | null>(null);
 
   const themeColors = READING_THEME_COLORS[readerPrefs.theme];

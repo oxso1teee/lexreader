@@ -19,6 +19,7 @@ import { signOut } from "../actions";
 import { deleteAccount, type DeleteAccountState } from "./delete-account-actions";
 import HapticsToggle from "./haptics-toggle";
 import FeedbackForm from "./feedback-form";
+import ThemeToggle from "@/components/theme-toggle";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -137,6 +138,13 @@ export default function SettingsClient({
         createdAt={createdAt}
         planLabel={planLabel(plan)}
       />
+
+      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+        <SectionHeader title="Оформление" />
+        <div className="mt-3">
+          <ThemeToggle />
+        </div>
+      </section>
 
       <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
         <SectionHeader title="Учебные настройки" />

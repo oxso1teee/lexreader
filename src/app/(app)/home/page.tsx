@@ -250,6 +250,28 @@ export default async function HomePage() {
         </Link>
       )}
 
+      {/* Gamified redesign: Practice Hub (/practice) groups Words Lab/Grammar
+          Gym/Listen Lounge/Speak Studio/Story Corner. Deliberately not a
+          7th bottom-nav item (the reference's own nav has exactly 6:
+          Home/Path/Missions/Arena/Library/Profile) — reached from here
+          instead, purely additive, doesn't touch the hero/fallback logic
+          above (the exact compatibility contract e2e tests assert on). */}
+      <Link
+        href="/practice"
+        className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-[var(--surface)] p-4 shadow-sm"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl" aria-hidden="true">
+            🏋️
+          </span>
+          <div>
+            <p className="text-body font-bold">Practice Hub</p>
+            <p className="text-caption text-[var(--text-secondary)]">Слова, грамматика, слух, речь</p>
+          </div>
+        </div>
+        <span aria-hidden="true">→</span>
+      </Link>
+
       <section className="flex flex-col gap-2">
         <SectionHeader title={t.summary.title} />
         <div className="flex flex-col gap-2">

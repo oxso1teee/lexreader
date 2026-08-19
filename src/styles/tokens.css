@@ -15,71 +15,65 @@
 :root {
   /* Surfaces — background is the page canvas, surface is a raised card
      (== existing --card), surface-elevated is one step up (modals,
-     popovers, the active nav item background). */
+     popovers, the active nav item background). Dark-navy values are now
+     the default (see globals.css); `data-theme="light"` below restores
+     the exact original light values unchanged. */
   --surface: var(--card);
-  --surface-elevated: #ffffff;
-  --surface-muted: #ece6db;
+  --surface-elevated: #1a2745;
+  --surface-muted: #0e1729;
 
-  /* Text — 0.68 (not the more obvious 0.55) is deliberate: verified via
-     axe-core (e2e/unified-shell-a11y.spec.ts) to reach WCAG AA 4.5:1 on
-     both --surface (#fff) and --background (#f5f1ea); 0.55 only reached
-     ~3.8:1 and failed the scan. */
-  --text-secondary: rgba(26, 26, 26, 0.68);
+  --text-secondary: rgba(238, 242, 248, 0.64);
 
   /* Border */
-  --border: rgba(26, 26, 26, 0.1);
-  --border-strong: rgba(26, 26, 26, 0.18);
+  --border: rgba(238, 242, 248, 0.1);
+  --border-strong: rgba(238, 242, 248, 0.2);
 
-  /* Semantic color roles — alias the existing accent tokens from
-     globals.css rather than introducing a second palette. */
-  --color-primary: var(--color-caramel);
-  --color-primary-foreground: #ffffff;
+  /* Gamified redesign: cyan/teal is the new primary accent (dark theme);
+     gold/amber is reserved specifically for XP/rewards/streak, never used
+     as a generic accent, matching the reference. Red stays error-only
+     (existing --color-danger convention, unchanged). */
+  --color-cyan: #22d3ee;
+  --color-cyan-deep: #0891b2;
+  --color-gold: #fbbf24;
+  /* Bright, dark-surface-appropriate by default; the light theme below
+     swaps this for a darker amber that stays readable on white/cream. */
+  --color-gold-text: #fcd34d;
+
+  /* Semantic color roles. */
+  --color-primary: var(--color-cyan);
+  --color-primary-foreground: #04222b;
   /* --color-caramel сам по себе (#a67c52) даёт только 3.16-3.73:1 на
      светлых поверхностях этого приложения — недостаточно для WCAG AA
      4.5:1 обычного текста (найдено axe-core). Эта пара — та же марка,
      но выдержана под контраст: используется ТОЛЬКО когда caramel нужен
      именно как цвет ТЕКСТА (не фона/иконки/акцентной точки, для которых
      порог мягче). */
-  --color-caramel-text: #7d5d3e;
+  /* Text-safe variants below are the DARK-appropriate values now, since
+     dark is the default theme (see globals.css). The light-theme
+     equivalents (unchanged from before this redesign) live in the
+     `:root[data-theme="light"]` block further down, alongside every other
+     token that needs to flip back for the preserved light identity. */
+  --color-caramel-text: #c79562;
   --color-success: var(--color-accent-green);
   --color-warning: var(--color-accent-orange);
   --color-danger: var(--color-accent-red);
   --color-info: var(--color-accent-blue);
-  /* M3 UI slice 2: тот же паттерн, что и caramel-text выше — accent-green
-     (#16a34a) на белом даёт только 3.29:1, accent-orange туда же. Отдельные
-     text-safe варианты (sRGB-линеаризованный контраст, точный расчёт, не на
-     глаз), используются ТОЛЬКО когда цвет нужен как текст (badge label в
-     SkillSection), не как фон/точка/иконка. */
-  --color-success-text: #166534;
-  --color-warning-text: #9a3412;
-  /* M3 Slice 4.1: same pattern again — --color-danger (#dc2626) reaches
-     ~4.8:1 as text on light surfaces (fine), but only ~3.4:1 against the
-     dark-mode surface (found via axe-core on Settings' account-deletion
-     card). Light mode keeps the raw danger red as-is (already passes);
-     dark mode gets a brighter red text-safe override, mirroring
-     success-text/warning-text/caramel-text/forest-text above. */
-  --color-danger-text: var(--color-danger);
+  --color-success-text: #4ade80;
+  --color-warning-text: #fdba74;
+  --color-danger-text: #f87171;
 
   /* Focus ring — deliberately not the brand color, so keyboard focus is
      never confused with a "you did something" accent state. */
   --focus-ring: var(--color-accent-blue);
 
-  /* M3 Slice 3: dark-forest-green primary accent, additive — used only by
-     Library/Add Material/Reader. Does NOT repoint --color-primary above,
-     so Today/Progress/Settings keep their existing caramel buttons
-     unchanged in this slice (a full palette migration would be its own
-     separate, separately-approved slice).
-     #1f4d3b gives ~9.6:1 with white text and ~8.6:1 as text-on-cream —
-     unlike caramel, the same raw value clears AA/AAA in both roles, so
-     no separate "-text" variant is needed for LIGHT mode. Dark mode still
-     needs one: the raw value only reaches ~4:1 as text against the dark
-     surface, so --color-forest-text gets a brighter override there,
-     mirroring the --color-caramel-text/--color-success-text pattern. */
+  /* M3 Slice 3: forest-green accent, used by Library/Add Material/Reader
+     regardless of theme (kept exactly as-is, unrelated to the cyan/gold
+     redesign above). Dark-appropriate values as the default now. */
   --color-forest: #1f4d3b;
-  --color-forest-deep: #163a2c;
-  --color-forest-text: #1f4d3b;
-  --color-forest-tint: #e4ede7;
-  --color-forest-tint-strong: #cfe0d6;
+  --color-forest-deep: #2c6b4f;
+  --color-forest-text: #34d399;
+  --color-forest-tint: #16281f;
+  --color-forest-tint-strong: #1c3427;
 
   /* Container widths for the new App Shell (existing pages keep their
      own inner max-w-2xl untouched). */
@@ -88,26 +82,46 @@
   --container-dashboard: 1280px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --surface-elevated: #262330;
-    --surface-muted: #1c1a24;
-    --text-secondary: rgba(240, 236, 227, 0.68);
-    --border: rgba(240, 236, 227, 0.12);
-    --border-strong: rgba(240, 236, 227, 0.22);
-    --color-caramel-text: #c79562;
-    --color-success-text: #4ade80;
-    --color-warning-text: #fdba74;
-    --color-danger-text: #f87171;
-    /* Button background stays the same deep green (still ~9.6:1 with white
-       text regardless of theme); hover gets lighter (not darker) so it
-       remains visible against the dark page; -text gets a brighter
-       emerald so it clears AA against the dark surface, distinct in hue
-       from --color-success-text's more chartreuse green. */
-    --color-forest-deep: #2c6b4f;
-    --color-forest-text: #34d399;
-    --color-forest-tint: #16281f;
-    --color-forest-tint-strong: #1c3427;
+/* The complete original light theme, byte-for-byte the values this file
+   had before the gamified redesign made dark the default -- reachable via
+   the theme toggle (src/components/theme-toggle.tsx), and shown on first
+   paint when there is no stored preference and the OS prefers light. */
+:root[data-theme="light"] {
+  --surface-elevated: #ffffff;
+  --surface-muted: #ece6db;
+  --text-secondary: rgba(26, 26, 26, 0.68);
+  --border: rgba(26, 26, 26, 0.1);
+  --border-strong: rgba(26, 26, 26, 0.18);
+  --color-primary: var(--color-caramel);
+  --color-primary-foreground: #ffffff;
+  --color-caramel-text: #7d5d3e;
+  --color-success-text: #166534;
+  --color-warning-text: #9a3412;
+  --color-danger-text: var(--color-danger);
+  --color-forest-deep: #163a2c;
+  --color-forest-text: #1f4d3b;
+  --color-forest-tint: #e4ede7;
+  --color-forest-tint-strong: #cfe0d6;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --surface-elevated: #ffffff;
+    --surface-muted: #ece6db;
+    --text-secondary: rgba(26, 26, 26, 0.68);
+    --border: rgba(26, 26, 26, 0.1);
+    --border-strong: rgba(26, 26, 26, 0.18);
+    --color-primary: var(--color-caramel);
+    --color-primary-foreground: #ffffff;
+    --color-caramel-text: #7d5d3e;
+    --color-success-text: #166534;
+    --color-warning-text: #9a3412;
+    --color-danger-text: var(--color-danger);
+    --color-forest-deep: #163a2c;
+    --color-forest-text: #1f4d3b;
+    --color-forest-tint: #e4ede7;
+    --color-forest-tint-strong: #cfe0d6;
+    --color-gold-text: #b45309;
   }
 }
 
@@ -134,6 +148,10 @@
   --color-forest-text: var(--color-forest-text);
   --color-forest-tint: var(--color-forest-tint);
   --color-forest-tint-strong: var(--color-forest-tint-strong);
+  --color-cyan: var(--color-cyan);
+  --color-cyan-deep: var(--color-cyan-deep);
+  --color-gold: var(--color-gold);
+  --color-gold-text: var(--color-gold-text);
 }
 
 /* Typography scale — semantic roles instead of ad hoc text-xl/font-bold
