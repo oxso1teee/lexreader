@@ -38,7 +38,7 @@ export default function WordRow({
   const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null);
 
   async function handlePhotoChange(file: File) {
-    const validationError = validateImageFile(file);
+    const validationError = await validateImageFile(file);
     if (validationError) {
       setPhotoError(validationError);
       return;
