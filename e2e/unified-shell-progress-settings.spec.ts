@@ -118,14 +118,24 @@ test("no horizontal overflow on /progress or /settings at 360px", async ({ page 
 test("/progress has no serious/critical axe violations on desktop or mobile", async ({ page }) => {
   await login(page);
 
+  // feat/page-transitions (PR #35) wraps every (app) page in a motion.div
+  // (src/app/(app)/template.tsx) — scanning right after goto(), with no
+  // wait for anything, occasionally caught this specific page's async
+  // data still settling (Progress fetches review/mission stats) and threw
+  // a transient color-contrast false-positive. Every OTHER test in this
+  // file already waits for real content before asserting anything (see
+  // "Settings profile section..." above) — these two just never had a
+  // reason to until page-transitions made the race visible.
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/progress");
+  await expect(page.getByRole("heading", { name: "Показатели" }).first()).toBeVisible();
   const desktopResults = await new AxeBuilder({ page }).include("body").analyze();
   const desktopSerious = desktopResults.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(desktopSerious, JSON.stringify(desktopSerious, null, 2)).toEqual([]);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/progress");
+  await expect(page.getByRole("heading", { name: "Показатели" }).first()).toBeVisible();
   const mobileResults = await new AxeBuilder({ page }).include("body").analyze();
   const mobileSerious = mobileResults.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(mobileSerious, JSON.stringify(mobileSerious, null, 2)).toEqual([]);
@@ -134,14 +144,17 @@ test("/progress has no serious/critical axe violations on desktop or mobile", as
 test("/settings has no serious/critical axe violations on desktop or mobile", async ({ page }) => {
   await login(page);
 
+  // Same page-transitions render race as the /progress test above.
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/settings");
+  await expect(page.getByText(TEST_EMAIL)).toBeVisible();
   const desktopResults = await new AxeBuilder({ page }).include("body").analyze();
   const desktopSerious = desktopResults.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(desktopSerious, JSON.stringify(desktopSerious, null, 2)).toEqual([]);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/settings");
+  await expect(page.getByText(TEST_EMAIL)).toBeVisible();
   const mobileResults = await new AxeBuilder({ page }).include("body").analyze();
   const mobileSerious = mobileResults.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(mobileSerious, JSON.stringify(mobileSerious, null, 2)).toEqual([]);
