@@ -59,6 +59,16 @@
      dark mode gets a brighter red text-safe override, mirroring
      success-text/warning-text/caramel-text/forest-text above. */
   --color-danger-text: var(--color-danger);
+  /* --color-info (#2563eb) was the one semantic color still missing its own
+     -text variant — every badge using it as text.[var(--color-info)] on a
+     bg-[var(--color-info)]/15 tint (mission-card.tsx's "В процессе" status,
+     missions/badges.tsx's "medium" priority, language-twin/badges.tsx's
+     "improving" pattern, learning-paths/badges.tsx's "introduced"/
+     "practicing" skill) only reached 4.19:1 on that tint — found via
+     axe-core on /missions (e2e/missions-privacy.spec.ts), below WCAG AA's
+     4.5:1. Real, computed contrast (WCAG relative-luminance formula, not
+     eyeballed): #1d4ed8 gives 5.44:1 against the measured #dee8fc tint. */
+  --color-info-text: #1d4ed8;
 
   /* Focus ring — deliberately not the brand color, so keyboard focus is
      never confused with a "you did something" accent state. */
@@ -99,6 +109,13 @@
     --color-success-text: #4ade80;
     --color-warning-text: #fdba74;
     --color-danger-text: #f87171;
+    /* Same info/15-tint badges above are worse in dark mode — the raw
+       #2563eb only reaches ~2.6:1 against the dark tint (computed against
+       #2563eb blended at 15% over --surface-elevated's dark value); #60a5fa
+       (a standard, well-known lighter blue, not an arbitrary pick) gives
+       ~5.3:1, mirroring every other -text token's brighter dark-mode
+       override above. */
+    --color-info-text: #60a5fa;
     /* Button background stays the same deep green (still ~9.6:1 with white
        text regardless of theme); hover gets lighter (not darker) so it
        remains visible against the dark page; -text gets a brighter
@@ -129,6 +146,7 @@
   --color-success-text: var(--color-success-text);
   --color-warning-text: var(--color-warning-text);
   --color-danger-text: var(--color-danger-text);
+  --color-info-text: var(--color-info-text);
   --color-forest: var(--color-forest);
   --color-forest-deep: var(--color-forest-deep);
   --color-forest-text: var(--color-forest-text);

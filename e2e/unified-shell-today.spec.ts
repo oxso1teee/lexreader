@@ -1,5 +1,10 @@
+import { createClient } from "@supabase/supabase-js";
 import { test, expect } from "@playwright/test";
-import { login, signUpFreshAccount, completeOnboardingForTest } from "./helpers";
+import { login, TEST_EMAIL, signUpFreshAccount, completeOnboardingForTest } from "./helpers";
+
+function serviceClient() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321", process.env.SUPABASE_SERVICE_ROLE_KEY ?? "");
+}
 
 test("navigation: active route gets aria-current, others do not", async ({ page }) => {
   await login(page);
@@ -15,6 +20,27 @@ test("navigation: active route gets aria-current, others do not", async ({ page 
 });
 
 test("Today primary CTA shows review action once a due flashcard exists", async ({ page }) => {
+  // M3 Slice 7 (Today v2): a real active Mission (pickHeroMission) takes the
+  // primary-CTA slot over the plain review action — src/app/(app)/home/page.tsx
+  // renders HeroMissionCard instead of PrimaryActionCard whenever one exists,
+  // regardless of dueCount. The shared TEST_EMAIL account accumulates real
+  // state across every e2e run (missions included, same as its texts/decks),
+  // so this test's own "Повторить" assertion below is only meaningful once
+  // no mission is currently occupying that slot — dismiss any, exactly the
+  // way the real UI does it (dismissMissionAction in
+  // src/app/(app)/missions/actions.ts), same self-contained spirit as the
+  // due-card setup right after this.
+  const supabase = serviceClient();
+  const { data: users } = await supabase.auth.admin.listUsers({ page: 1, perPage: 10_000 });
+  const userId = users?.users.find((u) => u.email === TEST_EMAIL)?.id;
+  if (userId) {
+    await supabase
+      .from("missions")
+      .update({ status: "dismissed", dismissed_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .in("status", ["available", "started"]);
+  }
+
   await login(page);
 
   // Гарантированно создаёт карточку с due_at=now() (default в схеме) —

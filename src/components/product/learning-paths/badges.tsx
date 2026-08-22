@@ -4,8 +4,8 @@ import type { SkillConfidence, SkillStatus } from "@/lib/learning-paths/types";
 // every badge pairs an icon + text label, color is a reinforcement only.
 const STATUS_META: Record<SkillStatus, { icon: string; label: string; className: string }> = {
   not_started: { icon: "○", label: "Не начато", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
-  introduced: { icon: "◐", label: "Изучается", className: "bg-[var(--color-info)]/15 text-[var(--color-info)]" },
-  practicing: { icon: "◑", label: "Практика", className: "bg-[var(--color-info)]/15 text-[var(--color-info)]" },
+  introduced: { icon: "◐", label: "Изучается", className: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]" },
+  practicing: { icon: "◑", label: "Практика", className: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]" },
   improving: { icon: "◕", label: "Улучшается", className: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]" },
   confident: { icon: "✓", label: "Уверенно", className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },
   maintenance: { icon: "✓", label: "Поддержка", className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },

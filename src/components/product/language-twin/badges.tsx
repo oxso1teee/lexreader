@@ -31,7 +31,7 @@ const STATUS_LABEL: Record<PatternStatus, string> = {
 };
 const STATUS_CLASS: Record<PatternStatus, string> = {
   active: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
-  improving: "bg-[var(--color-info)]/15 text-[var(--color-info)]",
+  improving: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]",
   resolved: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]",
   uncertain: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",
   dismissed: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",

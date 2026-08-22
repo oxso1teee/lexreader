@@ -4,7 +4,7 @@ import { MissionTypeBadge, MissionPriorityBadge, difficultyLabel } from "./badge
 import type { MissionRow, MissionStatus } from "@/lib/missions/types";
 
 const STATUS_BADGE: Partial<Record<MissionStatus, { label: string; className: string }>> = {
-  started: { label: "В процессе", className: "bg-[var(--color-info)]/15 text-[var(--color-info)]" },
+  started: { label: "В процессе", className: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]" },
   completed: { label: "✓ Завершена", className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },
   dismissed: { label: "Отклонена", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
   expired: { label: "Истекла", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
