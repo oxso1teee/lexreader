@@ -35,9 +35,10 @@ export const log = {
     emit(fields.outcome === "error" ? "warn" : "info", "import", fields);
   },
   subscription(fields: {
-    kind: "checkout_completed" | "invoice_paid" | "payment_failed" | "canceled";
+    kind: "checkout_completed" | "invoice_paid" | "payment_failed" | "canceled" | "duplicate_webhook_event";
     ownerId?: string;
     plan?: string;
+    stripeEventType?: string;
   }) {
     emit("info", "subscription", fields);
   },
