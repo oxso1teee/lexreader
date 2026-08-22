@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "audit:direct": "node --experimental-strip-types scripts/check-npm-audit.ts",
     "test": "npm run test:import && npm run test:youtube-ingestion && npm run test:extension && npm run test:srs && npm run test:fsrs && npm run test:csp && npm run test:ui",
     "test:import": "node --experimental-strip-types --test src/lib/import-cards.test.ts",
     "test:youtube-ingestion": "node --experimental-strip-types --test src/lib/youtube-ingestion/*.test.ts",

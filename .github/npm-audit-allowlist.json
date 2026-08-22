@@ -1,0 +1,11 @@
+{
+  "_comment": "docs/release-2026-08-22/07_TESTIROVANIE_I_CI.md раздел 3 / scripts/check-npm-audit.ts. Каждая запись — уже известная, сознательно отложенная high/critical находка npm audit на СВОЕЙ ПРЯМОЙ зависимости (package.json), а не транзитивной — транзитивные (например postcss/sharp, тянутся через next) исключаются автоматически полем isDirect из `npm audit --json`, отдельно в allowlist не нуждаются. Новая находка на прямой зависимости, которой здесь нет, валит CI. Закрыл находку — убери запись отсюда.",
+  "acceptedAdvisories": [
+    {
+      "package": "next",
+      "reason": "Фикс требует next@16.3.2 — вне текущего диапазона package.json (\"next\": \"16.2.10\", без ^). Осознанный апгрейд мажорной/минорной версии фреймворка с полным ручным прогоном чувствительных потоков, не однокомандный npm audit fix --force.",
+      "trackedIn": "docs/release-2026-08-22/02_KRITICHNYE_BAGI_SEYCHAS.md A.2",
+      "acceptedOn": "2026-08-22"
+    }
+  ]
+}
