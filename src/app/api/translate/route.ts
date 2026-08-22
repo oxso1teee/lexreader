@@ -10,29 +10,29 @@ const RATE_LIMIT_PER_MINUTE = 30;
 
 // P0-АУДИТ 3.2: таблица лимита теперь доступна только service_role — обычный
 // пользователь не может сам стереть свою историю запросов через прямой API.
-// P0-АУДИТ 3.3: раньше сначала считали, потом вставляли — окно гонки между
-// параллельными запросами. Вставляем сразу, считаем уже вместе с новой
-// строкой — не идеально атомарно (для этого нужна была бы Postgres-функция),
-// но окно гонки резко уже, чем было.
+// B.2 (docs/release-2026-08-22/02_KRITICHNYE_BAGI_SEYCHAS.md): P0-АУДИТ 3.3
+// reordered this to insert-then-count, which closed the worst case but was
+// still, by its own admission, "не идеально атомарно" — a large enough
+// concurrent burst could still each read the count before seeing each
+// other's inserts and collectively exceed the limit. check_translate_rate_limit
+// (0045_atomic_translate_rate_limit.sql) makes insert+count+cleanup one
+// atomic unit via a per-owner Postgres advisory lock — this is now a single
+// round-trip, not three.
 async function checkRateLimit(userId: string): Promise<boolean> {
   const service = createServiceClient();
-  const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+  const { data, error } = await service.rpc("check_translate_rate_limit", {
+    p_owner_id: userId,
+    p_limit: RATE_LIMIT_PER_MINUTE,
+    p_window_seconds: 60,
+  });
 
-  await service.from("translate_requests").insert({ owner_id: userId });
-
-  const { count } = await service
-    .from("translate_requests")
-    .select("id", { count: "exact", head: true })
-    .eq("owner_id", userId)
-    .gte("requested_at", oneMinuteAgo);
-
-  // Периодическая уборка старых записей лога — без отдельного крона.
-  if (Math.random() < 0.01) {
-    const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString();
-    await service.from("translate_requests").delete().lt("requested_at", oneHourAgo);
+  if (error) {
+    captureServerException(error, userId, { context: "check_translate_rate_limit" });
+    // Fail closed — an rpc error must never silently grant unlimited requests.
+    return false;
   }
 
-  return (count ?? 0) <= RATE_LIMIT_PER_MINUTE;
+  return data === true;
 }
 
 async function cachedTranslate(
