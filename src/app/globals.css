@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
 
+/* Ручной переключатель темы (раздел B файла 10): src/app/theme-init-script.ts
+   всегда резолвит системную/сохранённую тему в data-theme на <html> ещё до
+   гидрации, поэтому `dark:` теперь смотрит на атрибут, а не напрямую на
+   prefers-color-scheme — иначе выбор "Светлая" при тёмной ОС не подействовал
+   бы на классы Tailwind, только на токены ниже. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --background: #f5f1ea;
   --foreground: #1a1a1a;
@@ -25,12 +32,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #14120f;
-    --foreground: #f0ece3;
-    --card: #201d29;
-  }
+:root[data-theme="dark"] {
+  --background: #14120f;
+  --foreground: #f0ece3;
+  --card: #201d29;
 }
 
 body {

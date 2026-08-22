@@ -18,6 +18,7 @@ import {
 import { signOut } from "../actions";
 import { deleteAccount, type DeleteAccountState } from "./delete-account-actions";
 import HapticsToggle from "./haptics-toggle";
+import ThemeToggle from "./theme-toggle";
 import FeedbackForm from "./feedback-form";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
@@ -258,6 +259,7 @@ export default function SettingsClient({
         </div>
       </section>
 
+      <ThemeToggle />
       <HapticsToggle />
 
       <FeedbackForm />
