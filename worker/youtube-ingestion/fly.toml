@@ -1,0 +1,46 @@
+# Fly.io app config for the standalone YouTube ingestion worker (M3 Slice
+# 12 Gate #2B). Not yet deployed -- created ahead of time so `fly launch`/
+# `fly deploy` can run as soon as the account is authenticated. `app` name
+# is a placeholder; Fly will confirm/rename on first `fly launch`.
+app = "lexreader-youtube-worker"
+primary_region = "waw"
+
+[build]
+
+[env]
+  PORT = "8080"
+  WHISPER_MODEL = "tiny"
+  # WORKER_SHARED_SECRET is a real secret -- set via `fly secrets set`,
+  # never here.
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  # STT jobs can run several minutes -- default idle/response timeouts on
+  # some platforms are too short for that, so this is generous on purpose.
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 4
+    soft_limit = 2
+
+[[http_service.checks]]
+  interval = "15s"
+  timeout = "5s"
+  grace_period = "30s"
+  method = "GET"
+  path = "/health"
+
+# Give in-flight jobs real time to finish on deploy/restart before Fly
+# force-kills the machine (server.mjs's own SIGTERM handler drains
+# connections; this must be >= the longest job we expect to still be
+# running, in tension with faster deploys -- 90s is a compromise, not a
+# guarantee for a multi-minute STT job. Known limitation, see report.)
+kill_signal = "SIGTERM"
+kill_timeout = 90
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "2gb"

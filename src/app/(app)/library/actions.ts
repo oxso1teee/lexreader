@@ -248,8 +248,7 @@ function findNextPageUrl(document: Document, baseUrl: URL): URL | null {
 
 const MAX_PAGINATED_PAGES = 50;
 const MAX_ARTICLE_BODY_LENGTH = 200_000;
-// Оставляем запас под 45-секундный maxDuration страницы (library/new/page.tsx,
-// поднят вместе с этим фиксом ради ScraperAPI-запроса в youtube-actions.ts):
+// Оставляем запас под 45-секундный maxDuration страницы (library/new/page.tsx):
 // на последнюю обработанную страницу уже потрачено время, следующий фетч
 // (до 10 сек) не должен вывалиться за лимит вместе с записью в БД и редиректом.
 const PAGINATION_TIME_BUDGET_MS = 30_000;

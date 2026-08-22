@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
   "name": "LexReader YouTube Bridge",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Загружает субтитры YouTube через браузер пользователя и передаёт их в LexReader.",
-  "permissions": [],
+  "permissions": [
+    "tabs"
+  ],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://youtube.com/*"
@@ -18,11 +20,45 @@
         "https://lexreader.vercel.app/*",
         "https://lexreader.app/*",
         "https://www.lexreader.app/*",
+        "https://lexreader-focoqdkq7-meeeee4.vercel.app/*",
+        "https://lexreader-mnzvtftfs-meeeee4.vercel.app/*",
+        "https://lexreader-ctoczfjdx-meeeee4.vercel.app/*",
+        "https://lexreader-1zg3zf2nv-meeeee4.vercel.app/*",
+        "https://lexreader-he4dnhye3-meeeee4.vercel.app/*",
+        "https://lexreader-git-feature-import-video-reader-v2-meeeee4.vercel.app/*",
+        "https://lexreader-28rlw6ouq-meeeee4.vercel.app/*",
+        "https://lexreader-4ospe4xo4-meeeee4.vercel.app/*",
+        "https://lexreader-jce7n4yyh-meeeee4.vercel.app/*",
+        "https://lexreader-ktigrnw57-meeeee4.vercel.app/*",
         "http://localhost:3000/*",
         "http://127.0.0.1:3000/*"
       ],
       "js": [
         "lexreader-bridge.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/watch*",
+        "https://youtube.com/watch*"
+      ],
+      "js": [
+        "youtube-page-capture.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/watch*",
+        "https://youtube.com/watch*"
+      ],
+      "js": [
+        "youtube-dom-extractor.js",
+        "youtube-content-relay.js"
       ],
       "run_at": "document_start",
       "all_frames": false

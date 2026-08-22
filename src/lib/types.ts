@@ -38,7 +38,19 @@ export interface TextRow {
   collection_id: string | null;
   collection_order: number | null;
   created_at: string;
+  /** M3 Slice 12 — nullable, only set for youtube-sourced texts (migration 0042). */
+  youtube_duration_seconds: number | null;
+  transcript_source: TranscriptSourceTag | null;
+  processing_status: "pending" | "processing" | "ready" | "failed";
 }
+
+export type TranscriptSourceTag =
+  | "manual_caption"
+  | "auto_caption"
+  | "innertube"
+  | "browser_bridge"
+  | "yt_dlp_caption"
+  | "speech_to_text";
 
 export interface Collection {
   id: string;

@@ -38,9 +38,24 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.local.example
+!worker/**/.env.example
 
 # vercel
 .vercel
+
+# research/prototype scratch (M3 Slice 12) — isolated deps, never production
+/research/**/node_modules
+/research/**/whisper-venv
+/research/**/out
+/research/**/package-lock.json
+
+# research/youtube-transcript — debug/research scripts + throwaway Python env,
+# not production code. Untracked deliberately (docs/release-2026-08-22/08);
+# kept on disk locally for reference, not carried forward in git history.
+/research/youtube-transcript/
+
+# worker/youtube-ingestion (M3 Slice 12) — standalone deployable, own deps
+/worker/**/node_modules
 
 # typescript
 *.tsbuildinfo

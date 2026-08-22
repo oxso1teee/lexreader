@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  extractCaptionTracks,
   extractVideoId,
-  fetchYoutubeTranscript,
   parseJson3Segments,
+  buildTranscriptResult,
+  normalizeCanonicalSegments,
 } from "./youtube-transcript.mjs";
 
 test("extractVideoId supports normal, short and Shorts URLs", () => {
@@ -14,12 +14,11 @@ test("extractVideoId supports normal, short and Shorts URLs", () => {
   assert.equal(extractVideoId("https://example.com/watch?v=abcDEF_123-"), null);
 });
 
-test("extractCaptionTracks reads nested JSON without stopping on nested objects", () => {
-  const html = String.raw`<script>{"captions":{"playerCaptionsTracklistRenderer":{"captionTracks":[{"baseUrl":"https://www.youtube.com/api/timedtext?v=x\u0026lang=en","name":{"simpleText":"English"},"languageCode":"en"}]}},"videoDetails":{"title":"Demo"}}</script>`;
-  const tracks = extractCaptionTracks(html);
-  assert.equal(tracks.length, 1);
-  assert.equal(tracks[0].languageCode, "en");
-  assert.match(tracks[0].baseUrl, /lang=en/);
+test("extractVideoId ignores the #lexreader-extraction marker background.mjs appends to created tabs (RC extraction bug)", () => {
+  assert.equal(
+    extractVideoId("https://www.youtube.com/watch?v=abcDEF_123-#lexreader-extraction"),
+    "abcDEF_123-",
+  );
 });
 
 test("parseJson3Segments combines fragments and fills a missing duration", () => {
@@ -30,40 +29,122 @@ test("parseJson3Segments combines fragments and fills a missing duration", () =>
     ],
   });
   assert.deepEqual(segments, [
-    { startMs: 0, endMs: 1_500, body: "Hello world" },
-    { startMs: 1_500, endMs: 3_500, body: "Next line" },
+    { startMs: 0, endMs: 1_500, text: "Hello world" },
+    { startMs: 1_500, endMs: 3_500, text: "Next line" },
   ]);
 });
 
-test("fetchYoutubeTranscript chooses the learning-language track", async () => {
-  const html = String.raw`
-    <meta name="title" content="Test &amp; Learn">
-    <script>
-      {"captionTracks":[
-        {"baseUrl":"https://www.youtube.com/api/timedtext?v=video1&lang=ru","languageCode":"ru"},
-        {"baseUrl":"https://www.youtube.com/api/timedtext?v=video1&lang=en","languageCode":"en"}
-      ],"videoDetails":{"title":"Test & Learn"}}
-    </script>
-  `;
-  const json3 = JSON.stringify({
-    events: [{ tStartMs: 100, dDurationMs: 900, segs: [{ utf8: "Welcome" }] }],
+test("parseJson3Segments drops events with no usable text or a negative start", () => {
+  const segments = parseJson3Segments({
+    events: [
+      { tStartMs: 0, segs: [{ utf8: "   " }] },
+      { tStartMs: -10, segs: [{ utf8: "invalid" }] },
+      { tStartMs: 100, segs: [{ utf8: "kept" }] },
+    ],
   });
-  const requestedUrls = [];
-  const mockFetch = async (url) => {
-    requestedUrls.push(String(url));
-    return requestedUrls.length === 1
-      ? new Response(html, { status: 200 })
-      : new Response(json3, { status: 200 });
-  };
+  assert.deepEqual(segments, [{ startMs: 100, endMs: 2_100, text: "kept" }]);
+});
 
-  const result = await fetchYoutubeTranscript(
-    "https://www.youtube.com/watch?v=video1",
-    "en",
-    mockFetch,
-  );
+test("buildTranscriptResult produces the canonical shape from a real-shaped captured payload", () => {
+  const bodyText = JSON.stringify({
+    events: [
+      { tStartMs: 1_200, dDurationMs: 2_160, segs: [{ utf8: "All right, so here we are" }] },
+      { tStartMs: 3_360, dDurationMs: 1_500, segs: [{ utf8: "in front of the elephants" }] },
+    ],
+  });
+
+  const result = buildTranscriptResult({
+    videoId: "jNQXAC9IVRw",
+    title: "Me at the zoo",
+    lengthSeconds: "19",
+    lang: "en",
+    kind: null,
+    bodyText,
+  });
+
+  assert.equal(result.videoId, "jNQXAC9IVRw");
+  assert.equal(result.title, "Me at the zoo");
   assert.equal(result.languageCode, "en");
-  assert.equal(result.title, "Test & Learn");
-  assert.deepEqual(result.segments, [{ startMs: 100, endMs: 1_000, body: "Welcome" }]);
-  assert.match(requestedUrls[1], /lang=en/);
-  assert.match(requestedUrls[1], /fmt=json3/);
+  assert.equal(result.durationMs, 19_000);
+  assert.equal(result.source, "manual_caption");
+  assert.deepEqual(result.segments, [
+    { startMs: 1_200, endMs: 3_360, text: "All right, so here we are" },
+    { startMs: 3_360, endMs: 7_360, text: "in front of the elephants" },
+  ]);
+});
+
+test("normalizeCanonicalSegments is shared final normalization: order, dedupe, clean, and derive end times", () => {
+  assert.deepEqual(
+    normalizeCanonicalSegments([
+      { startMs: 5_000, endMs: 99_000, text: " second  line " },
+      { startMs: 1_000, endMs: 2_000, text: "first &amp; line" },
+      { startMs: 1_000, endMs: 3_000, text: "first &amp; line" },
+      { startMs: -1, endMs: 2_000, text: "invalid" },
+    ]),
+    [
+      { startMs: 1_000, endMs: 5_000, text: "first & line" },
+      { startMs: 5_000, endMs: 9_000, text: "second line" },
+    ],
+  );
+});
+
+test("normalizeCanonicalSegments does not stretch an obviously incomplete final row to video duration", () => {
+  const [segment] = normalizeCanonicalSegments(
+    [{ startMs: 180_000, endMs: 181_000, text: "minute three" }],
+    116 * 60_000,
+  );
+  assert.equal(segment.endMs, 184_000);
+});
+
+test("buildTranscriptResult tags auto-generated captions (kind=asr) as auto_caption", () => {
+  const bodyText = JSON.stringify({
+    events: [{ tStartMs: 0, dDurationMs: 1_000, segs: [{ utf8: "auto captioned" }] }],
+  });
+  const result = buildTranscriptResult({
+    videoId: "abcDEF_123-",
+    title: "Auto captions",
+    lengthSeconds: "10",
+    lang: "en",
+    kind: "asr",
+    bodyText,
+  });
+  assert.equal(result.source, "auto_caption");
+});
+
+test("buildTranscriptResult rejects a malformed video ID", () => {
+  assert.throws(() =>
+    buildTranscriptResult({ videoId: "; rm -rf /", title: "x", lengthSeconds: "1", lang: "en", kind: null, bodyText: "{}" }),
+  );
+});
+
+test("buildTranscriptResult rejects unparseable JSON", () => {
+  assert.throws(() =>
+    buildTranscriptResult({ videoId: "abcDEF_123-", title: "x", lengthSeconds: "1", lang: "en", kind: null, bodyText: "not json" }),
+  );
+});
+
+test("buildTranscriptResult rejects an empty transcript rather than saving zero segments", () => {
+  assert.throws(() =>
+    buildTranscriptResult({
+      videoId: "abcDEF_123-",
+      title: "x",
+      lengthSeconds: "1",
+      lang: "en",
+      kind: null,
+      bodyText: JSON.stringify({ events: [] }),
+    }),
+  );
+});
+
+test("buildTranscriptResult falls back to a placeholder title when none was captured", () => {
+  const result = buildTranscriptResult({
+    videoId: "abcDEF_123-",
+    title: undefined,
+    lengthSeconds: undefined,
+    lang: "en",
+    kind: null,
+    bodyText: JSON.stringify({ events: [{ tStartMs: 0, dDurationMs: 1_000, segs: [{ utf8: "hi" }] }] }),
+  });
+  assert.equal(result.title, "YouTube abcDEF_123-");
+  assert.equal(result.durationMs, undefined);
 });
