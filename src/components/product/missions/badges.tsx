@@ -25,7 +25,7 @@ const PRIORITY_LABEL: Record<MissionPriority, string> = {
 };
 const PRIORITY_CLASS: Record<MissionPriority, string> = {
   high: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
-  medium: "bg-[var(--color-info)]/15 text-[var(--color-info)]",
+  medium: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]",
   low: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",
 };
 
