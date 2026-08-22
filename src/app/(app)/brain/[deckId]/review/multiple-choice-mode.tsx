@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { reviewWord } from "./actions";
 import type { ReviewCard } from "./review-session";
 import SessionComplete from "./session-complete";
@@ -56,6 +57,7 @@ export default function MultipleChoiceMode({
   // Реальный per-card grade (2/0), тот же, что уходит в reviewWord() ниже —
   // не отдельная метрика, а просто накопленный счёт для миссии (§11-13).
   const [tally, setTally] = useState({ correct: 0, incorrect: 0 });
+  const reduceMotion = useReducedMotion();
 
   const done = index >= cards.length;
   const card = cards[index];
@@ -137,11 +139,16 @@ export default function MultipleChoiceMode({
                 ? "border-red-500 bg-red-50 dark:bg-red-950"
                 : "border-black/10 opacity-50 dark:border-white/15";
           return (
-            <button
+            <motion.button
               key={opt}
               type="button"
               disabled={showState}
               onClick={() => choose(opt)}
+              // Микро-пульс на правильном варианте в момент раскрытия — без
+              // задержки (следующая карточка доступна сразу через кнопку
+              // "Далее" ниже, эта анимация ничего не блокирует).
+              animate={showState && isCorrect && !reduceMotion ? { scale: [1, 1.035, 1] } : { scale: 1 }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
               className={`flex items-center justify-between gap-2 rounded-lg border px-4 py-3 text-left transition-colors ${stateClass}`}
             >
               <span>{opt}</span>
@@ -155,7 +162,7 @@ export default function MultipleChoiceMode({
                   <span aria-hidden="true">✗</span> Неверно
                 </span>
               )}
-            </button>
+            </motion.button>
           );
         })}
       </div>

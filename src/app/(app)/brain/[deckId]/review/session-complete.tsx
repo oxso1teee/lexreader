@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
 import { getCurrentStreak, getLanguageTwinUpdateAction, type LanguageTwinSessionUpdate } from "./actions";
 import { completeMissionAction } from "@/app/(app)/missions/actions";
 import { track } from "@/lib/posthog-client";
 import { StatusBadge, TrendIndicator, CategoryBadge } from "@/components/product/language-twin/badges";
 import type { PatternCategory, PatternStatus, Trend } from "@/lib/language-twin/types";
+
+// docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел B.1 —
+// первая установка motion (framer-motion) в проекте. Same
+// prefers-reduced-motion discipline as globals.css's existing flip-reveal
+// keyframe (useReducedMotion() is motion's own hook for the identical media
+// query) — purely decorative, no layout/timing dependency for anything
+// below (the "К практике" / mission-result links are interactive
+// immediately regardless of whether this plays).
+const CONFETTI = ["🎉", "✨", "🎊", "⭐"];
 
 export default function SessionComplete({
   count,
@@ -29,6 +39,7 @@ export default function SessionComplete({
   const [streak, setStreak] = useState<number | null>(null);
   const [twinUpdate, setTwinUpdate] = useState<LanguageTwinSessionUpdate | null>(null);
   const [missionDone, setMissionDone] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     getCurrentStreak().then(setStreak);
@@ -60,8 +71,29 @@ export default function SessionComplete({
   }, []);
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 px-5 text-center">
-      <p className="text-2xl font-semibold">Сессия завершена</p>
+    <div className="relative flex flex-1 flex-col items-center justify-center gap-3 px-5 text-center">
+      {!reduceMotion && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-6 flex justify-center gap-4 text-2xl">
+          {CONFETTI.map((emoji, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, y: 0, scale: 0.4, rotate: 0 }}
+              animate={{ opacity: [0, 1, 1, 0], y: -36 - i * 8, scale: 1, rotate: i % 2 ? 25 : -25 }}
+              transition={{ duration: 0.9, delay: i * 0.06, ease: "easeOut" }}
+            >
+              {emoji}
+            </motion.span>
+          ))}
+        </div>
+      )}
+      <motion.p
+        initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", stiffness: 320, damping: 18 }}
+        className="text-2xl font-semibold"
+      >
+        Сессия завершена
+      </motion.p>
       <p className="text-black/60 dark:text-white/60">Повторено слов: {count}</p>
       {newRecord && (
         <p className="font-medium text-[var(--color-caramel-text)]">🏆 Новый личный рекорд сессии!</p>

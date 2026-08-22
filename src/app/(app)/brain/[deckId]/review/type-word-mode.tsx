@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { reviewWord } from "./actions";
 import type { ReviewCard } from "./review-session";
 import SessionComplete from "./session-complete";
@@ -21,6 +22,7 @@ export default function TypeWordMode({
   // Реальный per-card результат, тот же, что уходит в reviewWord() ниже —
   // накопленный счёт для миссии (§11-13), не отдельная метрика.
   const [tally, setTally] = useState({ correct: 0, incorrect: 0 });
+  const reduceMotion = useReducedMotion();
 
   const done = index >= cards.length;
   const card = cards[index];
@@ -75,9 +77,15 @@ export default function TypeWordMode({
             небольшую цветовую поддержку на самом поле ввода, не трогая
             логику проверки/грейдинга ниже. */}
         {result && (
-          <p
+          <motion.p
             role="status"
             aria-live="polite"
+            initial={reduceMotion ? false : { scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            // Быстро и без задержки — тот же spring, что и в session-complete.tsx,
+            // но короче: следующая карточка не должна ждать анимацию, кнопка
+            // "Далее" кликабельна сразу же, это чисто декоративный вход.
+            transition={{ type: "spring", stiffness: 500, damping: 15 }}
             className={`flex items-center gap-1.5 font-medium ${
               result === "correct"
                 ? "text-emerald-700 dark:text-emerald-400"
@@ -86,7 +94,7 @@ export default function TypeWordMode({
           >
             <span aria-hidden="true">{result === "correct" ? "✓" : "✗"}</span>
             {result === "correct" ? "Верно!" : `Правильный ответ: ${answer}`}
-          </p>
+          </motion.p>
         )}
       </div>
 
