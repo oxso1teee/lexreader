@@ -43,9 +43,44 @@ export async function POST(request: Request) {
 
   const supabase = createServiceClient();
 
+  // docs/release-2026-08-22/07_TESTIROVANIE_I_CI.md section 1 / 02: Stripe
+  // guarantees occasional redelivery of the same event.id — a plain INSERT
+  // into a table with event_id as its primary key is a fully atomic
+  // idempotency check on its own (no advisory lock needed, unlike B.2's
+  // sliding-window rate limit): under concurrent delivery of the same
+  // event, exactly one INSERT wins the unique-constraint race and the other
+  // gets a real 23505 error, deterministically, every time.
+  const { error: dedupeError } = await supabase
+    .from("processed_stripe_events")
+    .insert({ event_id: event.id, event_type: event.type });
+
+  if (dedupeError) {
+    if (dedupeError.code === "23505") {
+      log.subscription({ kind: "duplicate_webhook_event", stripeEventType: event.type });
+      // Must still return 200 — Stripe interprets anything else as "retry
+      // this delivery again later", and it already succeeded the first time.
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    captureServerException(dedupeError, undefined, { stripeEventType: event.type, context: "processed_stripe_events insert" });
+    return NextResponse.json({ error: "Webhook dedupe check failed" }, { status: 500 });
+  }
+
   try {
     await processStripeEvent(event, stripe, supabase);
   } catch (e) {
+    // Roll back the reservation from above — this delivery attempt
+    // genuinely failed, and the 500 below is about to make Stripe retry it.
+    // Leaving the row in place would make that retry hit the dedupe check
+    // and silently return 200 without ever actually reprocessing — turning
+    // a transient failure into a permanently lost event instead of a safe
+    // retry.
+    const { error: rollbackError } = await supabase.from("processed_stripe_events").delete().eq("event_id", event.id);
+    if (rollbackError) {
+      // Genuinely worse than the original failure: the retry Stripe is
+      // about to send will now silently no-op forever against a
+      // reservation nothing cleaned up. Must not fail quietly.
+      captureServerException(rollbackError, undefined, { stripeEventType: event.type, context: "processed_stripe_events rollback delete" });
+    }
     captureServerException(e, undefined, { stripeEventType: event.type });
     // 500 — чтобы Stripe повторил доставку вебхука, а не решил, что мы его
     // успешно обработали, пока у нас в базе неконсистентное состояние.
