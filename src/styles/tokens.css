@@ -98,34 +98,32 @@
   --container-dashboard: 1280px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --surface-elevated: #262330;
-    --surface-muted: #1c1a24;
-    --text-secondary: rgba(240, 236, 227, 0.68);
-    --border: rgba(240, 236, 227, 0.12);
-    --border-strong: rgba(240, 236, 227, 0.22);
-    --color-caramel-text: #c79562;
-    --color-success-text: #4ade80;
-    --color-warning-text: #fdba74;
-    --color-danger-text: #f87171;
-    /* Same info/15-tint badges above are worse in dark mode — the raw
-       #2563eb only reaches ~2.6:1 against the dark tint (computed against
-       #2563eb blended at 15% over --surface-elevated's dark value); #60a5fa
-       (a standard, well-known lighter blue, not an arbitrary pick) gives
-       ~5.3:1, mirroring every other -text token's brighter dark-mode
-       override above. */
-    --color-info-text: #60a5fa;
-    /* Button background stays the same deep green (still ~9.6:1 with white
-       text regardless of theme); hover gets lighter (not darker) so it
-       remains visible against the dark page; -text gets a brighter
-       emerald so it clears AA against the dark surface, distinct in hue
-       from --color-success-text's more chartreuse green. */
-    --color-forest-deep: #2c6b4f;
-    --color-forest-text: #34d399;
-    --color-forest-tint: #16281f;
-    --color-forest-tint-strong: #1c3427;
-  }
+:root[data-theme="dark"] {
+  --surface-elevated: #262330;
+  --surface-muted: #1c1a24;
+  --text-secondary: rgba(240, 236, 227, 0.68);
+  --border: rgba(240, 236, 227, 0.12);
+  --border-strong: rgba(240, 236, 227, 0.22);
+  --color-caramel-text: #c79562;
+  --color-success-text: #4ade80;
+  --color-warning-text: #fdba74;
+  --color-danger-text: #f87171;
+  /* Same info/15-tint badges above are worse in dark mode — the raw
+     #2563eb only reaches ~2.6:1 against the dark tint (computed against
+     #2563eb blended at 15% over --surface-elevated's dark value); #60a5fa
+     (a standard, well-known lighter blue, not an arbitrary pick) gives
+     ~5.3:1, mirroring every other -text token's brighter dark-mode
+     override above. */
+  --color-info-text: #60a5fa;
+  /* Button background stays the same deep green (still ~9.6:1 with white
+     text regardless of theme); hover gets lighter (not darker) so it
+     remains visible against the dark page; -text gets a brighter
+     emerald so it clears AA against the dark surface, distinct in hue
+     from --color-success-text's more chartreuse green. */
+  --color-forest-deep: #2c6b4f;
+  --color-forest-text: #34d399;
+  --color-forest-tint: #16281f;
+  --color-forest-tint-strong: #1c3427;
 }
 
 @theme inline {
