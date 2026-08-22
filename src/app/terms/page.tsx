@@ -73,6 +73,10 @@ export default function TermsPage() {
       </p>
 
       <h2 className="mt-2 text-lg font-semibold">9. Контакты</h2>
+      {/* TODO(support-email, docs/release-2026-08-22/02_KRITICHNYE_BAGI_SEYCHAS.md A.3):
+          currently Sergey's personal Gmail — asked 2026-08-22 whether to set up a
+          dedicated support@ address, he had no preference yet. Replace the address
+          below (and the matching one in src/app/privacy/page.tsx) once he names one. */}
       <p>
         Вопросы по условиям использования:{" "}
         <a href="mailto:puchkov889@gmail.com" className="font-mono text-caramel underline">
