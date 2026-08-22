@@ -34,6 +34,24 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
+  # docs/release-2026-08-22/07_TESTIROVANIE_I_CI.md раздел 3: до этого шага
+  # находки вроде pdfjs-dist (файл 02, A.1) можно было узнать только вручную
+  # запустив `npm audit` — уязвимость провисела необнаруженной примерно
+  # неделю. Отдельный job (не шаг внутри checks) — свой явный статус в
+  # списке проверок PR, не теряется среди typecheck/lint/build. Не гейтит
+  # e2e (needs: checks, не npm-audit) — находка на прямой зависимости не
+  # должна блокировать функциональные тесты, только сама себя явно валит.
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run audit:direct
+
   e2e:
     runs-on: ubuntu-latest
     needs: checks
