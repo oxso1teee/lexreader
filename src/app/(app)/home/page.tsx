@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Calendar, Flame, Target } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getDueCount } from "@/lib/brain-stats";
@@ -294,10 +295,10 @@ export default async function HomePage() {
         <SectionHeader title={t.weekProgress.title} />
         <DailyPlanCard
           metrics={[
-            { label: t.weekProgress.activeDays, value: String(activeDaysThisWeek), icon: "📅" },
-            { label: "Дней подряд", value: String(profile.streak_current), icon: "🔥" },
+            { label: t.weekProgress.activeDays, value: String(activeDaysThisWeek), icon: Calendar },
+            { label: "Дней подряд", value: String(profile.streak_current), icon: Flame },
             ...(missionWeekStats.completed > 0
-              ? [{ label: t.weekProgress.missionsCompleted, value: String(missionWeekStats.completed), icon: "🎯" }]
+              ? [{ label: t.weekProgress.missionsCompleted, value: String(missionWeekStats.completed), icon: Target }]
               : []),
           ]}
         />

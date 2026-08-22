@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { BookOpen } from "lucide-react";
 import WordRow from "./word-row";
 import EmptyState from "./empty-state";
 import AddWordModal from "./add-word-modal";
@@ -64,7 +65,7 @@ export default function NotebookClient({
       </Link>
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <ScreenHeader icon="📖" title="Слова из чтения" metaChip={`${targetLanguage} · ${totalCount} слов`} />
+        <ScreenHeader icon={BookOpen} title="Слова из чтения" metaChip={`${targetLanguage} · ${totalCount} слов`} />
         <AddWordModal sourceLang={sourceLang} targetLang={nativeLang} />
       </div>
 
