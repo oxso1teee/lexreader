@@ -87,7 +87,7 @@ export default function ImportModal({
   }
 
   async function handlePhoto(file: File) {
-    const validationError = validateImageFile(file);
+    const validationError = await validateImageFile(file);
     if (validationError) {
       setError(validationError);
       return;

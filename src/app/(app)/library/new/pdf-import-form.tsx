@@ -49,7 +49,7 @@ export default function PdfImportForm({
   const [title, setTitle] = useState("");
 
   async function handleFile(file: File) {
-    const validationError = validatePdfFile(file);
+    const validationError = await validatePdfFile(file);
     if (validationError) {
       setPdfError(validationError);
       setStatus("error");

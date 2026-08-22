@@ -27,7 +27,7 @@ export default function PhotoImportForm({
   const [title, setTitle] = useState("");
 
   async function handleFile(file: File) {
-    const validationError = validateImageFile(file);
+    const validationError = await validateImageFile(file);
     if (validationError) {
       setOcrError(validationError);
       setStatus("error");
