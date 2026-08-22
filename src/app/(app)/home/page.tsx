@@ -13,6 +13,7 @@ import { messages } from "@/lib/i18n";
 import PageHeader from "@/components/product/page-header";
 import SectionHeader from "@/components/product/section-header";
 import PrimaryActionCard from "@/components/product/primary-action-card";
+import DailyGoalRow from "@/components/product/today/daily-goal-row";
 import ContinueLearningCard from "@/components/product/today/continue-learning-card";
 import ReviewSummaryCard from "@/components/product/today/review-summary-card";
 import DailyPlanCard from "@/components/product/today/daily-plan-card";
@@ -253,12 +254,7 @@ export default async function HomePage() {
       <section className="flex flex-col gap-2">
         <SectionHeader title={t.summary.title} />
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between rounded-xl bg-[var(--surface)] p-4 shadow-sm">
-            <p className="text-body-sm text-[var(--text-secondary)]">Дневная цель</p>
-            <p className="text-body-sm font-semibold">
-              {newWordsToday ?? 0} / {profile.daily_word_goal} слов
-            </p>
-          </div>
+          <DailyGoalRow current={newWordsToday ?? 0} goal={profile.daily_word_goal} />
           <ReviewSummaryCard dueCount={dueCount} />
           <ContinueLearningCard material={continueReading} />
           {(pendingRecommendationsCount ?? 0) > 0 && (
