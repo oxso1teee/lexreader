@@ -10,6 +10,8 @@ import EmptyState from "@/components/empty-state";
 import PageHeader from "@/components/product/page-header";
 import { ConfidenceBadge, StatusBadge, TrendIndicator, CategoryBadge } from "@/components/product/language-twin/badges";
 import LanguageTwinUnavailable from "@/components/product/language-twin/unavailable";
+import TwinAvatar from "@/components/product/language-twin/twin-avatar";
+import { growthStage, GROWTH_STAGE_LABEL } from "@/lib/language-twin/growth";
 import type { PatternRow } from "@/lib/language-twin/types";
 import RecomputeButton from "./recompute-button";
 import HowCalculated from "./how-calculated";
@@ -123,6 +125,17 @@ export default async function LanguageTwinPage() {
     topPatternMissionId = missionRow?.id ?? null;
   }
 
+  // Раздел C, Тир 3 — каждый решённый паттерн становится "цветком" на
+  // TwinAvatar; отдельный count, а не переиспользование patterns выше,
+  // потому что тот запрос намеренно исключает status='resolved' (тут
+  // показываются только активные/улучшающиеся/неуверенные паттерны для
+  // секции "Над чем работаем").
+  const { count: resolvedPatternCount } = await supabase
+    .from("language_error_patterns")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", profile.id)
+    .eq("status", "resolved");
+
   const { data: recsData } = await supabase
     .from("language_recommendations")
     .select("*")
@@ -150,11 +163,25 @@ export default async function LanguageTwinPage() {
   const strengths = (twinProfile.strengths_json as { title: string; evidence: string }[]) ?? [];
 
   const isLowConfidence = twinProfile.confidence === "low" && patterns.length === 0 && strengths.length === 0;
+  const stage = growthStage(twinProfile.observed_receptive_vocabulary ?? 0);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <LanguageTwinAnalytics confidence={isLowConfidence ? "low" : twinProfile.confidence} />
       <PageHeader title="Мой английский" description={OVERVIEW_SUBTITLE} action={<RecomputeButton />} />
+
+      <div className="flex flex-col items-center gap-1 rounded-2xl bg-card p-4 shadow-sm">
+        <TwinAvatar
+          stage={stage}
+          confidence={twinProfile.confidence}
+          streakActive={profile.streak_current > 0}
+          resolvedCount={resolvedPatternCount ?? 0}
+        />
+        <p className="text-sm font-medium">{GROWTH_STAGE_LABEL[stage]}</p>
+        <p className="text-xs text-[var(--text-secondary)]">
+          Растёт вместе с пассивным словарём — сейчас {twinProfile.observed_receptive_vocabulary ?? 0}+ слов
+        </p>
+      </div>
 
       {isLowConfidence ? (
         <div className="flex flex-col gap-3 rounded-2xl bg-[var(--color-warning)]/10 p-4">
