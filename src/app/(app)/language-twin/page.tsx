@@ -181,6 +181,13 @@ export default async function LanguageTwinPage() {
         <p className="text-xs text-[var(--text-secondary)]">
           Растёт вместе с пассивным словарём — сейчас {twinProfile.observed_receptive_vocabulary ?? 0}+ слов
         </p>
+        <a
+          href="/api/language-twin/share-card"
+          download="lexreader-language-twin.png"
+          className="focus-ring mt-2 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
+        >
+          📤 Поделиться прогрессом
+        </a>
       </div>
 
       {isLowConfidence ? (
