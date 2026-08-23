@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 export const TEST_EMAIL = "test@example.com";
@@ -87,6 +87,38 @@ export async function getSystemTextIdByTitle(title: string): Promise<string> {
   const { data, error } = await supabase.from("texts").select("id").eq("title", title).single();
   if (error || !data) throw new Error(`Seeded text "${title}" not found — check supabase/seed.sql`);
   return data.id;
+}
+
+// e2e/reading.spec.ts's Library→Reader click flaked repeatedly on CI's
+// shared 2-vCPU runner (never locally): the click itself always registers
+// (Playwright's own actionability wait already covers that), but the
+// client-side navigation it triggers occasionally never completes within
+// even a generous window — root-caused to the runner's CPU/DB contention,
+// NOT MyMemory/translate (the target route, /read/[textId], does zero
+// external calls on initial load — pure Supabase reads, see page.tsx).
+// A blind CI-level rerun ("try the whole job again") was masking this
+// without fixing it. This retries the *actual* flaky step — click, wait a
+// bounded window for navigation, and if it didn't happen, click again
+// (the link is idempotent: clicking it again from the same page is a
+// no-op-safe retry, not a duplicate action) — instead of failing the whole
+// test outright or leaning on external-process-level retries.
+export async function clickAndWaitForNav(
+  page: Page,
+  link: Locator,
+  urlPattern: RegExp,
+  { attempts = 3, perAttemptTimeoutMs = 10_000 }: { attempts?: number; perAttemptTimeoutMs?: number } = {},
+): Promise<void> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    await link.click();
+    try {
+      await expect(page).toHaveURL(urlPattern, { timeout: perAttemptTimeoutMs });
+      return;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
 }
 
 export async function restoreTestPassword() {
