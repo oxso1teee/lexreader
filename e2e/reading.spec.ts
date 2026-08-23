@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { login, clickAndWaitForNav } from "./helpers";
 
 test("reading flow: open text, tap word, translate, change level, finish", async ({ page }) => {
   // Root-caused via temporary CI diagnostics: the Library grid's material
@@ -23,8 +23,21 @@ test("reading flow: open text, tap word, translate, change level, finish", async
   // M3 Slice 3: Library больше не разделена на вкладки "Мои"/"Каталог" —
   // один общий грид (собственные + системные тексты по языку), поэтому
   // не нужно переключать вкладку перед тем, как найти системный текст.
-  await page.getByRole("link", { name: /A Walk in the Park/ }).click();
-  await expect(page).toHaveURL(/\/read\//, { timeout: 30_000 });
+  //
+  // The prefetch fix above didn't fully close this out — this specific
+  // click→navigate still occasionally times out on CI's shared runner even
+  // with prefetch off (never locally, never on any other test's Library
+  // click). Confirmed via CI logs it's NOT MyMemory/translate: the
+  // navigation itself times out before any translate call happens (that's
+  // a separate, later step below, with its own generous timeout) — /read/
+  // does zero external calls on load, only Supabase reads. Genuine
+  // CPU/DB-contention flake, not a logic bug — retries the actual flaky
+  // step (click-and-wait-for-nav) with a bounded budget instead of relying
+  // on external CI-level job reruns to paper over it.
+  await clickAndWaitForNav(page, page.getByRole("link", { name: /A Walk in the Park/ }), /\/read\//, {
+    attempts: 3,
+    perAttemptTimeoutMs: 12_000,
+  });
 
   // Тап по слову — попап с переводом. M3 Slice 3: контекстная панель
   // рендерится ДВАЖДЫ в DOM — один раз в десктопном <aside>, один раз в
