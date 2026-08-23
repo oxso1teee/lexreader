@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Headphones, Keyboard, Layers, ListChecks, Puzzle, type LucideIcon } from "lucide-react";
 
 // Practice Home "quick practice" (Slice 4 §5): only real, working modes.
 // Choice/Type/Match are binary-graded (not the full 4-rating FSRS/SM-2
@@ -6,11 +7,14 @@ import Link from "next/link";
 // equivalent to Cards. Listening isn't wired to a mode yet (no per-card
 // audio-first flow exists) — shown disabled ("план"), not as a dead button
 // that looks active.
-const MODES: { mode: string; icon: string; label: string }[] = [
-  { mode: "cards", icon: "🗂", label: "Карточки" },
-  { mode: "choice", icon: "🔤", label: "Выбор ответа" },
-  { mode: "type", icon: "⌨️", label: "Напечатать" },
-  { mode: "match", icon: "🧩", label: "Пары" },
+//
+// Раздел B.3 файла 10: иконки режимов практики функциональные (кнопки
+// действий) — раньше были эмодзи-строкой, теперь lucide.
+const MODES: { mode: string; icon: LucideIcon; label: string }[] = [
+  { mode: "cards", icon: Layers, label: "Карточки" },
+  { mode: "choice", icon: ListChecks, label: "Выбор ответа" },
+  { mode: "type", icon: Keyboard, label: "Напечатать" },
+  { mode: "match", icon: Puzzle, label: "Пары" },
 ];
 
 export default function QuickPracticeGrid() {
@@ -28,16 +32,12 @@ export default function QuickPracticeGrid() {
             href={`/brain/all/review?mode=${m.mode}`}
             className="flex flex-col items-center gap-1 rounded-xl border border-black/10 px-3 py-3 text-center text-sm font-medium hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/5"
           >
-            <span className="text-lg" aria-hidden="true">
-              {m.icon}
-            </span>
+            <m.icon aria-hidden="true" className="h-5 w-5" />
             <span>{m.label}</span>
           </Link>
         ))}
         <div className="flex flex-col items-center gap-1 rounded-xl border border-dashed border-black/15 px-3 py-3 text-center text-sm font-medium text-[var(--text-secondary)] dark:border-white/20">
-          <span className="text-lg" aria-hidden="true">
-            🎧
-          </span>
+          <Headphones aria-hidden="true" className="h-5 w-5" />
           <span>На слух</span>
           <span className="text-[10px] uppercase tracking-wide">план</span>
         </div>

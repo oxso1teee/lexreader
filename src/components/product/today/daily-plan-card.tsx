@@ -1,9 +1,10 @@
+import type { LucideIcon } from "lucide-react";
 import MetricCard from "@/components/product/metric-card";
 
 export interface DailyPlanMetric {
   label: string;
   value: string;
-  icon?: string;
+  icon?: LucideIcon;
 }
 
 // "Today Plan" — только реальные метрики, переданные вызывающим кодом
