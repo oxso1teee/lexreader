@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Apple's App Privacy Manifest (required since 2024 for apps using
+  "required reason" APIs — https://developer.apple.com/documentation/bundleresources/privacy_manifest_files).
+
+  This is the APP TARGET's own manifest — @capacitor/core and
+  @capacitor/ios already ship their own (node_modules/@capacitor/ios/
+  Capacitor/Capacitor/PrivacyInfo.xcprivacy and .../CapacitorCordova/
+  PrivacyInfo.xcprivacy), which Xcode picks up automatically from the
+  linked frameworks. This file covers only App/AppDelegate.swift and
+  App/SceneDelegate.swift, which are the stock Capacitor boilerplate and
+  call none of Apple's "required reason" API categories directly (no
+  UserDefaults, no file timestamps, no disk-space or system-boot-time
+  APIs) — hence NSPrivacyAccessedAPITypes is empty below, honestly.
+
+  docs/release-2026-08-22/05_YURIDICHESKIE_TREBOVANIYA_I_STORE_LISTING.md —
+  the real App Store Connect "Privacy Nutrition Label" (what data LexReader
+  itself collects over the network: email, saved words/texts, subscription
+  status) is a SEPARATE manual form in App Store Connect, not this file —
+  see the final submission checklist for that step. This manifest is about
+  iOS system APIs only, not your backend's data collection.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>

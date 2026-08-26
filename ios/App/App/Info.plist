@@ -32,6 +32,12 @@
 	<string>Микрофон нужен для голосового ввода слова при добавлении в словарь — необязательная функция, работает без него.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Распознавание речи нужно, чтобы превратить сказанное слово в текст при голосовом вводе — необязательная функция, работает без него.</string>
+	<!-- Только стандартный HTTPS/TLS (WKWebView → Supabase/Vercel), никакого
+	     собственного/нестандартного шифрования — избавляет от ручного
+	     вопроса про экспортное соответствие при каждой загрузке сборки в
+	     App Store Connect. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
