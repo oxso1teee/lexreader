@@ -2,13 +2,31 @@
   "manifest_version": 3,
   "name": "LexReader YouTube Bridge",
   "version": "2.0.0",
-  "description": "Загружает субтитры YouTube через браузер пользователя и передаёт их в LexReader.",
+  "description": "YouTube-субтитры для LexReader + тап-перевод слова в контексте на любой странице.",
   "permissions": [
-    "tabs"
+    "tabs",
+    "activeTab",
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
-    "https://youtube.com/*"
+    "https://youtube.com/*",
+    "https://lexreader.vercel.app/*",
+    "https://lexreader.app/*",
+    "https://www.lexreader.app/*",
+    "https://lexreader-focoqdkq7-meeeee4.vercel.app/*",
+    "https://lexreader-mnzvtftfs-meeeee4.vercel.app/*",
+    "https://lexreader-ctoczfjdx-meeeee4.vercel.app/*",
+    "https://lexreader-1zg3zf2nv-meeeee4.vercel.app/*",
+    "https://lexreader-he4dnhye3-meeeee4.vercel.app/*",
+    "https://lexreader-git-feature-import-video-reader-v2-meeeee4.vercel.app/*",
+    "https://lexreader-28rlw6ouq-meeeee4.vercel.app/*",
+    "https://lexreader-4ospe4xo4-meeeee4.vercel.app/*",
+    "https://lexreader-jce7n4yyh-meeeee4.vercel.app/*",
+    "https://lexreader-ktigrnw57-meeeee4.vercel.app/*",
+    "http://localhost:3000/*",
+    "http://127.0.0.1:3000/*"
   ],
   "background": {
     "service_worker": "background.mjs",
@@ -65,6 +83,7 @@
     }
   ],
   "action": {
-    "default_title": "LexReader YouTube Bridge"
+    "default_title": "LexReader — тап-перевод и YouTube-мост",
+    "default_popup": "popup.html"
   }
 }

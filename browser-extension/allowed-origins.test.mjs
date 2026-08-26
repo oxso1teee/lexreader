@@ -36,6 +36,16 @@ function extractManifestBridgeMatches() {
   return new Set(bridgeEntry.matches.map((m) => m.replace(/\/\*$/, "")));
 }
 
+function extractManifestHostPermissions() {
+  const manifest = JSON.parse(readFileSync(path.join(dir, "manifest.json"), "utf8"));
+  assert.ok(Array.isArray(manifest.host_permissions), "manifest.json must declare host_permissions");
+  return new Set(
+    manifest.host_permissions
+      .filter((m) => !m.includes("youtube.com")) // youtube.com entries are a separate, unrelated allowlist.
+      .map((m) => m.replace(/\/\*$/, "")),
+  );
+}
+
 test("lexreader-bridge.js's ALLOWED_ORIGINS matches background.mjs's ALLOWED_APP_ORIGINS exactly", () => {
   const bridgeOrigins = extractBridgeOrigins();
   assert.deepEqual(
@@ -51,6 +61,23 @@ test("manifest.json's content_scripts match patterns cover every allowed origin"
     assert.ok(
       manifestOrigins.has(origin),
       `manifest.json content_scripts is missing a match pattern for ${origin} -- the bridge script would never even get injected there`,
+    );
+  }
+});
+
+// docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
+// word-tap.js's background fetch (handleWordTapTranslate/isAllowedApiBase in
+// background.mjs) is gated by this exact same ALLOWED_APP_ORIGINS set, but
+// manifest.json's host_permissions is a second, independently-maintained
+// textual copy (content scripts/background fetches can't share one JS
+// constant with the manifest) — the same class of drift this file already
+// guards against for the bridge's content_scripts matches above.
+test("manifest.json's host_permissions cover every allowed origin (background fetch target allowlist)", () => {
+  const hostPermissions = extractManifestHostPermissions();
+  for (const origin of ALLOWED_APP_ORIGINS) {
+    assert.ok(
+      hostPermissions.has(origin),
+      `manifest.json host_permissions is missing ${origin} -- word-tap.js's background fetch to it would be blocked`,
     );
   }
 });

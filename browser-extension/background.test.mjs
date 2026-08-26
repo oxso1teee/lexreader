@@ -10,7 +10,8 @@ globalThis.chrome = {
   runtime: { onMessage: { addListener: () => {} } },
 };
 
-const { isAllowedSender, canonicalWatchUrl, withTimeout, EMERGENCY_TIMEOUT_MS } = await import("./background.mjs");
+const { isAllowedSender, canonicalWatchUrl, withTimeout, EMERGENCY_TIMEOUT_MS, isAllowedApiBase, handleWordTapTranslate } =
+  await import("./background.mjs");
 
 test("isAllowedSender accepts every allowed LexReader origin", () => {
   for (const url of [
@@ -77,4 +78,96 @@ test("withTimeout rejects with the timeout fallback when the promise never settl
 test("withTimeout propagates the original rejection when the promise fails before the deadline", async () => {
   const realError = new Error("transcript_unavailable");
   await assert.rejects(() => withTimeout(Promise.reject(realError), 1000, new Error("timeout")), realError);
+});
+
+// docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
+// isAllowedApiBase reuses the exact same ALLOWED_APP_ORIGINS as isAllowedSender
+// above, so word-tap.js's background fetch can only ever reach a LexReader
+// origin already trusted elsewhere in this manifest, never an arbitrary URL
+// a user might paste into the popup's "Адрес LexReader" field.
+test("isAllowedApiBase accepts every allowed LexReader origin", () => {
+  assert.equal(isAllowedApiBase("https://lexreader.app"), true);
+  assert.equal(isAllowedApiBase("https://lexreader.app/settings"), true);
+  assert.equal(isAllowedApiBase("http://localhost:3000"), true);
+});
+
+test("isAllowedApiBase rejects an unrelated or malformed URL", () => {
+  assert.equal(isAllowedApiBase("https://evil.example.com"), false);
+  assert.equal(isAllowedApiBase("not a url"), false);
+  assert.equal(isAllowedApiBase(undefined), false);
+});
+
+test("handleWordTapTranslate refuses to fetch when apiBaseUrl is outside the allowlist (no token leak to an arbitrary host)", async () => {
+  const result = await handleWordTapTranslate({
+    apiBaseUrl: "https://evil.example.com",
+    apiToken: "lxr_ext_secret",
+    body: { word: "hi" },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.status, 0);
+});
+
+test("handleWordTapTranslate posts to /api/extension/translate-and-save with the Bearer token and returns the parsed JSON body", async () => {
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url: String(url), init });
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ wordTranslation: "тест" }),
+    };
+  };
+  try {
+    const result = await handleWordTapTranslate({
+      apiBaseUrl: "https://lexreader.app",
+      apiToken: "lxr_ext_secret",
+      body: { word: "test", sourceLang: "en", targetLang: "ru" },
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 200);
+    assert.deepEqual(result.body, { wordTranslation: "тест" });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, "https://lexreader.app/api/extension/translate-and-save");
+    assert.equal(calls[0].init.headers.Authorization, "Bearer lxr_ext_secret");
+    assert.deepEqual(JSON.parse(calls[0].init.body), { word: "test", sourceLang: "en", targetLang: "ru" });
+  } finally {
+    delete globalThis.fetch;
+  }
+});
+
+test("handleWordTapTranslate surfaces a non-ok HTTP response instead of throwing", async () => {
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 401,
+    json: async () => ({ error: "Недействительный токен." }),
+  });
+  try {
+    const result = await handleWordTapTranslate({
+      apiBaseUrl: "https://lexreader.app",
+      apiToken: "bad",
+      body: { word: "test" },
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.status, 401);
+    assert.equal(result.body.error, "Недействительный токен.");
+  } finally {
+    delete globalThis.fetch;
+  }
+});
+
+test("handleWordTapTranslate handles a network failure (fetch throws) without crashing the caller", async () => {
+  globalThis.fetch = async () => {
+    throw new Error("network down");
+  };
+  try {
+    const result = await handleWordTapTranslate({
+      apiBaseUrl: "https://lexreader.app",
+      apiToken: "x",
+      body: { word: "test" },
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.status, 0);
+  } finally {
+    delete globalThis.fetch;
+  }
 });
