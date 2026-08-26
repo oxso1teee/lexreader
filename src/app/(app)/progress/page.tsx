@@ -338,6 +338,17 @@ export default async function ProgressPage({
         <span aria-hidden="true" className="text-[var(--text-secondary)]">→</span>
       </Link>
 
+      {/* docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C,
+          Тир 3 — живые дуэли. Та же лёгкая ссылка-карточка, без своего
+          RPC-запроса здесь — вся игровая логика на /duel. */}
+      <Link href="/duel" className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm">
+        <div>
+          <p className="text-body-sm font-semibold">Дуэль по словарю</p>
+          <p className="text-caption text-[var(--text-secondary)]">Пригласи друга на дуэль 1 на 1 в реальном времени</p>
+        </div>
+        <span aria-hidden="true" className="text-[var(--text-secondary)]">→</span>
+      </Link>
+
       {/* M3 Slice 8 §11: compact only — active Path, content progress,
           current stage, skills improved/confident. No giant LMS dashboard. */}
       {activePathState && (
