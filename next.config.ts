@@ -54,7 +54,14 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // microphone=(self) — найдено вживую при аудите privacy policy для
+          // мобильного релиза: src/components/mic-button.tsx (голосовой ввод
+          // слова, Web Speech API) требует доступ к микрофону, а
+          // microphone=() (пустой allowlist — не пускает НИКОГО, даже
+          // собственный origin) молча ломал эту уже существующую фичу.
+          // camera/geolocation по-прежнему нигде не используются — остаются
+          // запрещены.
+          { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Content-Security-Policy", value: csp },
         ],
