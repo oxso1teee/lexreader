@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>LexReader</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 14px;
+      font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1a1a1a;
+    }
+    h1 {
+      font-size: 15px;
+      margin: 0 0 2px;
+    }
+    p.tagline {
+      margin: 0 0 12px;
+      color: #666;
+      font-size: 12px;
+    }
+    fieldset {
+      border: 1px solid #e2e2e2;
+      border-radius: 10px;
+      margin: 0 0 10px;
+      padding: 10px;
+    }
+    legend {
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      padding: 0 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: #444;
+      margin: 6px 0 3px;
+    }
+    input[type="text"],
+    input[type="password"],
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #d5d5d5;
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fff;
+      color: #1a1a1a;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+    .row > div {
+      flex: 1;
+      min-width: 0;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .btn-primary {
+      width: 100%;
+      background: #111;
+      color: #fff;
+      margin-top: 10px;
+      padding: 10px 14px;
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #d5d5d5;
+      color: #333;
+      font-size: 12px;
+      padding: 5px 10px;
+      margin-top: 6px;
+    }
+    #tokenStatus,
+    #activateStatus {
+      font-size: 12px;
+      margin-top: 6px;
+      min-height: 14px;
+    }
+    .ok { color: #1a7f37; }
+    .warn { color: #9a3412; }
+    details summary {
+      cursor: pointer;
+      font-size: 12px;
+      color: #666;
+    }
+    .hint {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+    a { color: #0969da; }
+  </style>
+</head>
+<body>
+  <h1>LexReader</h1>
+  <p class="tagline">Тап-перевод на любой странице</p>
+
+  <fieldset>
+    <legend>API-токен</legend>
+    <label for="apiToken">Персональный токен</label>
+    <input type="password" id="apiToken" placeholder="lxr_ext_…" autocomplete="off" />
+    <p class="hint">Получить токен: LexReader → <a id="settingsLink" href="#" target="_blank" rel="noopener">Настройки → Браузерное расширение</a>.</p>
+    <button type="button" class="btn-secondary" id="saveTokenBtn">Сохранить токен</button>
+    <div id="tokenStatus"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Языки</legend>
+    <div class="row">
+      <div>
+        <label for="sourceLang">Изучаю</label>
+        <select id="sourceLang"></select>
+      </div>
+      <div>
+        <label for="targetLang">Родной</label>
+        <select id="targetLang"></select>
+      </div>
+    </div>
+  </fieldset>
+
+  <details>
+    <summary>Адрес LexReader</summary>
+    <label for="apiBaseUrl">Сервер</label>
+    <select id="apiBaseUrl"></select>
+  </details>
+
+  <button type="button" class="btn-primary" id="activateBtn">Включить на этой странице</button>
+  <div id="activateStatus"></div>
+  <p class="hint">Дважды кликни по слову на изучаемом языке — перевод и сохранение в словарь, как в чтении.</p>
+
+  <script src="popup.js"></script>
+</body>
+</html>

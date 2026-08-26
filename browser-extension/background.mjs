@@ -509,7 +509,49 @@ export async function extractYoutubeTranscript(
 
 const requestStates = new Map();
 
+// docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
+// "тап-перевод на любой странице". word-tap.js runs injected into an
+// arbitrary third-party page (not a LexReader origin), so isAllowedSender
+// (which checks sender.url against ALLOWED_APP_ORIGINS above) doesn't apply
+// here — the security boundary for this feature is the Bearer token itself,
+// verified server-side. The actual fetch() happens here in the background
+// service worker rather than in the content script on purpose: a fetch from
+// inside the third-party page would be subject to THAT page's own
+// connect-src CSP (many sites block cross-origin fetches outright), while
+// the background service worker is a privileged extension context, bound
+// only by host_permissions below — reusing the exact same LexReader origin
+// allowlist already trusted elsewhere in this manifest, nothing broader.
+export function isAllowedApiBase(url) {
+  try {
+    return ALLOWED_APP_ORIGINS.has(new URL(url).origin);
+  } catch {
+    return false;
+  }
+}
+
+export async function handleWordTapTranslate(message) {
+  if (!isAllowedApiBase(message?.apiBaseUrl)) {
+    return { ok: false, status: 0, body: { error: "Настроенный адрес LexReader не входит в список разрешённых." } };
+  }
+  try {
+    const res = await fetch(new URL("/api/extension/translate-and-save", message.apiBaseUrl), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${message.apiToken ?? ""}` },
+      body: JSON.stringify(message.body ?? {}),
+    });
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, body };
+  } catch {
+    return { ok: false, status: 0, body: { error: "Нет соединения с LexReader." } };
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === "LEXREADER_WORD_TAP_TRANSLATE") {
+    handleWordTapTranslate(message).then(sendResponse);
+    return true;
+  }
+
   if (message?.type === "LEXREADER_YOUTUBE_BRIDGE_PING") {
     sendResponse({ ok: isAllowedSender(sender) });
     return false;
