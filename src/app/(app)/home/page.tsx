@@ -10,6 +10,7 @@ import { getOrGenerateActiveMissions, getMissionsCompletedThisWeek } from "@/lib
 import { pickHeroMission } from "@/lib/missions/ranking";
 import { findMatchingMissionForSkill } from "@/lib/learning-paths/mission-match";
 import { getActivePathStateAction } from "../learning-paths/actions";
+import { isoWeekStart } from "@/lib/iso-week";
 import { messages } from "@/lib/i18n";
 import PageHeader from "@/components/product/page-header";
 import SectionHeader from "@/components/product/section-header";
@@ -32,14 +33,6 @@ const PATTERN_STATUS_PHRASE: Partial<Record<PatternStatus, string>> = {
   improving: "улучшается",
   uncertain: "нужно проверить",
 };
-
-function isoWeekStart(d: Date): string {
-  const day = (d.getUTCDay() + 6) % 7;
-  const monday = new Date(d);
-  monday.setUTCDate(d.getUTCDate() - day);
-  monday.setUTCHours(0, 0, 0, 0);
-  return monday.toISOString();
-}
 
 function isoDate(d: Date | string): string {
   return new Date(d).toISOString().slice(0, 10);
@@ -100,7 +93,7 @@ export default async function HomePage() {
       .select("id", { count: "exact", head: true })
       .eq("user_id", profile.id)
       .eq("status", "pending"),
-    getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date())),
+    getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date()).toISOString()),
     supabase.from("reading_sessions").select("started_at").eq("owner_id", profile.id).gte("started_at", sevenDaysAgo),
     supabase
       .from("review_log")
