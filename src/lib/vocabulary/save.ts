@@ -9,8 +9,12 @@ import { deriveItemType, normalizeVocabularyKey, type ItemType } from "./item-ty
 // previously-independent ad hoc checks the Phase A audit found. Existing duplicate rows from
 // before this slice are never touched here — this only prevents new ones.
 
-export type VocabularySourceType = "reader" | "manual" | "import_bulk" | "starter_deck" | "mission" | "path";
-export type ContextSourceType = "reader" | "manual" | "import" | "video";
+// "extension" (0048_extension_api_tokens.sql) — a word/phrase tapped on an arbitrary
+// third-party page via the browser extension's tap-to-translate feature, not through any
+// LexReader-imported text. See docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C,
+// Тир 3.
+export type VocabularySourceType = "reader" | "manual" | "import_bulk" | "starter_deck" | "mission" | "path" | "extension";
+export type ContextSourceType = "reader" | "manual" | "import" | "video" | "extension";
 
 export interface VocabularyContextInput {
   text: string;

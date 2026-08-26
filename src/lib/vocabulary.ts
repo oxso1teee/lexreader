@@ -4,7 +4,7 @@ import { checkAndAwardAchievements } from "@/lib/achievements-actions";
 import { addXp } from "@/lib/xp-actions";
 import { recordEvidence } from "@/lib/language-twin/evidence";
 import { escapeIlike } from "./ilike";
-import { findOrCreateFlashcard, type ContextSourceType } from "./vocabulary/save";
+import { findOrCreateFlashcard, type ContextSourceType, type VocabularySourceType } from "./vocabulary/save";
 
 export { escapeIlike };
 
@@ -29,10 +29,17 @@ export interface UpsertWordResult {
 // M3 Slice 12 Gate #3 — a context carrying a video timestamp is provenance 'video' regardless
 // of textId (video texts are still "reader-adjacent" for flashcards.source_type, but their
 // per-occurrence context is distinctly timestamped, unlike plain reading).
+//
+// docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 — a word tapped via the
+// browser extension on an arbitrary page has neither a textId nor a video timestamp, but it's
+// not "manual" either (nothing was typed) — sourceTypeOverride lets the extension's save path
+// say so explicitly instead of silently falling into the "manual" catch-all.
 function deriveContextSourceType(
   textId: string | null,
   sourceTimestampMs: number | null | undefined,
+  sourceTypeOverride: VocabularySourceType | undefined,
 ): ContextSourceType {
+  if (sourceTypeOverride === "extension") return "extension";
   if (sourceTimestampMs != null) return "video";
   return textId ? "reader" : "manual";
 }
@@ -97,18 +104,19 @@ async function refreshExistingLink(
     textId: string | null;
     language: string;
     sourceTimestampMs?: number | null;
+    sourceType?: VocabularySourceType;
   },
 ): Promise<FlashcardLinkInfo | null> {
   if (!input.contextSentence) return fetchFlashcardLinkInfo(supabase, flashcardId, false);
 
-  const contextSourceType = deriveContextSourceType(input.textId, input.sourceTimestampMs);
+  const contextSourceType = deriveContextSourceType(input.textId, input.sourceTimestampMs, input.sourceType);
   const result = await findOrCreateFlashcard(supabase, {
     ownerId: userId,
     language: input.language,
     front: input.headword,
     back: input.translation,
     itemType: "word",
-    sourceType: input.textId ? "reader" : "manual",
+    sourceType: input.sourceType ?? (input.textId ? "reader" : "manual"),
     context: {
       text: input.contextSentence,
       translation: input.contextTranslation,
@@ -133,16 +141,17 @@ async function linkToFlashcard(
     textId: string | null;
     language: string;
     sourceTimestampMs?: number | null;
+    sourceType?: VocabularySourceType;
   },
 ): Promise<FlashcardLinkInfo | null> {
-  const contextSourceType = deriveContextSourceType(input.textId, input.sourceTimestampMs);
+  const contextSourceType = deriveContextSourceType(input.textId, input.sourceTimestampMs, input.sourceType);
   const result = await findOrCreateFlashcard(supabase, {
     ownerId: userId,
     language: input.language,
     front: input.headword,
     back: input.translation,
     itemType: "word",
-    sourceType: input.textId ? "reader" : "manual",
+    sourceType: input.sourceType ?? (input.textId ? "reader" : "manual"),
     context: input.contextSentence
       ? {
           text: input.contextSentence,
@@ -171,6 +180,9 @@ export async function saveVocabularyItem(
     language: string;
     /** M3 Slice 12 Gate #3 — video playback position (ms) when saving from Video Reader. */
     sourceTimestampMs?: number | null;
+    /** Раздел C, Тир 3 — explicit override for extension-originated saves; defaults to the
+     *  existing textId-based "reader"/"manual" inference when omitted. */
+    sourceType?: VocabularySourceType;
   },
 ): Promise<UpsertWordResult> {
   // P0-АУДИТ 3.9: дедуп и апдейт теперь тоже скопированы по языку — иначе
@@ -205,6 +217,7 @@ export async function saveVocabularyItem(
           textId: input.textId,
           language: input.language,
           sourceTimestampMs: input.sourceTimestampMs,
+          sourceType: input.sourceType,
         })
       : await linkToFlashcard(supabase, userId, existing.id, {
           headword: input.headword,
@@ -214,6 +227,7 @@ export async function saveVocabularyItem(
           textId: input.textId,
           language: input.language,
           sourceTimestampMs: input.sourceTimestampMs,
+          sourceType: input.sourceType,
         });
 
     return {
@@ -264,6 +278,7 @@ export async function saveVocabularyItem(
     textId: input.textId,
     language: input.language,
     sourceTimestampMs: input.sourceTimestampMs,
+    sourceType: input.sourceType,
   });
 
   // Раздел 5.2 промта: точка входа общая для читалки/ручного добавления/

@@ -20,6 +20,8 @@ import { deleteAccount, type DeleteAccountState } from "./delete-account-actions
 import HapticsToggle from "./haptics-toggle";
 import ThemeToggle from "./theme-toggle";
 import FeedbackForm from "./feedback-form";
+import ExtensionTokensSection from "./extension-tokens-section";
+import type { ExtensionTokenSummary } from "./extension-actions";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -44,6 +46,7 @@ export default function SettingsClient({
   subscriptionPeriodEnd,
   hasStripeCustomer,
   initialPushEnabled,
+  extensionTokens,
 }: {
   email: string;
   createdAt: string;
@@ -56,6 +59,7 @@ export default function SettingsClient({
   subscriptionPeriodEnd: string | null;
   hasStripeCustomer: boolean;
   initialPushEnabled: boolean;
+  extensionTokens: ExtensionTokenSummary[];
 }) {
   const [pushEnabled, setPushEnabled] = useState(initialPushEnabled);
   const [pushBusy, setPushBusy] = useState(false);
@@ -263,6 +267,8 @@ export default function SettingsClient({
       <HapticsToggle />
 
       <FeedbackForm />
+
+      <ExtensionTokensSection initialTokens={extensionTokens} />
 
       <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
         <SectionHeader title="Аккаунт и безопасность" />
