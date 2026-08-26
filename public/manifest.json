@@ -1,9 +1,13 @@
 {
+  "id": "/",
   "name": "LexReader",
   "short_name": "LexReader",
   "description": "Учи язык через чтение реальных текстов",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "any",
+  "categories": ["education", "productivity"],
+  "lang": "ru",
   "background_color": "#f5f1ea",
   "theme_color": "#a67c52",
   "icons": [
