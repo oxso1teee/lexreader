@@ -5,6 +5,22 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { sendPush } from "@/lib/push";
 
+// docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
+// explicit opt-in, никогда не включается автоматически. RLS на profiles
+// ("owner full access", 0001_init.sql) уже гарантирует, что этот UPDATE
+// затрагивает только собственную строку — .eq("id", profile.id) ниже
+// делает то же самое явным в коде, тот же паттерн, что и revokeExtensionToken.
+export async function updateLeaderboardOptIn(optIn: boolean): Promise<{ ok: boolean; error?: string }> {
+  const profile = await requireProfile();
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ leaderboard_opt_in: optIn }).eq("id", profile.id);
+  if (error) return { ok: false, error: "Не удалось сохранить настройку." };
+
+  revalidatePath("/settings");
+  revalidatePath("/leaderboard");
+  return { ok: true };
+}
+
 export interface UpdateProfileState {
   error?: string;
   saved?: boolean;

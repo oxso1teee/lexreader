@@ -4,6 +4,7 @@ import { getDueCount, getReviewsThisWeekCount, computeHardestWords } from "@/lib
 import { decideProgressInsight } from "@/lib/progress-insight";
 import { getLanguageTwinEntryState } from "@/lib/language-twin/summary";
 import { getMissionsCompletedThisWeek } from "@/lib/missions/persist";
+import { isoWeekStart } from "@/lib/iso-week";
 import { getActivePathStateAction } from "../learning-paths/actions";
 import LanguageTwinSummaryCard from "@/components/product/language-twin/summary-card";
 import Link from "next/link";
@@ -19,14 +20,6 @@ import InsightBanner from "@/components/product/progress/insight-banner";
 import ActivityWeekCard from "@/components/product/progress/activity-week-card";
 import SkillSection from "@/components/product/progress/skill-section";
 import ProgressViewTracker from "./progress-view-tracker";
-
-function isoWeekStart(d: Date): string {
-  const day = (d.getUTCDay() + 6) % 7;
-  const monday = new Date(d);
-  monday.setUTCDate(d.getUTCDate() - day);
-  monday.setUTCHours(0, 0, 0, 0);
-  return monday.toISOString();
-}
 
 // M3 Slice 4: moved to src/lib/brain-stats.ts (computeHardestWords) so
 // Practice Home can reuse the same ranking instead of a second
@@ -195,7 +188,7 @@ export default async function ProgressPage({
       .select("id", { count: "exact", head: true })
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language)
-      .gte("created_at", isoWeekStart(new Date())),
+      .gte("created_at", isoWeekStart(new Date()).toISOString()),
     // M3 UI slice 2 — Progress redesign: минимальный набор новых запросов
     // (docs/ui/slice2-data-audit.md) для честного insight и "Активность за
     // 7 дней"/skill section — переиспользуем уже существующие helpers из
@@ -227,7 +220,7 @@ export default async function ProgressPage({
     // Missions v1 / Today v2 §5: shared helper (src/lib/missions/persist.ts)
     // so /home and /progress can never quietly report different numbers for
     // the same "completed this week" stat.
-    getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date())),
+    getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date()).toISOString()),
     getActivePathStateAction(),
     // M3 Slice 10 (task #280): learning_state is evidence-based (state-engine.ts) — a genuinely
     // different, more honest signal than the vocabulary_items.level counts above, which only
@@ -332,6 +325,18 @@ export default async function ProgressPage({
       <InsightBanner insight={insight} />
 
       {languageTwinState.kind !== "hidden" && <LanguageTwinSummaryCard state={languageTwinState} variant="progress" />}
+
+      {/* docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C,
+          Тир 3 — недельная лига. Лёгкая ссылка-карточка, не отдельный
+          RPC-запрос на этой и без того тяжёлой Promise.all-странице — вся
+          реальная агрегация/приватность живёт на самой /leaderboard. */}
+      <Link href="/leaderboard" className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm">
+        <div>
+          <p className="text-body-sm font-semibold">Недельная лига</p>
+          <p className="text-caption text-[var(--text-secondary)]">Сравни активность за неделю с другими участниками</p>
+        </div>
+        <span aria-hidden="true" className="text-[var(--text-secondary)]">→</span>
+      </Link>
 
       {/* M3 Slice 8 §11: compact only — active Path, content progress,
           current stage, skills improved/confident. No giant LMS dashboard. */}

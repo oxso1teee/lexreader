@@ -1,16 +1,15 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
+import { isoWeekStart as isoWeekStartDate } from "./iso-week.ts";
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-// Понедельник — начало ISO-недели (getUTCDay(): 0=вс..6=сб, сдвигаем на
-// понедельник = 0).
+// src/lib/iso-week.ts — общая точка правды для "начало ISO-недели"
+// (понедельник); здесь нужен именно date-only срез (streak_freeze_week —
+// date-колонка), остальные потребители берут полный ISO-timestamp.
 function isoWeekStart(d: Date): string {
-  const day = (d.getUTCDay() + 6) % 7;
-  const monday = new Date(d);
-  monday.setUTCDate(d.getUTCDate() - day);
-  return isoDate(monday);
+  return isoDate(isoWeekStartDate(d));
 }
 
 export async function touchStreak(supabase: SupabaseServerClient, userId: string) {

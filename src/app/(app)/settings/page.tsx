@@ -42,6 +42,7 @@ export default async function SettingsPage() {
         hasStripeCustomer={Boolean(subscription?.stripe_customer_id)}
         initialPushEnabled={(pushCount ?? 0) > 0}
         extensionTokens={extensionTokens}
+        leaderboardOptIn={profile.leaderboard_opt_in}
       />
     </div>
   );

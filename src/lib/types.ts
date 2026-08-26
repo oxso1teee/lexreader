@@ -20,6 +20,10 @@ export interface Profile {
    *  src/lib/placement/types.ts for the exact allowed values. */
   primary_goal: string | null;
   self_reported_cefr: string | null;
+  /** docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3
+   *  — explicit opt-in for the weekly leaderboard, default false. See
+   *  supabase/migrations/0049_weekly_leaderboard.sql. */
+  leaderboard_opt_in: boolean;
 }
 
 export type TextSourceType = "manual" | "article_url" | "youtube" | "system";
