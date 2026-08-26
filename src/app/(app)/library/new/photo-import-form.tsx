@@ -9,6 +9,7 @@ import { validateImageFile } from "@/lib/file-validation";
 import { log } from "@/lib/log";
 import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
+import { useIsNativePlatform } from "@/lib/use-is-native";
 
 export default function PhotoImportForm({
   targetLanguage,
@@ -20,6 +21,7 @@ export default function PhotoImportForm({
   collections: CollectionOption[];
 }) {
   const [state, formAction, pending] = useAddMaterialAction("file_photo", createText, {});
+  const isNative = useIsNativePlatform();
   const [status, setStatus] = useState<"idle" | "working" | "error">("idle");
   const [progress, setProgress] = useState(0);
   const [ocrError, setOcrError] = useState<string | null>(null);
@@ -158,11 +160,17 @@ export default function PhotoImportForm({
         // Не теряем распознанный и отредактированный текст при отказе —
         // раньше здесь весь экран подменялся на PaywallNotice.
         <p className="text-sm text-[var(--text-secondary)]">
-          Лимит бесплатного тарифа по текстам исчерпан.{" "}
-          <a href="/paywall?reason=texts" className="focus-ring font-semibold text-[var(--color-caramel-text)] underline">
-            Смотреть Premium
-          </a>
-          . Текст ниже сохранён — можно оформить Premium и сохранить его после.
+          {isNative ? (
+            "Лимит бесплатного тарифа по текстам исчерпан. Текст ниже сохранён."
+          ) : (
+            <>
+              Лимит бесплатного тарифа по текстам исчерпан.{" "}
+              <a href="/paywall?reason=texts" className="focus-ring font-semibold text-[var(--color-caramel-text)] underline">
+                Смотреть Premium
+              </a>
+              . Текст ниже сохранён — можно оформить Premium и сохранить его после.
+            </>
+          )}
         </p>
       )}
       <div className="flex gap-3">

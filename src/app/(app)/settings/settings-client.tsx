@@ -23,6 +23,7 @@ import FeedbackForm from "./feedback-form";
 import ExtensionTokensSection from "./extension-tokens-section";
 import type { ExtensionTokenSummary } from "./extension-actions";
 import LeaderboardOptInSection from "./leaderboard-opt-in-section";
+import { useIsNativePlatform } from "@/lib/use-is-native";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -64,6 +65,7 @@ export default function SettingsClient({
   extensionTokens: ExtensionTokenSummary[];
   leaderboardOptIn: boolean;
 }) {
+  const isNative = useIsNativePlatform();
   const [pushEnabled, setPushEnabled] = useState(initialPushEnabled);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushError, setPushError] = useState<string | null>(null);
@@ -229,15 +231,23 @@ export default function SettingsClient({
             )
           );
         })()}
-        {plan === "free" && (
+        {plan === "free" && !isNative && (
           <p className="text-body-sm mt-1 text-[var(--text-secondary)]">Управление подпиской и смена плана — на странице тарифов.</p>
         )}
         {hasStripeCustomer && plan !== "free" && (
           <p className="text-caption mt-1 text-[var(--text-secondary)]">Оплата через Stripe.</p>
         )}
-        <Link href="/pricing" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-caramel-text)]">
-          {plan === "free" ? "Посмотреть тарифы" : "Управление подпиской"} →
-        </Link>
+        {/* см. src/lib/use-is-native.ts — v1 обёртки не ведёт на подписку
+            внутри приложения вообще, тарифы/управление — только на сайте */}
+        {isNative ? (
+          <p className="text-body-sm mt-2 text-[var(--text-secondary)]">
+            Тарифы и управление подпиской — на сайте LexReader в браузере.
+          </p>
+        ) : (
+          <Link href="/pricing" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-caramel-text)]">
+            {plan === "free" ? "Посмотреть тарифы" : "Управление подпиской"} →
+          </Link>
+        )}
       </section>
 
       <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">

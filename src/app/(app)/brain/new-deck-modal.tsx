@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createDeck, type DeckFormState } from "./actions";
 import { FREE_DECK_LIMIT } from "@/lib/subscription";
 import { track } from "@/lib/posthog-client";
+import { useIsNativePlatform } from "@/lib/use-is-native";
 
 // M3 Slice 4 §12: deckCount/atLimit are computed server-side from the same
 // query hasFreeDeckRoom() itself uses (src/lib/subscription.ts) — the limit
@@ -20,6 +21,7 @@ export default function NewDeckModal({
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState<DeckFormState, FormData>(createDeck, {});
+  const isNative = useIsNativePlatform();
 
   // M3 Slice 4 §16: редкий race (atLimit=false при открытии, но лимит уже
   // достигнут ко времени сабмита — например вторая вкладка) — тот же
@@ -55,8 +57,9 @@ export default function NewDeckModal({
             {atLimit ? (
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-black/60 dark:text-white/60">
-                  На бесплатном тарифе можно создать до {FREE_DECK_LIMIT} колод. Чтобы создать ещё одну,
-                  перейди на Premium.
+                  {isNative
+                    ? `На бесплатном тарифе можно создать до ${FREE_DECK_LIMIT} колод.`
+                    : `На бесплатном тарифе можно создать до ${FREE_DECK_LIMIT} колод. Чтобы создать ещё одну, перейди на Premium.`}
                 </p>
                 <div className="mt-1 flex gap-2">
                   <button
@@ -66,12 +69,16 @@ export default function NewDeckModal({
                   >
                     Закрыть
                   </button>
-                  <Link
-                    href="/pricing?reason=decks"
-                    className="flex-1 rounded-full bg-caramel py-2.5 text-center font-medium text-black"
-                  >
-                    Смотреть Premium
-                  </Link>
+                  {/* см. src/lib/use-is-native.ts — в нативной обёртке ссылки
+                      на покупку подписки нет вообще */}
+                  {!isNative && (
+                    <Link
+                      href="/pricing?reason=decks"
+                      className="flex-1 rounded-full bg-caramel py-2.5 text-center font-medium text-black"
+                    >
+                      Смотреть Premium
+                    </Link>
+                  )}
                 </div>
               </div>
             ) : (
@@ -87,10 +94,15 @@ export default function NewDeckModal({
                 {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
                 {state.paywall && (
                   <p className="text-sm text-black/60 dark:text-white/60">
-                    На бесплатном тарифе можно создать до {FREE_DECK_LIMIT} колод.{" "}
-                    <Link href="/pricing?reason=decks" className="text-[var(--color-caramel-text)] underline">
-                      Смотреть Premium
-                    </Link>
+                    На бесплатном тарифе можно создать до {FREE_DECK_LIMIT} колод.
+                    {!isNative && (
+                      <>
+                        {" "}
+                        <Link href="/pricing?reason=decks" className="text-[var(--color-caramel-text)] underline">
+                          Смотреть Premium
+                        </Link>
+                      </>
+                    )}
                   </p>
                 )}
                 <div className="mt-1 flex gap-2">
