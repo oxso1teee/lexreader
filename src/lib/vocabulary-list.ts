@@ -14,7 +14,7 @@ import { isLearned } from "./srs.ts";
 export type SchedulerBucket = "new" | "due" | "learning" | "known";
 export type ItemType = "word" | "phrase";
 export type LearningState = "new" | "learning" | "familiar" | "active" | "maintenance";
-export type SourceType = "reader" | "manual" | "import_bulk" | "starter_deck" | "mission" | "path";
+export type SourceType = "reader" | "manual" | "import_bulk" | "starter_deck" | "mission" | "path" | "extension";
 
 export interface VocabularyRow {
   flashcardId: string;

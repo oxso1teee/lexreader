@@ -1,6 +1,6 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import type { EvidenceInput, EvidenceRow, EvidenceSourceType, LanguageTwinSettings } from "./types";
-import { getOrCreateSettings } from "./settings";
+import { getOrCreateSettingsSafe } from "./settings";
 
 // Which per-source opt-out gates each evidence source_type. vocabulary_item
 // evidence is literally "saved vocabulary" (word/level/seen_count from
@@ -22,12 +22,23 @@ const SOURCE_TYPE_SETTING: Record<EvidenceSourceType, keyof LanguageTwinSettings
 // source is disabled — call sites should treat "no evidence recorded" as a
 // normal, expected outcome of an opt-out, not a failure (plan doc §9: the
 // toggle must be real, not decorative).
+//
+// docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
+// found while wiring up the extension's save path: this used the throwing
+// getOrCreateSettings, so a Language Twin storage hiccup (e.g. a missing
+// service_role grant — exactly the api/extension/translate-and-save case,
+// the first ever service_role caller of saveVocabularyItem) took the
+// entire word save down with it, contradicting this function's own
+// documented contract above ("returns null, not an error"/never blocks an
+// unrelated save) and getOrCreateSettingsSafe's own stated purpose ("never
+// let a Language Twin storage problem take down surrounding content that
+// has nothing to do with this feature").
 export async function recordEvidence(
   supabase: SupabaseServerClient,
   input: EvidenceInput,
 ): Promise<EvidenceRow | null> {
-  const settings = await getOrCreateSettings(supabase, input.userId);
-  if (!settings.enabled) return null;
+  const settings = await getOrCreateSettingsSafe(supabase, input.userId);
+  if (!settings || !settings.enabled) return null;
   if (!settings[SOURCE_TYPE_SETTING[input.sourceType]]) return null;
 
   const { data, error } = await supabase

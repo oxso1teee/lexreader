@@ -17,6 +17,7 @@ const SOURCE_LABEL = {
   starter_deck: "Стартовый набор",
   mission: "Из задания",
   path: "Из курса",
+  extension: "Из расширения",
 } as const;
 const BUCKET_LABEL = { new: "Новое", due: "К повторению", learning: "Учу", known: "Знаю" } as const;
 

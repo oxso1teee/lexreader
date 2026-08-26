@@ -3,13 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getPlan } from "@/lib/subscription";
 import PageHeader from "@/components/product/page-header";
 import SettingsClient from "./settings-client";
+import { listExtensionTokens } from "./extension-actions";
 
 export default async function SettingsPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
   const user = await getSessionUser();
 
-  const [plan, { count: pushCount }, { data: subscription }] = await Promise.all([
+  const [plan, { count: pushCount }, { data: subscription }, extensionTokens] = await Promise.all([
     getPlan(supabase, profile.id),
     supabase
       .from("push_subscriptions")
@@ -22,6 +23,7 @@ export default async function SettingsPage() {
       .select("status, current_period_end, stripe_customer_id")
       .eq("owner_id", profile.id)
       .maybeSingle(),
+    listExtensionTokens(),
   ]);
 
   return (
@@ -39,6 +41,7 @@ export default async function SettingsPage() {
         subscriptionPeriodEnd={subscription?.current_period_end ?? null}
         hasStripeCustomer={Boolean(subscription?.stripe_customer_id)}
         initialPushEnabled={(pushCount ?? 0) > 0}
+        extensionTokens={extensionTokens}
       />
     </div>
   );
