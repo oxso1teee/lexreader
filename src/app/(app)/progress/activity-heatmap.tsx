@@ -8,11 +8,16 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+// feat/hybrid-gamification-visuals: раньше 4 уровня активности красились в
+// захардкоженные emerald-300/500/700 — цвет библиотеки по умолчанию, никак
+// не связанный с брендом. Теперь та же 4-ступенчатая шкала на forest-
+// токенах — каждый уже сам разруливает light/dark через свой :root[data-
+// theme="dark"]-оверрайд в tokens.css, отдельный dark:-вариант тут не нужен.
 function levelClass(count: number): string {
-  if (count === 0) return "bg-black/5 dark:bg-white/10";
-  if (count <= 2) return "bg-emerald-300 dark:bg-emerald-900";
-  if (count <= 5) return "bg-emerald-500 dark:bg-emerald-700";
-  return "bg-emerald-700 dark:bg-emerald-500";
+  if (count === 0) return "bg-[var(--surface-muted)]";
+  if (count <= 2) return "bg-[var(--color-forest-tint)]";
+  if (count <= 5) return "bg-[var(--color-forest-tint-strong)]";
+  return "bg-[var(--color-forest)]";
 }
 
 export default function ActivityHeatmap({ counts }: { counts: Record<string, number> }) {

@@ -11,6 +11,7 @@ import Link from "next/link";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
+import StreakHero from "./streak-hero";
 import LineChart from "./line-chart";
 import HardestWords from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
@@ -368,13 +369,14 @@ export default async function ProgressPage({
         </Link>
       )}
 
+      <StreakHero days={profile.streak_current} />
+
       <div>
         <h2 className="text-h3 mb-2">Показатели</h2>
         <div className="grid grid-cols-2 gap-3">
-          <StatCard value={profile.streak_current} label="Дней подряд сейчас" />
-          <StatCard value={activeDaysInPeriod} label="Учебных дней за период" color="blue" />
-          <StatCard value={finishedTexts ?? 0} label="Материалов завершено" color="green" />
-          <StatCard value={dueReviewsCount} label="К повторению сейчас" color="orange" />
+          <StatCard value={finishedTexts ?? 0} label="Материалов завершено" size="primary" />
+          <StatCard value={activeDaysInPeriod} label="Учебных дней за период" />
+          <StatCard value={dueReviewsCount} label="К повторению сейчас" />
         </div>
       </div>
 
@@ -401,8 +403,8 @@ export default async function ProgressPage({
         <div>
           <h2 className="text-h3 mb-2">Миссии</h2>
           <div className="grid grid-cols-2 gap-3">
-            <StatCard value={missionWeekStats.completed} label="Миссий завершено за неделю" color="green" />
-            <StatCard value={missionWeekStats.skillsTouched} label="Направлений затронуто" color="blue" />
+            <StatCard value={missionWeekStats.completed} label="Миссий завершено за неделю" size="primary" />
+            <StatCard value={missionWeekStats.skillsTouched} label="Направлений затронуто" />
           </div>
         </div>
       )}
@@ -412,24 +414,24 @@ export default async function ProgressPage({
       <div>
         <h2 className="mb-2 font-semibold">Словарный запас</h2>
         <div className="grid grid-cols-2 gap-3">
-          <StatCard value={totalWords ?? 0} label="Слов встречено (всего)" />
+          <StatCard value={totalWords ?? 0} label="Слов встречено (всего)" size="primary" />
           {/* Найдено при повторном аудите: эти карточки — кумулятивное
               состояние словаря, не зависят от вкладки периода выше (в отличие
               от "за период" ниже) — явно помечаем "всего", чтобы не выглядело
               багом на одном экране с показателем, который период учитывает. */}
-          <StatCard value={learningWords ?? 0} label="Изучаются всего (ур. 1-3)" color="orange" />
-          <StatCard value={knownWords ?? 0} label="Знаю всего (ур. 4)" color="green" />
-          <StatCard value={wordsReadTotal} label="Слов прочитано за период" color="purple" />
+          <StatCard value={learningWords ?? 0} label="Изучаются всего (ур. 1-3)" />
+          <StatCard value={knownWords ?? 0} label="Знаю всего (ур. 4)" />
+          <StatCard value={wordsReadTotal} label="Слов прочитано за период" />
         </div>
       </div>
 
       <div>
         <h2 className="mb-2 font-semibold">Карточки</h2>
         <div className="grid grid-cols-2 gap-3">
-          <StatCard value={cardsCreated} label="Карточек создано" color="blue" />
-          <StatCard value={answersGiven} label="Ответов дано" color="red" />
-          <StatCard value={familiarWords ?? 0} label="Почти закреплены" color="orange" />
-          <StatCard value={activeWords ?? 0} label="Активно вспоминаются" color="green" />
+          <StatCard value={cardsCreated} label="Карточек создано" size="primary" />
+          <StatCard value={answersGiven} label="Ответов дано" />
+          <StatCard value={familiarWords ?? 0} label="Почти закреплены" />
+          <StatCard value={activeWords ?? 0} label="Активно вспоминаются" />
         </div>
       </div>
 
