@@ -152,6 +152,24 @@
   --color-forest-text: var(--color-forest-text);
   --color-forest-tint: var(--color-forest-tint);
   --color-forest-tint-strong: var(--color-forest-tint-strong);
+  /* docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+     §1.2 — serif только для hero/H1 лендинга и крупных section-заголовков
+     там же, весь остальной UI остаётся на --font-sans (Geist). Значение
+     задано здесь напрямую (как --font-sans/--font-mono в globals.css), а
+     НЕ через :root-алиас, как остальные токены в этом файле — Tailwind
+     v4 уже поставляет свой собственный --font-serif внутри
+     `@layer theme` (built-in default theme), а unlayered `:root` не
+     побеждает layered `@layer theme` для custom properties так, как
+     побеждает для остальных объявлений — самореференсный алиас
+     (`--font-serif: var(--font-serif)`) резолвился в invalid/пустую
+     строку вместо реального значения (проверено живьём через
+     getComputedStyle). --font-playfair сам по себе определён только
+     внутри src/app/landing-page.tsx (next/font/google, scoped, не в
+     корневом layout.tsx) — на страницах, где этот компонент не
+     рендерится, переменная не в области видимости, и var(--font-playfair)
+     просто проваливается на следующий фолбэк в списке, Georgia/serif —
+     не ошибка, ожидаемая деградация. */
+  --font-serif: var(--font-playfair), Georgia, serif;
 }
 
 /* Typography scale — semantic roles instead of ad hoc text-xl/font-bold
