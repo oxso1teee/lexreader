@@ -42,7 +42,16 @@ test("Progress with real review/material history shows the due-reviews insight a
   await page.goto("/progress");
   await expect(page.getByRole("heading", { name: "Показатели" }).first()).toBeVisible();
   // due_reviews must win over every other insight per decideProgressInsight()'s priority.
-  await expect(page.getByText(/карточк.* к повторению\./)).toBeVisible();
+  // Found while chasing this test on a clean full-suite run (Next.js 16.3.3
+  // upgrade regression sweep): the shared TEST_EMAIL account's due-card count
+  // depends on every earlier test in the suite that touches it, so it can
+  // legitimately land anywhere — including counts whose Russian plural is
+  // "карточек" (wordForm() in progress-insight.ts, mod10 0/5-9/11-14), not
+  // just "карточка"/"карточки". The old regex `карточк.*` only matched the
+  // latter two (7th letter "к"); "карточек" diverges one letter earlier
+  // ("карточ"+"ек"). Matching the shared 6-letter "карточ" stem covers all
+  // three real plural forms instead of assuming a specific count range.
+  await expect(page.getByText(/карточ.* к повторению\./)).toBeVisible();
 });
 
 test("Settings profile section renders real fields: email, languages, goal, plan", async ({ page }) => {

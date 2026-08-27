@@ -24,7 +24,11 @@ test("Add Material: text tab creates a real material and redirects to the Reader
   await page.getByRole("button", { name: "Добавить в библиотеку" }).click();
 
   await expect(page).toHaveURL(/\/read\/[\w-]+$/, { timeout: 10_000 });
-  await expect(page.getByText(title)).toBeVisible();
+  // Next.js's own route announcer (#__next-route-announcer__, an a11y live
+  // region) now also carries the new route's page title text alongside the
+  // real <h1> — a plain getByText(title) matches both and fails strict
+  // mode. Scope to the heading role, same pattern as line 19 above.
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
 });
 
 test("Add Material: text tab rejects an empty and a too-short body honestly", async ({ page }) => {
