@@ -42,7 +42,7 @@ export default async function DeckPage({
         cardCount={cards?.length ?? 0}
         justCreated={created === "true"}
       />
-      <Link href="/brain/vocabulary" className="text-sm text-[var(--color-caramel-text)]">
+      <Link href="/brain/vocabulary" className="text-sm text-[var(--color-forest-text)]">
         ← Словарь и колоды
       </Link>
 
@@ -50,7 +50,7 @@ export default async function DeckPage({
         <DeckTitle deckId={deckId} name={deck.name} isDefault={deck.is_default} isStarter={deck.is_starter} />
         <Link
           href={`/brain/${deckId}/review`}
-          className="shrink-0 rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+          className="shrink-0 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
         >
           Начать повторение
         </Link>

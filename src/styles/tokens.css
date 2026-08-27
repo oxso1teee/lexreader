@@ -32,7 +32,7 @@
 
   /* Semantic color roles — alias the existing accent tokens from
      globals.css rather than introducing a second palette. */
-  --color-primary: var(--color-caramel);
+  --color-primary: var(--color-forest);
   --color-primary-foreground: #ffffff;
   /* --color-caramel сам по себе (#a67c52) даёт только 3.16-3.73:1 на
      светлых поверхностях этого приложения — недостаточно для WCAG AA
@@ -87,6 +87,7 @@
      mirroring the --color-caramel-text/--color-success-text pattern. */
   --color-forest: #1f4d3b;
   --color-forest-deep: #163a2c;
+  --color-forest-light: #2f6b52;
   --color-forest-text: #1f4d3b;
   --color-forest-tint: #e4ede7;
   --color-forest-tint-strong: #cfe0d6;
@@ -147,6 +148,7 @@
   --color-info-text: var(--color-info-text);
   --color-forest: var(--color-forest);
   --color-forest-deep: var(--color-forest-deep);
+  --color-forest-light: var(--color-forest-light);
   --color-forest-text: var(--color-forest-text);
   --color-forest-tint: var(--color-forest-tint);
   --color-forest-tint-strong: var(--color-forest-tint-strong);

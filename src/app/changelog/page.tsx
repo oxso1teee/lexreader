@@ -33,7 +33,7 @@ const ENTRIES = [
 export default function ChangelogPage() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6 py-10">
-      <Link href="/settings" className="text-sm text-caramel">
+      <Link href="/settings" className="text-sm text-forest">
         ← Настройки
       </Link>
       <h1 className="text-2xl font-bold">Что нового</h1>

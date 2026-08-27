@@ -19,7 +19,7 @@ export default function RecomputeButton({ variant = "secondary" }: { variant?: "
 
   const className =
     variant === "primary"
-      ? "focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black disabled:opacity-50"
+      ? "focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
       : "focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50";
 
   return (

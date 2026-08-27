@@ -23,7 +23,7 @@ export default function PrimaryActionCard({
   actionType: "review" | "continue_reading" | "add_material";
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-caramel to-caramel-light p-5 text-white shadow-sm">
+    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-forest to-forest-light p-5 text-white shadow-sm">
       {eyebrow && <span className="text-label uppercase tracking-wide text-white/70">{eyebrow}</span>}
       <div>
         <h2 className="text-h2">{title}</h2>

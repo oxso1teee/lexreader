@@ -51,7 +51,7 @@ export function difficultyLabel(difficulty: MissionDifficulty): string {
 
 export function MissionTypeBadge({ type }: { type: MissionType }) {
   return (
-    <span className="rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-[var(--color-caramel-text)]">
+    <span className="rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-[var(--color-forest-text)]">
       {missionTypeLabel(type)}
     </span>
   );

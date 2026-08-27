@@ -52,7 +52,7 @@ export default function DiagnosticFlow() {
         <ul className="flex flex-col gap-1.5">
           {result.signals.map((s) => (
             <li key={s.label} className="flex items-start gap-2 text-sm">
-              <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-caramel" />
+              <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-forest" />
               <span>
                 <span className="font-medium">{s.label}</span> — {s.detail}
               </span>
@@ -62,7 +62,7 @@ export default function DiagnosticFlow() {
         <div className="flex flex-col items-center gap-2 pt-1">
           <Link
             href="/language-twin"
-            className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+            className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
           >
             Посмотреть мой профиль
           </Link>
@@ -95,7 +95,7 @@ export default function DiagnosticFlow() {
               track("diagnostic_started", {});
               setStarted(true);
             }}
-            className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+            className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
           >
             Начать ({DIAGNOSTIC_QUESTIONS.length} вопросов)
           </button>
@@ -118,7 +118,7 @@ export default function DiagnosticFlow() {
       </p>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
         <span
-          className="block h-full rounded-full bg-caramel"
+          className="block h-full rounded-full bg-forest"
           style={{ width: `${(index / DIAGNOSTIC_QUESTIONS.length) * 100}%` }}
         />
       </div>

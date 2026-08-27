@@ -441,7 +441,7 @@ export default function ReviewSession({
             <button
               type="submit"
               disabled={editPending}
-              className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-caramel text-sm font-medium text-black disabled:opacity-50"
+              className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-forest text-sm font-medium text-white disabled:opacity-50"
             >
               {editPending ? "…" : "Сохранить"}
             </button>
@@ -497,7 +497,7 @@ export default function ReviewSession({
                 {card.sourceTextId && card.sourceTextTitle && (
                   <a
                     href={`/read/${card.sourceTextId}`}
-                    className="text-xs font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+                    className="text-xs font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
                   >
                     из «{card.sourceTextTitle}»
                   </a>
@@ -537,7 +537,7 @@ export default function ReviewSession({
                   </p>
                   <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
                     <div
-                      className="h-full rounded-full bg-caramel transition-[width]"
+                      className="h-full rounded-full bg-forest transition-[width]"
                       style={{
                         width: `${Math.min(100, (sessionTotal / Math.max(bestSessionCount, 1)) * 100)}%`,
                       }}

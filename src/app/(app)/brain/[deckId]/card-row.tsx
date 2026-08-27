@@ -71,7 +71,7 @@ export default function CardRow({
           <button
             type="submit"
             disabled={updatePending}
-            className="flex min-h-9 flex-1 items-center justify-center rounded-full bg-caramel text-sm font-medium text-black disabled:opacity-50"
+            className="flex min-h-9 flex-1 items-center justify-center rounded-full bg-forest text-sm font-medium text-white disabled:opacity-50"
           >
             {updatePending ? "…" : "Сохранить"}
           </button>

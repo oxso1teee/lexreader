@@ -27,7 +27,7 @@ function heroHeadline(mission: MissionRow): string {
 }
 
 // The Today hero slot — one card, sourced from a real active mission. Same
-// visual language as PrimaryActionCard (caramel gradient, black CTA pill) so
+// visual language as PrimaryActionCard (forest gradient, black CTA pill) so
 // swapping between "here's your mission" and the plain review/reading
 // fallback (home/page.tsx renders PrimaryActionCard directly when no mission
 // exists) never feels like two different apps.
@@ -40,7 +40,7 @@ export default function HeroMissionCard({
 }) {
   const isStarted = mission.status === "started";
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-caramel to-caramel-light p-5 text-white shadow-sm">
+    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-forest to-forest-light p-5 text-white shadow-sm">
       <span className="text-label uppercase tracking-wide text-white/70">Твой следующий шаг</span>
       <div>
         <h2 className="text-h2">{heroHeadline(mission)}</h2>

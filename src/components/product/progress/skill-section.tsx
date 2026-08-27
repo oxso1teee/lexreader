@@ -1,7 +1,7 @@
 import { skillStatus, SKILL_STATUS_LABEL, type SkillStatus } from "@/lib/skill-status";
 
 // --color-success/--color-warning как ЦВЕТ ТЕКСТА дают только 3.29:1/~3:1 на
-// светлом --surface (найдено axe-core) — тот же паттерн, что и caramel-text
+// светлом --surface (найдено axe-core) — тот же паттерн, что и forest-text
 // в tokens.css: text-safe варианты только для текста, не для фона/иконки.
 const STATUS_COLOR: Record<SkillStatus, string> = {
   few_data: "text-[var(--text-secondary)]",

@@ -12,7 +12,7 @@ export default function OfflinePage() {
       <button
         type="button"
         onClick={() => window.location.reload()}
-        className="mt-2 flex min-h-11 items-center justify-center rounded-full bg-caramel px-5 font-medium text-white"
+        className="mt-2 flex min-h-11 items-center justify-center rounded-full bg-forest px-5 font-medium text-white"
       >
         Повторить
       </button>

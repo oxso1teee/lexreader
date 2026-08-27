@@ -281,7 +281,7 @@ export default function VocabularyBrowser({
                 }}
                 className={`focus-ring min-h-9 rounded-full border px-3 py-1.5 text-xs font-medium ${
                   filter === f
-                    ? "border-caramel bg-caramel/15 text-[var(--color-caramel-text)]"
+                    ? "border-forest bg-forest/15 text-[var(--color-forest-text)]"
                     : "border-black/10 text-black/60 dark:border-white/15 dark:text-white/60"
                 }`}
               >
@@ -343,7 +343,7 @@ export default function VocabularyBrowser({
           </div>
 
           {selectedIds.size > 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-caramel/40 bg-caramel/10 px-3 py-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-forest/40 bg-forest/10 px-3 py-2 text-sm">
               <span className="font-medium">Выбрано: {selectedIds.size}</span>
               {canMarkKnown && (
                 <button type="button" disabled={isPending} onClick={handleBulkMarkKnown} className="rounded-full bg-white px-3 py-1.5 text-xs font-medium shadow-sm dark:bg-black/40">
@@ -457,7 +457,7 @@ function LearningStateBadge({ state }: { state: VocabularyRow["learningState"] }
 
 function DueBadge() {
   return (
-    <span className="shrink-0 rounded-full bg-caramel/15 px-2 py-0.5 text-[11px] font-medium text-[var(--color-caramel-text)]">
+    <span className="shrink-0 rounded-full bg-forest/15 px-2 py-0.5 text-[11px] font-medium text-[var(--color-forest-text)]">
       К повторению
     </span>
   );

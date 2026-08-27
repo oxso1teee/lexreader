@@ -60,7 +60,7 @@ export default function PracticeHero({
   const total = dueCount + newCount;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-caramel to-caramel-light p-4 text-white shadow-sm">
+    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-forest to-forest-light p-4 text-white shadow-sm">
       {resumable ? (
         <div className="flex items-center justify-between gap-3">
           <div>

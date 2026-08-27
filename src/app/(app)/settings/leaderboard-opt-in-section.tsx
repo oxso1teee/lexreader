@@ -56,7 +56,7 @@ export default function LeaderboardOptInSection({ initialOptIn }: { initialOptIn
         </p>
       )}
       {optIn && (
-        <Link href="/leaderboard" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-caramel-text)]">
+        <Link href="/leaderboard" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-forest-text)]">
           Открыть лидерборд →
         </Link>
       )}

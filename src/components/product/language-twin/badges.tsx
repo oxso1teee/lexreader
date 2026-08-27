@@ -89,7 +89,7 @@ export function categoryLabel(category: PatternCategory): string {
 
 export function CategoryBadge({ category }: { category: PatternCategory }) {
   return (
-    <span className="rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-[var(--color-caramel-text)]">
+    <span className="rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-[var(--color-forest-text)]">
       {categoryLabel(category)}
     </span>
   );

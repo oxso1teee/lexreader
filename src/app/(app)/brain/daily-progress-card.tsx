@@ -26,7 +26,7 @@ export default function DailyProgressCard({
       <p className="text-xs text-[var(--text-secondary)]">карточек повторено</p>
       {target > 0 && (
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
-          <div className="h-full rounded-full bg-caramel transition-[width]" style={{ width: `${percent}%` }} />
+          <div className="h-full rounded-full bg-forest transition-[width]" style={{ width: `${percent}%` }} />
         </div>
       )}
     </div>

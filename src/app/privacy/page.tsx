@@ -5,7 +5,7 @@ export const metadata = { title: "Политика конфиденциальн�
 export default function PrivacyPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-10 text-sm leading-6">
-      <Link href="/home" className="text-caramel underline">
+      <Link href="/home" className="text-forest underline">
         ← На главную
       </Link>
       <h1 className="text-2xl font-bold">Политика конфиденциальности</h1>
@@ -105,7 +105,7 @@ export default function PrivacyPage() {
           below (and the matching one in src/app/terms/page.tsx) once he names one. */}
       <p>
         Вопросы по обработке данных:{" "}
-        <a href="mailto:puchkov889@gmail.com" className="font-mono text-caramel underline">
+        <a href="mailto:puchkov889@gmail.com" className="font-mono text-forest underline">
           puchkov889@gmail.com
         </a>
         .

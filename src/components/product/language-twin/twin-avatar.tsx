@@ -70,7 +70,7 @@ export default function TwinAvatar({
             width={geo.trunkWidth}
             height={geo.trunkHeight}
             rx={geo.trunkWidth / 2}
-            fill="var(--color-caramel-text)"
+            fill="var(--color-forest-text)"
           />
           {geo.leafClusters.map(({ cx, cy, r }, i) => (
             <circle key={i} cx={cx} cy={cy} r={r} fill="var(--color-forest-text)" opacity={canopyOpacity} />

@@ -65,7 +65,7 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
       <p className="text-sm text-[var(--text-secondary)]">{reasonLabel(rec.reason_key)}</p>
       {!compact && (
         <div className="flex flex-wrap gap-2 pt-1">
-          <a href={target} onClick={handleOpen} className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black">
+          <a href={target} onClick={handleOpen} className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white">
             {ACTION_LABEL[rec.action_type] ?? "Открыть"}
           </a>
           <button
@@ -87,7 +87,7 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
         </div>
       )}
       {compact && (
-        <a href={target} onClick={handleOpen} className="focus-ring self-start rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black">
+        <a href={target} onClick={handleOpen} className="focus-ring self-start rounded-full bg-forest px-4 py-2 text-sm font-medium text-white">
           {ACTION_LABEL[rec.action_type] ?? "Открыть"}
         </a>
       )}

@@ -43,7 +43,7 @@ export default async function LearningPathStagePage({ params }: { params: Promis
                       <div className="flex flex-wrap items-center gap-2">
                         <SkillStatusBadge status={progress?.status ?? "not_started"} />
                         {isCurrent && (
-                          <span className="rounded-full bg-[var(--color-caramel-text)]/15 px-2 py-0.5 text-xs font-semibold text-[var(--color-caramel-text)]">
+                          <span className="rounded-full bg-[var(--color-forest-text)]/15 px-2 py-0.5 text-xs font-semibold text-[var(--color-forest-text)]">
                             Сейчас
                           </span>
                         )}

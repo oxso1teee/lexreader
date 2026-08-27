@@ -22,8 +22,8 @@ export default async function LearningPathsCatalogPage() {
       />
 
       {recommendation && recommendedPath && (
-        <div className="flex flex-col gap-1 rounded-2xl border border-[var(--color-caramel-text)]/30 bg-[var(--color-caramel-text)]/5 p-4">
-          <span className="text-xs font-semibold text-[var(--color-caramel-text)]">
+        <div className="flex flex-col gap-1 rounded-2xl border border-[var(--color-forest-text)]/30 bg-[var(--color-forest-text)]/5 p-4">
+          <span className="text-xs font-semibold text-[var(--color-forest-text)]">
             {recommendation.lowConfidence ? "Возможная рекомендация" : "Рекомендуем тебе"}
           </span>
           <p className="text-sm font-medium">{recommendedPath.path.title}</p>

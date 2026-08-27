@@ -49,7 +49,7 @@ export default function InstallBanner() {
 
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-black p-3.5 text-white dark:bg-white dark:text-black">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-caramel text-lg">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-forest text-lg">
         📲
       </div>
       <div className="min-w-0 flex-1">

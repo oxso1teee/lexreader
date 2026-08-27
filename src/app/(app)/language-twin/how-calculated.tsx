@@ -29,7 +29,7 @@ export default function HowCalculated({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="focus-ring text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+        className="focus-ring text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
       >
         Как это посчитано?
       </button>
@@ -49,7 +49,7 @@ export default function HowCalculated({
               <p className="text-[var(--text-secondary)]">
                 {placementRange ?? (placementSkipped ? "пропущена" : "не пройдена")}
               </p>
-              <Link href="/onboarding/placement?retake=1" className="focus-ring mt-1 inline-block text-xs font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline">
+              <Link href="/onboarding/placement?retake=1" className="focus-ring mt-1 inline-block text-xs font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline">
                 {placementRange ? "Обновить диагностику" : "Пройти диагностику"}
               </Link>
             </div>

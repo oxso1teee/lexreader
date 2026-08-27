@@ -85,7 +85,7 @@ export default function ReaderWordPanel({
                 : "Бесплатный лимит слов на сегодня исчерпан."}{" "}
               <Link
                 href={`/pricing?reason=${popup.isPhrase ? "cards" : "words"}`}
-                className="focus-ring font-semibold text-[var(--color-caramel-text)] underline"
+                className="focus-ring font-semibold text-[var(--color-forest-text)] underline"
               >
                 Смотреть Premium
               </Link>
@@ -135,7 +135,7 @@ export default function ReaderWordPanel({
               )}
               {popup.flashcardId && popup.learningState && (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-caramel/15 px-2 py-0.5 text-xs font-medium text-[var(--color-caramel-text)]">
+                  <span className="rounded-full bg-forest/15 px-2 py-0.5 text-xs font-medium text-[var(--color-forest-text)]">
                     {LEARNING_STATE_LABEL[popup.learningState]}
                   </span>
                   {!!popup.contextCount && popup.contextCount > 1 && (
@@ -143,7 +143,7 @@ export default function ReaderWordPanel({
                   )}
                   <Link
                     href={`/brain/vocabulary/${popup.flashcardId}`}
-                    className="focus-ring text-xs font-semibold text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+                    className="focus-ring text-xs font-semibold text-[var(--color-forest-text)] underline-offset-2 hover:underline"
                   >
                     Подробнее →
                   </Link>

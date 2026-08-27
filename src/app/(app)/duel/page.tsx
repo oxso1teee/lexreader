@@ -51,7 +51,7 @@ export default async function DuelLandingPage({
         )}
       </section>
 
-      <Link href="/progress" className="focus-ring self-start text-body-sm text-[var(--color-caramel-text)]">
+      <Link href="/progress" className="focus-ring self-start text-body-sm text-[var(--color-forest-text)]">
         ← К прогрессу
       </Link>
     </div>

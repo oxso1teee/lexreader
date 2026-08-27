@@ -60,7 +60,7 @@ export default function NotebookClient({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-5 py-6">
-      <Link href="/brain" className="mb-3 text-sm text-caramel">
+      <Link href="/brain" className="mb-3 text-sm text-forest">
         ← Мозг
       </Link>
 
@@ -72,7 +72,7 @@ export default function NotebookClient({
       {reviewDeckId && (
         <Link
           href={`/brain/${reviewDeckId}/review`}
-          className="mb-4 flex items-center justify-between rounded-2xl bg-caramel p-4 text-white shadow-sm"
+          className="mb-4 flex items-center justify-between rounded-2xl bg-forest p-4 text-white shadow-sm"
         >
           <span className="font-medium">
             {reviewDueCount > 0 ? `▶ Учить (${reviewDueCount} к повторению)` : "🎉 Всё повторено"}

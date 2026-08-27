@@ -201,7 +201,7 @@ export default function SettingsClient({
               <button
                 type="button"
                 onClick={handleTestPush}
-                className="focus-ring self-start text-body-sm text-[var(--color-caramel-text)] underline"
+                className="focus-ring self-start text-body-sm text-[var(--color-forest-text)] underline"
               >
                 Тестовое уведомление
               </button>
@@ -244,7 +244,7 @@ export default function SettingsClient({
             Тарифы и управление подпиской — на сайте LexReader в браузере.
           </p>
         ) : (
-          <Link href="/pricing" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-caramel-text)]">
+          <Link href="/pricing" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-forest-text)]">
             {plan === "free" ? "Посмотреть тарифы" : "Управление подпиской"} →
           </Link>
         )}

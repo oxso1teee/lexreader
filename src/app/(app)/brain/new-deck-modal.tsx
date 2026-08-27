@@ -42,7 +42,7 @@ export default function NewDeckModal({
           // означает реальную попытку, а не форму, которая тут же откажет.
           track(atLimit ? "deck_create_blocked_by_limit" : "deck_create_started");
         }}
-        className="rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+        className="rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
       >
         + Новая колода
       </button>
@@ -74,7 +74,7 @@ export default function NewDeckModal({
                   {!isNative && (
                     <Link
                       href="/pricing?reason=decks"
-                      className="flex-1 rounded-full bg-caramel py-2.5 text-center font-medium text-black"
+                      className="flex-1 rounded-full bg-forest py-2.5 text-center font-medium text-white"
                     >
                       Смотреть Premium
                     </Link>
@@ -98,7 +98,7 @@ export default function NewDeckModal({
                     {!isNative && (
                       <>
                         {" "}
-                        <Link href="/pricing?reason=decks" className="text-[var(--color-caramel-text)] underline">
+                        <Link href="/pricing?reason=decks" className="text-[var(--color-forest-text)] underline">
                           Смотреть Premium
                         </Link>
                       </>
@@ -116,7 +116,7 @@ export default function NewDeckModal({
                   <button
                     type="submit"
                     disabled={pending}
-                    className="flex-1 rounded-full bg-caramel py-2.5 font-medium text-black disabled:opacity-50"
+                    className="flex-1 rounded-full bg-forest py-2.5 font-medium text-white disabled:opacity-50"
                   >
                     {pending ? "…" : "Создать"}
                   </button>

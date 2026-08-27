@@ -24,7 +24,7 @@ export default function ReviewSummaryCard({ dueCount }: { dueCount: number }) {
         <Link
           href="/brain/all/review"
           onClick={() => track("review_entry_clicked", { destination: "/brain/all/review" })}
-          className="focus-ring text-body-sm font-semibold text-[var(--color-caramel-text)]"
+          className="focus-ring text-body-sm font-semibold text-[var(--color-forest-text)]"
         >
           Все карточки →
         </Link>

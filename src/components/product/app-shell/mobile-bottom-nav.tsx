@@ -35,18 +35,18 @@ export default function MobileBottomNav() {
             }`}
           >
             {/* Как и в DesktopSidebar — цвет бренда на иконке (декоративная
-                графика), не на тексте пункта: caramel-текст на белом фоне
+                графика), не на тексте пункта: forest-текст на белом фоне
                 давал 3.73:1 против требуемых 4.5:1 (найдено axe-core). Это
                 унаследовано из исходного (app)/nav.tsx один в один — не
                 новая регрессия, но раз тестируем именно этот компонент
                 заново, чиним заодно. */}
-            <span className={active ? "text-caramel" : ""} aria-hidden="true">
+            <span className={active ? "text-forest" : ""} aria-hidden="true">
               <Icon />
             </span>
             <span className="leading-none">{item.label}</span>
             <span
               className={`mt-0.5 h-1 w-1 rounded-full transition-opacity ${
-                active ? "bg-caramel opacity-100" : "opacity-0"
+                active ? "bg-forest opacity-100" : "opacity-0"
               }`}
             />
           </Link>

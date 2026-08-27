@@ -22,7 +22,7 @@ export default function AppError({
         <button
           type="button"
           onClick={reset}
-          className="flex min-h-11 items-center justify-center rounded-full bg-caramel px-5 font-medium text-white"
+          className="flex min-h-11 items-center justify-center rounded-full bg-forest px-5 font-medium text-white"
         >
           Попробовать снова
         </button>
