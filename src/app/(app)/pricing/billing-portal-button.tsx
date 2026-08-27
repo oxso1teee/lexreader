@@ -2,12 +2,24 @@
 
 import { useActionState } from "react";
 import { createBillingPortalSession, type CheckoutState } from "./actions";
+import { useIsNativePlatform } from "@/lib/use-is-native";
 
 export default function BillingPortalButton() {
   const [state, formAction, pending] = useActionState<CheckoutState, FormData>(
     createBillingPortalSession,
     {},
   );
+  const isNative = useIsNativePlatform();
+
+  // см. src/lib/use-is-native.ts — управление подпиской в v1 обёртки
+  // доступно только на сайте, не внутри нативного приложения.
+  if (isNative) {
+    return (
+      <p className="mt-3 text-sm text-black/50 dark:text-white/50">
+        Управление подпиской и оплатой — на сайте LexReader в браузере.
+      </p>
+    );
+  }
 
   return (
     <form action={formAction} className="mt-3">

@@ -8,6 +8,7 @@ import { validatePdfFile } from "@/lib/file-validation";
 import { log } from "@/lib/log";
 import PaywallNotice from "./paywall-notice";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
+import { useIsNativePlatform } from "@/lib/use-is-native";
 
 // M3 Slice 3 fix: pdfjs-dist's own module (canvas.js) runs `new DOMMatrix()`
 // as a module-evaluation side effect — a static top-level import (as this
@@ -42,6 +43,7 @@ export default function PdfImportForm({
   collections: CollectionOption[];
 }) {
   const [state, formAction, pending] = useAddMaterialAction("file_pdf", createText, {});
+  const isNative = useIsNativePlatform();
   const [status, setStatus] = useState<"idle" | "working" | "error">("idle");
   const [progress, setProgress] = useState(0);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -182,11 +184,17 @@ export default function PdfImportForm({
       )}
       {state.paywall && (
         <p className="text-sm text-[var(--text-secondary)]">
-          Лимит бесплатного тарифа по текстам исчерпан.{" "}
-          <a href="/paywall?reason=texts" className="focus-ring font-semibold text-[var(--color-caramel-text)] underline">
-            Смотреть Premium
-          </a>
-          . Текст ниже сохранён — можно оформить Premium и сохранить его после.
+          {isNative ? (
+            "Лимит бесплатного тарифа по текстам исчерпан. Текст ниже сохранён."
+          ) : (
+            <>
+              Лимит бесплатного тарифа по текстам исчерпан.{" "}
+              <a href="/paywall?reason=texts" className="focus-ring font-semibold text-[var(--color-caramel-text)] underline">
+                Смотреть Premium
+              </a>
+              . Текст ниже сохранён — можно оформить Premium и сохранить его после.
+            </>
+          )}
         </p>
       )}
       <div className="flex gap-3">

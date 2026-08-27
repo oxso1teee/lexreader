@@ -49,7 +49,17 @@ test("Today renders successfully for an authenticated user with no Learning Path
 
   await login(page);
   await expect(page.getByText("Не получилось выполнить действие")).not.toBeVisible();
-  await expect(page.getByText("Добрый день!").or(page.getByText("Доброе утро!")).or(page.getByText("Добрый вечер!"))).toBeVisible();
+  // src/lib/today.ts greetingForHour() has 4 buckets, not 3 — hour < 5
+  // returns "Доброй ночи", which this assertion was missing entirely, so
+  // any CI run landing between 00:00-04:59 UTC failed here on a real
+  // "Доброй ночи!" greeting the test simply never recognized as valid.
+  await expect(
+    page
+      .getByText("Добрый день!")
+      .or(page.getByText("Доброе утро!"))
+      .or(page.getByText("Добрый вечер!"))
+      .or(page.getByText("Доброй ночи!")),
+  ).toBeVisible();
 });
 
 test("Today renders successfully for an authenticated user with a real active Mission (hero slot)", async ({ page }) => {

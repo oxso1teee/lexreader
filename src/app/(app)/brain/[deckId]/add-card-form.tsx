@@ -5,6 +5,7 @@ import Link from "next/link";
 import { addFlashcard, type AddCardState } from "./actions";
 import { FREE_FLASHCARD_LIMIT } from "@/lib/subscription";
 import MicButton from "@/components/mic-button";
+import { useIsNativePlatform } from "@/lib/use-is-native";
 
 export default function AddCardForm({
   deckId,
@@ -20,6 +21,7 @@ export default function AddCardForm({
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
   const submittedRef = useRef(false);
+  const isNative = useIsNativePlatform();
 
   // front/back стали управляемыми полями (нужно для голосового ввода —
   // MicButton пишет распознанный текст напрямую в состояние), поэтому
@@ -74,10 +76,15 @@ export default function AddCardForm({
       {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
       {state.paywall && (
         <p className="text-sm text-black/60 dark:text-white/60">
-          На бесплатном тарифе можно держать до {FREE_FLASHCARD_LIMIT} карточек.{" "}
-          <Link href="/pricing?reason=cards" className="text-[var(--color-caramel-text)] underline">
-            Смотреть Premium
-          </Link>
+          На бесплатном тарифе можно держать до {FREE_FLASHCARD_LIMIT} карточек.
+          {!isNative && (
+            <>
+              {" "}
+              <Link href="/pricing?reason=cards" className="text-[var(--color-caramel-text)] underline">
+                Смотреть Premium
+              </Link>
+            </>
+          )}
         </p>
       )}
       <button
