@@ -1,5 +1,18 @@
 import Link from "next/link";
+import { Playfair_Display } from "next/font/google";
 import { BookOpen, MousePointerClick, RotateCw, type LucideIcon } from "lucide-react";
+
+// docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+// §1.2 — serif только для лендинга (hero H1 + крупный CTA-заголовок ниже),
+// весь остальной UI остаётся на Geist. Загружается прямо здесь, не в
+// корневом layout.tsx — LandingPage рендерится только для неавторизованных
+// на "/" (см. src/app/page.tsx), authenticated-страницы не должны тянуть
+// лишний шрифт, который им не нужен. cyrillic обязателен — заголовки на
+// русском, latin-only subset оставил бы кириллицу на системном фолбэке.
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin", "cyrillic"],
+});
 
 // Раздел B.6 файла 10: раньше это была mobile-only "quickwins"-страница
 // (max-w-md, без desktop-версии) — на широком экране просто узкая колонка
@@ -20,7 +33,7 @@ const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className={`${playfairDisplay.variable} flex min-h-dvh flex-col`}>
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
         <span className="text-lg font-bold tracking-tight">LexReader</span>
         <Link
@@ -34,7 +47,7 @@ export default function LandingPage() {
       <main className="flex flex-1 flex-col">
         <section className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-6 py-8 md:grid-cols-2 md:gap-16 md:py-16">
           <div className="flex flex-col gap-5">
-            <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
+            <h1 className="font-serif text-3xl font-bold tracking-tight md:text-5xl">
               Учи язык, читая то, что интересно
             </h1>
             <p className="text-body text-[var(--text-secondary)] md:text-lg">
@@ -88,7 +101,7 @@ export default function LandingPage() {
         </section>
 
         <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-5 px-6 py-16 text-center">
-          <h2 className="text-h1 max-w-xl">Начни с текста, который правда хочется дочитать</h2>
+          <h2 className="text-h1 font-serif max-w-xl">Начни с текста, который правда хочется дочитать</h2>
           <Link
             href="/onboarding"
             className="focus-ring flex min-h-12 items-center justify-center rounded-full bg-[var(--color-primary)] px-8 font-medium text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90"
