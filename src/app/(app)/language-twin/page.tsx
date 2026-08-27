@@ -87,7 +87,7 @@ export default async function LanguageTwinPage() {
           action={
             <Link
               href="/language-twin/diagnostic"
-              className="focus-ring mt-2 rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+              className="focus-ring mt-2 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
             >
               Пройти мини-диагностику
             </Link>
@@ -255,14 +255,14 @@ export default async function LanguageTwinPage() {
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/language-twin/patterns"
-                className="focus-ring self-start text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+                className="focus-ring self-start text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
               >
                 Открыть паттерн →
               </Link>
               {topPatternMissionId && (
                 <Link
                   href={`/missions/${topPatternMissionId}`}
-                  className="focus-ring self-start rounded-full bg-caramel px-3 py-1.5 text-xs font-medium text-black"
+                  className="focus-ring self-start rounded-full bg-forest px-3 py-1.5 text-xs font-medium text-white"
                 >
                   Потренировать сейчас
                 </Link>
@@ -282,7 +282,7 @@ export default async function LanguageTwinPage() {
         <div className="rounded-2xl bg-card p-4 shadow-sm">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold">Над чем работаем</h2>
-            <Link href="/language-twin/patterns" className="text-sm text-[var(--color-caramel-text)]">
+            <Link href="/language-twin/patterns" className="text-sm text-[var(--color-forest-text)]">
               Все →
             </Link>
           </div>
@@ -304,7 +304,7 @@ export default async function LanguageTwinPage() {
       <div className="rounded-2xl bg-card p-4 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Что сделать сегодня</h2>
-          <Link href="/language-twin/recommendations" className="text-sm text-[var(--color-caramel-text)]">
+          <Link href="/language-twin/recommendations" className="text-sm text-[var(--color-forest-text)]">
             Все →
           </Link>
         </div>
@@ -323,14 +323,14 @@ export default async function LanguageTwinPage() {
         <div className="rounded-2xl bg-card p-4 shadow-sm">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold">Последние изменения профиля</h2>
-            <Link href="/language-twin/timeline" className="text-sm text-[var(--color-caramel-text)]">
+            <Link href="/language-twin/timeline" className="text-sm text-[var(--color-forest-text)]">
               Вся история →
             </Link>
           </div>
           <ol className="flex flex-col gap-2">
             {recentChanges.map((entry, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-caramel" />
+                <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-forest" />
                 <div>
                   <p className="text-sm">{entry.title}</p>
                   <p className="text-xs text-[var(--text-secondary)]">

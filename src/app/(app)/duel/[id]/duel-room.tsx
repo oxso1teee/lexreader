@@ -162,7 +162,7 @@ export default function DuelRoom({
     return (
       <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
         <p className="text-body-sm text-[var(--text-secondary)]">Дуэль не найдена — возможно, ссылка неверна.</p>
-        <Link href="/duel" className="focus-ring mt-3 inline-block text-body-sm font-semibold text-[var(--color-caramel-text)]">
+        <Link href="/duel" className="focus-ring mt-3 inline-block text-body-sm font-semibold text-[var(--color-forest-text)]">
           ← Создать свою дуэль
         </Link>
       </section>
@@ -251,7 +251,7 @@ export default function DuelRoom({
                 Играть ещё раз
               </button>
             </form>
-            <Link href="/progress" className="focus-ring text-body-sm text-[var(--color-caramel-text)]">
+            <Link href="/progress" className="focus-ring text-body-sm text-[var(--color-forest-text)]">
               К прогрессу
             </Link>
           </div>

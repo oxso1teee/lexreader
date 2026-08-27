@@ -67,7 +67,7 @@ export default async function PricingPage({
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
       <PricingViewTracker reason={reason} />
       <div>
-        <Link href="/home" className="text-sm font-medium text-caramel">
+        <Link href="/home" className="text-sm font-medium text-forest">
           ← Назад
         </Link>
         <h1 className="mt-2 text-2xl font-bold">Выберите ваш план</h1>
@@ -132,7 +132,7 @@ export default async function PricingPage({
               Полный доступ ко всем премиум-функциям
             </p>
             <p className="mt-3">
-              <span className="text-3xl font-bold text-caramel">449 ₽</span>
+              <span className="text-3xl font-bold text-forest">449 ₽</span>
               <span className="text-black/50 dark:text-white/50"> /месяц</span>
             </p>
             <ul className="mt-4 flex flex-col gap-2 text-sm">
@@ -148,14 +148,14 @@ export default async function PricingPage({
                 <CheckoutButton
                   plan="premium_monthly"
                   label="Начать — 3 дня бесплатно"
-                  className="w-full rounded-full border-2 border-caramel py-3 font-semibold text-caramel"
+                  className="w-full rounded-full border-2 border-forest py-3 font-semibold text-forest"
                 />
               </div>
             ) : showDevSimulation ? (
               <form action={simulateSubscribe.bind(null, "premium_monthly")} className="mt-4">
                 <button
                   type="submit"
-                  className="w-full rounded-full border-2 border-caramel py-3 font-semibold text-caramel"
+                  className="w-full rounded-full border-2 border-forest py-3 font-semibold text-forest"
                 >
                   Начать
                 </button>
@@ -171,8 +171,8 @@ export default async function PricingPage({
             )}
           </div>
 
-          <div className="relative rounded-2xl border-2 border-caramel bg-card p-5 shadow-sm">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-caramel px-3 py-1 text-xs font-bold tracking-wide text-white uppercase">
+          <div className="relative rounded-2xl border-2 border-forest bg-card p-5 shadow-sm">
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-forest px-3 py-1 text-xs font-bold tracking-wide text-white uppercase">
               Популярный
             </span>
             <h2 className="mt-1 text-lg font-bold">LexReader Premium — Ежегодно</h2>
@@ -180,7 +180,7 @@ export default async function PricingPage({
               Полный доступ ко всем премиум-функциям
             </p>
             <p className="mt-3">
-              <span className="text-3xl font-bold text-caramel">4490 ₽</span>
+              <span className="text-3xl font-bold text-forest">4490 ₽</span>
               <span className="text-black/50 dark:text-white/50"> /год</span>
             </p>
             <p className="text-sm text-black/50 dark:text-white/50">
@@ -199,14 +199,14 @@ export default async function PricingPage({
                 <CheckoutButton
                   plan="premium_yearly"
                   label="Начать — 3 дня бесплатно"
-                  className="w-full rounded-full bg-caramel py-3 font-semibold text-white"
+                  className="w-full rounded-full bg-forest py-3 font-semibold text-white"
                 />
               </div>
             ) : showDevSimulation ? (
               <form action={simulateSubscribe.bind(null, "premium_yearly")} className="mt-4">
                 <button
                   type="submit"
-                  className="w-full rounded-full bg-caramel py-3 font-semibold text-white"
+                  className="w-full rounded-full bg-forest py-3 font-semibold text-white"
                 >
                   Начать
                 </button>

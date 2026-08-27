@@ -145,7 +145,7 @@ export default async function LibraryPage() {
             <p className="text-body-sm font-semibold">Пути обучения</p>
             <p className="text-xs text-[var(--text-secondary)]">Структурированные курсы: A2→B1, B1→B2, Everyday, IT</p>
           </div>
-          <span className="shrink-0 text-body-sm font-semibold text-[var(--color-caramel-text)]">Открыть →</span>
+          <span className="shrink-0 text-body-sm font-semibold text-[var(--color-forest-text)]">Открыть →</span>
         </Link>
 
         <LibraryBrowser items={items} />

@@ -63,7 +63,7 @@ export default function CheckRunner({
         Вопрос {index + 1} из {questions.length}
       </p>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
-        <span className="block h-full rounded-full bg-caramel transition-[width]" style={{ width: `${(index / questions.length) * 100}%` }} />
+        <span className="block h-full rounded-full bg-forest transition-[width]" style={{ width: `${(index / questions.length) * 100}%` }} />
       </div>
 
       <div className="rounded-2xl bg-card p-4 shadow-sm">
@@ -154,7 +154,7 @@ function ResultScreen({
           {meta.body} Результат: {percent}%. Твой путь сохранён — дальше Today будет каждый день показывать, что делать
           следующим.
         </p>
-        <Link href="/home" onClick={onRefresh} className="focus-ring self-start rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black">
+        <Link href="/home" onClick={onRefresh} className="focus-ring self-start rounded-full bg-forest px-4 py-2 text-sm font-medium text-white">
           Перейти в Today
         </Link>
       </div>
@@ -170,7 +170,7 @@ function ResultScreen({
         <Link
           href={`/learning-paths/${pathSlug}`}
           onClick={onRefresh}
-          className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+          className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
         >
           К пути
         </Link>

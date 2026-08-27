@@ -79,7 +79,7 @@ export default function AddWordModal({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Добавить слово вручную"
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-caramel text-lg font-medium text-white"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-forest text-lg font-medium text-white"
       >
         +
       </button>
@@ -165,7 +165,7 @@ export default function AddWordModal({
               type="button"
               disabled={busy || !headword.trim() || !translation.trim()}
               onClick={handleSave}
-              className="flex-1 rounded-full bg-caramel py-2.5 font-medium text-white disabled:opacity-50"
+              className="flex-1 rounded-full bg-forest py-2.5 font-medium text-white disabled:opacity-50"
             >
               {busy ? "…" : "Сохранить"}
             </button>

@@ -80,7 +80,7 @@ export default function AddCardForm({
           {!isNative && (
             <>
               {" "}
-              <Link href="/pricing?reason=cards" className="text-[var(--color-caramel-text)] underline">
+              <Link href="/pricing?reason=cards" className="text-[var(--color-forest-text)] underline">
                 Смотреть Premium
               </Link>
             </>
@@ -90,7 +90,7 @@ export default function AddCardForm({
       <button
         type="submit"
         disabled={pending}
-        className="flex min-h-11 items-center justify-center self-start rounded-full bg-caramel px-4 text-sm font-medium text-black disabled:opacity-50"
+        className="flex min-h-11 items-center justify-center self-start rounded-full bg-forest px-4 text-sm font-medium text-white disabled:opacity-50"
       >
         {pending ? "…" : "+ Добавить карточку"}
       </button>

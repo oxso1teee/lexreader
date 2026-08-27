@@ -45,7 +45,7 @@ export default function DeckTitle({
           autoFocus
           className="min-w-0 flex-1 rounded-lg border border-black/20 px-3 py-1.5 text-xl font-bold outline-none focus:border-black dark:border-white/25 dark:focus:border-white"
         />
-        <button type="button" disabled={isPending} onClick={handleSave} className="rounded-full bg-caramel px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50">
+        <button type="button" disabled={isPending} onClick={handleSave} className="rounded-full bg-forest px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
           {isPending ? "…" : "OK"}
         </button>
         <button

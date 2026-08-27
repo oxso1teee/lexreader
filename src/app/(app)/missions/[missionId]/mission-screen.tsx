@@ -115,7 +115,7 @@ export default function MissionScreen({
         <p className="text-sm">
           Эта миссия {label} и больше не активна.
         </p>
-        <Link href="/missions" className="focus-ring self-start text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline">
+        <Link href="/missions" className="focus-ring self-start text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline">
           ← Ко всем миссиям
         </Link>
       </div>

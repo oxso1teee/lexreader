@@ -127,7 +127,7 @@ function ActivePathHome({
         <span className="text-sm font-bold">{state.contentProgressPercent}%</span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
-        <span className="block h-full rounded-full bg-caramel transition-[width]" style={{ width: `${state.contentProgressPercent}%` }} />
+        <span className="block h-full rounded-full bg-forest transition-[width]" style={{ width: `${state.contentProgressPercent}%` }} />
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)]">
         <span>Уверенно: {state.skillsConfident}</span>
@@ -140,7 +140,7 @@ function ActivePathHome({
           <p className="text-sm font-medium">{focusSkill.title}</p>
           <Link
             href={`/learning-paths/${pathSlug}/${stage.key}/${focusSkill.key}`}
-            className="focus-ring self-start rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+            className="focus-ring self-start rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
           >
             Продолжить
           </Link>

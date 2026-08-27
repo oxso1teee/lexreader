@@ -306,7 +306,7 @@ export default function YoutubeImportForm({
             <a
               href="/lexreader-youtube-bridge.zip"
               download
-              className="focus-ring font-semibold text-[var(--color-caramel-text)] underline underline-offset-2"
+              className="focus-ring font-semibold text-[var(--color-forest-text)] underline underline-offset-2"
             >
               Скачай его
             </a>

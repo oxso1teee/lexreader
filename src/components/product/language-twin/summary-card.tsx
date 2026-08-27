@@ -28,7 +28,7 @@ export default function LanguageTwinSummaryCard({
         </p>
         <Link
           href="/language-twin/diagnostic"
-          className="focus-ring self-start rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+          className="focus-ring self-start rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
         >
           Пройти мини-диагностику
         </Link>
@@ -57,13 +57,13 @@ export default function LanguageTwinSummaryCard({
         <div className="mt-1 flex flex-wrap items-center gap-3">
           <Link
             href="/language-twin/correction"
-            className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+            className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
           >
             Потренировать 5 минут
           </Link>
           <Link
             href="/language-twin"
-            className="focus-ring text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+            className="focus-ring text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
           >
             Весь профиль →
           </Link>
@@ -103,7 +103,7 @@ export default function LanguageTwinSummaryCard({
 
       <Link
         href="/language-twin"
-        className="focus-ring self-start text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+        className="focus-ring self-start text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
       >
         Открыть «Мой английский» →
       </Link>

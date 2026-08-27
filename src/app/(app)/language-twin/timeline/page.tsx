@@ -35,7 +35,7 @@ export default async function LanguageTwinTimelinePage() {
           <ol className="relative flex flex-col gap-4 border-l-2 border-[var(--border)] pl-4">
             {entries.slice(0, 30).map((e, i) => (
               <li key={i} className="relative">
-                <span aria-hidden="true" className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-caramel" />
+                <span aria-hidden="true" className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-forest" />
                 <p className="text-xs text-[var(--text-secondary)]">{e.date}</p>
                 <p className="text-sm font-medium">{e.title}</p>
                 <p className="text-xs text-[var(--text-secondary)]">{e.desc}</p>

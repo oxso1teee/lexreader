@@ -81,7 +81,7 @@ export default async function LearningPathSkillPage({
           {hasKnowledgeCheck && (
             <Link
               href={`/learning-paths/${pathSlug}/${stage.key}/${skill.key}/check`}
-              className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+              className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
             >
               Проверить себя
             </Link>

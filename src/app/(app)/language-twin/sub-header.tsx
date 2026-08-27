@@ -29,7 +29,7 @@ export default function LanguageTwinSubHeader({
         <span className="text-xs font-medium text-[var(--text-secondary)]">Мой английский</span>
         <Link
           href={backHref}
-          className="focus-ring self-start text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+          className="focus-ring self-start text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
         >
           ← {backLabel}
         </Link>

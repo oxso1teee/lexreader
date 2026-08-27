@@ -31,7 +31,7 @@ export default async function LeaderboardPage() {
       {!profile.leaderboard_opt_in && (
         <section className="rounded-2xl bg-[var(--color-warning)]/10 p-4">
           <p className="text-body-sm text-[var(--color-warning-text)]">{LEADERBOARD_OPT_IN_NUDGE}</p>
-          <Link href="/settings" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-caramel-text)]">
+          <Link href="/settings" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-forest-text)]">
             Открыть настройки →
           </Link>
         </section>
@@ -47,14 +47,14 @@ export default async function LeaderboardPage() {
             {rows.map((row) => (
               <li
                 key={row.rank}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${row.isYou ? "bg-caramel/10" : ""}`}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${row.isYou ? "bg-forest/10" : ""}`}
               >
                 <span className="w-6 shrink-0 text-center text-body-sm font-semibold text-[var(--text-secondary)]">
                   {row.rank}
                 </span>
                 <span
                   aria-hidden="true"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-caramel/15 text-body-sm font-semibold text-[var(--color-caramel-text)]"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-forest/15 text-body-sm font-semibold text-[var(--color-forest-text)]"
                 >
                   {row.initials}
                 </span>

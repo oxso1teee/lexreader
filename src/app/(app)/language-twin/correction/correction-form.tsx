@@ -62,7 +62,7 @@ export default function CorrectionForm() {
           type="button"
           onClick={handleCheck}
           disabled={isPending || text.trim().length === 0}
-          className="focus-ring rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black disabled:opacity-50"
+          className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
           {isPending ? "Проверяем…" : "Проверить"}
         </button>
@@ -94,7 +94,7 @@ export default function CorrectionForm() {
             result.matches.map((m, i) => (
               <div key={i} className="rounded-lg bg-[var(--surface-muted)] p-3">
                 <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-[var(--color-caramel-text)]">
+                  <span className="rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-[var(--color-forest-text)]">
                     {categoryLabel(m.category as PatternCategory)}
                   </span>
                   <span className="text-xs font-semibold text-[var(--text-secondary)]">

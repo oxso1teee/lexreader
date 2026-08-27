@@ -100,7 +100,7 @@ export default function VocabularyItemDetail({
           <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
             {ITEM_TYPE_LABEL[detail.itemType]}
           </span>
-          <span className="rounded-full bg-caramel/15 px-2 py-0.5 text-xs font-medium text-[var(--color-caramel-text)]">
+          <span className="rounded-full bg-forest/15 px-2 py-0.5 text-xs font-medium text-[var(--color-forest-text)]">
             {LEARNING_STATE_LABEL[detail.learningState]}
           </span>
           <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
@@ -145,7 +145,7 @@ export default function VocabularyItemDetail({
               <button type="button" onClick={() => setIsEditing(false)} className="focus-ring min-h-11 flex-1 rounded-full bg-black/10 text-sm font-medium dark:bg-white/10">
                 Отмена
               </button>
-              <button type="submit" disabled={editPending} className="focus-ring min-h-11 flex-1 rounded-full bg-caramel text-sm font-medium text-black disabled:opacity-50">
+              <button type="submit" disabled={editPending} className="focus-ring min-h-11 flex-1 rounded-full bg-forest text-sm font-medium text-white disabled:opacity-50">
                 {editPending ? "…" : "Сохранить"}
               </button>
             </div>
@@ -195,7 +195,7 @@ export default function VocabularyItemDetail({
             <div className="flex flex-col gap-2">
               <Link
                 href={`/brain/${detail.deckId}/review?wordIds=${detail.flashcardId}`}
-                className="focus-ring flex min-h-11 items-center justify-center rounded-full bg-caramel text-sm font-medium text-black"
+                className="focus-ring flex min-h-11 items-center justify-center rounded-full bg-forest text-sm font-medium text-white"
               >
                 Практика сейчас
               </Link>
@@ -257,7 +257,7 @@ export default function VocabularyItemDetail({
                 {ctx.contextTranslation && <p className="mt-0.5 text-[var(--text-secondary)]">{ctx.contextTranslation}</p>}
                 <div className="mt-1 flex items-center justify-between text-xs text-[var(--text-secondary)]">
                   {ctx.sourceTextId && ctx.sourceTextTitle ? (
-                    <Link href={`/read/${ctx.sourceTextId}`} className="font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline">
+                    <Link href={`/read/${ctx.sourceTextId}`} className="font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline">
                       из «{ctx.sourceTextTitle}»
                     </Link>
                   ) : (

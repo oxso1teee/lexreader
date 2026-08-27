@@ -71,7 +71,7 @@ export default function GrammarRunner({
       </p>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
         <span
-          className="block h-full rounded-full bg-caramel transition-[width]"
+          className="block h-full rounded-full bg-forest transition-[width]"
           style={{ width: `${(index / questions.length) * 100}%` }}
         />
       </div>

@@ -1,5 +1,5 @@
 const COLORS: Record<string, string> = {
-  neutral: "text-caramel",
+  neutral: "text-forest",
   orange: "text-accent-orange",
   green: "text-accent-green",
   purple: "text-accent-purple",

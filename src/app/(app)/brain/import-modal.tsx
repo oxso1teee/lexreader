@@ -178,7 +178,7 @@ export default function ImportModal({
                 setOpen(false);
                 reset();
               }}
-              className="rounded-full bg-caramel px-5 py-2.5 font-medium text-black"
+              className="rounded-full bg-forest px-5 py-2.5 font-medium text-white"
             >
               Готово
             </button>
@@ -247,7 +247,7 @@ export default function ImportModal({
                 type="button"
                 disabled={busy || !deckId}
                 onClick={handleImport}
-                className="flex-1 rounded-full bg-caramel py-2.5 font-medium text-black disabled:opacity-50"
+                className="flex-1 rounded-full bg-forest py-2.5 font-medium text-white disabled:opacity-50"
               >
                 {busy ? "…" : "Импортировать"}
               </button>

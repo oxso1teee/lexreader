@@ -18,7 +18,7 @@ export default function ContinueLearningCard({
           title="Пока нет материала в процессе"
           body="Начни читать что-нибудь — прогресс появится здесь."
           action={
-            <Link href="/library" className="focus-ring text-body-sm font-semibold text-[var(--color-caramel-text)]">
+            <Link href="/library" className="focus-ring text-body-sm font-semibold text-[var(--color-forest-text)]">
               Открыть библиотеку →
             </Link>
           }

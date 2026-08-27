@@ -31,7 +31,7 @@ export default async function MissionsPage() {
           action={
             <Link
               href="/language-twin"
-              className="focus-ring mt-2 rounded-full bg-caramel px-4 py-2 text-sm font-medium text-black"
+              className="focus-ring mt-2 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
             >
               Открыть «Мой английский»
             </Link>
@@ -47,7 +47,7 @@ export default async function MissionsPage() {
 
       <Link
         href="/missions/history"
-        className="focus-ring self-start text-sm font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+        className="focus-ring self-start text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
       >
         История миссий →
       </Link>

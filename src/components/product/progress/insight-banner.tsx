@@ -12,7 +12,7 @@ export default function InsightBanner({ insight }: { insight: ProgressInsight })
         <Link
           href={insight.ctaHref}
           onClick={() => track("progress_insight_clicked", { insight_key: insight.key, destination: insight.ctaHref })}
-          className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-caramel-text)]"
+          className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-forest-text)]"
         >
           {insight.ctaLabel} →
         </Link>

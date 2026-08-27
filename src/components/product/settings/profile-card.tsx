@@ -29,7 +29,7 @@ export default function ProfileCard({
       <div className="mt-3 flex items-center gap-3">
         <span
           aria-hidden="true"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-caramel/15 text-base font-semibold text-[var(--color-caramel-text)]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-forest/15 text-base font-semibold text-[var(--color-forest-text)]"
         >
           {avatarInitials(email)}
         </span>

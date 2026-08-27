@@ -41,7 +41,7 @@ export default function StarterDeckCard({
           type="button"
           disabled={isPending}
           onClick={handleAdd}
-          className="flex min-h-9 shrink-0 items-center rounded-full bg-caramel px-3 font-medium text-black disabled:opacity-50"
+          className="flex min-h-9 shrink-0 items-center rounded-full bg-forest px-3 font-medium text-white disabled:opacity-50"
         >
           {isPending ? "Добавляем…" : "+ Добавить"}
         </button>

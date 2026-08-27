@@ -241,7 +241,7 @@ export default async function HomePage() {
             <p className="text-xs text-[var(--text-secondary)]">Мой путь · {pathLevelLabel}</p>
             <p className="text-body-sm truncate font-medium">{focusSkill.title}</p>
           </div>
-          <span className="shrink-0 text-body-sm font-semibold text-[var(--color-caramel-text)]">Продолжить →</span>
+          <span className="shrink-0 text-body-sm font-semibold text-[var(--color-forest-text)]">Продолжить →</span>
         </Link>
       )}
 
@@ -257,7 +257,7 @@ export default async function HomePage() {
               className="focus-ring flex items-center justify-between rounded-xl bg-[var(--surface)] p-4 shadow-sm"
             >
               <p className="text-body-sm text-[var(--text-secondary)]">Новых рекомендаций: {pendingRecommendationsCount}</p>
-              <span className="text-body-sm font-semibold text-[var(--color-caramel-text)]">Открыть →</span>
+              <span className="text-body-sm font-semibold text-[var(--color-forest-text)]">Открыть →</span>
             </Link>
           )}
         </div>
@@ -276,7 +276,7 @@ export default async function HomePage() {
             ))}
             <Link
               href="/language-twin"
-              className="focus-ring self-start text-xs font-medium text-[var(--color-caramel-text)] underline-offset-2 hover:underline"
+              className="focus-ring self-start text-xs font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
             >
               Весь профиль →
             </Link>

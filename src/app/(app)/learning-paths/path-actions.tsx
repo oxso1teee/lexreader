@@ -40,7 +40,7 @@ export function StartPathButton({
       type="button"
       onClick={handleClick}
       disabled={isPending}
-      className="focus-ring self-start rounded-full bg-caramel px-5 py-3 text-sm font-medium text-black disabled:opacity-50"
+      className="focus-ring self-start rounded-full bg-forest px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
     >
       {isPending ? "…" : label}
     </button>

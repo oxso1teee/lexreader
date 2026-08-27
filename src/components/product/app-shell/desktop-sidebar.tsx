@@ -39,7 +39,7 @@ export default function DesktopSidebar({
               onClick={() => track("app_nav_clicked", { destination: item.href, viewport_type: "desktop" })}
               className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
-                  ? "bg-caramel/15 text-black dark:text-white"
+                  ? "bg-forest/15 text-black dark:text-white"
                   : "text-black/60 hover:bg-black/5 hover:text-black/90 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white/90"
               }`}
             >
@@ -48,7 +48,7 @@ export default function DesktopSidebar({
                   4.5:1 как для текста) — сам текст пункта меню использует
                   text-black/white, иначе contrast был 3.16:1 против
                   требуемых 4.5:1 (найдено axe-core, e2e/unified-shell-a11y.spec.ts). */}
-              <span className={active ? "text-caramel" : ""} aria-hidden="true">
+              <span className={active ? "text-forest" : ""} aria-hidden="true">
                 <Icon />
               </span>
               <span>{item.label}</span>

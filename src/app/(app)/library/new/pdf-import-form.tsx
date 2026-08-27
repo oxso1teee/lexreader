@@ -189,7 +189,7 @@ export default function PdfImportForm({
           ) : (
             <>
               Лимит бесплатного тарифа по текстам исчерпан.{" "}
-              <a href="/paywall?reason=texts" className="focus-ring font-semibold text-[var(--color-caramel-text)] underline">
+              <a href="/paywall?reason=texts" className="focus-ring font-semibold text-[var(--color-forest-text)] underline">
                 Смотреть Premium
               </a>
               . Текст ниже сохранён — можно оформить Premium и сохранить его после.
