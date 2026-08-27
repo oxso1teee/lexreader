@@ -18,12 +18,18 @@ export default function AchievementsShelf({
       <div className="flex flex-wrap gap-2.5">
         {ACHIEVEMENTS.map((a) => {
           const earned = earnedIds.has(a.id);
+          // feat/hybrid-gamification-visuals: были плоские квадраты 1:1 с
+          // opacity-30 grayscale на неразблокированных и вообще без отличия
+          // у разблокированных — теперь кружки, разблокированные получают
+          // заметное forest-кольцо (выглядит как награда, а не как
+          // выключенная кнопка), у неразблокированных тот же принцип
+          // приглушения, просто по форме кружок.
           return (
             <div
               key={a.id}
               title={`${a.title} — ${a.description}`}
-              className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-black/5 text-2xl dark:bg-white/10 ${
-                earned ? "" : "opacity-30 grayscale"
+              className={`flex h-14 w-14 items-center justify-center rounded-full bg-black/5 text-2xl dark:bg-white/10 ${
+                earned ? "border-2 border-forest" : "opacity-30 grayscale"
               }`}
             >
               {a.icon}
