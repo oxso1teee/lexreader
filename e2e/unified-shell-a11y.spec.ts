@@ -69,7 +69,6 @@ test("analytics: track() calls added in this slice never pass user content, only
     "src/components/product/app-shell/desktop-sidebar.tsx",
     "src/components/product/app-shell/mobile-bottom-nav.tsx",
     "src/components/product/today/continue-learning-card.tsx",
-    "src/components/product/today/review-summary-card.tsx",
   ];
   // Блок-лист имён переменных/полей, которые могли бы протащить
   // пользовательский контент в свойства track() (docs/ui/analytics-events.md).
