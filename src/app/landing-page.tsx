@@ -1,18 +1,5 @@
 import Link from "next/link";
-import { Playfair_Display } from "next/font/google";
 import { BookOpen, MousePointerClick, RotateCw, type LucideIcon } from "lucide-react";
-
-// docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
-// §1.2 — serif только для лендинга (hero H1 + крупный CTA-заголовок ниже),
-// весь остальной UI остаётся на Geist. Загружается прямо здесь, не в
-// корневом layout.tsx — LandingPage рендерится только для неавторизованных
-// на "/" (см. src/app/page.tsx), authenticated-страницы не должны тянуть
-// лишний шрифт, который им не нужен. cyrillic обязателен — заголовки на
-// русском, latin-only subset оставил бы кириллицу на системном фолбэке.
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin", "cyrillic"],
-});
 
 // Раздел B.6 файла 10: раньше это была mobile-only "quickwins"-страница
 // (max-w-md, без desktop-версии) — на широком экране просто узкая колонка
@@ -33,7 +20,7 @@ const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
 
 export default function LandingPage() {
   return (
-    <div className={`${playfairDisplay.variable} flex min-h-dvh flex-col`}>
+    <div className="flex min-h-dvh flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
         <span className="text-lg font-bold tracking-tight">LexReader</span>
         <Link

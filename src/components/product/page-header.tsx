@@ -10,15 +10,17 @@ export default function PageHeader({
   title,
   description,
   action,
+  titleClassName,
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  titleClassName?: string;
 }) {
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-h1">{title}</h1>
+        <h1 className={`text-h1${titleClassName ? ` ${titleClassName}` : ""}`}>{title}</h1>
         {description && <p className="text-body-sm mt-1 text-[var(--text-secondary)]">{description}</p>}
       </div>
       {action}

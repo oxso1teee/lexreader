@@ -123,6 +123,7 @@ export default async function LibraryPage() {
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-5 py-6">
         <PageHeader
           title="Библиотека"
+          titleClassName="font-serif italic"
           description={
             items.length > 0
               ? `${materialsCountLabel(items.length)} · всё, что ты читаешь и смотришь на изучаемом языке`
