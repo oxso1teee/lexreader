@@ -435,8 +435,8 @@ export default async function ProgressPage({
         </div>
       </div>
 
-      <LineChart title="Слов прочитано в день" points={wordsChartPoints} color="#a67c52" />
-      <LineChart title="Карточек повторено в день" points={reviewsChartPoints} color="#2563eb" />
+      <LineChart title="Слов прочитано в день" points={wordsChartPoints} />
+      <LineChart title="Карточек повторено в день" points={reviewsChartPoints} />
 
       <HardestWords words={hardestWords} />
 

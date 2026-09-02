@@ -5,7 +5,13 @@ import { useState } from "react";
 export default function LineChart({
   title,
   points,
-  color = "#a67c52",
+  // docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+  // — единственный акцент. #a67c52 — буквально старый caramel-хекс,
+  // пропущенный миграцией caramel→forest (PR #49): та миграция ловила
+  // Tailwind-классы (bg-caramel и т.п.), не сырые hex-литералы внутри
+  // default-параметров TSX. page.tsx больше не передаёт цвет явно ни для
+  // одного из двух графиков — оба используют этот дефолт.
+  color = "var(--color-forest)",
 }: {
   title: string;
   points: { label: string; value: number }[];
