@@ -38,6 +38,13 @@
          getUserMedia/SpeechRecognition, но без этой декларации в манифесте
          запрос отклоняется ещё до диалога. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- src/app/(app)/library/new/photo-import-form.tsx (capture="environment")
+         и два обычных accept="image/*" file input'а (import-modal.tsx OCR-
+         импорт, notebook/word-row.tsx фото слова) — та же логика, что и
+         RECORD_AUDIO выше: Capacitor's BridgeWebChromeClient сам прокидывает
+         системный runtime-permission диалог на web-запрос камеры, но без
+         этой декларации в манифесте запрос отклоняется ещё до диалога. -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <!-- Android 13+ (API 33) требует этого разрешения для ЛЮБОГО показа
          уведомлений, включая те, что service worker (public/sw.js)
          показывает через self.registration.showNotification() на push-
