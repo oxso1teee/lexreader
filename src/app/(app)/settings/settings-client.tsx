@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { LANGUAGES, languageName } from "@/lib/languages";
 import { LEVELS, DAILY_GOALS } from "@/lib/onboarding-options";
@@ -24,6 +24,24 @@ import ExtensionTokensSection from "./extension-tokens-section";
 import type { ExtensionTokenSummary } from "./extension-actions";
 import LeaderboardOptInSection from "./leaderboard-opt-in-section";
 import { useIsNativePlatform } from "@/lib/use-is-native";
+
+// Экран 11/11 редизайна: реальный пред-существующий баг, найден при живом
+// тестировании после правки цветов (не связан с ней) — `typeof window !==
+// "undefined"` в теле компонента различается на сервере (всегда false) и
+// при первой клиентской гидратации (может быть true), давая React
+// "Hydration failed" на каждой загрузке /settings. Тот же паттерн уже
+// правильно решён в use-is-native.ts (getServerSnapshot всегда false,
+// React сам досинхронизирует до реального значения сразу после гидратации
+// без mismatch-варнинга) — переиспользуем его здесь для pushSupported.
+function subscribePushSupport(): () => void {
+  return () => {};
+}
+function getPushSupportedSnapshot(): boolean {
+  return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+}
+function getPushSupportedServerSnapshot(): boolean {
+  return false;
+}
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -71,8 +89,7 @@ export default function SettingsClient({
   const [pushError, setPushError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
 
-  const pushSupported =
-    typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+  const pushSupported = useSyncExternalStore(subscribePushSupport, getPushSupportedSnapshot, getPushSupportedServerSnapshot);
 
   // Не PII (docs/ui/analytics-events.md конвенция этого проекта): только
   // enum-план, без email/user id/сумм — видна при каждом визите Settings,
@@ -148,6 +165,10 @@ export default function SettingsClient({
         planLabel={planLabel(plan)}
       />
 
+      {/* Экран 11/11 редизайна: раньше отдельная карточка ("Мой английский")
+          только с двумя ссылками — теперь третий раздел внутри "Учебные
+          настройки" (тот же паттерн разделителей hr, что уже отделял push-
+          уведомления от формы) вместо ещё одной карточки в стопке. */}
       <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
         <SectionHeader title="Учебные настройки" />
         <div className="mt-3">
@@ -177,7 +198,7 @@ export default function SettingsClient({
                   type="button"
                   disabled={pushBusy}
                   onClick={enablePush}
-                  className="focus-ring flex min-h-11 items-center rounded-full bg-black px-4 text-body-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+                  className="focus-ring flex min-h-11 items-center rounded-full bg-forest px-4 text-body-sm font-medium text-white disabled:opacity-50"
                 >
                   {pushBusy ? "…" : "Включить"}
                 </button>
@@ -209,6 +230,31 @@ export default function SettingsClient({
             {testResult && <p className="text-body-sm text-[var(--text-secondary)]">{testResult}</p>}
           </div>
         )}
+
+        <hr className="my-4 border-[var(--border)]" />
+
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-body-sm">Language Twin: профиль, паттерны, приватность</span>
+          <Link
+            href="/language-twin/settings"
+            className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
+          >
+            Открыть
+          </Link>
+        </div>
+        {/* M3 Slice 9 §31/§36 — compact link only, no duplicated retake UI
+            here; the full self-report/Placement/behavioral breakdown and
+            the actual retake flow live on /language-twin ("Как это
+            посчитано?"). */}
+        <div className="mt-2 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-2">
+          <span className="text-body-sm">Диагностика английского</span>
+          <Link
+            href="/language-twin"
+            className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
+          >
+            Открыть
+          </Link>
+        </div>
       </section>
 
       <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
@@ -250,34 +296,16 @@ export default function SettingsClient({
         )}
       </section>
 
+      {/* Тема + вибро-отклик — раньше две отдельные карточки, каждая с одной
+          строкой настройки, теперь одна карточка "Оформление и устройство"
+          (та же группировка, что уже применена выше к "Учебным настройкам"). */}
       <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
-        <SectionHeader title="Мой английский" />
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <span className="text-body-sm">Language Twin: профиль, паттерны, приватность</span>
-          <Link
-            href="/language-twin/settings"
-            className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
-          >
-            Открыть
-          </Link>
-        </div>
-        {/* M3 Slice 9 §31/§36 — compact link only, no duplicated retake UI
-            here; the full self-report/Placement/behavioral breakdown and
-            the actual retake flow live on /language-twin ("Как это
-            посчитано?"). */}
-        <div className="mt-2 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-2">
-          <span className="text-body-sm">Диагностика английского</span>
-          <Link
-            href="/language-twin"
-            className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-4 text-body-sm font-medium"
-          >
-            Открыть
-          </Link>
+        <SectionHeader title="Оформление и устройство" />
+        <div className="mt-3 flex flex-col gap-4">
+          <ThemeToggle />
+          <HapticsToggle />
         </div>
       </section>
-
-      <ThemeToggle />
-      <HapticsToggle />
 
       <FeedbackForm />
 
@@ -432,7 +460,7 @@ function LearningPreferencesForm({
               onClick={() => setLvl(l.value)}
               className={`focus-ring flex min-h-11 items-center justify-center rounded-lg border px-2 text-xs font-medium transition-colors ${
                 lvl === l.value
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  ? "border-forest bg-forest text-white"
                   : "border-[var(--border-strong)]"
               }`}
             >
@@ -455,7 +483,7 @@ function LearningPreferencesForm({
               onClick={() => setGoal(g)}
               className={`focus-ring flex min-h-11 items-center justify-center rounded-lg border text-body-sm font-medium transition-colors ${
                 goal === g
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  ? "border-forest bg-forest text-white"
                   : "border-[var(--border-strong)]"
               }`}
             >
@@ -477,7 +505,7 @@ function LearningPreferencesForm({
       <button
         type="submit"
         disabled={pending}
-        className="focus-ring self-start flex min-h-11 items-center rounded-full bg-black px-5 text-body-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+        className="focus-ring self-start flex min-h-11 items-center rounded-full bg-forest px-5 text-body-sm font-medium text-white disabled:opacity-50"
       >
         {pending ? "…" : "Сохранить"}
       </button>

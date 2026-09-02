@@ -18,21 +18,44 @@ function subscribe(onChange: () => void): () => void {
 
 // Раздел 5 промта 2026-07-30 (полировка): настройка вибро-отклика — только
 // на устройстве (localStorage), не в аккаунте.
+//
+// Экран 11/11 редизайна: тот же паттерн строки-переключателя, что и
+// theme-toggle.tsx (двухпозиционный сегмент вместо голого <input
+// type="checkbox">), а не собственная карточка-секция — settings-client.tsx
+// собирает обе строки в одну карточку "Оформление и устройство".
 export default function HapticsToggle() {
   const enabled = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  function toggle() {
-    localStorage.setItem(KEY, enabled ? "false" : "true");
+  function select(next: boolean) {
+    localStorage.setItem(KEY, next ? "true" : "false");
     listeners.forEach((l) => l());
   }
 
   return (
-    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
-      <h2 className="text-h3 mb-2">Ощущения</h2>
-      <label className="flex min-h-11 items-center justify-between text-body-sm">
-        <span>Вибрация при ответах в Мозге</span>
-        <input type="checkbox" checked={enabled} onChange={toggle} className="focus-ring h-5 w-5" />
-      </label>
-    </section>
+    <div>
+      <p className="text-body-sm mb-1.5 text-[var(--text-secondary)]">Вибрация при ответах в Мозге</p>
+      <div role="group" aria-label="Вибрация при ответах" className="grid grid-cols-2 gap-1.5">
+        <button
+          type="button"
+          aria-pressed={enabled}
+          onClick={() => select(true)}
+          className={`focus-ring flex min-h-11 items-center justify-center rounded-lg border text-body-sm font-medium transition-colors ${
+            enabled ? "border-forest bg-forest text-white" : "border-[var(--border-strong)]"
+          }`}
+        >
+          Включена
+        </button>
+        <button
+          type="button"
+          aria-pressed={!enabled}
+          onClick={() => select(false)}
+          className={`focus-ring flex min-h-11 items-center justify-center rounded-lg border text-body-sm font-medium transition-colors ${
+            !enabled ? "border-forest bg-forest text-white" : "border-[var(--border-strong)]"
+          }`}
+        >
+          Выключена
+        </button>
+      </div>
+    </div>
   );
 }

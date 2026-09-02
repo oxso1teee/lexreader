@@ -34,7 +34,7 @@ export default function FeedbackForm() {
           <button
             type="submit"
             disabled={pending}
-            className="focus-ring flex min-h-11 items-center self-start rounded-full bg-black px-4 text-body-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+            className="focus-ring flex min-h-11 items-center self-start rounded-full bg-forest px-4 text-body-sm font-medium text-white disabled:opacity-50"
           >
             {pending ? "Отправляем…" : "Отправить"}
           </button>

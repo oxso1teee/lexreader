@@ -38,6 +38,13 @@ const OPTIONS: { value: ThemePreference; label: string }[] = [
 // "отсутствие значения"), чтобы отличать "выбрал системную" от "ещё не
 // открывал настройки" — оба резолвятся одинаково сейчас, но так честнее
 // для будущих миграций/аналитики.
+//
+// Экран 11/11 редизайна: раньше был собственной секцией-карточкой
+// ("Оформление" в одиночку) — теперь только строка-переключатель, образец
+// компонента-переключателя для остальных toggle'ов на этой странице
+// (settings-client.tsx собирает несколько таких строк в одну карточку
+// "Оформление и устройство" вместо стопки из отдельных карточек на
+// каждую мелкую настройку).
 export default function ThemeToggle() {
   const preference = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
@@ -59,8 +66,8 @@ export default function ThemeToggle() {
   }
 
   return (
-    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
-      <h2 className="text-h3 mb-2">Оформление</h2>
+    <div>
+      <p className="text-body-sm mb-1.5 text-[var(--text-secondary)]">Тема оформления</p>
       <div role="group" aria-label="Тема оформления" className="grid grid-cols-3 gap-1.5">
         {OPTIONS.map((o) => (
           <button
@@ -69,15 +76,13 @@ export default function ThemeToggle() {
             aria-pressed={preference === o.value}
             onClick={() => select(o.value)}
             className={`focus-ring flex min-h-11 items-center justify-center rounded-lg border text-body-sm font-medium transition-colors ${
-              preference === o.value
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-[var(--border-strong)]"
+              preference === o.value ? "border-forest bg-forest text-white" : "border-[var(--border-strong)]"
             }`}
           >
             {o.label}
           </button>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
