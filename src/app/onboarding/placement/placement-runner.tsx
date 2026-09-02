@@ -97,7 +97,7 @@ export default function PlacementRunner({
           10 коротких вопросов · около 3 минут. Это не официальный экзамен — просто поможет точнее подобрать курс.
           Отвечай как чувствуешь, без подсказок.
         </p>
-        <div className="rounded-lg border border-black/10 px-4 py-3 text-sm text-black/60 dark:border-white/15 dark:text-white/60">
+        <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/60 dark:border-white/15 dark:text-white/60">
           Во время теста не показываем «верно/неверно» по каждому вопросу — результат увидишь в конце, целиком.
         </div>
         {error && (
@@ -110,7 +110,7 @@ export default function PlacementRunner({
             type="button"
             disabled={isPending}
             onClick={begin}
-            className="focus-ring rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
+            className="focus-ring rounded-full bg-forest px-5 py-3 font-medium text-white transition-colors hover:bg-forest/90 disabled:opacity-50"
           >
             {isPending ? "Начинаем…" : isRetake ? "Обновить диагностику" : "Начать проверку"}
           </button>
@@ -164,11 +164,13 @@ export default function PlacementRunner({
       <p className="mb-1 text-sm text-black/50 dark:text-white/50" aria-live="polite">
         Вопрос {index + 1} из {questions.length}
       </p>
+      {/* Точки прогресса — тот же паттерн, что review-session.tsx (screen 4):
+          forest-light для пройденных, border-strong для оставшихся. */}
       <div className="mb-6 flex gap-1.5">
         {questions.map((_, i) => (
           <div
             key={i}
-            className={`h-1 flex-1 rounded-full ${i <= index ? "bg-black dark:bg-white" : "bg-black/10 dark:bg-white/15"}`}
+            className={`h-1 flex-1 rounded-full ${i <= index ? "bg-[var(--color-forest-light)]" : "bg-[var(--border-strong)]"}`}
           />
         ))}
       </div>
@@ -182,9 +184,9 @@ export default function PlacementRunner({
             type="button"
             disabled={isPending}
             onClick={() => setSelected(i)}
-            className={`rounded-lg border px-4 py-3 text-left transition-colors disabled:opacity-60 ${
+            className={`rounded-2xl border px-4 py-3 text-left transition-colors disabled:opacity-60 ${
               selected === i
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                ? "border-forest bg-forest/15 text-[var(--color-forest-text)]"
                 : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
             }`}
           >
@@ -208,7 +210,7 @@ export default function PlacementRunner({
           type="button"
           disabled={selected === null || isPending}
           onClick={submit}
-          className="focus-ring w-full rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/80"
+          className="focus-ring w-full rounded-full bg-forest px-5 py-3 font-medium text-white transition-colors hover:bg-forest/90 disabled:opacity-40"
         >
           {isPending ? "…" : index + 1 >= questions.length ? "Завершить" : "Далее"}
         </button>
