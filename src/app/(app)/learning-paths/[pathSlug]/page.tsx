@@ -68,7 +68,7 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
                 {activeState ? (
                   <Link
                     href={`/learning-paths/${pathSlug}/${stage.key}`}
-                    className="focus-ring flex items-center justify-between gap-2 rounded-lg border border-[var(--border-strong)] px-3 py-2 text-sm hover:border-black/30 dark:hover:border-white/40"
+                    className="focus-ring flex items-center justify-between gap-2 rounded-2xl border border-[var(--border-strong)] px-3 py-2 text-sm hover:border-black/30 dark:hover:border-white/40"
                   >
                     <span className="flex items-center gap-2">
                       <span aria-hidden="true">{meta?.icon}</span>
@@ -77,7 +77,7 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
                     <span className="text-xs text-[var(--text-secondary)]">{meta?.label}</span>
                   </Link>
                 ) : (
-                  <div className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border-strong)] px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between gap-2 rounded-2xl border border-[var(--border-strong)] px-3 py-2 text-sm">
                     <span>{stage.title}</span>
                     <span className="text-xs text-[var(--text-secondary)]">{skillsInStage} навыков</span>
                   </div>
@@ -135,7 +135,7 @@ function ActivePathHome({
       </div>
 
       {focusSkill && stage ? (
-        <div className="flex flex-col gap-2 rounded-lg border border-[var(--border-strong)] p-3">
+        <div className="flex flex-col gap-2 rounded-2xl border border-[var(--border-strong)] p-3">
           <span className="text-xs text-[var(--text-secondary)]">Следующий шаг</span>
           <p className="text-sm font-medium">{focusSkill.title}</p>
           <Link

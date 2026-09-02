@@ -43,7 +43,7 @@ export default async function DuelLandingPage({
           <form action={createDuelAction} className="mt-3">
             <button
               type="submit"
-              className="focus-ring flex min-h-11 items-center rounded-full bg-black px-5 text-body-sm font-medium text-white dark:bg-white dark:text-black"
+              className="focus-ring flex min-h-11 items-center rounded-full bg-forest px-5 text-body-sm font-medium text-white"
             >
               Создать дуэль и пригласить друга
             </button>
