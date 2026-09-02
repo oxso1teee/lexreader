@@ -376,17 +376,35 @@ export default function ReviewSession({
           }`}
         />
       )}
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-[var(--text-secondary)]">
-          {index + 1} / {cards.length}
-          {cards.length - index - 1 > 0 && <span> · осталось {cards.length - index - 1}</span>}
-        </p>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          {/* Точки прогресса — одна на карточку, forest-light для пройденных
+              (включая текущую), приглушённая для оставшихся. flex-wrap —
+              большие сессии (20+ карточек) переносятся на вторую строку
+              вместо растягивания/переполнения, а не обрезаются. Числовой
+              "X / Y" рядом сохранён — точки дают ощущение прогресса на
+              взгляд, но не заменяют точное "сколько осталось" для длинных
+              сессий, где точки могут перенестись на несколько строк. */}
+          <div className="flex flex-wrap items-center gap-1" role="img" aria-label={`Карточка ${index + 1} из ${cards.length}`}>
+            {cards.map((c, i) => (
+              <span
+                key={c.flashcardId}
+                aria-hidden="true"
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${i <= index ? "bg-[var(--color-forest-light)]" : "bg-[var(--border-strong)]"}`}
+              />
+            ))}
+          </div>
+          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
+            {index + 1} / {cards.length}
+            {cards.length - index - 1 > 0 && <span> · осталось {cards.length - index - 1}</span>}
+          </p>
+        </div>
         <button
           type="button"
           onClick={exitSession}
           aria-label="Завершить сессию"
           title="Выйти (Esc)"
-          className="flex min-h-9 min-w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
+          className="flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
         >
           ✕
         </button>
@@ -450,7 +468,11 @@ export default function ReviewSession({
         </form>
       ) : (
         <>
-          <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+          {/* Приподнятая карточка — тот же язык, что и у Reader'а
+              (rounded-3xl + мягкая тонированная под фон тень, не чёрная):
+              вопрос/ответ раньше просто плавали в пустой странице без
+              собственного фона/границы. */}
+          <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-black/[0.06] bg-white/60 p-6 text-center shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035]">
             <div className="flex items-center gap-2">
               <p className="text-2xl font-semibold">{question}</p>
               {speechAvailable && (
