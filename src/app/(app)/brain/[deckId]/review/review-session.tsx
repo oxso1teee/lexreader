@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { reviewWord, undoLastGrade, sendCardToNotebook, updateReviewBest } from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
@@ -475,11 +476,23 @@ export default function ReviewSession({
             {revealed && (
               <div className="flip-reveal flex flex-col items-center gap-2">
                 {card.photoUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  // unoptimized: card.photoUrl — приватный Supabase Storage
+                  // signed URL с TTL в час (word-row.tsx); next/image's
+                  // серверный оптимизатор кеширует результат дольше этого
+                  // TTL, так что доменная оптимизация тут бессмысленна и
+                  // потенциально ломается на просроченной ссылке.
+                  // width/height + style auto: официальный next/image-паттерн
+                  // для картинки с заранее неизвестным (пользовательским)
+                  // соотношением сторон — ведёт себя как обычный <img>
+                  // с max-h-40, не как fill.
+                  <Image
                     src={card.photoUrl}
                     alt=""
-                    className="max-h-40 rounded-lg object-cover"
+                    width={400}
+                    height={400}
+                    unoptimized
+                    className="max-h-40 w-auto rounded-lg object-cover"
+                    style={{ width: "auto", height: "auto" }}
                   />
                 )}
                 <p className="text-xl font-medium text-black/80 dark:text-white/80">{answer}</p>

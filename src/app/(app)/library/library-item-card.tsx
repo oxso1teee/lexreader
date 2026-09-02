@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { coverGradient, coverInitials, youtubeThumbnailUrl } from "@/lib/text-cover";
 import { typeLabel, type LibraryItem } from "./library-item";
@@ -50,12 +51,14 @@ export default function LibraryItemCard({ item }: { item: LibraryItem }) {
           style={{ background: showThumb ? undefined : `linear-gradient(135deg, ${gradientA}, ${gradientB})`, height: "6.5rem" }}
         >
           {showThumb && (
-            // Free, keyless YouTube thumbnail — no next/image domain config needed.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            // Free, keyless YouTube thumbnail — i.ytimg.com allowlisted in
+            // next.config.ts's images.remotePatterns.
+            <Image
               src={youtubeThumbnailUrl(item.youtubeVideoId!)}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover"
+              fill
+              sizes="(min-width: 1024px) 20vw, 45vw"
+              className="object-cover"
               onError={() => setThumbFailed(true)}
             />
           )}
