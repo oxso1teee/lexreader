@@ -70,9 +70,13 @@ const nextConfig: NextConfig = {
           // слова, Web Speech API) требует доступ к микрофону, а
           // microphone=() (пустой allowlist — не пускает НИКОГО, даже
           // собственный origin) молча ломал эту уже существующую фичу.
-          // camera/geolocation по-прежнему нигде не используются — остаются
-          // запрещены.
-          { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" },
+          // camera=(self) — тот же паттерн: library/new/photo-import-form.tsx
+          // (capture="environment") и два обычных accept="image/*" file
+          // input'а (import-modal.tsx OCR-импорт, notebook/word-row.tsx фото
+          // слова) уже используют камеру, camera=() запрещал бы это и
+          // собственному origin. geolocation по-прежнему нигде не
+          // используется — остаётся запрещена.
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Content-Security-Policy", value: csp },
         ],
