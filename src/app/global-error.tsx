@@ -41,7 +41,13 @@ export default function GlobalError({
               minHeight: "2.75rem",
               padding: "0 1.25rem",
               borderRadius: "9999px",
-              background: "#a67c52",
+              // Тот же старый caramel, пропущенный по той же причине, что
+              // и layout.tsx's themeColor/share-card routes — этот файл
+              // намеренно не может использовать Tailwind-классы/CSS-
+              // переменные из tokens.css (рендерит собственные html/body в
+              // обход корневого layout.tsx, см. комментарий выше), только
+              // raw hex того же --color-forest.
+              background: "#1f4d3b",
               color: "white",
               fontWeight: 500,
               border: "none",
