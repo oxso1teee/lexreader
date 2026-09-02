@@ -690,7 +690,7 @@ export default function Reader({
               {pageSentences.map((sentence, i) => (
                 <div key={i} className="mb-4 border-b border-black/[0.05] pb-4 last:border-0 dark:border-white/[0.06]">
                   <p
-                    className="font-serif"
+                    className="font-[family-name:var(--font-reader-serif)]"
                     style={{ fontSize: `${readerPrefs.fontSize}px`, lineHeight: readerPrefs.lineHeight }}
                   >
                     {sentence}
@@ -720,7 +720,7 @@ export default function Reader({
             </div>
           ) : (
             <article
-              className="font-serif mx-auto w-full flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 tracking-[-0.006em] shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8"
+              className="font-[family-name:var(--font-reader-serif)] mx-auto w-full flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 tracking-[-0.006em] shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8"
               style={{
                 maxWidth: `${maxWidthPx}px`,
                 fontSize: `${readerPrefs.fontSize}px`,

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import RegisterServiceWorker from "./register-service-worker";
@@ -13,6 +13,20 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Промпт 1 (реальный serif для текста чтения) — --font-serif в
+// tokens.css уже существовал, но был запитан от --font-playfair, которая
+// подключена только внутри landing-page.tsx (next/font/google, scoped) —
+// вне этого дерева переменная не в области видимости, и font-serif на
+// /read/[textId] проваливался на Georgia/serif-фолбэк, никогда не
+// показывая реальный веб-шрифт. Отдельный токен --font-reader-serif,
+// подключённый здесь в корневом layout.tsx (в области видимости везде),
+// специально для тела читаемого текста — не трогает --font-serif
+// (заголовки лендинга, вне этой задачи).
+const sourceSerif = Source_Serif_4({
+  variable: "--font-reader-serif",
+  subsets: ["latin", "cyrillic"],
 });
 
 export const metadata: Metadata = {
@@ -62,7 +76,7 @@ export default function RootLayout({
       // React ругался бы на расхождение серверного/клиентского HTML на
       // каждой загрузке (сервер не знает выбор темы устройства).
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}
     >
       <head>
         <Script id="theme-init" strategy="beforeInteractive">
