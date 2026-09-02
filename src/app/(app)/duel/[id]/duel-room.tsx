@@ -169,11 +169,15 @@ export default function DuelRoom({
     );
   }
 
+  // Кружки с инициалами — тот же паттерн, что leaderboard/page.tsx и
+  // profile-card.tsx (bg-forest/15 + text-[--color-forest-text]), а не
+  // голый текст "Имя: счёт" — визуальное согласование с остальным
+  // приложением, механику счёта не меняет.
   const scoreRow = (
-    <div className="flex items-center justify-center gap-6 text-body-sm">
-      <span className={state.isCreator ? "font-bold" : ""}>{state.isCreator ? "Ты" : state.creatorInitials}: {state.creatorScore}</span>
-      <span className="text-[var(--text-secondary)]">—</span>
-      <span className={!state.isCreator ? "font-bold" : ""}>{!state.isCreator ? "Ты" : (state.opponentInitials ?? "…")}: {state.opponentScore}</span>
+    <div className="flex items-center justify-center gap-5">
+      <ScoreSide initials={state.creatorInitials} score={state.creatorScore} isMe={state.isCreator} />
+      <span className="pt-2 text-caption font-bold text-[var(--text-secondary)]">VS</span>
+      <ScoreSide initials={state.opponentInitials ?? "…"} score={state.opponentScore} isMe={!state.isCreator} />
     </div>
   );
 
@@ -193,7 +197,7 @@ export default function DuelRoom({
             type="button"
             disabled={busy}
             onClick={handleJoin}
-            className="focus-ring flex min-h-11 items-center rounded-full bg-black px-6 text-body-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black mx-auto"
+            className="focus-ring mx-auto flex min-h-11 items-center rounded-full bg-forest px-6 text-body-sm font-medium text-white disabled:opacity-50"
           >
             {busy ? "…" : "Присоединиться"}
           </button>
@@ -215,7 +219,7 @@ export default function DuelRoom({
             <button
               type="button"
               onClick={handleCopyLink}
-              className="focus-ring flex min-h-11 shrink-0 items-center rounded-full bg-black px-3 text-body-sm font-medium text-white dark:bg-white dark:text-black"
+              className="focus-ring flex min-h-11 shrink-0 items-center rounded-full bg-forest px-3 text-body-sm font-medium text-white"
             >
               {copied ? "Скопировано ✓" : "Копировать"}
             </button>
@@ -246,7 +250,7 @@ export default function DuelRoom({
             <form action={createDuelAction}>
               <button
                 type="submit"
-                className="focus-ring flex min-h-11 items-center rounded-full bg-black px-5 text-body-sm font-medium text-white dark:bg-white dark:text-black"
+                className="focus-ring flex min-h-11 items-center rounded-full bg-forest px-5 text-body-sm font-medium text-white"
               >
                 Играть ещё раз
               </button>
@@ -257,6 +261,22 @@ export default function DuelRoom({
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+function ScoreSide({ initials, score, isMe }: { initials: string; score: number; isMe: boolean }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div
+        className={`flex h-10 w-10 items-center justify-center rounded-full text-body-sm font-semibold ${
+          isMe ? "bg-forest text-white" : "bg-forest/15 text-[var(--color-forest-text)]"
+        }`}
+      >
+        {initials}
+      </div>
+      <span className="text-caption text-[var(--text-secondary)]">{isMe ? "Ты" : "Соперник"}</span>
+      <span className="font-mono text-body-sm font-bold tabular-nums">{score}</span>
     </div>
   );
 }
@@ -323,7 +343,7 @@ function RoundView({
             type="button"
             disabled={busy}
             onClick={() => onAnswer(opt)}
-            className="focus-ring rounded-lg border border-black/10 px-4 py-3 text-left transition-colors hover:border-black/30 disabled:opacity-50 dark:border-white/15 dark:hover:border-white/40"
+            className="focus-ring rounded-2xl border border-black/10 px-4 py-3 text-left transition-colors hover:border-black/30 disabled:opacity-50 dark:border-white/15 dark:hover:border-white/40"
           >
             {opt}
           </button>

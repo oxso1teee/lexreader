@@ -42,7 +42,7 @@ export default function CompleteLessonButton({
       type="button"
       onClick={handleClick}
       disabled={isPending}
-      className="focus-ring self-start rounded-full bg-black px-5 py-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+      className="focus-ring self-start rounded-full bg-forest px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
     >
       {isPending ? "…" : "Отметить как изученное"}
     </button>

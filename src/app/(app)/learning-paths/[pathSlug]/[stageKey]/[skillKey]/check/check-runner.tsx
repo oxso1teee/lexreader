@@ -91,7 +91,7 @@ export default function CheckRunner({
                 type="button"
                 disabled={showState}
                 onClick={() => choose(i)}
-                className={`focus-ring flex items-center justify-between gap-2 rounded-lg border px-4 py-2.5 text-left text-sm transition-colors ${stateClass}`}
+                className={`focus-ring flex items-center justify-between gap-2 rounded-2xl border px-4 py-2.5 text-left text-sm transition-colors ${stateClass}`}
               >
                 <span>{opt}</span>
                 {showState && isCorrect && (
@@ -116,7 +116,7 @@ export default function CheckRunner({
           type="button"
           disabled={isPending}
           onClick={next}
-          className="focus-ring self-start rounded-full bg-black px-5 py-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+          className="focus-ring self-start rounded-full bg-forest px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
         >
           {isPending ? "…" : index + 1 >= questions.length ? "Завершить" : "Далее"}
         </button>
