@@ -136,6 +136,24 @@ export default async function LanguageTwinPage() {
     .eq("user_id", profile.id)
     .eq("status", "resolved");
 
+  // docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+  // — единый профильный вид: "что путает" уже показывают "Сейчас в фокусе"/
+  // "Над чем работаем" выше (patterns со статусом active/improving/uncertain),
+  // но "что уже закрыл" раньше не было видно нигде на самой Overview —
+  // resolvedCount уходил только в декоративные "цветы" TwinAvatar, без
+  // единого места, что именно решено. Тот же паттерн карточки, что и у
+  // "Над чем работаем"/"Что сделать сегодня" — не новый список, не полная
+  // /patterns-страница (там уже есть все статусы), просто последние 1-2
+  // здесь же, на профиле.
+  const { data: resolvedPatternsData } = await supabase
+    .from("language_error_patterns")
+    .select("id, title, category, status")
+    .eq("user_id", profile.id)
+    .eq("status", "resolved")
+    .order("last_seen_at", { ascending: false })
+    .limit(2);
+  const resolvedPatterns = (resolvedPatternsData ?? []) as Pick<PatternRow, "id" | "title" | "category" | "status">[];
+
   const { data: recsData } = await supabase
     .from("language_recommendations")
     .select("*")
@@ -300,6 +318,26 @@ export default async function LanguageTwinPage() {
           </div>
         </div>
       </div>
+
+      {resolvedPatterns.length > 0 && (
+        <div className="rounded-2xl bg-card p-4 shadow-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Уже закрыто</h2>
+            <Link href="/language-twin/patterns" className="text-sm text-[var(--color-forest-text)]">
+              Все →
+            </Link>
+          </div>
+          <div className="flex flex-col gap-2">
+            {resolvedPatterns.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center gap-2">
+                <CategoryBadge category={p.category} />
+                <StatusBadge status={p.status} />
+                <p className="text-sm">{p.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl bg-card p-4 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
