@@ -170,6 +170,13 @@
      просто проваливается на следующий фолбэк в списке, Georgia/serif —
      не ошибка, ожидаемая деградация. */
   --font-serif: var(--font-playfair), Georgia, serif;
+  /* Промпт 1 (реальный serif для текста чтения) — отдельный токен, не
+     --font-serif выше (тот только для лендинга/крупных заголовков,
+     запитан от --font-playfair, вне области этой задачи). --font-reader-
+     serif подключён через next/font/google прямо в корневом layout.tsx
+     (src/app/layout.tsx), поэтому в области видимости на любой странице
+     приложения, включая /read/[textId] — в отличие от --font-playfair. */
+  --font-reader-serif: var(--font-reader-serif), Georgia, serif;
 }
 
 /* Typography scale — semantic roles instead of ad hoc text-xl/font-bold
