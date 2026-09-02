@@ -16,7 +16,12 @@ export default function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #a67c52, #c99a68)",
+          // Тот же старый caramel-градиент, пропущенный по той же причине,
+          // что и api/share-card/route.tsx (см. комментарий там) —
+          // ImageResponse/Satori не видит Tailwind/CSS-переменные. Эта
+          // картинка — то, что видно в превью при шаринге ссылки на сайт
+          // в мессенджерах/соцсетях, самый заметный из трёх touchpoint'ов.
+          background: "linear-gradient(135deg, #1f4d3b, #2f6b52)",
           color: "#fff",
           fontFamily: "sans-serif",
         }}

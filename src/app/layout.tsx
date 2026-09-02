@@ -39,7 +39,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#a67c52",
+  // docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+  // — единственный акцент. Красит мобильный браузер/PWA-хром (статус-бар) —
+  // видно почти на каждом экране на телефоне, старый caramel пережил
+  // миграцию #49 (та искала Tailwind-классы, не raw hex в объекте
+  // метаданных). --color-forest из tokens.css.
+  themeColor: "#1f4d3b",
   // M3 Slice 1: без viewportFit "cover" env(safe-area-inset-*) в
   // MobileBottomNav не активен на iOS (docs/ui/current-ui-audit.md §5).
   viewportFit: "cover",

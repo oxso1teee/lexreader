@@ -27,7 +27,16 @@ export async function GET() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #a67c52, #c99a68)",
+          // docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+          // — единственный акцент. Был старый caramel-градиент (#a67c52,
+          // #c99a68) — next/og's ImageResponse (Satori) рендерится вне DOM
+          // страницы, не читает Tailwind-классы/CSS-переменные, поэтому
+          // миграция caramel→forest (PR #49, искала bg-caramel и т.п. по
+          // TSX) физически не могла это поймать. Raw hex тех же значений,
+          // что --color-forest/--color-forest-light в tokens.css — тот же
+          // паттерн, что уже правильно сделан в api/language-twin/share-card
+          // (см. его CANOPY_COLOR-комментарий).
+          background: "linear-gradient(135deg, #1f4d3b, #2f6b52)",
           color: "#fff",
           fontFamily: "sans-serif",
         }}
@@ -37,11 +46,19 @@ export async function GET() {
         </div>
         <div style={{ display: "flex", gap: 60, marginTop: 40 }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ fontSize: 96, fontWeight: 800 }}>🔥 {profile.streak_current}</div>
+            {/* Found live-testing this exact route while fixing its colors
+                (никогда не было e2e-покрыто — просто "скачай PNG", без UI-
+                assertion): Satori (движок next/og's ImageResponse) требует
+                явный display:flex/contents/none у любого <div> с больше чем
+                одним child-узлом — здесь их два ("🔥 " текстовый литерал +
+                выражение {'{'}profile.streak_current{'}'}), без явного
+                display этот div падал с 500 на каждый реальный запрос.
+                Настоящий, пред-существующий баг, не связанный с цветом. */}
+            <div style={{ display: "flex", fontSize: 96, fontWeight: 800 }}>🔥 {profile.streak_current}</div>
             <div style={{ fontSize: 28, opacity: 0.85 }}>дней подряд</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ fontSize: 96, fontWeight: 800 }}>💯 {wordCount ?? 0}</div>
+            <div style={{ display: "flex", fontSize: 96, fontWeight: 800 }}>💯 {wordCount ?? 0}</div>
             <div style={{ fontSize: 28, opacity: 0.85 }}>слов выучено</div>
           </div>
         </div>
