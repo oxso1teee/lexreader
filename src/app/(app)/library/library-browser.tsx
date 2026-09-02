@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { track } from "@/lib/posthog-client";
 import EmptyState from "@/components/empty-state";
+import LibraryFeaturedCard from "./library-featured-card";
 import LibraryItemCard from "./library-item-card";
 import {
   matchesFilter,
@@ -62,9 +63,26 @@ export default function LibraryBrowser({ items }: { items: LibraryItem[] }) {
     track("library_filter_changed", { filter: next });
   }
 
+  // "Одна крупная обложка «продолжить» сверху + ровная сетка ниже" — только
+  // в дефолтном виде (без поиска/фильтра), чтобы не путать намерение
+  // пользователя, когда он явно что-то ищет/фильтрует. Самый недавно
+  // открытый материал в процессе (не 0%, ещё не завершён) — тот же
+  // критерий "в процессе", что уже использует ContinueLearningCard на
+  // Today (src/components/product/today/continue-learning-card.tsx).
+  const isDefaultView = filter === "all" && !query.trim();
+  const featured = useMemo(() => {
+    if (!isDefaultView) return null;
+    const inProgress = items.filter((i) => i.percentRead > 0 && i.percentRead < 100 && i.lastReadAt);
+    if (inProgress.length === 0) return null;
+    return [...inProgress].sort((a, b) => (a.lastReadAt! < b.lastReadAt! ? 1 : -1))[0];
+  }, [items, isDefaultView]);
+
   const filtered = useMemo(
-    () => items.filter((item) => matchesFilter(item, filter) && matchesSearch(item, query)),
-    [items, filter, query],
+    () =>
+      items
+        .filter((item) => item.id !== featured?.id)
+        .filter((item) => matchesFilter(item, filter) && matchesSearch(item, query)),
+    [items, filter, query, featured],
   );
 
   if (items.length === 0) {
@@ -131,8 +149,12 @@ export default function LibraryBrowser({ items }: { items: LibraryItem[] }) {
         ))}
       </div>
 
+      {featured && <LibraryFeaturedCard item={featured} />}
+
       {filtered.length === 0 ? (
-        <EmptyState icon="🔍" title="Ничего не нашлось" body="Попробуй другой запрос или сними фильтр." />
+        // Единственный материал в библиотеке — сам featured выше (не
+        // настоящее пустое состояние, фильтровать/искать нечего).
+        !featured && <EmptyState icon="🔍" title="Ничего не нашлось" body="Попробуй другой запрос или сними фильтр." />
       ) : (
         <>
           <p className="text-xs text-[var(--text-secondary)]" aria-live="polite">
