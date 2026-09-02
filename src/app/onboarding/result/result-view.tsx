@@ -60,10 +60,10 @@ export default function ResultView({
       {!isSkipped && result ? (
         <section className="flex flex-col gap-3">
           <p className="text-sm font-medium text-black/50 dark:text-white/50">Твой стартовый диапазон</p>
-          <p className="text-4xl font-bold tracking-tight">{result.range}</p>
+          <p className="text-4xl font-bold tracking-tight text-forest">{result.range}</p>
 
           {hasConflict && selfReportedCefr && selfReportedCefr !== "unsure" && (
-            <div className="rounded-lg border border-black/10 bg-black/[0.03] px-4 py-3 text-sm text-black/70 dark:border-white/15 dark:bg-white/[0.04] dark:text-white/70">
+            <div className="rounded-2xl border border-black/10 bg-black/[0.03] px-4 py-3 text-sm text-black/70 dark:border-white/15 dark:bg-white/[0.04] dark:text-white/70">
               Несколько базовых навыков пока нестабильны. Перед более сложными темами стоит немного укрепить фундамент.
             </div>
           )}
@@ -105,14 +105,14 @@ export default function ResultView({
 
       <section className="flex flex-col gap-3">
         <p className="text-sm font-medium text-black/50 dark:text-white/50">Рекомендуемый путь</p>
-        <div className="rounded-lg border border-black bg-black/[0.02] px-4 py-4 dark:border-white dark:bg-white/[0.06]">
+        <div className="rounded-2xl border border-forest bg-forest/10 px-4 py-4">
           <p className="text-lg font-semibold">{primary.title}</p>
           <p className="text-sm text-black/50 dark:text-white/50">{primary.kind}</p>
           <button
             type="button"
             disabled={pending !== null}
             onClick={() => choose(recommendation.primary)}
-            className="focus-ring mt-3 w-full rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
+            className="focus-ring mt-3 w-full rounded-full bg-forest px-5 py-3 font-medium text-white transition-colors hover:bg-forest/90 disabled:opacity-50"
           >
             {pending === recommendation.primary ? "…" : `Выбрать «${primary.title}»`}
           </button>
@@ -129,14 +129,14 @@ export default function ResultView({
         )}
 
         {alternative && showAlternative && (
-          <div className="rounded-lg border border-black/10 px-4 py-4 dark:border-white/15">
+          <div className="rounded-2xl border border-black/10 px-4 py-4 dark:border-white/15">
             <p className="text-lg font-semibold">{alternative.title}</p>
             <p className="text-sm text-black/50 dark:text-white/50">{alternative.kind}</p>
             <button
               type="button"
               disabled={pending !== null}
               onClick={() => choose(recommendation.alternative as PathSlug)}
-              className="focus-ring mt-3 w-full rounded-full border border-black/10 px-5 py-3 font-medium transition-colors hover:border-black/30 disabled:opacity-50 dark:border-white/15 dark:hover:border-white/40"
+              className="focus-ring mt-3 w-full rounded-full border border-forest px-5 py-3 font-medium text-forest transition-colors hover:bg-forest/5 disabled:opacity-50"
             >
               {pending === recommendation.alternative ? "…" : `Выбрать «${alternative.title}»`}
             </button>
