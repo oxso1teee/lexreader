@@ -730,6 +730,16 @@ export default function WatchPlayer({
         <main className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="sticky top-[68px] z-[5] overflow-hidden rounded-2xl bg-black shadow-[0_18px_60px_rgba(80,60,35,0.12)]">
             <div className="relative aspect-video w-full">
+              {/* Экран 9/11 редизайна: "дать этому экрану визуальный вес" —
+                  плашка источника субтитров прямо на видео, как watch-badge в
+                  референс-мокапе, а не только текстом мелким шрифтом под
+                  заголовком (та строка ниже отвечает уже за длительность и
+                  счётчик слов, не дублирует источник). */}
+              {sourceLabel && (
+                <div className="absolute top-2 left-2 z-[1] rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-medium text-white">
+                  {sourceLabel}
+                </div>
+              )}
               <YouTubePlayerViewport
                 fallback={Boolean(playerFallback)}
                 playerState={playerState.status}
@@ -750,7 +760,7 @@ export default function WatchPlayer({
                       href={playerFallback.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="focus-ring mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-bold text-black transition hover:bg-white/90"
+                      className="focus-ring mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-bold text-forest transition hover:bg-white/90"
                     >
                       {playerFallback.actionLabel}
                     </a>
@@ -815,7 +825,12 @@ export default function WatchPlayer({
                               onClickWord(tok.text, seg.body, seg.startMs);
                             }}
                             style={{
-                              backgroundColor: selected ? "#a67c5266" : levelColor ? `${levelColor}33` : undefined,
+                              // docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+                              // — единственный акцент. Был caramel "#a67c5266" (та же
+                              // строка, что читатель уже правил в PR #64 отдельно от
+                              // этого файла) — inline style, поэтому мимо Tailwind-грепа.
+                              // "#1f4d3b66" = --color-forest с той же альфой (0x66≈40%).
+                              backgroundColor: selected ? "#1f4d3b66" : levelColor ? `${levelColor}33` : undefined,
                             }}
                             className="focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
                           >
