@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
+import { Geist, Geist_Mono, Source_Serif_4, Playfair_Display } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import RegisterServiceWorker from "./register-service-worker";
@@ -26,6 +26,20 @@ const geistMono = Geist_Mono({
 // (заголовки лендинга, вне этой задачи).
 const sourceSerif = Source_Serif_4({
   variable: "--font-reader-serif",
+  subsets: ["latin", "cyrillic"],
+});
+
+// Промпт 2 (serif-заголовок Библиотеки + инфраструктура для остальных
+// экранов) — перенесено сюда из landing-page.tsx (было scoped там же,
+// вне области видимости на всех остальных страницах). §1.2 брендбука
+// разрешает serif не только на лендинге, но и на заголовках уровня
+// hero/H1 нескольких реальных экранов — раз он понадобится больше чем в
+// одном месте, шрифт грузится один раз в корневом layout.tsx, как и
+// --font-reader-serif выше. Имя переменной то же самое (--font-playfair)
+// — --font-serif в tokens.css уже резолвится через var(--font-playfair),
+// Georgia, serif и заработает без правки токена.
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin", "cyrillic"],
 });
 
@@ -76,7 +90,7 @@ export default function RootLayout({
       // React ругался бы на расхождение серверного/клиентского HTML на
       // каждой загрузке (сервер не знает выбор темы устройства).
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable} ${playfairDisplay.variable} h-full antialiased`}
     >
       <head>
         <Script id="theme-init" strategy="beforeInteractive">
