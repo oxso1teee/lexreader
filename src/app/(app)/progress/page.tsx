@@ -11,7 +11,7 @@ import Link from "next/link";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
-import StreakHero from "./streak-hero";
+import StreakHero from "@/components/product/streak-hero";
 import LineChart from "./line-chart";
 import HardestWords from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";

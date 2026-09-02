@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calendar, Flame, Target } from "lucide-react";
+import { Award, CalendarCheck, RotateCcw, Target } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getDueCount } from "@/lib/brain-stats";
@@ -15,12 +15,11 @@ import { messages } from "@/lib/i18n";
 import PageHeader from "@/components/product/page-header";
 import SectionHeader from "@/components/product/section-header";
 import PrimaryActionCard from "@/components/product/primary-action-card";
-import DailyGoalRow from "@/components/product/today/daily-goal-row";
 import ContinueLearningCard from "@/components/product/today/continue-learning-card";
-import ReviewSummaryCard from "@/components/product/today/review-summary-card";
 import DailyPlanCard from "@/components/product/today/daily-plan-card";
 import ComingSoonCard from "@/components/product/today/coming-soon-card";
 import HeroMissionCard from "@/components/product/today/hero-mission-card";
+import StreakHero from "@/components/product/streak-hero";
 import InstallBanner from "./install-banner";
 import TodayAnalytics from "./today-analytics";
 import type { PatternCategory, PatternStatus, PatternRow } from "@/lib/language-twin/types";
@@ -192,6 +191,8 @@ export default async function HomePage() {
 
       <InstallBanner />
 
+      <StreakHero days={profile.streak_current} />
+
       {heroMission ? (
         <>
           <HeroMissionCard mission={heroMission} reasonText={heroReasonText} />
@@ -245,22 +246,35 @@ export default async function HomePage() {
         </Link>
       )}
 
+      {/* Один герой (стрик выше, основной CTA — hero mission/primary action
+          выше) + три-четыре цифры в ряд вместо стопки из четырёх визуально
+          одинаковых карточек (DailyGoalRow/ReviewSummaryCard/recommendations-
+          card, все — rounded-xl bg-surface p-4 shadow-sm, неотличимые на
+          взгляд), которая была здесь раньше. Прогресс недели (activeDays/
+          missions) слит в ту же строку — второй похожей строки метрик ниже
+          на странице больше нет. */}
       <section className="flex flex-col gap-2">
         <SectionHeader title={t.summary.title} />
-        <div className="flex flex-col gap-2">
-          <DailyGoalRow current={newWordsToday ?? 0} goal={profile.daily_word_goal} />
-          <ReviewSummaryCard dueCount={dueCount} />
-          <ContinueLearningCard material={continueReading} />
-          {(pendingRecommendationsCount ?? 0) > 0 && (
-            <Link
-              href="/language-twin/recommendations"
-              className="focus-ring flex items-center justify-between rounded-xl bg-[var(--surface)] p-4 shadow-sm"
-            >
-              <p className="text-body-sm text-[var(--text-secondary)]">Новых рекомендаций: {pendingRecommendationsCount}</p>
-              <span className="text-body-sm font-semibold text-[var(--color-forest-text)]">Открыть →</span>
-            </Link>
-          )}
-        </div>
+        <DailyPlanCard
+          metrics={[
+            { label: "К повторению", value: String(dueCount), icon: RotateCcw },
+            { label: "Дневная цель", value: `${newWordsToday ?? 0}/${profile.daily_word_goal}`, icon: Target },
+            { label: t.weekProgress.activeDays, value: String(activeDaysThisWeek), icon: CalendarCheck },
+            ...(missionWeekStats.completed > 0
+              ? [{ label: t.weekProgress.missionsCompleted, value: String(missionWeekStats.completed), icon: Award }]
+              : []),
+          ]}
+        />
+        <ContinueLearningCard material={continueReading} />
+        {(pendingRecommendationsCount ?? 0) > 0 && (
+          <Link
+            href="/language-twin/recommendations"
+            className="focus-ring flex items-center justify-between rounded-xl bg-[var(--surface)] p-4 shadow-sm"
+          >
+            <p className="text-body-sm text-[var(--text-secondary)]">Новых рекомендаций: {pendingRecommendationsCount}</p>
+            <span className="text-body-sm font-semibold text-[var(--color-forest-text)]">Открыть →</span>
+          </Link>
+        )}
       </section>
 
       {topPatterns.length > 0 && (
@@ -283,19 +297,6 @@ export default async function HomePage() {
           </div>
         </section>
       )}
-
-      <section className="flex flex-col gap-2">
-        <SectionHeader title={t.weekProgress.title} />
-        <DailyPlanCard
-          metrics={[
-            { label: t.weekProgress.activeDays, value: String(activeDaysThisWeek), icon: Calendar },
-            { label: "Дней подряд", value: String(profile.streak_current), icon: Flame },
-            ...(missionWeekStats.completed > 0
-              ? [{ label: t.weekProgress.missionsCompleted, value: String(missionWeekStats.completed), icon: Target }]
-              : []),
-          ]}
-        />
-      </section>
 
       <ComingSoonCard />
     </div>
