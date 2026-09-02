@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { deleteWord, markKnown, setPhotoUrl, toggleFavorite } from "./actions";
 import { validateImageFile } from "@/lib/file-validation";
@@ -84,8 +85,9 @@ export default function WordRow({
           className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-black/15 text-black/30 hover:border-black/30 dark:border-white/20 dark:text-white/30 dark:hover:border-white/40"
         >
           {localPhotoUrl || photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={localPhotoUrl ?? photoUrl!} alt="" className="h-full w-full object-cover" />
+            // unoptimized — тот же приватный signed URL (TTL 1 час) с тем же
+            // обоснованием, что в review-session.tsx.
+            <Image src={localPhotoUrl ?? photoUrl!} alt="" fill unoptimized sizes="44px" className="object-cover" />
           ) : uploading ? (
             <span className="text-xs">…</span>
           ) : (

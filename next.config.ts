@@ -46,6 +46,17 @@ const nextConfig: NextConfig = {
   // компьютер. Без этого приложение при открытии через 127.0.0.1
   // молча не гидрируется (HMR-сокет получает отказ, React не крепится).
   allowedDevOrigins: ["localhost", "127.0.0.1"],
+  // next/image требует явный allowlist для внешних доменов. Только
+  // i.ytimg.com — превью YouTube-видео в LibraryItemCard (youtubeThumbnailUrl()
+  // в src/lib/text-cover.ts), единственная внешняя картинка в приложении с
+  // публичным, стабильным URL. Фото слов (word-photos) — приватные signed
+  // URL из Supabase Storage с TTL в час: next/image's remote optimizer сам
+  // кеширует результат дольше этого TTL, так что оптимизация через сервер
+  // Next.js для них сознательно не включена (см. `unoptimized` на местах
+  // использования) — remotePatterns тут не нужен.
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "i.ytimg.com" }],
+  },
   async headers() {
     return [
       {

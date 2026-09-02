@@ -59,7 +59,10 @@ test("YouTube material renders a real thumbnail image, not just a gradient place
   await page.goto("/library");
   const card = page.getByRole("link", { name: /Me at the zoo/ });
   const img = card.locator("img");
-  await expect(img).toHaveAttribute("src", /i\.ytimg\.com\/vi\/.+\/hqdefault\.jpg/);
+  // next/image (library-item-card.tsx) proxies through /_next/image?url=<encoded>,
+  // not the raw i.ytimg.com URL directly — match the encoded original URL
+  // inside the query string instead of the old literal-hostname pattern.
+  await expect(img).toHaveAttribute("src", /_next\/image\?url=.*i\.ytimg\.com%2Fvi%2F.+%2Fhqdefault\.jpg/);
 });
 
 test("no horizontal overflow on Library at 360px", async ({ page }) => {
