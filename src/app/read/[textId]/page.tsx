@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Playfair_Display } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
@@ -6,6 +7,22 @@ import type { LearningState } from "@/lib/vocabulary-list";
 import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
 import { hasSavedReaderPrefs, parseReaderPrefs } from "./reader-prefs";
 import Reader from "./reader";
+
+// docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+// §1.2 — serif только для крупного текста/заголовков, не всего UI; сам
+// текст чтения — самый очевидный кандидат в приложении, чтения на много
+// абзацев подряд, где serif реально помогает, не декоративен. Загружается
+// здесь, не в корневом layout.tsx — тот же scoped-паттерн, что и у
+// src/app/landing-page.tsx (authenticated-страницы, где Reader не
+// рендерится, не должны тянуть лишний шрифт). Та же переменная
+// --font-playfair, что и у лендинга — не второй шрифт, та же гарнитура,
+// просто ещё одна scoped-загрузка для другого поддерева страниц (у
+// next/font/google нет способа переиспользовать один экземпляр между
+// двумя не связанными layout'ами без общего родителя).
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin", "cyrillic"],
+});
 
 export default async function ReadPage({
   params,
@@ -138,23 +155,25 @@ export default async function ReadPage({
     : null;
 
   return (
-    <Reader
-      textId={text.id}
-      title={text.title}
-      body={text.body}
-      sourceLang={text.language}
-      targetLang={profile.native_language}
-      wordLevels={wordLevels}
-      initialPageIndex={progress?.last_page_index ?? 0}
-      initialServerPrefs={initialServerPrefs}
-      chapter={chapter}
-      stats={{
-        unique: uniqueTokens.size,
-        new: statsNew,
-        learning: statsLearning,
-        familiar: statsFamiliar,
-        known: statsKnown,
-      }}
-    />
+    <div className={playfairDisplay.variable}>
+      <Reader
+        textId={text.id}
+        title={text.title}
+        body={text.body}
+        sourceLang={text.language}
+        targetLang={profile.native_language}
+        wordLevels={wordLevels}
+        initialPageIndex={progress?.last_page_index ?? 0}
+        initialServerPrefs={initialServerPrefs}
+        chapter={chapter}
+        stats={{
+          unique: uniqueTokens.size,
+          new: statsNew,
+          learning: statsLearning,
+          familiar: statsFamiliar,
+          known: statsKnown,
+        }}
+      />
+    </div>
   );
 }

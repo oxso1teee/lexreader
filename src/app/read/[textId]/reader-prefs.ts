@@ -20,7 +20,14 @@ export const DEFAULT_READER_PREFS: ReaderPrefs = {
   width: "narrow",
 };
 
-export const READING_WIDTH_PX: Record<ReadingWidth, number> = { narrow: 820, wide: 1040 };
+// docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
+// "комфортная ширина колонки" — 820/1040 at the default 18px font size
+// (plus the article's own px-5/sm:px-9 padding) worked out to roughly
+// 83-108 characters per line, well past the ~45-75ch range typography
+// guidance (Bringhurst) treats as comfortable for sustained reading.
+// 680/860 keeps the same two-option narrow/wide choice but both land
+// close to that range instead of one comfortable-ish and one too wide.
+export const READING_WIDTH_PX: Record<ReadingWidth, number> = { narrow: 680, wide: 860 };
 
 export const MIN_FONT_SIZE = 15;
 export const MAX_FONT_SIZE = 24;
