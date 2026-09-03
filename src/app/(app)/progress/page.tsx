@@ -12,6 +12,7 @@ import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
 import StreakHero from "@/components/product/streak-hero";
+import WeekActivityRow from "./week-activity-row";
 import LineChart from "./line-chart";
 import HardestWords from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
@@ -292,6 +293,17 @@ export default async function ProgressPage({
     activityCounts[key] = (activityCounts[key] ?? 0) + 1;
   }
 
+  // Progress mockup alignment — 7 дней текущей недели (Пн→Вс) для
+  // WeekActivityRow, из уже посчитанного activityCounts выше — без нового
+  // запроса. Будущие дни недели просто не встречаются как ключ в
+  // activityCounts, честно остаются false.
+  const weekStart = isoWeekStart(new Date());
+  const activeDaysThisWeek = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart);
+    d.setUTCDate(d.getUTCDate() + i);
+    return (activityCounts[isoDate(d)] ?? 0) > 0;
+  });
+
   const daysSinceLastReading = lastReadingRow ? daysSince(lastReadingRow.started_at) : null;
 
   const insight = decideProgressInsight({
@@ -369,7 +381,8 @@ export default async function ProgressPage({
         </Link>
       )}
 
-      <StreakHero days={profile.streak_current} />
+      <StreakHero days={profile.streak_current} bestStreak={profile.streak_longest} />
+      <WeekActivityRow activeDays={activeDaysThisWeek} />
 
       <div>
         <h2 className="text-h3 mb-2">Показатели</h2>
