@@ -91,7 +91,7 @@ export default async function BrainPage() {
 
       <WeakWordsCard words={weakWords} />
 
-      <QuickPracticeGrid />
+      <QuickPracticeGrid dueCount={dueCount} />
 
       {readingWordCount ? (
         <Link
