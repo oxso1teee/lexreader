@@ -60,7 +60,10 @@ export default function NotebookClient({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-5 py-6">
-      <Link href="/brain" className="mb-3 text-sm text-forest">
+      {/* forest-text-contrast-fix: text-forest -> --color-forest-text (see
+          stat-card.tsx) -- this link sits on the plain page background,
+          same dark-mode failure mode. */}
+      <Link href="/brain" className="mb-3 text-sm text-[var(--color-forest-text)]">
         ← Мозг
       </Link>
 

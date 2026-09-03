@@ -47,8 +47,16 @@ export default function DesktopSidebar({
                   для неё действует другой, более мягкий порог WCAG, не
                   4.5:1 как для текста) — сам текст пункта меню использует
                   text-black/white, иначе contrast был 3.16:1 против
-                  требуемых 4.5:1 (найдено axe-core, e2e/unified-shell-a11y.spec.ts). */}
-              <span className={active ? "text-forest" : ""} aria-hidden="true">
+                  требуемых 4.5:1 (найдено axe-core, e2e/unified-shell-a11y.spec.ts).
+
+                  forest-text-contrast-fix: тот "мягкий порог" — 3:1, а не 0
+                  — и голый text-forest (--color-forest, не переопределён в
+                  тёмной теме) его тоже не проходил: реально измерено (пиксели
+                  рендера, не на глаз) ~1.63:1 иконки на bg-forest/15 пилюле
+                  поверх тёмной --card. --color-forest-text (~8.6:1 против
+                  --card в тёмной теме) с огромным запасом чист и для этого
+                  порога тоже. */}
+              <span className={active ? "text-[var(--color-forest-text)]" : ""} aria-hidden="true">
                 <Icon />
               </span>
               <span>{item.label}</span>

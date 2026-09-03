@@ -33,7 +33,9 @@ const ENTRIES = [
 export default function ChangelogPage() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6 py-10">
-      <Link href="/settings" className="text-sm text-forest">
+      {/* forest-text-contrast-fix: text-forest -> --color-forest-text (see
+          progress/stat-card.tsx). */}
+      <Link href="/settings" className="text-sm text-[var(--color-forest-text)]">
         ← Настройки
       </Link>
       <h1 className="text-2xl font-bold">Что нового</h1>

@@ -15,7 +15,14 @@ export default function StatCard({
 }) {
   return (
     <div className="rounded-2xl bg-card px-4 py-4 shadow-sm">
-      <p className={size === "primary" ? "text-3xl font-bold text-forest" : "text-xl font-semibold text-forest"}>{value}</p>
+      {/* forest-text-contrast-fix: text-forest resolves to --color-forest,
+          which isn't overridden for dark theme in tokens.css — same dark
+          green on a dark card, axe-core measured ~1.3-1.7:1 (found via PR
+          #80). --color-forest-text is the token tokens.css already defines
+          specifically for this: identical #1f4d3b in light, brighter
+          #34d399 in dark. Verified ~9.6:1 light / ~8.6:1 dark against
+          --card. */}
+      <p className={size === "primary" ? "text-3xl font-bold text-[var(--color-forest-text)]" : "text-xl font-semibold text-[var(--color-forest-text)]"}>{value}</p>
       <p className="text-sm text-[var(--text-secondary)]">{label}</p>
     </div>
   );

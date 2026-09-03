@@ -41,7 +41,9 @@ export default function PersonalRecords({
               {r.icon}
             </span>
             <div className="min-w-0">
-              <p className="text-lg font-bold text-forest">{r.value}</p>
+              {/* forest-text-contrast-fix: see stat-card.tsx for why
+                  --color-forest-text, not text-forest. */}
+              <p className="text-lg font-bold text-[var(--color-forest-text)]">{r.value}</p>
               <p className="truncate text-xs text-[var(--text-secondary)]">{r.label}</p>
             </div>
           </div>

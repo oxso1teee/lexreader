@@ -60,7 +60,9 @@ export default function ResultView({
       {!isSkipped && result ? (
         <section className="flex flex-col gap-3">
           <p className="text-sm font-medium text-black/50 dark:text-white/50">Твой стартовый диапазон</p>
-          <p className="text-4xl font-bold tracking-tight text-forest">{result.range}</p>
+          {/* forest-text-contrast-fix: text-forest -> --color-forest-text
+              (see progress/stat-card.tsx for the full contrast rationale). */}
+          <p className="text-4xl font-bold tracking-tight text-[var(--color-forest-text)]">{result.range}</p>
 
           {hasConflict && selfReportedCefr && selfReportedCefr !== "unsure" && (
             <div className="rounded-2xl border border-black/10 bg-black/[0.03] px-4 py-3 text-sm text-black/70 dark:border-white/15 dark:bg-white/[0.04] dark:text-white/70">
@@ -136,7 +138,11 @@ export default function ResultView({
               type="button"
               disabled={pending !== null}
               onClick={() => choose(recommendation.alternative as PathSlug)}
-              className="focus-ring mt-3 w-full rounded-full border border-forest px-5 py-3 font-medium text-forest transition-colors hover:bg-forest/5 disabled:opacity-50"
+              /* forest-text-contrast-fix: both border-forest and text-forest
+                 measured ~1.9:1 in dark (this box has no bg-card behind it,
+                 just the plain page background) -- --color-forest-text for
+                 both keeps border/text visually matched, same as before. */
+              className="focus-ring mt-3 w-full rounded-full border border-[var(--color-forest-text)] px-5 py-3 font-medium text-[var(--color-forest-text)] transition-colors hover:bg-forest/5 disabled:opacity-50"
             >
               {pending === recommendation.alternative ? "…" : `Выбрать «${alternative.title}»`}
             </button>

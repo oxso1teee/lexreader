@@ -67,7 +67,9 @@ export default async function PricingPage({
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
       <PricingViewTracker reason={reason} />
       <div>
-        <Link href="/home" className="text-sm font-medium text-forest">
+        {/* forest-text-contrast-fix: text-forest -> --color-forest-text
+            (see progress/stat-card.tsx). */}
+        <Link href="/home" className="text-sm font-medium text-[var(--color-forest-text)]">
           ← Назад
         </Link>
         <h1 className="mt-2 text-2xl font-bold">Выберите ваш план</h1>
@@ -132,7 +134,7 @@ export default async function PricingPage({
               Полный доступ ко всем премиум-функциям
             </p>
             <p className="mt-3">
-              <span className="text-3xl font-bold text-forest">449 ₽</span>
+              <span className="text-3xl font-bold text-[var(--color-forest-text)]">449 ₽</span>
               <span className="text-black/50 dark:text-white/50"> /месяц</span>
             </p>
             <ul className="mt-4 flex flex-col gap-2 text-sm">
@@ -143,19 +145,23 @@ export default async function PricingPage({
                 </li>
               ))}
             </ul>
+            {/* forest-text-contrast-fix: both border-forest and text-forest
+                on this outline button measured ~1.7:1 against bg-card in
+                dark (same failure as progress/stat-card.tsx) --
+                --color-forest-text for both keeps border/text matched. */}
             {stripeReady ? (
               <div className="mt-4">
                 <CheckoutButton
                   plan="premium_monthly"
                   label="Начать — 3 дня бесплатно"
-                  className="w-full rounded-full border-2 border-forest py-3 font-semibold text-forest"
+                  className="w-full rounded-full border-2 border-[var(--color-forest-text)] py-3 font-semibold text-[var(--color-forest-text)]"
                 />
               </div>
             ) : showDevSimulation ? (
               <form action={simulateSubscribe.bind(null, "premium_monthly")} className="mt-4">
                 <button
                   type="submit"
-                  className="w-full rounded-full border-2 border-forest py-3 font-semibold text-forest"
+                  className="w-full rounded-full border-2 border-[var(--color-forest-text)] py-3 font-semibold text-[var(--color-forest-text)]"
                 >
                   Начать
                 </button>
@@ -180,7 +186,7 @@ export default async function PricingPage({
               Полный доступ ко всем премиум-функциям
             </p>
             <p className="mt-3">
-              <span className="text-3xl font-bold text-forest">4490 ₽</span>
+              <span className="text-3xl font-bold text-[var(--color-forest-text)]">4490 ₽</span>
               <span className="text-black/50 dark:text-white/50"> /год</span>
             </p>
             <p className="text-sm text-black/50 dark:text-white/50">
