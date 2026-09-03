@@ -76,6 +76,14 @@ function paginate(sentences: string[]): [number, number][] {
   return pages.length > 0 ? pages : [[0, 0]];
 }
 
+// Reader mockup alignment — новая верхняя панель хочет оценку времени
+// чтения ("X мин"), которой раньше в приложении не было нигде. 200 слов/
+// мин — общепринятый ориентир скорости чтения взрослого человека (не
+// специфичный для этого кодабейза прецедент, которого не существует —
+// просто стандартная эвристика), единственный вход — уже реально
+// посчитанный texts.word_count, без новых запросов к БД.
+const READING_WORDS_PER_MINUTE = 200;
+
 export default function Reader({
   textId,
   title,
@@ -83,6 +91,7 @@ export default function Reader({
   sourceLang,
   targetLang,
   wordLevels,
+  wordCount,
   stats,
   initialPageIndex = 0,
   initialServerPrefs,
@@ -94,6 +103,10 @@ export default function Reader({
   sourceLang: string;
   targetLang: string;
   wordLevels: Record<string, WordLevelInfo>;
+  /** Реальное word_count текста (или оценка, если для старой записи не
+   *  посчитан) — единственный вход для оценки времени чтения в новой
+   *  верхней панели, без новых запросов к БД. */
+  wordCount: number;
   stats: Stats;
   initialPageIndex?: number;
   initialServerPrefs: ReaderPrefs | null;
@@ -518,6 +531,8 @@ export default function Reader({
   const readingProgress = Math.round(((pageIndex + 1) / pages.length) * 100);
   const maxWidthPx = READING_WIDTH_PX[readerPrefs.width];
   const focusMode = mode === "focus";
+  const estimatedMinutes = Math.max(1, Math.round(wordCount / READING_WORDS_PER_MINUTE));
+  const chapterTimeLabel = chapter ? `Глава ${chapter.position} · ${estimatedMinutes} мин` : `${estimatedMinutes} мин`;
 
   return (
     <div
@@ -548,10 +563,15 @@ export default function Reader({
                 {chapter && <span> › {chapter.collectionTitle}</span>}
               </nav>
               <h1 className="truncate text-base font-bold tracking-[-0.01em] sm:text-lg">{title}</h1>
-              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-                {chapter ? `Часть ${chapter.position} из ${chapter.total} · ` : ""}
-                Страница {pageIndex + 1} из {pages.length} · просмотрено слов: {wordsLookedUp}
-              </p>
+              {/* Reader mockup alignment — "Глава N · X мин" вместо "Страница
+                  X из Y · просмотрено слов: Z": оценка времени чтения из
+                  реального texts.word_count (см. estimatedMinutes выше),
+                  "Глава N" только когда текст реально часть коллекции
+                  (chapter !== null) — без выдуманного номера главы для
+                  одиночных текстов. wordsLookedUp продолжает считаться и
+                  уходить в finishReading() как раньше, просто больше не
+                  показан в этой строке. */}
+              <p className="mt-0.5 font-mono text-[10.5px] text-[var(--text-secondary)]">{chapterTimeLabel}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {/* M3 Slice 11 (plan doc §2, navigation) — Reader's own position is already
@@ -571,7 +591,7 @@ export default function Reader({
                 aria-label="Настройки чтения"
                 className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/70 text-[var(--color-forest-text)] shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
               >
-                <span aria-hidden="true" className="text-base font-bold">
+                <span aria-hidden="true" className="text-[12px] font-bold">
                   Aa
                 </span>
               </button>
@@ -625,12 +645,19 @@ export default function Reader({
               ✕ Выйти из Focus
             </button>
           )}
-        </div>
-        <div className="h-0.5 bg-black/[0.04] dark:bg-white/[0.05]">
-          <div
-            className="h-full bg-[var(--color-forest)] transition-[width] duration-300"
-            style={{ width: `${readingProgress}%` }}
-          />
+
+          {/* Reader mockup alignment — тонкая (3px) скруглённая полоска +
+              процент справа, вместо прежней 0.5px edge-to-edge без подписи;
+              то же readingProgress (страница/страницы), не новая метрика. */}
+          <div className="flex items-center gap-2">
+            <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-[var(--border)]">
+              <div
+                className="h-full rounded-full bg-[var(--color-forest-light)] transition-[width] duration-300"
+                style={{ width: `${readingProgress}%` }}
+              />
+            </div>
+            <span className="shrink-0 font-mono text-[10px] text-[var(--text-secondary)]">{readingProgress}%</span>
+          </div>
         </div>
       </header>
 
@@ -689,8 +716,11 @@ export default function Reader({
               </p>
               {pageSentences.map((sentence, i) => (
                 <div key={i} className="mb-4 border-b border-black/[0.05] pb-4 last:border-0 dark:border-white/[0.06]">
+                  {/* Reader mockup alignment — только шрифт приведён в
+                      соответствие (font-serif -> font-reading), остальное
+                      в parallel-режиме не тронуто (границы задачи). */}
                   <p
-                    className="font-serif"
+                    className="font-reading"
                     style={{ fontSize: `${readerPrefs.fontSize}px`, lineHeight: readerPrefs.lineHeight }}
                   >
                     {sentence}
@@ -720,7 +750,7 @@ export default function Reader({
             </div>
           ) : (
             <article
-              className="font-serif mx-auto w-full flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 tracking-[-0.006em] shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8"
+              className="font-reading mx-auto w-full flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 tracking-[-0.005em] shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8"
               style={{
                 maxWidth: `${maxWidthPx}px`,
                 fontSize: `${readerPrefs.fontSize}px`,
@@ -740,6 +770,23 @@ export default function Reader({
                       const levelColor = info ? WORD_LEVELS[info.level]?.color : undefined;
                       const selected = isTokenSelected(si, ti);
 
+                      // Reader mockup alignment — раньше выделение при
+                      // drag-выборе фразы красилось raw-хексом caramel с
+                      // альфой ("#a67c5266", тот же стрей-цвет, что уже
+                      // правили в watch-player.tsx на screen 9 прошлой
+                      // серии) поверх общей rounded/px-0.5 базы. Теперь
+                      // свой набор классов на forest-tint/forest-text,
+                      // отдельно от levelColor-подсветки ниже (семантика
+                      // уровня знания слова — не тронута, тот же принцип
+                      // исключения, что и во всей предыдущей серии
+                      // редизайна). --color-forest-text, не голый
+                      // --color-forest — тот в тёмной теме ярче
+                      // (см. tokens.css), тот же паттерн "текст на тонированном
+                      // фоне", что уже используют бейджи по всему приложению.
+                      const wordClassName = selected
+                        ? "focus-ring touch-none select-none rounded-[4px] px-[3px] py-0 font-semibold text-[var(--color-forest-text)] transition-colors [-webkit-touch-callout:none]"
+                        : "focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40";
+
                       return (
                         <button
                           key={ti}
@@ -750,12 +797,12 @@ export default function Reader({
                           onClick={() => onClickWord(tok.text, sentence)}
                           style={{
                             backgroundColor: selected
-                              ? "#a67c5266"
+                              ? "var(--color-forest-tint)"
                               : levelColor
                                 ? `${levelColor}33`
                                 : undefined,
                           }}
-                          className="focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                          className={wordClassName}
                         >
                           {tok.text}
                         </button>
@@ -846,7 +893,14 @@ export default function Reader({
               </div>
             )}
             {popup ? (
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+              // Reader mockup alignment — карточка перевода: bg-surface-
+              // elevated ("raised" card, тот же токен, что уже используют
+              // модалки/поповеры — см. его комментарий в tokens.css),
+              // rounded-[14px]/px-[13px]/py-[12px] по спеке, тонированная
+              // forest-тень вместо обычной shadow-sm. Позиционирование
+              // (в потоке рядом с текстом на десктопе) не тронуто — уже
+              // "под текстом", не оверлей.
+              <div className="rounded-[14px] border border-[var(--border)] bg-[var(--surface-elevated)] px-[13px] py-[12px] shadow-[0_8px_30px_rgba(31,77,59,0.08)]">
                 <ReaderWordPanel
                   popup={popup}
                   manualTranslation={manualTranslation}
@@ -872,9 +926,17 @@ export default function Reader({
         )}
       </div>
 
-      {/* Mobile bottom sheet — same ReaderWordPanel content, different chrome */}
+      {/* Mobile bottom sheet — same ReaderWordPanel content, different chrome.
+          Reader mockup alignment: цвет/тень приведены к тому же bg-surface-
+          elevated + тонированной тени, что и десктопная карточка, радиус
+          14px на видимых верхних углах. Позиционирование (fixed bottom
+          sheet, не inline-under-text) намеренно НЕ тронуто — задача явно
+          просит не рисковать взаимодействием (мобильная клавиатура для
+          manual-translation-input) ради формы карточки; padding тоже
+          оставлен прежним (p-5) — рассчитан на полноширинный sheet с
+          drag-handle, не то же самое, что компактная карточка на десктопе. */}
       {popup && (
-        <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl border-t border-black/10 bg-[var(--surface)] p-5 shadow-2xl dark:border-white/10 lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-[14px] border-t border-[var(--border)] bg-[var(--surface-elevated)] p-5 shadow-[0_-8px_30px_rgba(31,77,59,0.1)] lg:hidden">
           <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-[var(--border-strong)]" aria-hidden="true" />
           <div className="mx-auto max-w-2xl">
             <ReaderWordPanel

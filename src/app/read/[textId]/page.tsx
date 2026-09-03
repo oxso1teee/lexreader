@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Playfair_Display } from "next/font/google";
+import { Source_Serif_4 } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
@@ -8,19 +8,18 @@ import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
 import { hasSavedReaderPrefs, parseReaderPrefs } from "./reader-prefs";
 import Reader from "./reader";
 
-// docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
-// §1.2 — serif только для крупного текста/заголовков, не всего UI; сам
-// текст чтения — самый очевидный кандидат в приложении, чтения на много
-// абзацев подряд, где serif реально помогает, не декоративен. Загружается
-// здесь, не в корневом layout.tsx — тот же scoped-паттерн, что и у
-// src/app/landing-page.tsx (authenticated-страницы, где Reader не
-// рендерится, не должны тянуть лишний шрифт). Та же переменная
-// --font-playfair, что и у лендинга — не второй шрифт, та же гарнитура,
-// просто ещё одна scoped-загрузка для другого поддерева страниц (у
-// next/font/google нет способа переиспользовать один экземпляр между
-// двумя не связанными layout'ами без общего родителя).
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
+// Reader mockup alignment — тело читаемого текста больше не на
+// Playfair Display (дисплейный шрифт для заголовков, ошибочный выбор для
+// длинного чтения — см. комментарий у --font-reading в tokens.css), а на
+// Source Serif 4, реально предназначенном для длинного текста. Тот же
+// scoped-паттерн, что был здесь и раньше для Playfair (next/font/google,
+// не в корневом layout.tsx — authenticated-страницы, где Reader не
+// рендерится, не должны тянуть лишний шрифт). Playfair Display в этом
+// поддереве больше не используется ни для чего (font-serif в reader.tsx
+// заменён на font-reading) — локальная загрузка здесь была нужна только
+// ради него, поэтому просто заменена, а не оставлена рядом неиспользуемой.
+const sourceSerif = Source_Serif_4({
+  variable: "--font-reading",
   subsets: ["latin", "cyrillic"],
 });
 
@@ -155,7 +154,7 @@ export default async function ReadPage({
     : null;
 
   return (
-    <div className={playfairDisplay.variable}>
+    <div className={sourceSerif.variable}>
       <Reader
         textId={text.id}
         title={text.title}
@@ -163,6 +162,7 @@ export default async function ReadPage({
         sourceLang={text.language}
         targetLang={profile.native_language}
         wordLevels={wordLevels}
+        wordCount={text.word_count ?? uniqueTokens.size}
         initialPageIndex={progress?.last_page_index ?? 0}
         initialServerPrefs={initialServerPrefs}
         chapter={chapter}
