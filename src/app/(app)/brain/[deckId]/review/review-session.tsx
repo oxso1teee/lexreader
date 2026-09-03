@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { reviewWord, undoLastGrade, sendCardToNotebook, updateReviewBest } from "./actions";
+import { Flame } from "lucide-react";
+import { reviewWord, undoLastGrade, sendCardToNotebook, updateReviewBest, getCurrentStreak } from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
 import { reviewFsrsCard, type FsrsStateRow } from "@/lib/fsrs";
@@ -33,12 +34,49 @@ export interface ReviewCard {
 // each clears WCAG AA 4.5:1 while keeping the same red→orange→green meaning
 // and relative light→dark progression between "Помню"/"Легко". red-600
 // already passed as-is.
+//
+// Review mockup alignment — reference asks for var(--color-danger)/forest
+// tokens. Again: --color-danger resolves to #dc2626, the exact same hex as
+// bg-red-600 already in use — switched to the token (zero visual change,
+// clearer intent). Hard: --color-warning resolves to #ea580c (Tailwind
+// orange-600) — hand-computed WCAG contrast for white-on-#ea580c is ~3.56:1,
+// BELOW the 4.5:1 AA floor that was the whole point of the darkening above
+// (and axe-core would very likely re-flag it), so kept the current
+// bg-orange-700 (#c2410c, ~5.18:1, verified safe) instead of the token —
+// same warm-orange hue family the reference asks for, just the shade that's
+// actually accessible. Good/Easy: --color-forest (~9.6:1) and
+// --color-forest-light (~6.28:1) both clear AA comfortably with white text.
 const GRADES: { value: 0 | 1 | 2 | 3; label: string; className: string }[] = [
-  { value: 0, label: "Не помню", className: "bg-red-600 hover:bg-red-500" },
-  { value: 1, label: "Трудно", className: "bg-orange-700 hover:bg-orange-600" },
-  { value: 2, label: "Помню", className: "bg-emerald-700 hover:bg-emerald-600" },
-  { value: 3, label: "Легко", className: "bg-emerald-800 hover:bg-emerald-700" },
+  { value: 0, label: "Не помню", className: "bg-[var(--color-danger)] hover:opacity-90" },
+  { value: 1, label: "Трудно", className: "bg-orange-700 hover:opacity-90" },
+  { value: 2, label: "Помню", className: "bg-[var(--color-forest)] hover:opacity-90" },
+  { value: 3, label: "Легко", className: "bg-[var(--color-forest-light)] hover:opacity-90" },
 ];
+
+// Review mockup alignment — useSyncExternalStore, тот же паттерн, что уже
+// принят в src/lib/use-is-native.ts для точно такого же класса проблемы
+// (браузерное API, недоступное на сервере): getServerSnapshot обязана
+// вернуть то же самое, что первый клиентский рендер при гидратации, иначе
+// React расходится в тексте/DOM между SSR и клиентом. Раньше здесь было
+// `typeof window !== "undefined" && …` прямо в теле рендера — валидный на
+// сервере false, но потенциально true уже на первом клиентском рендере,
+// то есть настоящий hydration mismatch (не просто lint-придирка): React
+// ловил это на кнопке 🔊 (которая то есть, то нет между SSR/CSR) и
+// перерисовывал всё поддерево с нуля, что как побочный эффект стирало
+// data-theme, поставленный до гидратации в theme-init-script.ts (React не
+// знает про этот атрибут — он не из её виртуального DOM — и снимает его при
+// реконсиляции того же узла). На практике это гасило тёмную тему именно на
+// этом экране, что прямо противоречит "Тёмная тема обязательна" из этой же
+// задачи — поэтому чиним, хоть это и вне явно перечисленных файлов/функций.
+function subscribeNoop(): () => void {
+  return () => {};
+}
+function getSpeechSnapshot(): boolean {
+  return "speechSynthesis" in window;
+}
+function getSpeechServerSnapshot(): boolean {
+  return false;
+}
 
 // Из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, п.6): показываем
 // итоговый интервал прямо на кнопках оценки — прозрачность алгоритма вместо
@@ -131,6 +169,15 @@ export default function ReviewSession({
   // незначительна (одна строка), а по этому единственному месту решается,
   // какое из двух взаимоисключающих событий отправить при монтировании.
   const wasResumedRef = useRef(!!loadReviewSession(userId, sessionDeckId));
+  // Review mockup alignment — top bar streak flame. Same real, already-used
+  // server action session-complete.tsx already calls (getCurrentStreak() ->
+  // profiles.streak_current); reusing it here needed zero new props threaded
+  // through review-mode-switcher.tsx (out of scope for this task) since this
+  // component is already "use client" and can call it directly.
+  const [streak, setStreak] = useState<number | null>(null);
+  useEffect(() => {
+    getCurrentStreak().then(setStreak);
+  }, []);
 
   const done = index >= cards.length;
   const card = cards[index];
@@ -170,7 +217,9 @@ export default function ReviewSession({
   // Listening mode (src/app/read/[textId]/reader.tsx) — no paid TTS. `front`
   // is always the target-language word regardless of studyDirection, so
   // pronunciation always speaks it, not whichever side is "question" right now.
-  const speechAvailable = typeof window !== "undefined" && "speechSynthesis" in window;
+  // See subscribeNoop/getSpeechSnapshot/getSpeechServerSnapshot above for why
+  // this is useSyncExternalStore and not a plain `typeof window` check.
+  const speechAvailable = useSyncExternalStore(subscribeNoop, getSpeechSnapshot, getSpeechServerSnapshot);
   function speak() {
     if (!speechAvailable || !card) return;
     const utterance = new SpeechSynthesisUtterance(card.front);
@@ -358,6 +407,13 @@ export default function ReviewSession({
           missionId={missionId}
           missionCorrectCount={tally[2] + tally[3]}
           missionIncorrectCount={tally[0] + tally[1]}
+          // Review mockup alignment — реальные слова этой сессии (front —
+          // всегда язык изучения, back — родной, см. комментарий у speak()
+          // выше), не новый запрос: cards уже в состоянии этого компонента.
+          // SessionComplete — прямой ребёнок этого файла (не через
+          // review-mode-switcher.tsx), так что новый проп не требует правок
+          // вне заявленных двух файлов.
+          cards={cards.map((c) => ({ front: c.front, back: c.back }))}
         />
       </>
     );
@@ -376,29 +432,12 @@ export default function ReviewSession({
           }`}
         />
       )}
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          {/* Точки прогресса — одна на карточку, forest-light для пройденных
-              (включая текущую), приглушённая для оставшихся. flex-wrap —
-              большие сессии (20+ карточек) переносятся на вторую строку
-              вместо растягивания/переполнения, а не обрезаются. Числовой
-              "X / Y" рядом сохранён — точки дают ощущение прогресса на
-              взгляд, но не заменяют точное "сколько осталось" для длинных
-              сессий, где точки могут перенестись на несколько строк. */}
-          <div className="flex flex-wrap items-center gap-1" role="img" aria-label={`Карточка ${index + 1} из ${cards.length}`}>
-            {cards.map((c, i) => (
-              <span
-                key={c.flashcardId}
-                aria-hidden="true"
-                className={`h-1.5 w-1.5 shrink-0 rounded-full ${i <= index ? "bg-[var(--color-forest-light)]" : "bg-[var(--border-strong)]"}`}
-              />
-            ))}
-          </div>
-          <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
-            {index + 1} / {cards.length}
-            {cards.length - index - 1 > 0 && <span> · осталось {cards.length - index - 1}</span>}
-          </p>
-        </div>
+      {/* Review mockup alignment — 3-колоночный верх (X слева / точки по
+          центру / стрик справа), вместо прежнего 2-колоночного (точки+счётчик
+          слева, X справа). Числовая подпись "X / Y · осталось Z" вынесена
+          отдельной строкой под рядом — точки дают ощущение прогресса на
+          взгляд, подпись даёт точное число, ни одно не потеряно. */}
+      <div className="mb-1.5 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={exitSession}
@@ -408,7 +447,43 @@ export default function ReviewSession({
         >
           ✕
         </button>
+        {/* Точки прогресса — одна на карточку, forest-light для пройденных
+            (включая текущую), приглушённая для оставшихся. flex-wrap —
+            большие сессии (20+ карточек) переносятся на вторую строку
+            вместо растягивания/переполнения, а не обрезаются. */}
+        <div
+          className="flex flex-wrap items-center justify-center gap-1"
+          role="img"
+          aria-label={`Карточка ${index + 1} из ${cards.length}`}
+        >
+          {cards.map((c, i) => (
+            <span
+              key={c.flashcardId}
+              aria-hidden="true"
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${i <= index ? "bg-[var(--color-forest-light)]" : "bg-[var(--border-strong)]"}`}
+            />
+          ))}
+        </div>
+        {/* Стрик — только когда реально >0 (getCurrentStreak(), та же
+            server action, что session-complete.tsx уже вызывает): нет
+            смысла показывать "🔥 0", а до первого resolve просто пусто —
+            ничего не выдумываем, ничего не мигает разметкой-заглушкой. */}
+        <div className="flex min-h-9 min-w-9 shrink-0 items-center justify-end">
+          {streak !== null && streak > 0 && (
+            <span
+              className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]"
+              title={`Стрик: ${streak} ${streak === 1 ? "день" : "дней"} подряд`}
+            >
+              <Flame aria-hidden="true" className="h-3.5 w-3.5 text-orange-500" />
+              {streak}
+            </span>
+          )}
+        </div>
       </div>
+      <p className="mb-4 text-center text-sm text-[var(--text-secondary)]">
+        {index + 1} / {cards.length}
+        {cards.length - index - 1 > 0 && <span> · осталось {cards.length - index - 1}</span>}
+      </p>
 
       {lastGraded && (
         <button
@@ -468,13 +543,15 @@ export default function ReviewSession({
         </form>
       ) : (
         <>
-          {/* Приподнятая карточка — тот же язык, что и у Reader'а
-              (rounded-3xl + мягкая тонированная под фон тень, не чёрная):
-              вопрос/ответ раньше просто плавали в пустой странице без
-              собственного фона/границы. */}
-          <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-black/[0.06] bg-white/60 p-6 text-center shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035]">
+          {/* Review mockup alignment — приподнятая карточка на
+              --surface-elevated/--border (тот же токен-язык, что уже принят
+              для /read), радиус 22px, мягкая тонированная тень (нет
+              литерального var(--shadow) в токенах — тот же приём "имени нет,
+              значение то же по духу", что --surface-elevated уже применял на
+              /read). */}
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-[18px] py-[30px] text-center shadow-[0_18px_60px_rgba(80,60,35,0.06)]">
             <div className="flex items-center gap-2">
-              <p className="text-2xl font-semibold">{question}</p>
+              <p className="text-[25px] font-bold">{question}</p>
               {speechAvailable && (
                 <button
                   type="button"
@@ -517,15 +594,25 @@ export default function ReviewSession({
                     style={{ width: "auto", height: "auto" }}
                   />
                 )}
-                <p className="text-xl font-medium text-black/80 dark:text-white/80">{answer}</p>
+                <p className="text-[12px] text-[var(--text-secondary)]">{answer}</p>
                 {card.notes && (
                   <p className="max-w-sm text-sm text-[var(--text-secondary)]">{card.notes}</p>
                 )}
+                {/* Review mockup alignment — italic/11.5px/faint, без прежней
+                    закрашенной пилюли-фона (референс просит только
+                    типографику). Playfair/Source Serif здесь сознательно не
+                    подключаем: "use client"-компонент, next/font/google в
+                    таком контексте не задокументирован явно (сверено с
+                    node_modules/next/dist/docs/), а протянуть шрифт через
+                    Server Component предка означало бы править
+                    review-mode-switcher.tsx — вне границ задачи. Курсив на
+                    существующем sans-стеке — тот же компромисс, что и в
+                    заголовке session-complete.tsx ниже. */}
                 {card.contextSentence && (
-                  <div className="max-w-sm rounded-lg bg-black/5 px-3 py-2 text-sm dark:bg-white/5">
-                    <p className="text-black/70 dark:text-white/70">{card.contextSentence}</p>
+                  <div className="max-w-sm">
+                    <p className="italic text-[11.5px] text-[var(--text-secondary)]">{card.contextSentence}</p>
                     {card.contextTranslation && (
-                      <p className="mt-0.5 text-[var(--text-secondary)]">{card.contextTranslation}</p>
+                      <p className="mt-0.5 text-[11.5px] text-[var(--text-secondary)]">{card.contextTranslation}</p>
                     )}
                   </div>
                 )}
@@ -556,15 +643,20 @@ export default function ReviewSession({
           </div>
 
           {!revealed ? (
+            // Review mockup alignment — единый forest-акцент вместо
+            // чёрного/белого CTA, тот же паттерн, что уже применён на
+            // /home, /read и /library в этой серии задач (референс это
+            // явно не описывает, но чёрно-белые кнопки — тот самый дрейф от
+            // бренда, что зачищался на каждом предыдущем экране).
             <button
               type="button"
               onClick={revealAnswer}
-              className="rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
+              className="mt-4 rounded-full bg-[var(--color-forest)] px-5 py-3 font-medium text-white"
             >
               Показать ответ
             </button>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="mt-4 flex flex-col gap-3">
               {bestSessionCount > 0 && (
                 <div>
                   <p className="text-center text-xs text-[var(--text-secondary)]">
@@ -580,7 +672,11 @@ export default function ReviewSession({
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Review mockup alignment — 4 в ряд вместо 2×2, радиус 16px
+                  вместо pill, тень снизу под каждой кнопкой. previewDays/
+                  formatInterval() ниже — та же самая формула, что и раньше,
+                  не тронута, только разметка вокруг неё. */}
+              <div className="grid grid-cols-4 gap-2">
                 {GRADES.map((g) => {
                 // M2 Learning Upgrade (LEARN-007): один и тот же адаптер для
                 // предпросмотра и для реального сохранения (src/lib/fsrs.ts,
@@ -600,15 +696,15 @@ export default function ReviewSession({
                     type="button"
                     disabled={isPending}
                     onClick={() => grade(g.value)}
-                    className={`flex min-h-11 flex-col items-center justify-center rounded-full px-4 py-3 font-medium text-white transition-colors disabled:opacity-50 ${g.className}`}
+                    className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-2xl px-[3px] py-[10px] text-center font-medium text-white shadow-[0_4px_10px_-2px_rgba(0,0,0,0.3)] transition-opacity disabled:opacity-50 ${g.className}`}
                   >
-                    <span>{g.label}</span>
+                    <span className="text-xs leading-tight">{g.label}</span>
                     {/* M3 Slice 4.1: opacity-80 white blended over these
                         backgrounds dropped as low as 2.32:1 (found via
                         axe-core) — full-opacity white stays legible (same
                         ratio as the label above) and de-emphasis still
                         comes through via the smaller text-xs size. */}
-                    <span className="text-xs font-normal">{formatInterval(previewDays)}</span>
+                    <span className="text-[10px] font-normal leading-tight">{formatInterval(previewDays)}</span>
                   </button>
                 );
                 })}
