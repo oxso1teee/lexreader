@@ -160,7 +160,13 @@ export default function LibraryBrowser({ items }: { items: LibraryItem[] }) {
           <p className="text-xs text-[var(--text-secondary)]" aria-live="polite">
             {materialsCountLabel(filtered.length)}
           </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {/* Library mockup alignment — gap-3 (12px) -> gap-2.5 (10px), по
+              референсу. grid-cols-2 на мобильном уже совпадал с референсом
+              1-в-1; sm:/lg: расширение колонок на широких экранах оставлено
+              — референс рисован под мобильную ширину, схлопывать сетку до
+              двух колонок на десктопе было бы регрессией по юзабилити,
+              которую референс не просил явно. */}
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
             {filtered.map((item) => (
               <LibraryItemCard key={item.id} item={item} />
             ))}
