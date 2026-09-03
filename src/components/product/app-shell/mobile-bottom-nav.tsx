@@ -45,8 +45,15 @@ export default function MobileBottomNav() {
           >
             {/* Как и в DesktopSidebar — цвет бренда на иконке (декоративная
                 графика), не на тексте пункта: forest-текст на белом фоне
-                давал 3.73:1 против требуемых 4.5:1 (найдено axe-core). */}
-            <span className={active ? "text-forest" : ""} aria-hidden="true">
+                давал 3.73:1 против требуемых 4.5:1 (найдено axe-core).
+
+                forest-text-contrast-fix: голый text-forest (--color-forest,
+                не переопределён в тёмной теме) не проходил даже мягкий
+                3:1-порог для иконки в тёмной теме — реально измерено
+                (getComputedStyle на живом рендере) ~1.72:1 иконки на
+                --card. --color-forest-text (~8.6:1 против --card в тёмной
+                теме) с большим запасом чист. */}
+            <span className={active ? "text-[var(--color-forest-text)]" : ""} aria-hidden="true">
               <Icon />
             </span>
             <span className="leading-none">{item.label}</span>
