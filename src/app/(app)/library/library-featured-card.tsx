@@ -12,6 +12,11 @@ import { typeLabel, type LibraryItem } from "./library-item";
 // читается прямо сейчас. Один item (см. library-browser.tsx — самый
 // недавно открытый среди 0 < percentRead < 100) вынесен сюда, крупнее и
 // с прогресс-баром поверх обложки, а не рядовой плиткой в сетке ниже.
+//
+// Library mockup alignment — компактнее (108-140px вместо 176-208px),
+// прогресс теперь тонкая (3px) полоса во всю ширину карточки снизу (как
+// read-progress в /read/[textId]), не отдельный блок с текстовым
+// процентом внутри отступа.
 export default function LibraryFeaturedCard({ item }: { item: LibraryItem }) {
   const [thumbFailed, setThumbFailed] = useState(false);
   const [gradientA, gradientB] = coverGradient(item.title);
@@ -23,7 +28,7 @@ export default function LibraryFeaturedCard({ item }: { item: LibraryItem }) {
       href={item.href}
       prefetch={false}
       aria-label={`Продолжить: ${typeLabel(item)} ${item.title}`}
-      className="focus-ring group relative flex h-44 items-end overflow-hidden rounded-3xl p-5 text-white shadow-[0_18px_50px_-20px_rgba(31,77,59,0.45)] sm:h-52"
+      className="focus-ring group relative flex h-[108px] items-end overflow-hidden rounded-[20px] p-4 text-white shadow-[0_18px_50px_-20px_rgba(31,77,59,0.45)] sm:h-[140px]"
       style={{ background: showThumb ? undefined : `linear-gradient(150deg, ${gradientA}, ${gradientB})` }}
     >
       {showThumb && (
@@ -37,20 +42,17 @@ export default function LibraryFeaturedCard({ item }: { item: LibraryItem }) {
         />
       )}
       {!showThumb && (
-        <span aria-hidden className="absolute inset-0 flex items-center justify-center text-8xl font-bold text-white/15">
+        <span aria-hidden className="absolute inset-0 flex items-center justify-center text-6xl font-bold text-white/15">
           {initials}
         </span>
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" aria-hidden="true" />
-      <div className="relative flex w-full flex-col gap-2">
-        <span className="text-xs font-bold uppercase tracking-wide text-white/80">Продолжить чтение</span>
-        <p className="text-2xl font-bold leading-tight sm:text-3xl">{item.title}</p>
-        <div className="mt-1 flex items-center gap-3">
-          <div className="h-1.5 max-w-xs flex-1 overflow-hidden rounded-full bg-white/25">
-            <div className="h-full rounded-full bg-white" style={{ width: `${item.percentRead}%` }} />
-          </div>
-          <span className="shrink-0 text-xs font-semibold text-white/85">{item.percentRead}%</span>
-        </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/[0.35] to-transparent" aria-hidden="true" />
+      <div className="relative flex w-full flex-col gap-1">
+        <span className="text-[10px] font-bold uppercase tracking-wide text-white/85">Продолжаешь</span>
+        <p className="text-[15px] font-bold leading-tight">{item.title}</p>
+      </div>
+      <div className="absolute inset-x-0 bottom-0 h-[3px] bg-white/25" aria-hidden="true">
+        <div className="h-full bg-white/90" style={{ width: `${item.percentRead}%` }} />
       </div>
     </Link>
   );

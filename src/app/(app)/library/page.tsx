@@ -1,10 +1,25 @@
 import Link from "next/link";
+import { Playfair_Display } from "next/font/google";
+import { Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
-import PageHeader from "@/components/product/page-header";
 import LibraryBrowser from "./library-browser";
 import { materialsCountLabel, type LibraryItem } from "./library-item";
+
+// Library mockup alignment — заголовок "Библиотека" на Playfair Display
+// italic, тем же принципом, что уже применён в /read/[textId] (см.
+// --font-reading в src/app/read/[textId]/page.tsx): scoped-загрузка прямо
+// здесь, не через общий --font-serif/--font-playfair (тот подключён
+// только внутри landing-page.tsx, вне области видимости на /library —
+// PR #75, который добавлял его в корневой layout.tsx, ещё не смержен, и
+// его правка layout.tsx всё равно вне заявленного для этой задачи списка
+// файлов). page-header.tsx тоже не в списке файлов этой задачи — заголовок
+// собран прямо здесь, а не через правку общего компонента.
+const playfairDisplay = Playfair_Display({
+  variable: "--font-library-serif",
+  subsets: ["latin", "cyrillic"],
+});
 
 export default async function LibraryPage() {
   const profile = await requireProfile();
@@ -119,24 +134,41 @@ export default async function LibraryPage() {
   ];
 
   return (
-    <div className="relative flex flex-1 flex-col">
+    <div className={`${playfairDisplay.variable} relative flex flex-1 flex-col`}>
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-5 py-6">
-        <PageHeader
-          title="Библиотека"
-          description={
-            items.length > 0
-              ? `${materialsCountLabel(items.length)} · всё, что ты читаешь и смотришь на изучаемом языке`
-              : undefined
-          }
-          action={
+        {/* Library mockup alignment — референс: заголовок (Playfair italic,
+            ~19px) слева, круглая иконка поиска справа. "+Добавить материал"
+            и строка с числом материалов — существующая функциональность,
+            не в референсе явно, но и не убрана: описание количества
+            осталось отдельной строкой ниже, кнопка — рядом с иконкой
+            поиска (на мобильном была скрыта и раньше, sm:flex, там
+            остаётся только floating-FAB внизу, как и было). Иконка поиска
+            ведёт на #library-search (реальный id инпута в
+            library-browser.tsx, тот не тронут) — обычная HTML-навигация
+            по якорю, без нового client-side состояния. */}
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="font-[family-name:var(--font-library-serif)] text-[19px] font-bold italic">Библиотека</h1>
+          <div className="flex shrink-0 items-center gap-2">
+            <a
+              href="#library-search"
+              aria-label="Поиск по библиотеке"
+              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-card"
+            >
+              <Search aria-hidden="true" className="h-4 w-4" />
+            </a>
             <Link
               href="/library/new"
               className="focus-ring hidden min-h-11 items-center justify-center rounded-full bg-[var(--color-forest)] px-5 text-sm font-bold text-white sm:flex"
             >
               ＋ Добавить материал
             </Link>
-          }
-        />
+          </div>
+        </div>
+        {items.length > 0 && (
+          <p className="text-body-sm -mt-2 text-[var(--text-secondary)]">
+            {materialsCountLabel(items.length)} · всё, что ты читаешь и смотришь на изучаемом языке
+          </p>
+        )}
         <Link
           href="/learning-paths"
           className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm"
