@@ -183,9 +183,21 @@ export default async function LibraryPage() {
         <LibraryBrowser items={items} />
       </div>
 
+      {/* bottom-20 (80px) раньше клал нижний край FAB ровно на верхний
+          край MobileBottomNav — измерено живьём (getBoundingClientRect):
+          новый плавающий tabbar (PR #76) стоит на bottom-4 (16px) и имеет
+          высоту 64px, то есть его верхний край — ровно 80px от низа
+          экрана, а FAB's bottom-20 = те же 80px — нулевой зазор, визуально
+          выглядит как наложение (плюс тени обоих элементов). 96px = 80px
+          (верх tabbar) + 16px зазора (тот же модуль, что уже даёт tabbar
+          от края экрана) + env(safe-area-inset-bottom) — то же самое
+          выражение, что уже держит tabbar над home-indicator на iOS (см.
+          marginBottom в mobile-bottom-nav.tsx), чтобы зазор не схлопнулся
+          на вырезных экранах. */}
       <Link
         href="/library/new"
-        className="focus-ring fixed bottom-20 right-5 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-forest)] text-2xl text-white shadow-lg hover:bg-[var(--color-forest-deep)] sm:hidden"
+        className="focus-ring fixed right-5 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-forest)] text-2xl text-white shadow-lg hover:bg-[var(--color-forest-deep)] sm:hidden"
+        style={{ bottom: "calc(96px + env(safe-area-inset-bottom))" }}
         aria-label="Добавить материал"
       >
         +
