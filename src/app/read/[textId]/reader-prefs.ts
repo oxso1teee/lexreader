@@ -13,9 +13,15 @@ export interface ReaderPrefs {
   width: ReadingWidth;
 }
 
+// Reader mockup alignment — lineHeight default 1.9 -> 1.85 (референс),
+// fontSize/MIN/MAX/theme/width не тронуты: та же регулировка размера
+// шрифта пользователем, что и была, просто пересчитанная база под новый
+// шрифт тела текста (Source Serif 4, см. --font-reading в tokens.css) —
+// настройка не удалена, значение по умолчанию просто соответствует
+// новому шрифту точнее, чем старое (было подобрано под Playfair Display).
 export const DEFAULT_READER_PREFS: ReaderPrefs = {
   fontSize: 18,
-  lineHeight: 1.9,
+  lineHeight: 1.85,
   theme: "paper",
   width: "narrow",
 };

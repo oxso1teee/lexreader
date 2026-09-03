@@ -62,7 +62,7 @@ export default function ReaderWordPanel({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-lg font-bold">{popup.text}</p>
+            <p className="text-[13px] font-bold">{popup.text}</p>
             <button
               type="button"
               onClick={() => onSpeak(popup.text)}
@@ -119,7 +119,9 @@ export default function ReaderWordPanel({
             </div>
           ) : (
             <>
-              <p className="font-semibold text-[var(--color-forest-text)]">{popup.wordTranslation}</p>
+              {/* Reader mockup alignment — перевод: 11px, var(--fg-secondary)
+                  (нейтральный, не forest-акцент), а не bold-forest, как раньше. */}
+              <p className="text-[11px] text-[var(--text-secondary)]">{popup.wordTranslation}</p>
               {popup.sentenceTranslation && (
                 <p className="mt-1 text-sm italic text-[var(--text-secondary)]">{popup.sentenceTranslation}</p>
               )}
@@ -156,14 +158,57 @@ export default function ReaderWordPanel({
             </>
           )}
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Закрыть"
-          className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
-        >
-          ✕
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {/* Reader mockup alignment — тот же клик/disabled/aria-label,
+              что раньше был на широкой pill-кнопке ниже (isPhrase ->
+              onAddPhrase, иначе onSetLevel(4)) — просто круглая 27×27
+              forest-кнопка в шапке рядом со словом/переводом, а не
+              отдельный блок под уровнем знания. Функционал не менялся,
+              только позиция/форма. Заметно меньше обычного min-h-11
+              (44px) touch-target, принятого в остальном приложении —
+              литеральный спек попросил именно 27×27 для этой компактной
+              иконки-кнопки. */}
+          {!popup.loading && !popup.error && !popup.paywall && (
+            <button
+              type="button"
+              onClick={popup.isPhrase ? onAddPhrase : () => onSetLevel(4)}
+              disabled={popup.isPhrase ? popup.saved : false}
+              aria-label={
+                popup.isPhrase
+                  ? popup.saved
+                    ? "Сохранено"
+                    : "Сохранить фразу в словарь"
+                  : popup.level === 4
+                    ? "Сохранено"
+                    : "Добавить в словарь"
+              }
+              className={`focus-ring flex h-[27px] w-[27px] shrink-0 items-center justify-center rounded-full text-sm font-bold disabled:opacity-60 ${
+                !popup.isPhrase && popup.level === 4 ? "text-black" : "text-white"
+              }`}
+              style={{
+                // WORD_LEVELS[4].color (#a1a1aa, светло-серый) — та же пара,
+                // что уже была в исходной widescreen-кнопке ниже (text-black
+                // именно для этого фона, text-white для forest) — белый
+                // текст на этом сером даёт ~2:1, далеко ниже WCAG AA 4.5:1.
+                backgroundColor: popup.isPhrase
+                  ? "var(--color-forest)"
+                  : popup.level === 4
+                    ? WORD_LEVELS[4].color
+                    : "var(--color-forest)",
+              }}
+            >
+              {popup.isPhrase ? (popup.saved ? "✓" : "+") : popup.level === 4 ? "✓" : "+"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {!popup.isPhrase && popup.vocabId && (
@@ -182,32 +227,6 @@ export default function ReaderWordPanel({
               </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {!popup.loading && !popup.error && !popup.paywall && (
-        <div className="flex gap-2">
-          {popup.isPhrase ? (
-            <button
-              type="button"
-              onClick={onAddPhrase}
-              disabled={popup.saved}
-              className="focus-ring flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[var(--color-forest)] px-3 text-sm font-bold text-white disabled:opacity-60"
-            >
-              {popup.saved ? "Сохранено ✓" : "Сохранить фразу"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => onSetLevel(4)}
-              className={`focus-ring flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-sm font-bold ${
-                popup.level === 4 ? "text-black" : "text-white"
-              }`}
-              style={{ backgroundColor: popup.level === 4 ? WORD_LEVELS[4].color : "var(--color-forest)" }}
-            >
-              {popup.level === 4 ? "Сохранено ✓" : "Уже знаю"}
-            </button>
-          )}
         </div>
       )}
 
