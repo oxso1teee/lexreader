@@ -4,6 +4,55 @@ import { fetchMissionCandidates, fetchMissionHistory } from "./candidates.ts";
 import { computeExpiresAt, generateMissionDrafts } from "./generator.ts";
 import type { MissionRow } from "./types.ts";
 
+export interface StartedMissionProgress {
+  mission: MissionRow;
+  currentStep: number;
+  percent: number;
+}
+
+// Missions mockup alignment — /missions' hero banner needs an honest % for
+// the one mission actually in progress. missions has no language column
+// (supabase/migrations/0037_missions.sql) to filter on, so this mirrors
+// fetchActiveMissions() below and filters by user_id only. Two conditions
+// both have to hold for the banner to render at all (enforced by returning
+// null, not a default/zero state, the moment either is missing):
+//   1. a mission with status="started" actually exists;
+//   2. it has a real mission_attempts row recording current_step -- a
+//      mission can be "started" (server action flips the status) before
+//      the player has answered anything and logged a first attempt row.
+// mission_attempts has a partial unique index guaranteeing at most one
+// open (completed_at is null) attempt per mission at a time, but ordering
+// by created_at desc + limit 1 (not filtering on completed_at) is the
+// literal "самая свежая запись" the task asked for and degrades safely
+// even if an older completed attempt were ever left around.
+export async function getStartedMissionProgress(
+  supabase: SupabaseServerClient,
+  userId: string,
+): Promise<StartedMissionProgress | null> {
+  const { data: startedMission } = await supabase
+    .from("missions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("status", "started")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!startedMission) return null;
+
+  const { data: attempt } = await supabase
+    .from("mission_attempts")
+    .select("current_step")
+    .eq("mission_id", startedMission.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!attempt) return null;
+
+  const stepCount = (startedMission as MissionRow).step_count;
+  const percent = stepCount > 0 ? Math.min(100, Math.round((attempt.current_step / stepCount) * 100)) : 0;
+  return { mission: startedMission as MissionRow, currentStep: attempt.current_step, percent };
+}
+
 const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 
 // The DB-touching half of generation (plan doc §7/§20): on-demand,
