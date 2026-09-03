@@ -65,7 +65,7 @@ test("visible focus outline is applied on nav links via real keyboard navigation
 test("analytics: track() calls added in this slice never pass user content, only enums/routes/booleans", () => {
   const filesToScan = [
     "src/app/(app)/home/today-analytics.tsx",
-    "src/components/product/primary-action-card.tsx",
+    "src/components/product/today/hero-card.tsx",
     "src/components/product/app-shell/desktop-sidebar.tsx",
     "src/components/product/app-shell/mobile-bottom-nav.tsx",
     "src/components/product/today/continue-learning-card.tsx",
