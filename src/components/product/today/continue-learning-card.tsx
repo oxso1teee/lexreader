@@ -1,10 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { track } from "@/lib/posthog-client";
-import ProgressBar from "@/components/product/progress-bar";
+import { coverGradient, coverInitials } from "@/lib/text-cover";
 import EmptyState from "@/components/empty-state";
 
+// Today mockup alignment — референс: горизонтальная карточка с маленькой
+// обложкой 32×42 (тот же градиент-по-заголовку, что уже используют
+// library-featured-card.tsx/library-item-card.tsx через text-cover.ts,
+// без новых запросов к БД — coverGradient/coverInitials чистые функции
+// от title), название + "Продолжить · N%", шеврон справа. Раньше это был
+// текст + отдельный ProgressBar под ним, без обложки вообще.
 export default function ContinueLearningCard({
   material,
 }: {
@@ -12,7 +19,7 @@ export default function ContinueLearningCard({
 }) {
   if (!material) {
     return (
-      <div className="rounded-xl bg-[var(--surface)] p-4 shadow-sm">
+      <div className="rounded-2xl bg-card p-4 shadow-sm">
         <EmptyState
           icon="📖"
           title="Пока нет материала в процессе"
@@ -27,17 +34,27 @@ export default function ContinueLearningCard({
     );
   }
 
+  const [gradientA, gradientB] = coverGradient(material.title);
+  const initials = coverInitials(material.title);
+
   return (
     <Link
       href={`/read/${material.textId}`}
       onClick={() => track("continue_learning_clicked", { destination: `/read/${material.textId}` })}
-      className="focus-ring block rounded-xl bg-[var(--surface)] p-4 shadow-sm"
+      className="focus-ring flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-card p-[11px] shadow-sm"
     >
-      <p className="text-caption uppercase tracking-wide">Продолжить чтение</p>
-      <p className="text-body mt-1 truncate font-semibold">{material.title}</p>
-      <div className="mt-2">
-        <ProgressBar ratio={material.percentRead / 100} label={`${material.percentRead}% прочитано`} />
+      <span
+        aria-hidden="true"
+        className="flex h-[42px] w-8 shrink-0 items-center justify-center rounded-[6px] text-[9px] font-bold text-white/70"
+        style={{ background: `linear-gradient(150deg, ${gradientA}, ${gradientB})` }}
+      >
+        {initials}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[12px] font-bold">{material.title}</p>
+        <p className="text-[10px] text-[var(--text-secondary)]">Продолжить · {material.percentRead}%</p>
       </div>
+      <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--text-secondary)]" />
     </Link>
   );
 }

@@ -5,19 +5,28 @@ import { usePathname } from "next/navigation";
 import { track } from "@/lib/posthog-client";
 import { NAV_ITEMS } from "./nav-items";
 
-// Замена (app)/nav.tsx: та же вёрстка/поведение (сохраняем существующий
-// UX, docs/ui/current-ui-audit.md §2), плюс aria-current для активного
-// пункта (был 0 в исходном файле) и safe-area padding снизу (viewportFit
-// теперь "cover" в src/app/layout.tsx — без paddingBottom здесь контент
-// nav оказался бы под home-indicator на iOS).
+// Today mockup alignment — раньше сплошная полоса снизу (border-top,
+// flush с краями экрана), теперь плавающая карточка (inset 16px по
+// бокам/снизу, rounded-[20px], shadow, --card фон/--border), как в
+// референсе. Тот же список NAV_ITEMS (общий источник правды с
+// DesktopSidebar, docs/ui/route-map.md) — 5 реальных пунктов, не 4, как
+// на иллюстративном мокапе: сокращать список означало бы убрать реальный
+// route/функциональность, что прямо запрещено заданием.
+//
+// Референс просит forest на иконке+подписи активного таба — оставлено
+// как раньше (forest только на иконке, подпись — text-black/white): та
+// же --color-forest на белом даёт 3.73:1 против требуемых WCAG AA
+// 4.5:1 (найдено axe-core, комментарий ниже унаследован из исходного
+// файла) — не переносим известный, уже раз исправленный a11y-баг обратно
+// ради точного соответствия референсу.
 export default function MobileBottomNav() {
   const pathname = usePathname();
 
   return (
     <nav
       aria-label="Основная навигация"
-      className="sticky bottom-0 z-20 flex border-t border-black/10 bg-card/95 backdrop-blur dark:border-white/10 md:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="sticky bottom-4 z-20 mx-4 flex rounded-[20px] border border-[var(--border)] bg-card shadow-[0_8px_30px_-8px_rgba(0,0,0,0.25)] md:hidden"
+      style={{ marginBottom: "env(safe-area-inset-bottom)" }}
     >
       {NAV_ITEMS.map((item) => {
         const active = pathname.startsWith(item.href);
@@ -36,10 +45,7 @@ export default function MobileBottomNav() {
           >
             {/* Как и в DesktopSidebar — цвет бренда на иконке (декоративная
                 графика), не на тексте пункта: forest-текст на белом фоне
-                давал 3.73:1 против требуемых 4.5:1 (найдено axe-core). Это
-                унаследовано из исходного (app)/nav.tsx один в один — не
-                новая регрессия, но раз тестируем именно этот компонент
-                заново, чиним заодно. */}
+                давал 3.73:1 против требуемых 4.5:1 (найдено axe-core). */}
             <span className={active ? "text-forest" : ""} aria-hidden="true">
               <Icon />
             </span>
