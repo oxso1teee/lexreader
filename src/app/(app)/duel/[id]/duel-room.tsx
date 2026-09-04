@@ -268,10 +268,15 @@ export default function DuelRoom({
 function ScoreSide({ initials, score, isMe }: { initials: string; score: number; isMe: boolean }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
+      {/* Duel mockup alignment — my avatar keeps the forest gradient (same
+          pattern as /missions' hero banner), opponent's is a neutral badge
+          now, not a second forest-colored circle: forest is "me", not a
+          shared duel-branding color for both sides. */}
       <div
         className={`flex h-10 w-10 items-center justify-center rounded-full text-body-sm font-semibold ${
-          isMe ? "bg-forest text-white" : "bg-forest/15 text-[var(--color-forest-text)]"
+          isMe ? "text-white" : "bg-[var(--border-strong)] text-[var(--foreground)]"
         }`}
+        style={isMe ? { background: "linear-gradient(150deg, var(--color-forest), var(--color-forest-light))" } : undefined}
       >
         {initials}
       </div>
@@ -301,10 +306,33 @@ function RoundView({
       <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
         <p className="text-caption text-[var(--text-secondary)]">Раунд {round.index}</p>
         <p className="text-h3 my-2">{round.word}</p>
-        <p className="text-body-sm mb-3">
-          Правильный ответ: <strong>{round.correctAnswer}</strong>
-        </p>
-        <div className="flex justify-center gap-6 text-body-sm">
+        {/* Duel mockup alignment — same 4-option grid as the unanswered
+            state (round.options is still there after resolve), now with
+            highlighting instead of a plain "Правильный ответ: X" line
+            (removed — the grid already shows it, keeping both would say
+            the same thing twice). Non-interactive divs, not buttons — the
+            round is over, nothing here is clickable anymore. */}
+        <div className="flex flex-col gap-2">
+          {round.options.map((opt) => {
+            const isCorrect = opt === round.correctAnswer;
+            const isMyWrongPick = !isCorrect && opt === round.myAnswer?.answer;
+            return (
+              <div
+                key={opt}
+                className={`rounded-2xl border px-4 py-3 text-left ${
+                  isCorrect
+                    ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)] font-bold text-[var(--color-forest-text)]"
+                    : isMyWrongPick
+                      ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
+                      : "border-black/10 dark:border-white/15"
+                }`}
+              >
+                {opt}
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-3 flex justify-center gap-6 text-body-sm">
           <span className={round.myAnswer?.isCorrect ? "text-[var(--color-success-text)]" : "text-[var(--color-danger-text)]"}>
             Ты: {round.myAnswer?.answer || "—"} {round.myAnswer?.isCorrect ? "✓" : "✗"}
           </span>
