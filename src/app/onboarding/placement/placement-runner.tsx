@@ -12,11 +12,10 @@ export interface PublicPlacementQuestion {
   options: string[];
 }
 
-const TIER_LABEL: Record<PublicPlacementQuestion["tier"], string> = {
-  foundational: "Базовый",
-  intermediate: "Средний",
-  upper: "Продвинутый",
-};
+// Placement question mockup alignment — the tier badge that used to render
+// here (Базовый/Средний/Продвинутый) is gone from the question screen (not
+// in the reference, and the eyebrow's question-number already places you),
+// so this label lookup has no remaining call site.
 
 export default function PlacementRunner({
   questions,
@@ -147,35 +146,38 @@ export default function PlacementRunner({
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-10">
+      {/* Placement question mockup alignment — progress pills (left) and
+          Skip/Cancel (right) combined into one row; the tier badge
+          (TIER_LABEL) is dropped, not present in the reference and the
+          question number below already identifies where we are. */}
       <div className="mb-2 flex items-center justify-between">
-        <span className="rounded-full bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
-          {TIER_LABEL[q.tier]}
-        </span>
+        <div className="flex gap-1">
+          {questions.map((_, i) => (
+            <span
+              key={i}
+              className={`h-[3px] w-[13px] rounded-full ${i <= index ? "bg-[var(--color-forest-light)]" : "bg-[var(--border)]"}`}
+            />
+          ))}
+        </div>
         <button
           type="button"
           disabled={isPending}
           onClick={() => (isRetake ? router.push("/language-twin") : skip())}
-          className="focus-ring text-xs text-black/40 underline underline-offset-2 disabled:opacity-50 dark:text-white/40"
+          className="focus-ring text-[10.5px] text-[var(--text-secondary)] underline underline-offset-2 disabled:opacity-50"
         >
           {isRetake ? "Отмена" : "Пропустить"}
         </button>
       </div>
 
-      <p className="mb-1 text-sm text-black/50 dark:text-white/50" aria-live="polite">
-        Вопрос {index + 1} из {questions.length}
+      {/* Replaces the old standalone "Вопрос N из M" line -- same real
+          numbers, just folded into one eyebrow above the question.
+          aria-live carried over from that line so screen readers still get
+          an announcement each time the index changes. */}
+      <p className="mb-4 font-mono text-[10.5px] text-[var(--text-secondary)]" aria-live="polite">
+        Короткая проверка уровня · вопрос {index + 1} из {questions.length}
       </p>
-      {/* Точки прогресса — тот же паттерн, что review-session.tsx (screen 4):
-          forest-light для пройденных, border-strong для оставшихся. */}
-      <div className="mb-6 flex gap-1.5">
-        {questions.map((_, i) => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full ${i <= index ? "bg-[var(--color-forest-light)]" : "bg-[var(--border-strong)]"}`}
-          />
-        ))}
-      </div>
 
-      <h2 className="mb-4 text-xl font-semibold">{q.prompt}</h2>
+      <h2 className="mb-4 text-[15.5px] font-bold leading-snug">{q.prompt}</h2>
 
       <div className="flex flex-col gap-2">
         {q.options.map((opt, i) => (
@@ -184,10 +186,10 @@ export default function PlacementRunner({
             type="button"
             disabled={isPending}
             onClick={() => setSelected(i)}
-            className={`rounded-2xl border px-4 py-3 text-left transition-colors disabled:opacity-60 ${
+            className={`rounded-2xl border px-4 py-3 text-left text-[13px] transition-colors disabled:opacity-60 ${
               selected === i
                 ? "border-forest bg-forest/15 text-[var(--color-forest-text)]"
-                : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                : "border-[var(--border-strong)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
             }`}
           >
             {opt}
@@ -195,7 +197,7 @@ export default function PlacementRunner({
         ))}
       </div>
 
-      <p className="mt-3 text-xs text-black/40 dark:text-white/40">
+      <p className="mt-3 text-center text-[10.5px] text-[var(--text-secondary)]">
         Без подсказок «верно/неверно» — так результат честнее. Увидишь его целиком на следующем экране.
       </p>
 
