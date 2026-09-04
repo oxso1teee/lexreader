@@ -8,7 +8,7 @@ import { buildTimelineEntries } from "@/lib/language-twin/timeline";
 import { MIN_EVIDENCE_FOR_PROFILE } from "@/lib/language-twin/constants";
 import EmptyState from "@/components/empty-state";
 import PageHeader from "@/components/product/page-header";
-import { ConfidenceBadge, StatusBadge, TrendIndicator, CategoryBadge } from "@/components/product/language-twin/badges";
+import { ConfidenceBadge, StatusBadge, TrendIndicator, CategoryBadge, categoryLabel } from "@/components/product/language-twin/badges";
 import LanguageTwinUnavailable from "@/components/product/language-twin/unavailable";
 import TwinAvatar from "@/components/product/language-twin/twin-avatar";
 import { growthStage, GROWTH_STAGE_LABEL } from "@/lib/language-twin/growth";
@@ -147,12 +147,15 @@ export default async function LanguageTwinPage() {
   // здесь же, на профиле.
   const { data: resolvedPatternsData } = await supabase
     .from("language_error_patterns")
-    .select("id, title, category, status")
+    .select("id, title, category, status, last_seen_at")
     .eq("user_id", profile.id)
     .eq("status", "resolved")
     .order("last_seen_at", { ascending: false })
     .limit(2);
-  const resolvedPatterns = (resolvedPatternsData ?? []) as Pick<PatternRow, "id" | "title" | "category" | "status">[];
+  const resolvedPatterns = (resolvedPatternsData ?? []) as Pick<
+    PatternRow,
+    "id" | "title" | "category" | "status" | "last_seen_at"
+  >[];
 
   const { data: recsData } = await supabase
     .from("language_recommendations")
@@ -309,9 +312,23 @@ export default async function LanguageTwinPage() {
               <p className="text-sm text-[var(--text-secondary)]">Активных паттернов нет.</p>
             ) : (
               patterns.slice(0, 2).map((p) => (
-                <div key={p.id} className="flex items-start gap-2">
-                  <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-warning)]" />
-                  <p className="text-sm">{p.title}</p>
+                <div
+                  key={p.id}
+                  className="flex items-center gap-2.5 rounded-2xl border border-[var(--border)] bg-card px-3.5 py-2.5"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]"
+                  >
+                    ●
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{p.title}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      Обновлено {new Date(p.last_seen_at).toLocaleDateString("ru-RU")}
+                    </p>
+                  </div>
+                  <TrendIndicator trend={p.trend} />
                 </div>
               ))
             )}
@@ -329,10 +346,22 @@ export default async function LanguageTwinPage() {
           </div>
           <div className="flex flex-col gap-2">
             {resolvedPatterns.map((p) => (
-              <div key={p.id} className="flex flex-wrap items-center gap-2">
-                <CategoryBadge category={p.category} />
-                <StatusBadge status={p.status} />
-                <p className="text-sm">{p.title}</p>
+              <div
+                key={p.id}
+                className="flex items-center gap-2.5 rounded-2xl border border-[var(--border)] bg-card px-3.5 py-2.5"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-success)]/15 text-[var(--color-success-text)]"
+                >
+                  ✓
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{p.title}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {categoryLabel(p.category)} · последнее наблюдение {new Date(p.last_seen_at).toLocaleDateString("ru-RU")}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
