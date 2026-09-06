@@ -174,7 +174,7 @@ document.body.appendChild(tag);
 **Как чинить**: `fetch(..., { redirect: "manual" })` + вручную проверять каждый `Location`-заголовок через `assertPublicUrl` перед тем, как следовать дальше (с ограничением числа переходов).
 
 #### 3.5 Health-check эндпоинт без авторизации жрёт общую квоту перевода (высокий)
-**Файл**: `src/app/api/health/translate/route.ts:7-26` — никакой аутентификации, никакого рейт-лимита, в отличие от настоящего `/api/translate`. `docs/OBSERVABILITY.md` прямо советует опрашивать этот URL внешним мониторингом каждые несколько минут — это уже само по себе способ незаметно съедать общий дневной лимит MyMemory (~5000 слов/день на всё приложение).
+**Файл**: `src/app/api/health/translate/route.ts:7-26` — никакой аутентификации, никакого рейт-лимита, в отличие от настоящего `/api/translate`. `docs/OBSERVABILITY.md` прямо советует опрашивать этот URL внешним мониторингом каждые несколько минут — это уже само по себе способ незаметно съедать общий дневной лимит MyMemory (~5000 символов/день на всё приложение).
 
 #### 3.6 Вебхук Stripe не обрабатывает `customer.subscription.updated` (высокий)
 **Файл**: `src/app/api/webhooks/stripe/route.ts` — switch покрывает только `checkout.session.completed`/`invoice.paid`/`invoice.payment_failed`/`customer.subscription.deleted`. Смена плана через Customer Portal (месяц→год, отложенная отмена) присылает именно `customer.subscription.updated`, который сейчас молча игнорируется — план в базе останется неверным до следующего `invoice.paid`.
