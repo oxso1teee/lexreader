@@ -106,14 +106,65 @@ create policy). Перепроверено построчно в этой сес
 См. `docs/release-2026-08-22/02_KRITICHNYE_BAGI_SEYCHAS.md` B.1 — статус
 обновлён 06.09.2026.
 
-### B.2 Гонка при проверке лимита переводов 30/мин (СРЕДНИЙ)
+### B.2 Гонка при проверке лимита переводов 30/мин — УЖЕ ИСПРАВЛЕНО миграцией 0045
 
-`docs/PRELAUNCH_AUDIT_2026-07-23.md`, раздел 3.3 — `select count` потом
-`insert`, не атомарно. Не нашёл следов перехода на атомарную проверку
-(например, RPC-функцию с `SELECT ... FOR UPDATE` или Postgres advisory
-lock). Не блокирует релиз в сторы, но стоит закрыть параллельно с
-разделом 3 (Безопасность), пока не набралась реальная пользовательская
-база, на которой это дорого воспроизводить и чинить.
+**Статус: ЗАКРЫТО** (22.08.2026, коммит `8f29d496` «fix(security): close
+B.2 — atomic translate rate-limit via advisory lock»). Аудитор 22.08.2026
+не нашёл следов перехода на атомарную проверку — но искал «create
+policy ... FOR UPDATE» или подобное, а фикс сделан через plpgsql-RPC, не
+через политику, поэтому миграция 0045 не похожа на ожидаемый паттерн.
+Перепроверено построчно в этой сессии.
+
+Что фактически сделано:
+
+- `supabase/migrations/0045_atomic_translate_rate_limit.sql`:
+  - `create or replace function public.check_translate_rate_limit(
+      p_owner_id uuid, p_limit integer, p_window_seconds integer)` —
+    plpgsql-RPC, делает insert+count+cleanup одним атомарным юнитом.
+  - `pg_advisory_xact_lock(hashtext('translate_requests'),
+      hashtext(p_owner_id::text))` — per-owner транзакционный advisory
+    lock: сериализует только параллельные вызовы для одного и того же
+    пользователя, разные пользователи друг друга не блокируют,
+    автоматически освобождается на commit/rollback.
+  - INSERT записи в `translate_requests` и `SELECT count(*) WHERE
+    owner_id = p_owner_id AND requested_at >= now() - window` под одной
+    блокировкой → каждый последующий вызов видит INSERT предыдущего.
+  - `revoke all ... from public/anon/authenticated` + `grant execute to
+    service_role` — функция недоступна обычному пользователю, обход
+    лимита через прямой PostgREST невозможен.
+- `src/lib/translate-request.ts:17-32` (`checkRateLimit`) — старый
+  трёхшаговый `select-then-insert` заменён на один `rpc("check_translate_rate_limit", ...)`
+  через service_role. Fail-closed: RPC-ошибка → `return false`
+  (никогда не «молчаливо разрешить» при сбое БД).
+- `src/app/api/translate/route.ts` и
+  `src/app/api/extension/translate-and-save/route.ts` используют тот же
+  `checkRateLimit` — единая квота 30/мин per-user независимо от того,
+  откуда пришёл запрос (cookie-сессия или Bearer-токен расширения).
+- `e2e/translate-rate-limit-race.spec.ts` — регрессионный тест: 40
+  параллельных RPC-вызовов одного пользователя против лимита 10 →
+  `expect(allowedCount).toBe(LIMIT)` и `expect(recordedCount).toBe(40)`
+  под **настоящим** Postgres (нужен реальный lock, mock не докажет).
+  Тест ловит регрессию: если кто-то случайно уберёт advisory lock или
+  изменит ключи — этот тест упадёт в CI.
+
+Свойства безопасности этой реализации:
+
+1. **Атомарность** под высокой параллельной нагрузкой: ровно
+   `LIMIT` разрешённых вызовов среди любого числа одновременных — это
+   именно то, что аудит требовал.
+2. **Cross-user не блокируется**: advisory lock захватывается per-owner,
+   пользователи друг друга не ждут.
+3. **Обход невозможен**: RPC доступна только `service_role`, обычные
+   пользователи не могут её вызвать через PostgREST.
+4. **Fail-closed**: сбой БД означает «отклонить запрос», не
+   «бесплатно пропустить».
+
+Связанная часть P0-АУДИТ 3.2 (пользователь стирал свою историю
+`translate_requests` через `for all` политику и обходил лимит) закрыта
+в `0014_harden_shared_tables_rls.sql` тем же двойным барьером
+(revoke grants + drop policy), что и для `translations_cache` — см. B.1.
+
+**Никакого фикса кода не требуется.** Статус обновлён 06.09.2026.
 
 ## C. Требует перепроверки перед тем, как чинить (не трогать вслепую)
 
