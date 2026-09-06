@@ -61,25 +61,50 @@ Data Safety/Privacy Nutrition Label (файл 05).
 
 ## B. Перепроверено из старых аудитов — подтверждено, ещё открыто
 
-### B.1 Кэш переводов может быть отравлен любым пользователем (СРЕДНИЙ-ВЫСОКИЙ)
+### B.1 Кэш переводов может быть отравлен любым пользователем — УЖЕ ИСПРАВЛЕНО миграцией 0014
 
-Из `docs/PRELAUNCH_AUDIT_2026-07-23.md`, раздел 3.1 — не нашёл следов
-исправления в текущих миграциях (`grep` по `translations_cache` не
-показывает новой политики, ограничивающей `insert`). Проверь
-`supabase/migrations/*translat*` и `src/app/api/translate/route.ts`
-своими глазами перед тем, как чинить — я не проверял это построчно
-сегодня, только что не увидел явной миграции-фикса в списке файлов.
+**Статус: ЗАКРЫТО** (22.07.2026, коммит `b991d827` «Fix all findings from
+pre-launch audit: security, bugs, i18n, CI»). Июльский аудитор 22.08.2026
+не нашёл следов исправления (`grep translations_cache` не дал ожидаемого
+хита, потому что 0014 названа `0014_harden_shared_tables_rls.sql`, не
+`*translat*`, и сам текст — это drop policy + revoke, а не новая
+create policy). Перепроверено построчно в этой сессии.
 
-**Сценарий**: пользователь напрямую вставляет заведомо неверный/
-оскорбительный перевод для частого слова раньше настоящего запроса —
-из-за `unique(source_text, source_lang, target_lang)` и
-`ignoreDuplicates: true` эта запись побеждает навсегда для всех
-пользователей, включая платных.
+Что фактически сделано:
 
-**Фикс**: то же, что предлагалось в июле — либо `insert` только через
-`service_role` (сервер сам пишет в кэш после успешного вызова MyMemory,
-клиент никогда не пишет напрямую), либо триггер на `before insert`,
-валидирующий, что запись создаётся из серверного контекста.
+- `supabase/migrations/0014_harden_shared_tables_rls.sql`, помеченный
+  `P0-АУДИТ 3.1`:
+  - `drop policy if exists "translations_cache: authenticated write" on translations_cache;`
+  - `revoke insert, update, delete on translations_cache from authenticated;`
+  - Политика SELECT (`translations_cache: authenticated read using (true)`)
+    оставлена — все авторизованные могут читать кэш.
+- `src/lib/translate-request.ts:52-60` (`cachedTranslate`) — запись в кэш
+  теперь идёт **только** через `createServiceClient()` после успешного
+  вызова MyMemory; клиентская роль больше не пишет в `translations_cache`
+  ни одним путём. Комментарий `P0-АУДИТ 3.1` явно объясняет почему.
+- `supabase/migrations/0045_atomic_translate_rate_limit.sql:67-70`
+  — `check_translate_rate_limit` доступна исключительно `service_role`,
+  никакой записи в `translate_requests` от `authenticated`.
+
+Двойной барьер после 0014:
+
+1. **RLS**: для роли `authenticated` нет ни одной политики, разрешающей
+   INSERT/UPDATE/DELETE на `translations_cache` → RLS режет любую попытку.
+2. **Grants**: `insert, update, delete` явно отозваны у `authenticated`
+   в 0014 → даже если RLS-политика случайно вернётся, Postgres вернёт
+   `42501 permission denied for table translations_cache`.
+
+Сценарий из июльского аудита (User A делает прямой `POST
+/rest/v1/translations_cache` с поддельным переводом, User B потом
+получает его через `/api/translate`) — нереализуем после применения
+0014. User A получит `42501 permission denied` ещё до RLS-чека.
+
+**Никакого фикса кода не требуется.** Если хочется страховки от
+регрессии в будущем — добавить один блок в существующий
+`e2e/rls-cross-user-isolation.spec.ts`: «authenticated user не может
+  INSERT/UPDATE/DELETE в `translations_cache`, но SELECT работает».
+См. `docs/release-2026-08-22/02_KRITICHNYE_BAGI_SEYCHAS.md` B.1 — статус
+обновлён 06.09.2026.
 
 ### B.2 Гонка при проверке лимита переводов 30/мин (СРЕДНИЙ)
 
