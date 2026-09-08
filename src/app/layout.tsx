@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import RegisterServiceWorker from "./register-service-worker";
 import { THEME_INIT_SCRIPT } from "./theme-init-script";
+import { siteUrl } from "@/lib/site-url";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Без metadataBase Next.js резолвит og:image/twitter:image относительно
+  // http://localhost:3000 в прод-сборке (warning при build) — расшаренная
+  // ссылка показывает битое превью. siteUrl() — тот же источник домена, что
+  // и письма сброса пароля / Stripe-редиректы (src/lib/site-url.ts).
+  metadataBase: new URL(siteUrl()),
   title: "LexReader",
   description: "Учи язык через чтение реальных текстов",
   manifest: "/manifest.json",
