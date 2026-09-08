@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { KNOWN_LEVEL } from "@/lib/word-level";
+import { KNOWN_LEVEL, syncStatusAndLevel } from "@/lib/word-level";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { findOrCreateFlashcard } from "@/lib/vocabulary/save";
 import { deriveItemType } from "@/lib/vocabulary/item-type";
@@ -19,9 +19,10 @@ export async function deleteWord(id: string) {
 export async function markKnown(id: string) {
   const profile = await requireProfile();
   const supabase = await createClient();
+  const { status, level } = syncStatusAndLevel(KNOWN_LEVEL);
   const { error } = await supabase
     .from("vocabulary_items")
-    .update({ status: "known", level: KNOWN_LEVEL })
+    .update({ status, level })
     .eq("id", id);
   if (error) throw new Error("Не удалось обновить слово.");
   await recordEvidence(supabase, {

@@ -53,6 +53,10 @@ export default async function PricingPage({
   // Теперь в реальном проде при неготовом Stripe показываем нейтральное
   // "недоступно" вместо тестового пути, а не тихо пускаем "покупку" мимо
   // настоящей оплаты.
+  // VERCEL_ENV автоматически задаётся Vercel: "production" / "preview" / "development".
+  // Локально он не задан. Используем его, чтобы отличить настоящий прод от
+  // превью/дева — в проде при неготовом Stripe показываем "временно недоступно",
+  // а не тестовую кнопку.
   const isRealProduction = process.env.NODE_ENV === "production" && process.env.VERCEL_ENV === "production";
   const showDevSimulation = !stripeReady && !isRealProduction;
   const showUnavailable = !stripeReady && isRealProduction;

@@ -36,6 +36,27 @@ async function getUserIdByEmail(supabase: ReturnType<typeof serviceClient>, emai
   return user.id;
 }
 
+// Fresh free-tier account plus its own anon-key session — the same "direct
+// PostgREST from outside the app" client the main test uses, here to prove
+// the free-tier limit *triggers* (not RLS) hold up against direct writes.
+async function createFreeUser(page: import("@playwright/test").Page, service: ReturnType<typeof serviceClient>) {
+  const email = await signUpFreshAccount(page);
+  await completeOnboardingForTest(email);
+  const userId = await getUserIdByEmail(service, email);
+  const client = await signInAnon(email);
+  return { userId, client };
+}
+
+async function getRegularDeckCount(service: ReturnType<typeof serviceClient>, userId: string): Promise<number> {
+  const { count } = await service.from("decks").select("id", { count: "exact", head: true }).eq("owner_id", userId).eq("is_starter", false);
+  return count ?? 0;
+}
+
+async function getRegularFlashcardCount(service: ReturnType<typeof serviceClient>, userId: string): Promise<number> {
+  const { count } = await service.from("flashcards").select("id", { count: "exact", head: true }).eq("owner_id", userId).eq("is_starter", false);
+  return count ?? 0;
+}
+
 test("a second user cannot read or write another user's subscriptions/texts/vocabulary_items/decks/flashcards via a direct Supabase client", async ({ page, browser }) => {
   const service = serviceClient();
 
@@ -160,4 +181,333 @@ test("a second user cannot read or write another user's subscriptions/texts/voca
   expect(finalVocab?.headword).toBe("a-headword");
   const { count: forgedTextsCount } = await service.from("texts").select("id", { count: "exact", head: true }).eq("owner_id", userIdA).eq("title", "forged");
   expect(forgedTextsCount ?? 0).toBe(0);
+});
+
+test("free user deck limit enforced at DB level via direct PostgREST", async ({ page }) => {
+  const service = serviceClient();
+  const { userId, client } = await createFreeUser(page, service);
+
+  const { data: sub } = await service.from("subscriptions").select("plan, status").eq("owner_id", userId).maybeSingle();
+  expect(sub, "user should have no subscription (free tier)").toBeNull();
+
+  const baselineRegularDecks = await getRegularDeckCount(service, userId);
+  const decksToCreate = 3 - baselineRegularDecks;
+
+  const testDeckIds: string[] = [];
+  for (let i = 0; i < decksToCreate; i++) {
+    const { data: deck, error } = await service.from("decks").insert({ owner_id: userId, name: `Test Regular Deck ${i}`, language: "en", is_starter: false }).select("id").single();
+    expect(error, `failed to create test regular deck ${i}`).toBeNull();
+    expect(deck).not.toBeNull();
+    testDeckIds.push(deck!.id);
+  }
+
+  const regularCountAfterSetup = await getRegularDeckCount(service, userId);
+  expect(regularCountAfterSetup).toBe(baselineRegularDecks + decksToCreate);
+
+  const { error: insertError4th } = await client.from("decks").insert({ owner_id: userId, name: "4th Regular Deck", language: "en", is_starter: false });
+  expect(insertError4th, "4th regular deck should be blocked by FREE_DECK_LIMIT_EXCEEDED trigger").not.toBeNull();
+  expect(String(insertError4th?.message).toUpperCase()).toContain("FREE_DECK_LIMIT_EXCEEDED");
+
+  const { data: starterDeck, error: starterError } = await client.from("decks").insert({ owner_id: userId, name: "Starter Deck", language: "en", is_starter: true }).select("id, is_starter").single();
+  expect(starterError, "starter deck insert should succeed").toBeNull();
+  expect(starterDeck).not.toBeNull();
+  expect(starterDeck!.is_starter).toBe(true);
+
+  const regularCountAfterStarter = await getRegularDeckCount(service, userId);
+  expect(regularCountAfterStarter).toBe(baselineRegularDecks + decksToCreate);
+
+  const { error: insertError4thAgain } = await client.from("decks").insert({ owner_id: userId, name: "4th Regular Deck Again", language: "en", is_starter: false });
+  expect(insertError4thAgain, "4th regular deck should still be blocked after starter deck").not.toBeNull();
+  expect(String(insertError4thAgain?.message).toUpperCase()).toContain("FREE_DECK_LIMIT_EXCEEDED");
+
+  await service.from("decks").delete().in("id", testDeckIds);
+  await service.from("decks").delete().eq("id", starterDeck!.id);
+});
+
+test("free user flashcard limit enforced at DB level via direct PostgREST", async ({ page }) => {
+  const service = serviceClient();
+  const { userId, client } = await createFreeUser(page, service);
+
+  const { data: sub } = await service.from("subscriptions").select("plan, status").eq("owner_id", userId).maybeSingle();
+  expect(sub).toBeNull();
+
+  const { data: deck, error: deckError } = await service.from("decks").insert({ owner_id: userId, name: "Test Deck", language: "en", is_starter: false }).select("id").single();
+  expect(deckError).toBeNull();
+  expect(deck).not.toBeNull();
+  const deckId = deck!.id;
+
+  const baselineRegularFlashcards = await getRegularFlashcardCount(service, userId);
+
+  const flashcardRows = Array.from({ length: 50 }, (_, i) => ({
+    deck_id: deckId,
+    owner_id: userId,
+    front: `word-${i}`,
+    back: `translation-${i}`,
+    language: "en",
+    item_type: "word",
+    normalized_key: `word-${i}`,
+    source_type: "manual",
+    is_starter: false,
+  }));
+  const { error: fcInsertError } = await service.from("flashcards").insert(flashcardRows);
+  expect(fcInsertError).toBeNull();
+
+  const regularCountAfterSetup = await getRegularFlashcardCount(service, userId);
+  expect(regularCountAfterSetup).toBe(baselineRegularFlashcards + 50);
+
+  const { error: insertError51st } = await client.from("flashcards").insert({
+    deck_id: deckId,
+    owner_id: userId,
+    front: "word-51",
+    back: "translation-51",
+    language: "en",
+    item_type: "word",
+    normalized_key: "word-51",
+    source_type: "manual",
+    is_starter: false,
+  });
+  expect(insertError51st, "51st regular flashcard should be blocked by FREE_FLASHCARD_LIMIT_EXCEEDED trigger").not.toBeNull();
+  expect(String(insertError51st?.message).toUpperCase()).toContain("FREE_FLASHCARD_LIMIT_EXCEEDED");
+
+  // Regression guard (migration 0051): at the flashcard limit, a plain edit
+  // of an existing card (no is_starter / owner_id change) must still succeed —
+  // the UPDATE trigger's WHEN clause is what keeps it from firing here.
+  const { data: anyRegularFc } = await service.from("flashcards").select("id").eq("owner_id", userId).eq("is_starter", false).eq("deck_id", deckId).limit(1).single();
+  const { error: benignEditError } = await client.from("flashcards").update({ back: "edited at the limit" }).eq("id", anyRegularFc!.id);
+  expect(benignEditError, "editing an existing card at the flashcard limit must be allowed").toBeNull();
+
+  const { data: starterFc, error: starterFcError } = await client.from("flashcards").insert({
+    deck_id: deckId,
+    owner_id: userId,
+    front: "starter-word",
+    back: "starter-translation",
+    language: "en",
+    item_type: "word",
+    normalized_key: "starter-word",
+    source_type: "manual",
+    is_starter: true,
+  }).select("id, is_starter").single();
+
+  expect(starterFcError, "starter flashcard insert should succeed (is_starter column exists per migration 0021)").toBeNull();
+  expect(starterFc).not.toBeNull();
+  expect(starterFc!.is_starter).toBe(true);
+
+  const regularCountAfterStarterFc = await getRegularFlashcardCount(service, userId);
+  expect(regularCountAfterStarterFc).toBe(baselineRegularFlashcards + 50);
+
+  const { error: insertError51stAgain } = await client.from("flashcards").insert({
+    deck_id: deckId,
+    owner_id: userId,
+    front: "word-51-again",
+    back: "translation-51-again",
+    language: "en",
+    item_type: "word",
+    normalized_key: "word-51-again",
+    source_type: "manual",
+    is_starter: false,
+  });
+  expect(insertError51stAgain, "51st regular flashcard should still be blocked after starter flashcard").not.toBeNull();
+  expect(String(insertError51stAgain?.message).toUpperCase()).toContain("FREE_FLASHCARD_LIMIT_EXCEEDED");
+
+  await service.from("flashcards").delete().eq("deck_id", deckId);
+  await service.from("decks").delete().eq("id", deckId);
+});
+
+test("update triggers for free tier limits: is_starter and owner_id changes", async ({ page, browser }) => {
+  const service = serviceClient();
+  const { userId, client } = await createFreeUser(page, service);
+
+  const { data: sub } = await service.from("subscriptions").select("plan, status").eq("owner_id", userId).maybeSingle();
+  expect(sub).toBeNull();
+
+  const baselineRegularDecks = await getRegularDeckCount(service, userId);
+  const decksToCreate = 3 - baselineRegularDecks;
+
+  const testDeckIds: string[] = [];
+  for (let i = 0; i < decksToCreate; i++) {
+    const { data: deck, error } = await service.from("decks").insert({ owner_id: userId, name: `Test Regular Deck ${i}`, language: "en", is_starter: false }).select("id").single();
+    expect(error, `failed to create test regular deck ${i}`).toBeNull();
+    expect(deck).not.toBeNull();
+    testDeckIds.push(deck!.id);
+  }
+
+  let regularCount = await getRegularDeckCount(service, userId);
+  expect(regularCount).toBe(baselineRegularDecks + decksToCreate);
+
+  // Regression guard (migration 0051): at the deck limit, a plain rename
+  // (nothing touching is_starter / owner_id) must NOT trip the free-limit
+  // trigger. Only is_starter / owner_id changes are limit-checked on UPDATE.
+  const { error: benignRenameError } = await client.from("decks").update({ name: "Renamed at the limit" }).eq("id", testDeckIds[0]);
+  expect(benignRenameError, "renaming an existing deck at the deck limit must be allowed").toBeNull();
+
+  const { data: starterTestDeck, error: starterTestDeckError } = await service.from("decks").insert({ owner_id: userId, name: "Starter Test Deck", language: "en", is_starter: true }).select("id, is_starter").single();
+  expect(starterTestDeckError).toBeNull();
+  expect(starterTestDeck).not.toBeNull();
+  expect(starterTestDeck!.is_starter).toBe(true);
+
+  regularCount = await getRegularDeckCount(service, userId);
+  expect(regularCount).toBe(baselineRegularDecks + decksToCreate);
+
+  const { error: updateToStarterError } = await client.from("decks").update({ is_starter: true }).eq("id", testDeckIds[0]);
+  expect(updateToStarterError, "regular -> starter update should succeed (frees slot)").toBeNull();
+
+  regularCount = await getRegularDeckCount(service, userId);
+  expect(regularCount).toBe(baselineRegularDecks + decksToCreate - 1);
+
+  const { error: insert4thAfterFree } = await client.from("decks").insert({ owner_id: userId, name: "4th After Free", language: "en", is_starter: false });
+  expect(insert4thAfterFree, "4th regular deck should succeed after regular->starter freed a slot").toBeNull();
+
+  regularCount = await getRegularDeckCount(service, userId);
+  expect(regularCount).toBe(baselineRegularDecks + decksToCreate);
+
+  // The bypass this migration exists to close: flipping a starter deck back
+  // to regular while already at the regular limit must be rejected.
+  const { error: updateToRegularError } = await client.from("decks").update({ is_starter: false }).eq("id", testDeckIds[0]);
+  expect(updateToRegularError, "starter -> regular update should be blocked at limit").not.toBeNull();
+  expect(String(updateToRegularError?.message).toUpperCase()).toContain("FREE_DECK_LIMIT_EXCEEDED");
+
+  const { data: verifyStarterStill } = await service.from("decks").select("is_starter").eq("id", testDeckIds[0]).single();
+  expect(verifyStarterStill?.is_starter).toBe(true);
+
+  // Flashcard UPDATE tests - use existing test deck (testDeckIds[1]) which is still regular
+  // Don't create a new regular deck for flashcards when at limit
+  const fcDeckId = testDeckIds[1];
+
+  const baselineRegularFlashcards = await getRegularFlashcardCount(service, userId);
+
+  const fcRows = Array.from({ length: 50 }, (_, i) => ({
+    deck_id: fcDeckId,
+    owner_id: userId,
+    front: `fc-word-${i}`,
+    back: `fc-translation-${i}`,
+    language: "en",
+    item_type: "word",
+    normalized_key: `fc-word-${i}`,
+    source_type: "manual",
+    is_starter: false,
+  }));
+  const { error: fcInsertError } = await service.from("flashcards").insert(fcRows);
+  expect(fcInsertError).toBeNull();
+
+  const regularFcCountAfterSetup = await getRegularFlashcardCount(service, userId);
+  expect(regularFcCountAfterSetup).toBe(baselineRegularFlashcards + 50);
+
+  const { data: starterFcRow, error: starterFcRowError } = await service.from("flashcards").insert({
+    deck_id: fcDeckId,
+    owner_id: userId,
+    front: "starter-fc",
+    back: "starter-fc-trans",
+    language: "en",
+    item_type: "word",
+    normalized_key: "starter-fc",
+    source_type: "manual",
+    is_starter: true,
+  }).select("id").single();
+  expect(starterFcRowError).toBeNull();
+  expect(starterFcRow).not.toBeNull();
+
+  const { data: regularFcRow } = await service.from("flashcards").select("id").eq("owner_id", userId).eq("is_starter", false).eq("deck_id", fcDeckId).limit(1).single();
+  expect(regularFcRow).not.toBeNull();
+
+  const { error: fcUpdateToStarter } = await client.from("flashcards").update({ is_starter: true }).eq("id", regularFcRow!.id);
+  expect(fcUpdateToStarter, "flashcard regular->starter update should succeed").toBeNull();
+
+  const regularFcCountAfterUpdate = await getRegularFlashcardCount(service, userId);
+  expect(regularFcCountAfterUpdate).toBe(baselineRegularFlashcards + 49);
+
+  // Flipping a starter card back to regular is limit-checked, but a BEFORE
+  // UPDATE trigger counts the pre-update state, so at 49 regular this brings
+  // the user to exactly 50 (the cap) — not past it. The next regular INSERT
+  // is still blocked, so this is a hard ceiling, not a bypass.
+  const { error: fcUpdateToRegular } = await client.from("flashcards").update({ is_starter: false }).eq("id", starterFcRow!.id);
+  expect(fcUpdateToRegular, "starter -> regular flashcard update lands exactly at the cap (49 -> 50)").toBeNull();
+
+  const regularFcCountAfterStarterToRegular = await getRegularFlashcardCount(service, userId);
+  expect(regularFcCountAfterStarterToRegular).toBe(baselineRegularFlashcards + 50);
+
+  const { data: verifyStarterFcStill } = await service.from("flashcards").select("is_starter").eq("id", starterFcRow!.id).single();
+  expect(verifyStarterFcStill?.is_starter).toBe(false);
+
+  // Owner_id change test - isolated from free-tier trigger
+  // Create second user, verify they exist
+  const contextB = await browser.newContext();
+  const pageB = await contextB.newPage();
+  let emailB: string;
+  try {
+    emailB = await signUpFreshAccount(pageB);
+    await completeOnboardingForTest(emailB);
+    const userIdB = await getUserIdByEmail(service, emailB);
+
+    // User A tries to UPDATE their deck to owner_id = userIdB
+    // This should be blocked by RLS (owner_id change not allowed by RLS policy)
+    const { error: ownerChangeError } = await client.from("decks").update({ owner_id: userIdB }).eq("id", testDeckIds[1]);
+    expect(ownerChangeError, "owner_id change should be blocked by RLS").not.toBeNull();
+
+    const { data: verifyOwnerUnchanged } = await service.from("decks").select("owner_id").eq("id", testDeckIds[1]).single();
+    expect(verifyOwnerUnchanged?.owner_id).toBe(userId);
+  } finally {
+    await contextB.close();
+  }
+
+  // Cleanup - only test-created rows
+  await service.from("flashcards").delete().eq("deck_id", fcDeckId);
+  await service.from("decks").delete().in("id", testDeckIds);
+  await service.from("decks").delete().eq("id", starterTestDeck!.id);
+});
+
+test("premium user unlimited via direct PostgREST", async ({ page }) => {
+  const service = serviceClient();
+  const { userId, client } = await createFreeUser(page, service);
+
+  await service.from("subscriptions").upsert({ owner_id: userId, plan: "premium_yearly", status: "active", current_period_end: new Date(Date.now() + 365 * 86_400_000).toISOString() });
+
+  const { data: sub } = await service.from("subscriptions").select("plan, status").eq("owner_id", userId).single();
+  expect(sub?.plan).toBe("premium_yearly");
+  expect(sub?.status).toBe("active");
+
+  const baselineRegularDecks = await getRegularDeckCount(service, userId);
+  const DECKS_TO_CREATE = 10;
+
+  const createdDeckIds: string[] = [];
+  for (let i = 0; i < DECKS_TO_CREATE; i++) {
+    const { data: deck, error } = await client.from("decks").insert({ owner_id: userId, name: `Premium Deck ${i}`, language: "en", is_starter: false }).select("id").single();
+    expect(error, `premium user should create deck ${i} over free limit`).toBeNull();
+    expect(deck).not.toBeNull();
+    createdDeckIds.push(deck!.id);
+  }
+
+  const finalRegularDecks = await getRegularDeckCount(service, userId);
+  expect(finalRegularDecks).toBe(baselineRegularDecks + DECKS_TO_CREATE);
+
+  const { data: fcDeck, error: fcDeckError } = await service.from("decks").insert({ owner_id: userId, name: "FC Premium Deck", language: "en", is_starter: false }).select("id").single();
+  expect(fcDeckError).toBeNull();
+  expect(fcDeck).not.toBeNull();
+  const fcDeckId = fcDeck!.id;
+
+  const baselineRegularFlashcards = await getRegularFlashcardCount(service, userId);
+  const FLASHCARDS_TO_CREATE = 60;
+
+  for (let i = 0; i < FLASHCARDS_TO_CREATE; i++) {
+    const { error } = await client.from("flashcards").insert({
+      deck_id: fcDeckId,
+      owner_id: userId,
+      front: `premium-word-${i}`,
+      back: `premium-trans-${i}`,
+      language: "en",
+      item_type: "word",
+      normalized_key: `premium-word-${i}`,
+      source_type: "manual",
+      is_starter: false,
+    });
+    expect(error, `premium user should create flashcard ${i} over free limit`).toBeNull();
+  }
+
+  const finalRegularFlashcards = await getRegularFlashcardCount(service, userId);
+  expect(finalRegularFlashcards).toBe(baselineRegularFlashcards + FLASHCARDS_TO_CREATE);
+
+  // Cleanup - only test-created rows by ID
+  await service.from("flashcards").delete().eq("deck_id", fcDeckId);
+  await service.from("decks").delete().eq("id", fcDeckId);
+  await service.from("decks").delete().in("id", createdDeckIds);
+  await service.from("subscriptions").delete().eq("owner_id", userId);
 });
