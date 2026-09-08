@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { touchStreak } from "@/lib/streak";
-import { statusFromLevel, KNOWN_LEVEL } from "@/lib/word-level";
+import { KNOWN_LEVEL, syncStatusAndLevel } from "@/lib/word-level";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { findOrCreateFlashcard } from "@/lib/vocabulary/save";
 import { addXp } from "@/lib/xp-actions";
@@ -52,9 +52,10 @@ export async function upsertWord(input: {
 
 export async function setWordLevel(vocabularyItemId: string, level: 0 | 1 | 2 | 3 | 4) {
   const supabase = await createClient();
+  const { status } = syncStatusAndLevel(level);
   const { error } = await supabase
     .from("vocabulary_items")
-    .update({ level, status: statusFromLevel(level) })
+    .update({ level, status })
     .eq("id", vocabularyItemId);
   if (error) throw new Error("Не удалось сохранить уровень слова.");
 
