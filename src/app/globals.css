@@ -18,17 +18,30 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-caramel: #a67c52;
-  --color-caramel-light: #b08968;
   --color-beige: #f5f1ea;
-  --color-indigo-card: #1e1b3a;
-  --color-navy-card: #1c2541;
+  /* redesign/duolingo-flat: --color-accent-green/orange are still used
+     directly by src/app/read/[textId]/reader.tsx's text-accent-orange/
+     text-accent-green classes (outside the success/warning semantic roles,
+     which now live in src/styles/tokens.css aliased to --leaf/--ember) —
+     kept as-is, untouched by this phase's palette swap.
+     --color-caramel/--color-caramel-light/--color-indigo-card/
+     --color-navy-card/--color-accent-purple removed — grepped for every
+     var(--color-caramel*)/bg-caramel/bg-indigo-card/bg-navy-card/
+     bg-accent-purple usage across src/, found none (every remaining hit
+     was a code comment describing the earlier caramel→forest migration,
+     not a live reference). */
   --color-accent-green: #16a34a;
   --color-accent-orange: #ea580c;
-  --color-accent-purple: #7c3aed;
   --color-accent-blue: #2563eb;
   --color-accent-red: #dc2626;
-  --font-sans: var(--font-geist-sans);
+  /* redesign/duolingo-flat: Unbounded (display/headings) + Onest (body) —
+     next/font/google, both loaded in src/app/layout.tsx with the latin+
+     cyrillic subsets (app is Russian-first). Geist Sans removed (no
+     component referenced --font-geist-sans/font-sans by name outside this
+     file — grepped), Geist Mono kept (font-mono is used in 8 files for
+     numeric displays, unrelated to this palette/type direction change). */
+  --font-display: var(--font-unbounded);
+  --font-sans: var(--font-onest);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -41,7 +54,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-onest), Arial, Helvetica, sans-serif;
 }
 
 /* Раздел 6 промта (docs/IMPLEMENTATION_PROMPT_2026-07-28.md): отклик при
