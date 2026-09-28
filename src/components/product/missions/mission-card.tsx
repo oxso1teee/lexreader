@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   BookMarked,
   BookOpenText,
+  Check,
   Compass,
   MessageSquareText,
   PenLine,
@@ -14,9 +15,9 @@ import {
 import { missionTypeLabel, difficultyLabel, MissionPriorityDot } from "./badges";
 import type { MissionRow, MissionStatus, MissionType } from "@/lib/missions/types";
 
-const STATUS_BADGE: Partial<Record<MissionStatus, { label: string; className: string }>> = {
+const STATUS_BADGE: Partial<Record<MissionStatus, { label: string; icon?: LucideIcon; className: string }>> = {
   started: { label: "В процессе", className: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]" },
-  completed: { label: "✓ Завершена", className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },
+  completed: { label: "Завершена", icon: Check, className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },
   dismissed: { label: "Отклонена", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
   expired: { label: "Истекла", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
 };
@@ -81,7 +82,8 @@ export default function MissionCard({ mission }: { mission: MissionRow }) {
       <div className="flex shrink-0 flex-col items-end gap-1.5">
         <MissionPriorityDot priority={mission.priority} />
         {statusBadge && (
-          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap ${statusBadge.className}`}>
+          <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap ${statusBadge.className}`}>
+            {statusBadge.icon && <statusBadge.icon aria-hidden="true" className="h-2.5 w-2.5" />}
             {statusBadge.label}
           </span>
         )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { track } from "@/lib/posthog-client";
@@ -113,9 +114,10 @@ export default function CorrectionForm() {
                 type="button"
                 onClick={handleSave}
                 disabled={isPending || saved}
-                className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
+                className="focus-ring inline-flex items-center gap-1.5 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
               >
-                {saved ? "✓ Сохранено в профиль" : "Сохранить в профиль"}
+                {saved && <Check aria-hidden="true" className="h-4 w-4" />}
+                {saved ? "Сохранено в профиль" : "Сохранить в профиль"}
               </button>
             </div>
           )}

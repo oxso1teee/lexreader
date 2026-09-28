@@ -8,6 +8,7 @@ import { isoWeekStart } from "@/lib/iso-week";
 import { getActivePathStateAction } from "../learning-paths/actions";
 import LanguageTwinSummaryCard from "@/components/product/language-twin/summary-card";
 import Link from "next/link";
+import { Share2 } from "lucide-react";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
@@ -463,9 +464,10 @@ export default async function ProgressPage({
       <a
         href="/api/share-card"
         download="lexreader-progress.png"
-        className="block rounded-2xl bg-card p-4 text-center text-sm font-medium shadow-sm"
+        className="flex items-center justify-center gap-1.5 rounded-2xl bg-card p-4 text-center text-sm font-medium shadow-sm"
       >
-        📤 Скачать карточку прогресса
+        <Share2 aria-hidden="true" className="h-4 w-4" />
+        Скачать карточку прогресса
       </a>
 
       <AchievementsShelf

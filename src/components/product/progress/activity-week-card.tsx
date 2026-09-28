@@ -1,3 +1,4 @@
+import { CalendarDays } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 import SectionHeader from "@/components/product/section-header";
 
@@ -27,7 +28,7 @@ export default function ActivityWeekCard({ data }: { data: ActivityWeekData }) {
         </div>
       ) : (
         <EmptyState
-          icon="📆"
+          icon={CalendarDays}
           title="Пока нет активности за неделю"
           body="Почитай что-нибудь или повтори карточки — активность появится здесь."
         />

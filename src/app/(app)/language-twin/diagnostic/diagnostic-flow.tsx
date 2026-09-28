@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { Compass } from "lucide-react";
 import { track } from "@/lib/posthog-client";
 import { DIAGNOSTIC_QUESTIONS } from "@/lib/language-twin/diagnostic";
 import { submitDiagnosticAction, type DiagnosticSubmitResult } from "../actions";
@@ -39,8 +40,8 @@ export default function DiagnosticFlow() {
     return (
       <div className="flex flex-col gap-3 rounded-2xl bg-card p-6 shadow-sm">
         <div className="flex flex-col items-center gap-1 text-center">
-          <span className="text-4xl" aria-hidden="true">
-            🧭
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-forest-tint)]">
+            <Compass aria-hidden="true" className="h-7 w-7 text-[var(--color-forest-text)]" />
           </span>
           <h2 className="text-lg font-bold">Профиль обновлён</h2>
           <p className="text-xs text-[var(--text-secondary)]">
@@ -81,8 +82,8 @@ export default function DiagnosticFlow() {
   if (!started) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-2xl bg-card p-6 text-center shadow-sm">
-        <span className="text-4xl" aria-hidden="true">
-          🧭
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-forest-tint)]">
+          <Compass aria-hidden="true" className="h-7 w-7 text-[var(--color-forest-text)]" />
         </span>
         <p className="text-sm text-[var(--text-secondary)]">
           Отвечай как получится — правильный ответ не обязателен. Диагностика не выдаёт точный CEFR-уровень,

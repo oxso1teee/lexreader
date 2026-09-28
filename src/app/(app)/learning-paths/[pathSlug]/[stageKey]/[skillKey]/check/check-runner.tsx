@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, PartyPopper, X } from "lucide-react";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -96,12 +97,12 @@ export default function CheckRunner({
                 <span>{opt}</span>
                 {showState && isCorrect && (
                   <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                    <span aria-hidden="true">✓</span> Верно
+                    <Check aria-hidden="true" className="h-3.5 w-3.5" /> Верно
                   </span>
                 )}
                 {isSelectedWrong && (
                   <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                    <span aria-hidden="true">✗</span> Неверно
+                    <X aria-hidden="true" className="h-3.5 w-3.5" /> Неверно
                   </span>
                 )}
               </button>
@@ -149,7 +150,10 @@ function ResultScreen({
   if (result.firstWinJustCompleted) {
     return (
       <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm" role="status" aria-live="polite">
-        <p className="text-lg font-bold">Отличное начало! 🎉</p>
+        <p className="flex items-center gap-2 text-lg font-bold">
+          <PartyPopper aria-hidden="true" className="h-5 w-5 text-[var(--color-forest-text)]" />
+          Отличное начало!
+        </p>
         <p className="text-sm text-[var(--text-secondary)]">
           {meta.body} Результат: {percent}%. Твой путь сохранён — дальше Today будет каждый день показывать, что делать
           следующим.

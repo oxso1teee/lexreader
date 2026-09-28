@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, X } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { track } from "@/lib/posthog-client";
 import Dialog from "@/components/product/language-twin/dialog";
@@ -90,7 +91,7 @@ function PatternDetail({
                   }}
                   className="focus-ring flex min-h-9 min-w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black disabled:opacity-40 dark:hover:text-white"
                 >
-                  ✕
+                  <X aria-hidden="true" className="h-4 w-4" />
                 </button>
               </div>
             ))}
@@ -105,9 +106,10 @@ function PatternDetail({
               track("pattern_marked_inaccurate", { category: pattern.category });
               startTransition(() => markPatternInaccurateAction(pattern.id));
             }}
-            className="focus-ring rounded-full border border-[var(--border-strong)] px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+            className="focus-ring inline-flex items-center gap-1 rounded-full border border-[var(--border-strong)] px-3 py-1.5 text-xs font-medium disabled:opacity-50"
           >
-            {metadata.markedInaccurate ? "✓ Отмечено как неточное" : "Отметить как неточное"}
+            {metadata.markedInaccurate && <Check aria-hidden="true" className="h-3.5 w-3.5" />}
+            {metadata.markedInaccurate ? "Отмечено как неточное" : "Отметить как неточное"}
           </button>
           {pattern.status === "dismissed" ? (
             <button

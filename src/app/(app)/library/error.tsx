@@ -4,6 +4,7 @@
 // server component's data fetch throws. reset() re-runs the segment, which
 // is a genuine retry, not a decorative button (docs/ui/m3-slice3-library-reader-plan.md §5).
 import { useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { log } from "@/lib/log";
 
 export default function LibraryError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -13,8 +14,8 @@ export default function LibraryError({ error, reset }: { error: Error & { digest
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center gap-3 px-5 py-20 text-center">
-      <span className="text-3xl" aria-hidden>
-        ⚠️
+      <span aria-hidden>
+        <AlertTriangle className="h-8 w-8 text-[var(--color-danger-text)]" />
       </span>
       <h1 className="text-h2">Не удалось загрузить библиотеку</h1>
       <p className="max-w-sm text-sm text-[var(--text-secondary)]">

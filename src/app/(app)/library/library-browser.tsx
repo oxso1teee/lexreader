@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Library, Search, X, Plus } from "lucide-react";
 import { track } from "@/lib/posthog-client";
 import EmptyState from "@/components/empty-state";
 import LibraryFeaturedCard from "./library-featured-card";
@@ -88,15 +89,16 @@ export default function LibraryBrowser({ items }: { items: LibraryItem[] }) {
   if (items.length === 0) {
     return (
       <EmptyState
-        icon="📚"
+        icon={Library}
         title="Библиотека пока пуста"
         body="Добавь первый текст, статью, YouTube-видео или PDF — LexReader сохранит незнакомые слова и предложит повторение."
         action={
           <a
             href="/library/new"
-            className="focus-ring mt-2 inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-forest)] px-5 text-sm font-bold text-white"
+            className="focus-ring mt-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-[var(--color-forest)] px-5 text-sm font-bold text-white"
           >
-            ＋ Добавить первый материал
+            <Plus aria-hidden="true" className="h-4 w-4" />
+            Добавить первый материал
           </a>
         }
       />
@@ -125,7 +127,7 @@ export default function LibraryBrowser({ items }: { items: LibraryItem[] }) {
               aria-label="Очистить поиск"
               className="focus-ring absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"
             >
-              ✕
+              <X aria-hidden="true" className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -154,7 +156,7 @@ export default function LibraryBrowser({ items }: { items: LibraryItem[] }) {
       {filtered.length === 0 ? (
         // Единственный материал в библиотеке — сам featured выше (не
         // настоящее пустое состояние, фильтровать/искать нечего).
-        !featured && <EmptyState icon="🔍" title="Ничего не нашлось" body="Попробуй другой запрос или сними фильтр." />
+        !featured && <EmptyState icon={Search} title="Ничего не нашлось" body="Попробуй другой запрос или сними фильтр." />
       ) : (
         <>
           <p className="text-xs text-[var(--text-secondary)]" aria-live="polite">

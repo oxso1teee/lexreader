@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useActionState } from "react";
 import { sendFeedback, type FeedbackState } from "./actions";
 
@@ -10,8 +11,8 @@ export default function FeedbackForm() {
     <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
       <h2 className="text-h3 mb-2">Обратная связь</h2>
       {state.ok ? (
-        <p role="status" className="text-body-sm text-[var(--color-success)]">
-          Спасибо, получили ✓
+        <p role="status" className="inline-flex items-center gap-1 text-body-sm text-[var(--color-success)]">
+          Спасибо, получили <Check aria-hidden="true" className="h-4 w-4" />
         </p>
       ) : (
         <form action={formAction} className="flex flex-col gap-2">

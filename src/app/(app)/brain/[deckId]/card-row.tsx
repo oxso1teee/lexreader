@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { Pencil, X } from "lucide-react";
 import { deleteFlashcard, updateFlashcard, type UpdateCardState } from "./actions";
 
 export default function CardRow({
@@ -93,7 +94,7 @@ export default function CardRow({
           className="flex min-h-11 min-w-11 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
           aria-label="Редактировать карточку"
         >
-          ✎
+          <Pencil aria-hidden="true" className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -102,7 +103,7 @@ export default function CardRow({
           className="flex min-h-11 min-w-11 items-center justify-center text-red-500 disabled:opacity-40"
           aria-label="Удалить карточку"
         >
-          ✕
+          <X aria-hidden="true" className="h-4 w-4" />
         </button>
       </div>
     </div>

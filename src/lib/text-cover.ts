@@ -13,27 +13,6 @@ const PALETTE: [string, string][] = [
   ["#4a6a5a", "#2e463c"],
 ];
 
-const TOPIC_EMOJI: Record<string, string> = {
-  coffee: "☕",
-  river: "🌊",
-  lake: "🌊",
-  friend: "🤝",
-  cat: "🐱",
-  letter: "✉️",
-  neighbor: "🏘️",
-  airport: "✈️",
-  bookshop: "📚",
-  cooking: "🍲",
-  city: "🏙️",
-  room: "🔍",
-  train: "🚆",
-  job: "💼",
-  interview: "💼",
-  rain: "🌧️",
-  house: "🏚️",
-  hill: "🏚️",
-};
-
 export function hashString(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
@@ -42,12 +21,6 @@ export function hashString(s: string): number {
 
 export function coverGradient(title: string): [string, string] {
   return PALETTE[hashString(title) % PALETTE.length];
-}
-
-export function coverEmoji(title: string): string {
-  const lower = title.toLowerCase();
-  const key = Object.keys(TOPIC_EMOJI).find((k) => lower.includes(k));
-  return key ? TOPIC_EMOJI[key] : "📄";
 }
 
 // M3 Slice 3: "professional-looking" gradient fallback per the artifact —

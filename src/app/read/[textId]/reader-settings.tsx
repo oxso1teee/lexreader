@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import {
   DEFAULT_READER_PREFS,
@@ -112,7 +113,7 @@ export default function ReaderSettings({
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-h3">Настройки чтения</h2>
           <button type="button" onClick={onClose} aria-label="Закрыть" className="focus-ring text-[var(--text-secondary)]">
-            ✕
+            <X aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { LANGUAGES, languageName } from "@/lib/languages";
@@ -499,7 +500,11 @@ function LearningPreferencesForm({
             {state.error}
           </p>
         )}
-        {state.saved && <p className="text-body-sm text-[var(--color-success)]">Сохранено ✓</p>}
+        {state.saved && (
+          <p className="inline-flex items-center gap-1 text-body-sm text-[var(--color-success)]">
+            Сохранено <Check aria-hidden="true" className="h-4 w-4" />
+          </p>
+        )}
       </div>
 
       <button

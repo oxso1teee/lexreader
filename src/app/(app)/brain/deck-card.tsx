@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
+import { Layers, ChevronRight, X } from "lucide-react";
 import { deleteDeck } from "./actions";
 
 export default function DeckCard({
@@ -61,8 +62,9 @@ export default function DeckCard({
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
-            📚 {cardCount} карт.
+          <p className="mt-0.5 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
+            <Layers aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+            {cardCount} карт.
             {dueCount !== undefined && newCount !== undefined && knownCount !== undefined && (
               <span>
                 {" "}
@@ -71,7 +73,7 @@ export default function DeckCard({
             )}
           </p>
         </div>
-        <span aria-hidden="true" className="text-black/30 dark:text-white/30">›</span>
+        <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-black/30 dark:text-white/30" />
       </Link>
       {/* Найдено при живой проверке: удаление колоды "Главная" ломает
           addPhraseToDefaultDeck (сохранение слова из читалки в карточку) —
@@ -87,7 +89,7 @@ export default function DeckCard({
           aria-label="Удалить колоду"
           className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-red-500 disabled:opacity-40 dark:border-white/15"
         >
-          ✕
+          <X aria-hidden="true" className="h-4 w-4" />
         </button>
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { Library, Type, MessageSquare } from "lucide-react";
 import type { VocabularyRow } from "@/lib/vocabulary-list";
 import { bulkMoveToDeck, bulkMarkKnown, bulkDeleteFlashcards } from "./actions";
 import NewDeckModal from "../new-deck-modal";
@@ -229,7 +230,14 @@ export default function VocabularyBrowser({
                 : "border-transparent text-[var(--text-secondary)] hover:text-black/70 dark:hover:text-white/70"
             }`}
           >
-            {s === "vocabulary" ? "Словарь" : "📚 Колоды"}
+            {s === "vocabulary" ? (
+              "Словарь"
+            ) : (
+              <>
+                <Library aria-hidden="true" className="h-4 w-4" />
+                Колоды
+              </>
+            )}
           </button>
         ))}
       </div>
@@ -388,7 +396,9 @@ export default function VocabularyBrowser({
 
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10 text-center">
-              <p className="text-2xl">🔤</p>
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-forest-tint)]">
+                <Type aria-hidden="true" className="h-6 w-6 text-[var(--color-forest-text)]" />
+              </span>
               <p className="font-medium">
                 {query || filter !== "all" || deckFilter !== "all" || sourceOnly
                   ? "Ничего не найдено по этим условиям"
@@ -419,8 +429,8 @@ export default function VocabularyBrowser({
                     className="focus-ring flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-medium">
-                        {r.isPhrase && <span aria-hidden="true">💬 </span>}
+                      <p className="flex items-center gap-1 truncate font-medium">
+                        {r.isPhrase && <MessageSquare aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />}
                         {r.front}
                       </p>
                       <p className="truncate text-sm text-[var(--text-secondary)]">

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { RotateCw, Compass, Download, Trash2 } from "lucide-react";
 import { track } from "@/lib/posthog-client";
 import Dialog from "@/components/product/language-twin/dialog";
 import type { LanguageTwinSettings } from "@/lib/language-twin/types";
@@ -108,29 +109,33 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
             type="button"
             disabled={isPending}
             onClick={handleRecompute}
-            className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="focus-ring inline-flex items-center gap-1.5 self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
           >
-            ↻ Пересчитать профиль сейчас
+            <RotateCw aria-hidden="true" className="h-4 w-4" />
+            Пересчитать профиль сейчас
           </button>
           <Link
             href="/language-twin/diagnostic"
-            className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
+            className="focus-ring inline-flex items-center gap-1.5 self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
           >
-            🧭 Обновить оценку (пройти диагностику ещё раз)
+            <Compass aria-hidden="true" className="h-4 w-4" />
+            Обновить оценку (пройти диагностику ещё раз)
           </Link>
           <a
             href="/api/export/data"
             download
-            className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
+            className="focus-ring inline-flex items-center gap-1.5 self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
           >
-            ⬇ Экспортировать все данные (включая Language Twin)
+            <Download aria-hidden="true" className="h-4 w-4" />
+            Экспортировать все данные (включая Language Twin)
           </a>
           <button
             type="button"
             onClick={() => setConfirmingReset(true)}
-            className="focus-ring self-start rounded-full border border-[var(--color-danger)] px-4 py-2 text-sm font-medium text-[var(--color-danger-text)]"
+            className="focus-ring inline-flex items-center gap-1.5 self-start rounded-full border border-[var(--color-danger)] px-4 py-2 text-sm font-medium text-[var(--color-danger-text)]"
           >
-            🗑 Сбросить Language Twin
+            <Trash2 aria-hidden="true" className="h-4 w-4" />
+            Сбросить Language Twin
           </button>
         </div>
         {toast && (

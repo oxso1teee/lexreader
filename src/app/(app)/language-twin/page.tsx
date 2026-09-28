@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Moon, Sprout, Share2 } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
@@ -44,7 +45,7 @@ export default async function LanguageTwinPage() {
         <LanguageTwinAnalytics confidence="none" />
         <PageHeader title="Мой английский" description="Language Twin сейчас выключен" />
         <EmptyState
-          icon="🌙"
+          icon={Moon}
           title="Language Twin выключен"
           body="Мы не собираем новых данных и не строим выводов, пока функция выключена. Включить можно в любой момент — уже накопленные данные никуда не денутся."
           action={<EnableToggleInline />}
@@ -81,7 +82,7 @@ export default async function LanguageTwinPage() {
         <LanguageTwinAnalytics confidence="none" />
         <PageHeader title="Мой английский" description={OVERVIEW_SUBTITLE} />
         <EmptyState
-          icon="🌱"
+          icon={Sprout}
           title="Пока недостаточно данных"
           body="Language Twin учится на твоей реальной активности — почитай что-нибудь, повтори карточки в Мозге или пройди короткую диагностику, и здесь появятся первые выводы."
           action={
@@ -202,9 +203,10 @@ export default async function LanguageTwinPage() {
         <a
           href="/api/language-twin/share-card"
           download="lexreader-language-twin.png"
-          className="focus-ring mt-2 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
+          className="focus-ring mt-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
         >
-          📤 Поделиться прогрессом
+          <Share2 aria-hidden="true" className="h-4 w-4" />
+          Поделиться прогрессом
         </a>
       </div>
 

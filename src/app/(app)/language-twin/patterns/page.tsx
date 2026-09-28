@@ -1,5 +1,6 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { Puzzle } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 import LanguageTwinSubHeader from "../sub-header";
 import PatternListClient from "./pattern-list-client";
@@ -39,7 +40,7 @@ export default async function LanguageTwinPatternsPage() {
       <LanguageTwinSubHeader title="Паттерны" description="Каждый паттерн подкреплён конкретными примерами из твоей активности" />
       {patterns.length === 0 ? (
         <EmptyState
-          icon="🧩"
+          icon={Puzzle}
           title="Паттернов пока нет"
           body="Как только накопится достаточно данных, здесь появятся конкретные паттерны с примерами из твоей активности."
         />

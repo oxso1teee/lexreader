@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Pencil } from "lucide-react";
 import { renameDeck } from "../actions";
 
 // M3 Slice 4 §11: name уже была mutable-колонкой, просто не было UI —
@@ -76,7 +77,7 @@ export default function DeckTitle({
         </span>
       )}
       <button type="button" onClick={() => setIsEditing(true)} aria-label="Переименовать колоду" className="flex min-h-9 min-w-9 shrink-0 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white">
-        ✎
+        <Pencil aria-hidden="true" className="h-4 w-4" />
       </button>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { completeLessonAction } from "../../../actions";
@@ -24,7 +25,7 @@ export default function CompleteLessonButton({
   if (alreadyCompleted) {
     return (
       <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-success-text)]">
-        <span aria-hidden="true">✓</span> Урок изучен
+        <Check aria-hidden="true" className="h-4 w-4" /> Урок изучен
       </span>
     );
   }

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowDown, ExternalLink } from "lucide-react";
 import { tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
 import type { TranscriptSourceTag } from "@/lib/types";
@@ -747,10 +748,10 @@ export default function WatchPlayer({
                 {playerFallback ? (
                   <>
                     <div
-                      className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-xl text-white"
+                      className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white"
                       aria-hidden="true"
                     >
-                      ↗
+                      <ExternalLink className="h-5 w-5" />
                     </div>
                     <h2 className="text-base font-bold text-white sm:text-lg">{playerFallback.title}</h2>
                     <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/70">
@@ -885,7 +886,8 @@ export default function WatchPlayer({
           onClick={resumeFollowing}
           className="focus-ring fixed inset-x-0 bottom-24 z-20 mx-auto flex min-h-11 w-fit items-center gap-1.5 rounded-full bg-[var(--color-forest)] px-4 text-sm font-bold text-white shadow-lg lg:bottom-6"
         >
-          ↓ Вернуться к текущей строке
+          <ArrowDown aria-hidden="true" className="h-4 w-4" />
+          Вернуться к текущей строке
         </button>
       )}
 

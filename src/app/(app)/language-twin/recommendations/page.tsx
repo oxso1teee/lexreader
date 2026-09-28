@@ -1,5 +1,6 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { Target } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 import LanguageTwinSubHeader from "../sub-header";
 import RecommendationCard, { type RecommendationCardData } from "../recommendation-card";
@@ -28,7 +29,7 @@ export default async function LanguageTwinRecommendationsPage() {
       <LanguageTwinSubHeader title="Рекомендации" description="Каждая рекомендация связана с конкретным паттерном или пробелом" />
 
       {(pending ?? []).length === 0 ? (
-        <EmptyState icon="🎯" title="Рекомендаций пока нет" body="Все текущие рекомендации выполнены — отличная работа, или пока недостаточно данных." />
+        <EmptyState icon={Target} title="Рекомендаций пока нет" body="Все текущие рекомендации выполнены — отличная работа, или пока недостаточно данных." />
       ) : (
         <div className="flex flex-col gap-3">
           {(pending as RecommendationCardData[]).map((rec) => (

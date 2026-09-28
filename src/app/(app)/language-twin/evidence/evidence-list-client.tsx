@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { track } from "@/lib/posthog-client";
 import type { EvidenceRow, EvidenceSourceType } from "@/lib/language-twin/types";
@@ -82,7 +83,7 @@ export default function EvidenceListClient({ evidence }: { evidence: EvidenceRow
                 onClick={() => handleDelete(e.id, e.source_type)}
                 className="focus-ring flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black disabled:opacity-40 dark:hover:text-white"
               >
-                ✕
+                <X aria-hidden="true" className="h-4 w-4" />
               </button>
             </div>
           ))

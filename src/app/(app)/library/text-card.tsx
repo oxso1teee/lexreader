@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
+import { Video, X } from "lucide-react";
 import { deleteText } from "./actions";
 
 const WORDS_PER_MINUTE = 200;
@@ -42,8 +43,8 @@ export default function TextCard({
         className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-black/10 px-4 py-3 transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
       >
         <span className="min-w-0 flex-1">
-        <p className="truncate font-medium">
-          {youtubeVideoId && "📺 "}
+        <p className="flex items-center gap-1.5 truncate font-medium">
+          {youtubeVideoId && <Video aria-hidden="true" className="h-4 w-4 shrink-0" />}
           {title}
         </p>
         <p className="text-sm text-black/50 dark:text-white/50">
@@ -70,9 +71,10 @@ export default function TextCard({
         <Link
           href={`/watch/${id}`}
           aria-label="Смотреть с субтитрами"
-          className="flex min-h-11 shrink-0 items-center justify-center rounded-full border border-black/10 px-3 text-sm font-medium dark:border-white/15"
+          className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-black/10 px-3 text-sm font-medium dark:border-white/15"
         >
-          📺 Смотреть
+          <Video aria-hidden="true" className="h-4 w-4" />
+          Смотреть
         </Link>
       )}
       {canDelete && (
@@ -83,7 +85,7 @@ export default function TextCard({
           aria-label="Удалить текст"
           className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-red-500 disabled:opacity-40 dark:border-white/15"
         >
-          ✕
+          <X aria-hidden="true" className="h-4 w-4" />
         </button>
       )}
     </div>

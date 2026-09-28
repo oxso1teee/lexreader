@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, ChevronRight, Play, PartyPopper, Search, Star } from "lucide-react";
 import WordRow from "./word-row";
 import EmptyState from "./empty-state";
 import AddWordModal from "./add-word-modal";
@@ -77,21 +77,34 @@ export default function NotebookClient({
           href={`/brain/${reviewDeckId}/review`}
           className="mb-4 flex items-center justify-between rounded-2xl bg-forest p-4 text-white shadow-sm"
         >
-          <span className="font-medium">
-            {reviewDueCount > 0 ? `▶ Учить (${reviewDueCount} к повторению)` : "🎉 Всё повторено"}
+          <span className="flex items-center gap-1.5 font-medium">
+            {reviewDueCount > 0 ? (
+              <>
+                <Play aria-hidden="true" className="h-4 w-4" />
+                Учить ({reviewDueCount} к повторению)
+              </>
+            ) : (
+              <>
+                <PartyPopper aria-hidden="true" className="h-4 w-4" />
+                Всё повторено
+              </>
+            )}
           </span>
-          <span>›</span>
+          <ChevronRight aria-hidden="true" className="h-4 w-4" />
         </Link>
       )}
 
       <>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="🔍 Поиск по тетради..."
-          className="mb-3 w-full rounded-lg border border-black/15 bg-card px-4 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
-        />
+        <div className="relative mb-3">
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Поиск по тетради..."
+            className="w-full rounded-lg border border-black/15 bg-card py-2 pl-9 pr-4 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          />
+        </div>
 
         <div className="mb-3 flex items-center justify-between">
           <a
@@ -110,7 +123,8 @@ export default function NotebookClient({
                 : "border-black/15 text-black/50 hover:border-black/30 dark:border-white/20 dark:text-white/50 dark:hover:border-white/40"
             }`}
           >
-            {favoritesOnly ? "★" : "☆"} Избранное
+            <Star aria-hidden="true" className="h-4 w-4" fill={favoritesOnly ? "currentColor" : "none"} />
+            Избранное
           </button>
         </div>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Playfair_Display } from "next/font/google";
 import { notFound } from "next/navigation";
+import { Check, PartyPopper } from "lucide-react";
 import { getPath, getAllSkills } from "@/lib/learning-paths/curriculum/index.ts";
 import { stageStatus } from "@/lib/learning-paths/progress-engine.ts";
 import { findCurrentFocusSkill } from "@/lib/learning-paths/progress-engine.ts";
@@ -102,7 +103,7 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
                                 : "bg-[var(--border)] text-[var(--text-secondary)]"
                           }`}
                         >
-                          {status === "completed" ? "✓" : index + 1}
+                          {status === "completed" ? <Check aria-label="Пройдено" className="h-4 w-4" /> : index + 1}
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-[12.5px] font-bold">{stage.title}</span>
@@ -201,7 +202,10 @@ function ActivePathHome({
             </Link>
           </div>
         ) : (
-          <p className="text-sm font-medium text-[var(--color-success-text)]">Путь завершён 🎉</p>
+          <p className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-success-text)]">
+            <PartyPopper aria-hidden="true" className="h-4 w-4" />
+            Путь завершён
+          </p>
         )}
 
         <PausePathButton pathSlug={pathSlug} />

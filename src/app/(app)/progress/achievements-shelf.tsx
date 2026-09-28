@@ -1,3 +1,4 @@
+import { Snowflake } from "lucide-react";
 import { ACHIEVEMENTS, WEEKLY_QUEST_TARGET } from "@/lib/achievements";
 
 export default function AchievementsShelf({
@@ -28,11 +29,11 @@ export default function AchievementsShelf({
             <div
               key={a.id}
               title={`${a.title} — ${a.description}`}
-              className={`flex h-14 w-14 items-center justify-center rounded-full bg-black/5 text-2xl dark:bg-white/10 ${
+              className={`flex h-14 w-14 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 ${
                 earned ? "border-2 border-forest" : "opacity-30 grayscale"
               }`}
             >
-              {a.icon}
+              <a.icon aria-hidden="true" className="h-6 w-6" />
             </div>
           );
         })}
@@ -49,7 +50,7 @@ export default function AchievementsShelf({
       </div>
 
       <div className="mt-2 flex items-center gap-2 rounded-lg bg-black/5 p-3 text-sm dark:bg-white/10">
-        <span>❄️</span>
+        <Snowflake aria-hidden="true" className="h-4 w-4 shrink-0" />
         <span>
           {streakFreezeAvailable
             ? "Заморозка стрика доступна — пропуск одного дня на этой неделе не обнулит серию"

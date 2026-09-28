@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { LANGUAGES, READY_LANGUAGES } from "@/lib/languages";
@@ -23,8 +24,9 @@ function WaitlistLanguageCell({ code, name }: { code: string; name: string }) {
 
   if (state.ok) {
     return (
-      <div className="rounded-lg border border-black/10 px-4 py-3 text-left text-sm text-black/50 dark:border-white/15 dark:text-white/50">
-        {name} — сообщим, когда будет готово ✓
+      <div className="flex items-center gap-1.5 rounded-lg border border-black/10 px-4 py-3 text-left text-sm text-black/50 dark:border-white/15 dark:text-white/50">
+        {name} — сообщим, когда будет готово
+        <Check aria-hidden="true" className="h-4 w-4 shrink-0" />
       </div>
     );
   }

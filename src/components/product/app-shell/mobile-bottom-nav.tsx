@@ -54,7 +54,7 @@ export default function MobileBottomNav() {
                 --card. --color-forest-text (~8.6:1 против --card в тёмной
                 теме) с большим запасом чист. */}
             <span className={active ? "text-[var(--color-forest-text)]" : ""} aria-hidden="true">
-              <Icon />
+              <Icon className="h-5 w-5" />
             </span>
             <span className="leading-none">{item.label}</span>
             <span

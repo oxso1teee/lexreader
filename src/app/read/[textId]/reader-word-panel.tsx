@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Check, Info, Plus, Volume2, X } from "lucide-react";
 import { WORD_LEVELS } from "@/lib/types";
 import { LEARNING_STATE_LABEL } from "@/lib/vocabulary/learning-state-label";
 import type { LearningState } from "@/lib/vocabulary-list";
@@ -69,7 +70,7 @@ export default function ReaderWordPanel({
               aria-label="Прослушать произношение"
               className="focus-ring flex min-h-11 min-w-11 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
             >
-              🔊
+              <Volume2 aria-hidden="true" className="h-4 w-4" />
             </button>
             {popup.isPhrase && (
               <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs">фраза</span>
@@ -151,8 +152,9 @@ export default function ReaderWordPanel({
                   </Link>
                 </div>
               )}
-              <p className="mt-2 text-xs text-[var(--text-secondary)]">
-                💬 Подробное объяснение в контексте пока недоступно — нет AI-провайдера для этого. Показан
+              <p className="mt-2 flex items-start gap-1 text-xs text-[var(--text-secondary)]">
+                <Info aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                Подробное объяснение в контексте пока недоступно — нет AI-провайдера для этого. Показан
                 только словарный перевод и исходное предложение.
               </p>
             </>
@@ -197,7 +199,11 @@ export default function ReaderWordPanel({
                     : "var(--color-forest)",
               }}
             >
-              {popup.isPhrase ? (popup.saved ? "✓" : "+") : popup.level === 4 ? "✓" : "+"}
+              {(popup.isPhrase ? popup.saved : popup.level === 4) ? (
+                <Check aria-hidden="true" className="h-4 w-4" />
+              ) : (
+                <Plus aria-hidden="true" className="h-4 w-4" />
+              )}
             </button>
           )}
           <button
@@ -206,7 +212,7 @@ export default function ReaderWordPanel({
             aria-label="Закрыть"
             className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center text-[var(--text-secondary)] hover:text-[var(--color-forest-text)]"
           >
-            ✕
+            <X aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
       </div>

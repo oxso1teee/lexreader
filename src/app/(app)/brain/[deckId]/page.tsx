@@ -7,6 +7,7 @@ import CardRow from "./card-row";
 import DeckTitle from "./deck-title";
 import DeleteDeckButton from "./delete-deck-button";
 import DeckAnalytics from "./deck-analytics";
+import { Layers } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 
 export default async function DeckPage({
@@ -72,7 +73,7 @@ export default async function DeckPage({
 
       {!cards || cards.length === 0 ? (
         <EmptyState
-          icon="🧠✨"
+          icon={Layers}
           title="В колоде пока нет карточек"
           body="Добавь вручную выше или через «Импорт» на экране «Мозг»."
         />

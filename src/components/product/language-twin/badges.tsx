@@ -1,3 +1,4 @@
+import { Check, CircleDot, HelpCircle, Minus, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 import type { ConfidenceLevel, PatternCategory, PatternStatus, Trend } from "@/lib/language-twin/types";
 
 // Same "text-safe variant only for text, not background" convention as
@@ -22,12 +23,19 @@ export function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
   );
 }
 
+// redesign/duolingo-flat phase 2: ●/✓/?/▲/▼ glyphs → lucide (one icon system).
 const STATUS_LABEL: Record<PatternStatus, string> = {
-  active: "● Активный",
-  improving: "● Улучшается",
-  resolved: "✓ Решено",
-  uncertain: "? Не уверены",
+  active: "Активный",
+  improving: "Улучшается",
+  resolved: "Решено",
+  uncertain: "Не уверены",
   dismissed: "Скрыт",
+};
+const STATUS_ICON: Partial<Record<PatternStatus, LucideIcon>> = {
+  active: CircleDot,
+  improving: TrendingUp,
+  resolved: Check,
+  uncertain: HelpCircle,
 };
 const STATUS_CLASS: Record<PatternStatus, string> = {
   active: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
@@ -38,8 +46,10 @@ const STATUS_CLASS: Record<PatternStatus, string> = {
 };
 
 export function StatusBadge({ status }: { status: PatternStatus }) {
+  const Icon = STATUS_ICON[status];
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLASS[status]}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLASS[status]}`}>
+      {Icon && <Icon aria-hidden="true" className="h-3 w-3" />}
       {STATUS_LABEL[status]}
     </span>
   );
@@ -49,18 +59,25 @@ export function TrendIndicator({ trend }: { trend: Trend }) {
   if (trend === "up") {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-success-text)]">
-        ▲ растёт<span className="sr-only"> (положительная динамика)</span>
+        <TrendingUp aria-hidden="true" className="h-3.5 w-3.5" />
+        растёт<span className="sr-only"> (положительная динамика)</span>
       </span>
     );
   }
   if (trend === "down") {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-danger-text)]">
-        ▼ снижается<span className="sr-only"> (отрицательная динамика)</span>
+        <TrendingDown aria-hidden="true" className="h-3.5 w-3.5" />
+        снижается<span className="sr-only"> (отрицательная динамика)</span>
       </span>
     );
   }
-  return <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]">— стабильно</span>;
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]">
+      <Minus aria-hidden="true" className="h-3.5 w-3.5" />
+      стабильно
+    </span>
+  );
 }
 
 const CATEGORY_LABEL: Record<PatternCategory, string> = {

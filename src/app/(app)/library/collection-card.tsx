@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Library } from "lucide-react";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -33,7 +34,10 @@ export default function CollectionCard({
       href={`/library/collections/${id}`}
       className="block rounded-lg border border-black/10 px-4 py-3 transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
     >
-      <p className="truncate font-medium">📚 {title}</p>
+      <p className="flex items-center gap-1.5 truncate font-medium">
+        <Library aria-hidden="true" className="h-4 w-4 shrink-0" />
+        {title}
+      </p>
       <p className="text-sm text-black/50 dark:text-white/50">{formatPartsCount(textCount)}</p>
       {lastReadAt && (
         <p className="mt-0.5 text-xs text-black/40 dark:text-white/40">

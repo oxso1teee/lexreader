@@ -3,13 +3,17 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Type, MessageSquare, Volume2, type LucideIcon } from "lucide-react";
 import { track } from "@/lib/posthog-client";
 import { bulkMoveToDeck, bulkMarkKnown, bulkDeleteFlashcards } from "../actions";
 import { updateFlashcard, type UpdateCardState } from "../../[deckId]/actions";
 import { LEARNING_STATE_LABEL } from "@/lib/vocabulary/learning-state-label";
 import type { VocabularyDetail } from "./page";
 
-const ITEM_TYPE_LABEL = { word: "🔤 Слово", phrase: "💬 Фраза" } as const;
+const ITEM_TYPE_LABEL: Record<"word" | "phrase", { icon: LucideIcon; label: string }> = {
+  word: { icon: Type, label: "Слово" },
+  phrase: { icon: MessageSquare, label: "Фраза" },
+};
 const SOURCE_LABEL = {
   reader: "Из чтения",
   manual: "Добавлено вручную",
@@ -97,8 +101,16 @@ export default function VocabularyItemDetail({
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl bg-card p-4 shadow-sm">
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
-            {ITEM_TYPE_LABEL[detail.itemType]}
+          <span className="inline-flex items-center gap-1 rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
+            {(() => {
+              const { icon: Icon, label } = ITEM_TYPE_LABEL[detail.itemType];
+              return (
+                <>
+                  <Icon aria-hidden="true" className="h-3 w-3" />
+                  {label}
+                </>
+              );
+            })()}
           </span>
           <span className="rounded-full bg-forest/15 px-2 py-0.5 text-xs font-medium text-[var(--color-forest-text)]">
             {LEARNING_STATE_LABEL[detail.learningState]}
@@ -155,7 +167,7 @@ export default function VocabularyItemDetail({
             <div className="mb-1 flex items-center gap-2">
               <h2 className="text-2xl font-bold">{detail.front}</h2>
               <button type="button" onClick={speak} aria-label="Произнести" className="focus-ring flex min-h-11 min-w-11 items-center justify-center">
-                🔊
+                <Volume2 aria-hidden="true" className="h-5 w-5" />
               </button>
             </div>
             <p className="mb-3 text-lg text-black/70 dark:text-white/70">{detail.back}</p>

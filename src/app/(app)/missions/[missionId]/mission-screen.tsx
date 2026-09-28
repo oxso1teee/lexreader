@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -127,7 +128,9 @@ export default function MissionScreen({
     return (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col items-center gap-2 rounded-2xl bg-card p-6 text-center shadow-sm">
-          <span className="text-4xl" aria-hidden="true">✓</span>
+          <span aria-hidden="true" className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-success)]/15">
+            <Check className="h-8 w-8 text-[var(--color-success-text)]" />
+          </span>
           <h2 className="text-lg font-bold">Миссия завершена</h2>
           {total > 0 && (
             <p className="text-sm text-[var(--text-secondary)]">

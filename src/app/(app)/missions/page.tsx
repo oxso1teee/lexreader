@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Playfair_Display } from "next/font/google";
+import { Target } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { getOrGenerateActiveMissions, getStartedMissionProgress } from "@/lib/missions/persist";
 import { createClient } from "@/lib/supabase/server";
@@ -69,7 +70,7 @@ export default async function MissionsPage() {
 
       {missions.length === 0 ? (
         <EmptyState
-          icon="🎯"
+          icon={Target}
           title="Пока нет активных миссий"
           body="Миссии появляются, когда в профиле «Мой английский» накопится достаточно данных — почитай что-нибудь, повтори карточки в Мозге или пройди мини-диагностику."
           action={

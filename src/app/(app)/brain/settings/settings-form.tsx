@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { CalendarDays, RefreshCw, Settings2, Library, Palette, Save } from "lucide-react";
 import type { SrsSettings } from "@/lib/types";
 import { updateSrsSettings, type SettingsFormState } from "./actions";
 
@@ -79,7 +80,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
   return (
     <form action={formAction} className="flex flex-col gap-6 pb-6">
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">📅 Дневные лимиты</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <CalendarDays aria-hidden="true" className="h-4 w-4" />
+          Дневные лимиты
+        </h2>
         <NumberField
           name="new_cards_per_day"
           label="Новых карточек в день"
@@ -97,7 +101,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">🔄 Направление изучения</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <RefreshCw aria-hidden="true" className="h-4 w-4" />
+          Направление изучения
+        </h2>
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm">Направление по умолчанию</span>
           <button
@@ -115,7 +122,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">⚙️ Алгоритм повторения (для продвинутых)</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <Settings2 aria-hidden="true" className="h-4 w-4" />
+          Алгоритм повторения (для продвинутых)
+        </h2>
         <NumberField
           name="starting_ease"
           label="Стартовый коэффициент лёгкости"
@@ -150,7 +160,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">📚 Интервалы «выпуска» карточки</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <Library aria-hidden="true" className="h-4 w-4" />
+          Интервалы «выпуска» карточки
+        </h2>
         <NumberField
           name="graduating_interval_days"
           label="Интервал после первого успеха (дней)"
@@ -168,7 +181,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">🎨 Отображение</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <Palette aria-hidden="true" className="h-4 w-4" />
+          Отображение
+        </h2>
         <Toggle name="show_timer" label="Показывать таймер" defaultChecked={settings.show_timer} />
         <Toggle
           name="autoplay_audio"
@@ -183,9 +199,16 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-emerald-600 py-3 font-bold text-black disabled:opacity-50"
+        className="flex items-center justify-center gap-1.5 rounded-full bg-emerald-600 py-3 font-bold text-black disabled:opacity-50"
       >
-        {pending ? "…" : "💾 Сохранить настройки"}
+        {pending ? (
+          "…"
+        ) : (
+          <>
+            <Save aria-hidden="true" className="h-4 w-4" />
+            Сохранить настройки
+          </>
+        )}
       </button>
     </form>
   );

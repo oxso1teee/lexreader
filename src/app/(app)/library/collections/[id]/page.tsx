@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Library } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
@@ -47,11 +48,14 @@ export default async function CollectionPage({
       <Link href="/library" className="text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white">
         ← Библиотека
       </Link>
-      <h1 className="mb-4 mt-2 text-xl font-semibold">📚 {collection.title}</h1>
+      <h1 className="mb-4 mt-2 flex items-center gap-2 text-xl font-semibold">
+        <Library aria-hidden="true" className="h-5 w-5" />
+        {collection.title}
+      </h1>
 
       {rows.length === 0 ? (
         <EmptyState
-          icon="📚"
+          icon={Library}
           title="В коллекции пока пусто"
           body="Добавь текст из Библиотеки и укажи эту коллекцию при сохранении."
         />

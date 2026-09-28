@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { Check, PartyPopper, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { track } from "@/lib/posthog-client";
 import { describeDuelError, DUEL_ROUND_TIME_LIMIT_MS, type DuelState } from "@/lib/duel";
@@ -219,9 +220,10 @@ export default function DuelRoom({
             <button
               type="button"
               onClick={handleCopyLink}
-              className="focus-ring flex min-h-11 shrink-0 items-center rounded-full bg-forest px-3 text-body-sm font-medium text-white"
+              className="focus-ring flex min-h-11 shrink-0 items-center gap-1 rounded-full bg-forest px-3 text-body-sm font-medium text-white"
             >
-              {copied ? "Скопировано ✓" : "Копировать"}
+              {copied ? "Скопировано" : "Копировать"}
+              {copied && <Check aria-hidden="true" className="h-4 w-4" />}
             </button>
           </div>
         </section>
@@ -242,8 +244,17 @@ export default function DuelRoom({
 
       {state.status === "finished" && (
         <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
-          <p className="text-h3 mb-1">
-            {state.isDraw ? "Ничья!" : state.winnerIsMe ? "Ты выиграл! 🎉" : "Соперник выиграл"}
+          <p className="text-h3 mb-1 flex items-center justify-center gap-1.5">
+            {state.isDraw ? (
+              "Ничья!"
+            ) : state.winnerIsMe ? (
+              <>
+                <PartyPopper aria-hidden="true" className="h-5 w-5" />
+                Ты выиграл!
+              </>
+            ) : (
+              "Соперник выиграл"
+            )}
           </p>
           {scoreRow}
           <div className="mt-4 flex flex-col items-center gap-2">
@@ -333,11 +344,13 @@ function RoundView({
           })}
         </div>
         <div className="mt-3 flex justify-center gap-6 text-body-sm">
-          <span className={round.myAnswer?.isCorrect ? "text-[var(--color-success-text)]" : "text-[var(--color-danger-text)]"}>
-            Ты: {round.myAnswer?.answer || "—"} {round.myAnswer?.isCorrect ? "✓" : "✗"}
+          <span className={`inline-flex items-center gap-1 ${round.myAnswer?.isCorrect ? "text-[var(--color-success-text)]" : "text-[var(--color-danger-text)]"}`}>
+            Ты: {round.myAnswer?.answer || "—"}{" "}
+            {round.myAnswer?.isCorrect ? <Check aria-label="верно" className="h-4 w-4" /> : <X aria-label="неверно" className="h-4 w-4" />}
           </span>
-          <span className={round.opponentAnswer?.isCorrect ? "text-[var(--color-success-text)]" : "text-[var(--color-danger-text)]"}>
-            Соперник: {round.opponentAnswer?.answer || "—"} {round.opponentAnswer?.isCorrect ? "✓" : "✗"}
+          <span className={`inline-flex items-center gap-1 ${round.opponentAnswer?.isCorrect ? "text-[var(--color-success-text)]" : "text-[var(--color-danger-text)]"}`}>
+            Соперник: {round.opponentAnswer?.answer || "—"}{" "}
+            {round.opponentAnswer?.isCorrect ? <Check aria-label="верно" className="h-4 w-4" /> : <X aria-label="неверно" className="h-4 w-4" />}
           </span>
         </div>
         <p className="text-caption mt-3 text-[var(--text-secondary)]">Следующий раунд скоро начнётся…</p>

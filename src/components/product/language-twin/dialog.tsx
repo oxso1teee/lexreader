@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
 // Slice 5 accessibility requirement (brief §29: "dialog focus trap; focus
@@ -74,7 +75,7 @@ export default function Dialog({
             aria-label="Закрыть"
             className="focus-ring flex min-h-9 min-w-9 items-center justify-center rounded-full"
           >
-            ✕
+            <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
         {children}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { BookOpen, ChevronRight } from "lucide-react";
 import { track } from "@/lib/posthog-client";
 import { coverGradient, coverInitials } from "@/lib/text-cover";
 import EmptyState from "@/components/empty-state";
@@ -21,7 +21,7 @@ export default function ContinueLearningCard({
     return (
       <div className="rounded-2xl bg-card p-4 shadow-sm">
         <EmptyState
-          icon="📖"
+          icon={BookOpen}
           title="Пока нет материала в процессе"
           body="Начни читать что-нибудь — прогресс появится здесь."
           action={

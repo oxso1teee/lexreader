@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createWorker } from "tesseract.js";
+import { FolderOpen, X, Camera } from "lucide-react";
 import { importFlashcards } from "./actions";
 import { FREE_FLASHCARD_LIMIT } from "@/lib/subscription";
 import { TESSERACT_LANG } from "@/lib/ocr-lang-map";
@@ -157,9 +158,10 @@ export default function ImportModal({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"
+        className="flex items-center gap-1.5 rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"
       >
-        📁 Импорт
+        <FolderOpen aria-hidden="true" className="h-4 w-4" />
+        Импорт
       </button>
     );
   }
@@ -211,7 +213,7 @@ export default function ImportModal({
                     className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-red-500"
                     aria-label="Удалить"
                   >
-                    ✕
+                    <X aria-hidden="true" className="h-4 w-4" />
                   </button>
                 </div>
               ))}
@@ -256,8 +258,9 @@ export default function ImportModal({
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium">1. Выберите источник</p>
-            <label className="cursor-pointer rounded-lg border border-black/20 px-4 py-3 text-center dark:border-white/25">
-              📁 Выбрать файл с карточками
+            <label className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-black/20 px-4 py-3 text-center dark:border-white/25">
+              <FolderOpen aria-hidden="true" className="h-4 w-4" />
+              Выбрать файл с карточками
               <input
                 type="file"
                 accept=".csv,.tsv,.txt,.json"
@@ -268,8 +271,9 @@ export default function ImportModal({
                 }}
               />
             </label>
-            <label className="cursor-pointer rounded-lg border border-black/20 px-4 py-3 text-center dark:border-white/25">
-              📸 Импорт с фото (OCR)
+            <label className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-black/20 px-4 py-3 text-center dark:border-white/25">
+              <Camera aria-hidden="true" className="h-4 w-4" />
+              Импорт с фото (OCR)
               <input
                 type="file"
                 accept="image/*"

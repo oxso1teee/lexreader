@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { PartyPopper } from "lucide-react";
 import { loadReviewSession, clearReviewSession, type ReviewSessionSnapshot } from "@/lib/review-session-resume";
 
 // useSyncExternalStore (not useState+useEffect): server and the first client
@@ -105,7 +106,10 @@ export default function PracticeHero({
           </Link>
         </div>
       ) : (
-        <p className="font-medium">🎉 Всё повторено!</p>
+        <p className="flex items-center gap-1.5 font-medium">
+          <PartyPopper aria-hidden="true" className="h-4 w-4" />
+          Всё повторено!
+        </p>
       )}
     </div>
   );

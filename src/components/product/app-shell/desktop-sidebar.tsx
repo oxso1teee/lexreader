@@ -57,7 +57,7 @@ export default function DesktopSidebar({
                   --card в тёмной теме) с огромным запасом чист и для этого
                   порога тоже. */}
               <span className={active ? "text-[var(--color-forest-text)]" : ""} aria-hidden="true">
-                <Icon />
+                <Icon className="h-5 w-5" />
               </span>
               <span>{item.label}</span>
             </Link>

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { X } from "lucide-react";
 import { coverGradient, coverInitials, youtubeThumbnailUrl } from "@/lib/text-cover";
 import { typeLabel, type LibraryItem } from "./library-item";
 import { deleteText } from "./actions";
@@ -76,7 +77,7 @@ export default function LibraryItemCard({ item }: { item: LibraryItem }) {
           aria-label={`Удалить «${item.title}»`}
           className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/35 text-white opacity-0 backdrop-blur-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-40"
         >
-          ✕
+          <X aria-hidden="true" className="h-4 w-4" />
         </button>
       )}
     </div>

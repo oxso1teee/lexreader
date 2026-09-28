@@ -1,5 +1,6 @@
 "use client";
 
+import { Frown } from "lucide-react";
 import { log } from "@/lib/log";
 
 export default function GlobalError({
@@ -13,7 +14,7 @@ export default function GlobalError({
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-      <p className="text-4xl">😕</p>
+      <Frown aria-hidden="true" className="h-10 w-10 text-[var(--text-secondary)]" />
       <h1 className="text-xl font-semibold">Что-то пошло не так</h1>
       <p className="text-sm text-black/60 dark:text-white/60">
         Произошла непредвиденная ошибка. Попробуй ещё раз — обычно это временный сбой.

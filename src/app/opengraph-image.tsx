@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { OgBookOpen } from "@/lib/og-icons";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -26,7 +27,12 @@ export default function Image() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ fontSize: 64, fontWeight: 800 }}>📖 LexReader</div>
+        {/* redesign/duolingo-flat phase 2: 📖 emoji → lucide BookOpen geometry
+            (src/lib/og-icons.tsx — lucide-react itself is client-only). */}
+        <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 64, fontWeight: 800 }}>
+          <OgBookOpen size={64} color="#fff" />
+          LexReader
+        </div>
         <div style={{ fontSize: 32, marginTop: 20, opacity: 0.9 }}>
           Учи язык через чтение реальных текстов
         </div>

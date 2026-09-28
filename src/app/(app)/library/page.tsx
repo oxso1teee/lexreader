@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Playfair_Display } from "next/font/google";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
@@ -158,9 +158,10 @@ export default async function LibraryPage() {
             </a>
             <Link
               href="/library/new"
-              className="focus-ring hidden min-h-11 items-center justify-center rounded-full bg-[var(--color-forest)] px-5 text-sm font-bold text-white sm:flex"
+              className="focus-ring hidden min-h-11 items-center justify-center rounded-full bg-[var(--color-forest)] px-5 text-sm font-bold text-white sm:flex sm:gap-1.5"
             >
-              ＋ Добавить материал
+              <Plus aria-hidden="true" className="h-4 w-4" />
+              Добавить материал
             </Link>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
+import { Camera, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { deleteWord, markKnown, setPhotoUrl, toggleFavorite } from "./actions";
 import { validateImageFile } from "@/lib/file-validation";
@@ -91,7 +92,7 @@ export default function WordRow({
           ) : uploading ? (
             <span className="text-xs">…</span>
           ) : (
-            <span className="text-lg">📷</span>
+            <Camera aria-hidden="true" className="h-5 w-5" />
           )}
           <input
             type="file"
@@ -111,7 +112,7 @@ export default function WordRow({
               aria-label={favorite ? "Убрать из избранного" : "Добавить в избранное"}
               className={`shrink-0 ${favorite ? "text-yellow-500" : "text-black/20 hover:text-black/40 dark:text-white/20 dark:hover:text-white/40"}`}
             >
-              {favorite ? "★" : "☆"}
+              <Star aria-hidden="true" className="h-4 w-4" fill={favorite ? "currentColor" : "none"} />
             </button>
             <span className="truncate">{headword}</span>
           </p>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Frown } from "lucide-react";
+
 export default function GlobalError({
   error,
   reset,
@@ -28,7 +30,7 @@ export default function GlobalError({
             fontFamily: "system-ui, sans-serif",
           }}
         >
-          <p style={{ fontSize: "2.5rem" }}>😕</p>
+          <Frown aria-hidden="true" size={40} color="rgba(0,0,0,0.6)" />
           <h1 style={{ fontSize: "1.25rem", fontWeight: 600 }}>Приложение не смогло загрузиться</h1>
           <p style={{ fontSize: "0.875rem", color: "rgba(0,0,0,0.6)" }}>
             Произошла непредвиденная ошибка. Попробуй обновить страницу.

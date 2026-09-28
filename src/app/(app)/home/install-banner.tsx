@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -49,8 +50,8 @@ export default function InstallBanner() {
 
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-black p-3.5 text-white dark:bg-white dark:text-black">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-forest text-lg">
-        📲
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-forest text-white">
+        <Download aria-hidden="true" className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">Установи LexReader</p>

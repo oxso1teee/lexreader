@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Flame, BookOpen, Library, Settings2, ChevronRight } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -73,8 +74,9 @@ export default async function BrainPage() {
         description={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
         action={
           profile.streak_current > 0 ? (
-            <span className="shrink-0 rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium dark:border-white/15">
-              🔥 Стрик {profile.streak_current}
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-black/10 px-3 py-1.5 text-sm font-medium dark:border-white/15">
+              <Flame aria-hidden="true" className="h-4 w-4" />
+              Стрик {profile.streak_current}
             </span>
           ) : undefined
         }
@@ -98,8 +100,11 @@ export default async function BrainPage() {
           href="/brain/vocabulary"
           className="flex items-center justify-between rounded-2xl bg-card px-4 py-3 text-sm shadow-sm"
         >
-          <span>📖 Слова из чтения · {readingWordCount}</span>
-          <span>›</span>
+          <span className="inline-flex items-center gap-1.5">
+            <BookOpen aria-hidden="true" className="h-4 w-4" />
+            Слова из чтения · {readingWordCount}
+          </span>
+          <ChevronRight aria-hidden="true" className="h-4 w-4" />
         </Link>
       ) : null}
 
@@ -110,15 +115,17 @@ export default async function BrainPage() {
       <div className="flex gap-2">
         <Link
           href="/brain/vocabulary"
-          className="flex-1 rounded-full bg-forest px-4 py-2 text-center text-sm font-medium text-white"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-forest px-4 py-2 text-center text-sm font-medium text-white"
         >
-          📚 Словарь и колоды
+          <Library aria-hidden="true" className="h-4 w-4" />
+          Словарь и колоды
         </Link>
         <Link
           href="/brain/settings"
-          className="rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"
+          className="flex items-center gap-1.5 rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"
         >
-          ⚙️ Настройки
+          <Settings2 aria-hidden="true" className="h-4 w-4" />
+          Настройки
         </Link>
       </div>
     </div>

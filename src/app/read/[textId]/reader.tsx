@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { BookOpen, Check, Keyboard, X } from "lucide-react";
 import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
 import { log } from "@/lib/log";
@@ -581,9 +582,7 @@ export default function Reader({
                 aria-label="Словарь"
                 className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/70 text-[var(--color-forest-text)] shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
               >
-                <span aria-hidden="true" className="text-base">
-                  📖
-                </span>
+                <BookOpen aria-hidden="true" className="h-[18px] w-[18px]" />
               </Link>
               <button
                 type="button"
@@ -640,9 +639,10 @@ export default function Reader({
             <button
               type="button"
               onClick={() => changeMode("assisted")}
-              className="focus-ring flex min-h-11 items-center self-start rounded-full border border-[var(--border-strong)] px-3.5 text-xs font-bold text-[var(--text-secondary)]"
+              className="focus-ring flex min-h-11 items-center self-start gap-1 rounded-full border border-[var(--border-strong)] px-3.5 text-xs font-bold text-[var(--text-secondary)]"
             >
-              ✕ Выйти из Focus
+              <X aria-hidden="true" className="h-3.5 w-3.5" />
+              Выйти из Focus
             </button>
           )}
 
@@ -865,9 +865,10 @@ export default function Reader({
                   type="button"
                   disabled={finishing}
                   onClick={handleFinish}
-                  className="focus-ring flex min-h-11 items-center justify-center rounded-full bg-[var(--color-success-text)]/15 px-4 text-sm font-bold text-[var(--color-success-text)] disabled:opacity-50"
+                  className="focus-ring flex min-h-11 items-center justify-center gap-1 rounded-full bg-[var(--color-success-text)]/15 px-4 text-sm font-bold text-[var(--color-success-text)] disabled:opacity-50"
                 >
-                  {finishing ? "…" : "Завершить ✓"}
+                  {finishing ? "…" : "Завершить"}
+                  {!finishing && <Check aria-hidden="true" className="h-4 w-4" />}
                 </button>
               )}
             </div>
@@ -918,8 +919,9 @@ export default function Reader({
                 Нажми на слово в тексте, чтобы посмотреть перевод
               </div>
             )}
-            <p className="text-xs text-[var(--text-secondary)]">
-              ⌨️ ← → — страница/часть · F — Focus · Esc — закрыть панель
+            <p className="flex items-start gap-1 text-xs text-[var(--text-secondary)]">
+              <Keyboard aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              ← → — страница/часть · F — Focus · Esc — закрыть панель
               {mode === "listening" ? " · Space — пауза/воспр." : ""}
             </p>
           </aside>
