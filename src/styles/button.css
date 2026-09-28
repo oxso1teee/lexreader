@@ -1,0 +1,99 @@
+/* redesign/duolingo-flat, phase 3 — "пухлая" кнопка: плоская заливка +
+   плотная нижняя кромка (inset box-shadow), при нажатии кромка исчезает и
+   кнопка проседает на её высоту. Никаких blur/drop-shadow. Цвета — только
+   через токены из tokens.css; вариант задаёт три custom properties
+   (--btn-fill/--btn-edge/--btn-label), механика общая для всех.
+
+   @layer components — чтобы Tailwind-утилиты на конкретной кнопке
+   (w-full, px-8 и т.п.) побеждали базовые значения отсюда. */
+@layer components {
+  .btn {
+    --btn-edge-h: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 16px;
+    background-color: var(--btn-fill);
+    color: var(--btn-label);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    box-shadow: inset 0 calc(-1 * var(--btn-edge-h)) 0 0 var(--btn-edge);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 80ms ease-out,
+      box-shadow 80ms ease-out,
+      filter 120ms ease-out;
+  }
+
+  .btn-md {
+    min-height: 3rem;
+    padding: 0.75rem 1.5rem calc(0.75rem + var(--btn-edge-h));
+    font-size: 1rem;
+  }
+
+  .btn-sm {
+    --btn-edge-h: 3px;
+    min-height: 2.25rem;
+    padding: 0.4rem 1rem calc(0.4rem + var(--btn-edge-h));
+    font-size: 0.875rem;
+  }
+
+  .btn-pill {
+    border-radius: 999px;
+  }
+
+  .btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .btn:active {
+    transform: translateY(var(--btn-edge-h));
+    box-shadow: inset 0 0 0 0 var(--btn-edge);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: none;
+    transform: none;
+    box-shadow: inset 0 calc(-1 * var(--btn-edge-h)) 0 0 var(--btn-edge);
+  }
+
+  .btn-leaf {
+    --btn-fill: var(--color-forest);
+    --btn-edge: var(--color-forest-deep);
+    --btn-label: #fff;
+  }
+
+  .btn-sky {
+    --btn-fill: var(--sky);
+    --btn-edge: var(--sky-edge);
+    --btn-label: #fff;
+  }
+
+  .btn-ember {
+    --btn-fill: var(--color-warning);
+    --btn-edge: var(--ember-edge);
+    --btn-label: #fff;
+  }
+
+  /* Отдельного токена для тёмной кромки нейтральной кнопки нет — берём
+     сам --surface-muted, затемнённый на 18%: одна формула работает и в
+     светлой, и в тёмной теме без второго значения. */
+  .btn-ghost {
+    --btn-fill: var(--surface-muted);
+    --btn-edge: color-mix(in oklab, var(--surface-muted), #000 18%);
+    --btn-label: var(--foreground);
+  }
+
+  .btn-danger {
+    --btn-fill: var(--color-danger);
+    --btn-edge: var(--danger-edge);
+    --btn-label: #fff;
+  }
+}

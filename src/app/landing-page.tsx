@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Playfair_Display } from "next/font/google";
+import { ButtonLink } from "@/components/ui/button";
 import { BookOpen, MousePointerClick, RotateCw, type LucideIcon } from "lucide-react";
 
 // docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
@@ -55,12 +56,9 @@ export default function LandingPage() {
               одним тапом и повторяй их по расписанию.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="/onboarding"
-                className="focus-ring flex min-h-12 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 font-medium text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90"
-              >
+              <ButtonLink href="/onboarding" variant="leaf">
                 Начать бесплатно
-              </Link>
+              </ButtonLink>
               <Link
                 href="/login"
                 className="focus-ring text-body-sm text-[var(--text-secondary)] underline underline-offset-2 sm:no-underline sm:hover:underline"
@@ -102,12 +100,9 @@ export default function LandingPage() {
 
         <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-5 px-6 py-16 text-center">
           <h2 className="text-h1 font-serif max-w-xl">Начни с текста, который правда хочется дочитать</h2>
-          <Link
-            href="/onboarding"
-            className="focus-ring flex min-h-12 items-center justify-center rounded-full bg-[var(--color-primary)] px-8 font-medium text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90"
-          >
+          <ButtonLink href="/onboarding" variant="leaf" className="px-8">
             Начать бесплатно
-          </Link>
+          </ButtonLink>
         </section>
       </main>
 
