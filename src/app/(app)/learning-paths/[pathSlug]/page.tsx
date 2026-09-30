@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Playfair_Display } from "next/font/google";
 import { notFound } from "next/navigation";
 import { Check, PartyPopper } from "lucide-react";
 import { getPath, getAllSkills } from "@/lib/learning-paths/curriculum/index.ts";
 import { stageStatus } from "@/lib/learning-paths/progress-engine.ts";
 import { findCurrentFocusSkill } from "@/lib/learning-paths/progress-engine.ts";
+import { ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { PathSlug } from "@/lib/learning-paths/types";
 import LearningPathsSubHeader from "../sub-header";
 import LearningPathsViewTracker from "../analytics";
@@ -15,15 +16,6 @@ import { StartPathButton, PausePathButton } from "../path-actions";
 // STAGE_STATUS_META lookup (✓/◐/○ + "Завершён"/"Сейчас"/"Впереди") with the
 // numbered-circle + real doneInStage/skillsInStage fraction design below;
 // no longer referenced anywhere in this file.
-//
-// Also: scoped Playfair Display italic for the hero's path title, same
-// pattern as library/page.tsx (--font-library-serif) and
-// read/[textId]/page.tsx (--font-reading) — local next/font/google load
-// right here, unique variable name, not the shared --font-serif.
-const playfairDisplay = Playfair_Display({
-  variable: "--font-path-hero",
-  subsets: ["latin", "cyrillic"],
-});
 
 export default async function LearningPathDetailsPage({ params }: { params: Promise<{ pathSlug: string }> }) {
   const { pathSlug: slugParam } = await params;
@@ -65,7 +57,7 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
         <PathDetailsBody pathSlug={pathSlug} enrollmentStatus={enrollment?.status ?? null} otherActivePathTitle={otherActivePath?.title ?? null} />
       )}
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <p className="mb-3 text-sm font-semibold">Этапы</p>
         {/* Path overview mockup alignment — doneInStage mirrors
             stageStatus()'s own byKey/content_completed_at logic
@@ -131,7 +123,7 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
             </ul>
           );
         })()}
-      </div>
+      </Card>
     </div>
   );
 }
@@ -172,11 +164,11 @@ function ActivePathHome({
           duel avatar). Confident/improving line moved down here, inside
           the same card, per the task. */}
       <div
-        className={`${playfairDisplay.variable} rounded-[20px] p-4 text-white`}
+        className="rounded-[20px] p-4 text-white"
         style={{ background: "linear-gradient(150deg, var(--color-forest), var(--color-forest-light))" }}
       >
         <p className="text-[10.5px] font-bold uppercase tracking-wide text-white/85">Мой путь</p>
-        <p className="mt-1 font-[family-name:var(--font-path-hero)] text-lg font-bold italic">{state.path.title}</p>
+        <p className="mt-1 font-display text-lg font-bold">{state.path.title}</p>
         <div className="mt-3 h-[7px] w-full overflow-hidden rounded-full bg-white/25">
           <span className="block h-full rounded-full bg-white transition-[width]" style={{ width: `${state.contentProgressPercent}%` }} />
         </div>
@@ -189,17 +181,14 @@ function ActivePathHome({
 
       {/* "Следующий шаг" + PausePathButton stay outside the hero, same
           wrapper/styling as before this task. */}
-      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm">
+      <Card className="flex flex-col gap-3">
         {focusSkill && stage ? (
           <div className="flex flex-col gap-2 rounded-2xl border border-[var(--border-strong)] p-3">
             <span className="text-xs text-[var(--text-secondary)]">Следующий шаг</span>
             <p className="text-sm font-medium">{focusSkill.title}</p>
-            <Link
-              href={`/learning-paths/${pathSlug}/${stage.key}/${focusSkill.key}`}
-              className="focus-ring self-start rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
-            >
+            <ButtonLink href={`/learning-paths/${pathSlug}/${stage.key}/${focusSkill.key}`} variant="leaf" size="sm" className="self-start">
               Продолжить
-            </Link>
+            </ButtonLink>
           </div>
         ) : (
           <p className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-success-text)]">
@@ -209,7 +198,7 @@ function ActivePathHome({
         )}
 
         <PausePathButton pathSlug={pathSlug} />
-      </div>
+      </Card>
     </div>
   );
 }

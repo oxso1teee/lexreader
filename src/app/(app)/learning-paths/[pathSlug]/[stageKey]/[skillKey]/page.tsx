@@ -1,26 +1,15 @@
-import Link from "next/link";
-import { Playfair_Display } from "next/font/google";
 import { notFound } from "next/navigation";
 import { getPath } from "@/lib/learning-paths/curriculum/index.ts";
 import { buildGrammarQuestionSet } from "@/lib/missions/grammar-bank";
 import { SkillStatusBadge } from "@/components/product/learning-paths/badges";
 import { ConfidenceBadge } from "@/components/product/language-twin/badges";
+import { ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { PathSlug } from "@/lib/learning-paths/types";
 import LearningPathsSubHeader from "../../../sub-header";
 import LearningPathsViewTracker from "../../../analytics";
 import { getSkillStateAction } from "../../../actions";
 import CompleteLessonButton from "./lesson-actions";
-
-// Learning Paths lesson mockup alignment — scoped Playfair Display italic
-// for skill.lesson.objective, same pattern as library/page.tsx
-// (--font-library-serif) and read/[textId]/page.tsx (--font-reading):
-// local next/font/google load right here (this file, not sub-header.tsx/
-// page-header.tsx — both out of scope), unique variable name, not the
-// shared --font-serif (only wired up in landing-page.tsx).
-const playfairDisplay = Playfair_Display({
-  variable: "--font-lesson-objective",
-  subsets: ["latin", "cyrillic"],
-});
 
 export default async function LearningPathSkillPage({
   params,
@@ -43,7 +32,7 @@ export default async function LearningPathSkillPage({
   const hasKnowledgeCheck = Boolean(skill.category) && buildGrammarQuestionSet(skill.category!, 1, "probe", skill.subTopic).length > 0;
 
   return (
-    <div className={`${playfairDisplay.variable} mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4`}>
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <LearningPathsViewTracker event="skill_opened" props={{ path_slug: pathSlug, skill_key: skill.key }} />
       <LearningPathsSubHeader title={skill.title} backHref={`/learning-paths/${pathSlug}/${stage.key}`} backLabel={stage.title} />
 
@@ -52,8 +41,8 @@ export default async function LearningPathSkillPage({
         {languageTwinSignal && <ConfidenceBadge level={languageTwinSignal.confidence} />}
       </div>
 
-      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm">
-        <p className="font-[family-name:var(--font-lesson-objective)] text-base font-semibold italic">
+      <Card className="flex flex-col gap-3">
+        <p className="font-display text-base font-semibold">
           {skill.lesson.objective}
         </p>
         <p className="text-sm text-[var(--text-secondary)]">{skill.lesson.explanation}</p>
@@ -96,50 +85,44 @@ export default async function LearningPathSkillPage({
         </div>
 
         <CompleteLessonButton pathSlug={pathSlug} skillKey={skill.key} alreadyCompleted={Boolean(progress?.content_completed_at)} />
-      </div>
+      </Card>
 
       {languageTwinSignal && (
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <Card>
           <p className="text-xs font-semibold text-[var(--text-secondary)]">Из твоего профиля «Мой английский»</p>
           <p className="mt-1 text-sm">{languageTwinSignal.patternTitle}</p>
           <p className="text-xs text-[var(--text-secondary)]">Наблюдений: {languageTwinSignal.evidenceCount}</p>
-        </div>
+        </Card>
       )}
 
-      <div className="flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm">
+      <Card className="flex flex-col gap-2">
         <p className="text-sm font-semibold">Практика</p>
         <div className="flex flex-wrap gap-2">
           {hasKnowledgeCheck && (
-            <Link
-              href={`/learning-paths/${pathSlug}/${stage.key}/${skill.key}/check`}
-              className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
-            >
+            <ButtonLink href={`/learning-paths/${pathSlug}/${stage.key}/${skill.key}/check`} variant="leaf" size="sm">
               Проверить себя
-            </Link>
+            </ButtonLink>
           )}
           {matchingMissionId ? (
-            <Link
-              href={`/missions/${matchingMissionId}`}
-              className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
-            >
+            <ButtonLink href={`/missions/${matchingMissionId}`} variant="ghost" size="sm">
               Потренировать
-            </Link>
+            </ButtonLink>
           ) : (
             <span className="rounded-full border border-dashed border-[var(--border-strong)] px-4 py-2 text-sm text-[var(--text-secondary)]">
               Активной миссии по этой теме пока нет
             </span>
           )}
-          <Link href="/brain" className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium">
+          <ButtonLink href="/brain" variant="ghost" size="sm">
             Открыть Практику
-          </Link>
-          <Link href="/library" className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium">
+          </ButtonLink>
+          <ButtonLink href="/library" variant="ghost" size="sm">
             Открыть библиотеку
-          </Link>
+          </ButtonLink>
         </div>
         {!hasKnowledgeCheck && (
           <p className="text-xs text-[var(--text-secondary)]">Автоматической проверки для этого навыка пока нет — используй Практику и чтение.</p>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

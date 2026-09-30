@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { completeLessonAction } from "../../../actions";
 import { track } from "@/lib/posthog-client";
+import { Button } from "@/components/ui/button";
 import type { PathSlug } from "@/lib/learning-paths/types";
 
 // Content completion only (plan doc's "never collapse content completion
@@ -39,13 +40,8 @@ export default function CompleteLessonButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isPending}
-      className="focus-ring self-start rounded-full bg-forest px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
-    >
+    <Button variant="leaf" onClick={handleClick} disabled={isPending} className="self-start">
       {isPending ? "…" : "Отметить как изученное"}
-    </button>
+    </Button>
   );
 }

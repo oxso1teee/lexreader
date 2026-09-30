@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPath } from "@/lib/learning-paths/curriculum/index.ts";
 import { findCurrentFocusSkill } from "@/lib/learning-paths/progress-engine.ts";
 import { SkillStatusBadge } from "@/components/product/learning-paths/badges";
+import { CardLink } from "@/components/ui/card";
 import type { PathSlug, SkillProgressRow } from "@/lib/learning-paths/types";
 import LearningPathsSubHeader from "../../sub-header";
 import LearningPathsViewTracker from "../../analytics";
@@ -36,9 +36,9 @@ export default async function LearningPathStagePage({ params }: { params: Promis
                 const isCurrent = focusSkill?.key === skill.key;
                 return (
                   <li key={skill.key}>
-                    <Link
+                    <CardLink
                       href={`/learning-paths/${pathSlug}/${stage.key}/${skill.key}`}
-                      className="focus-ring flex flex-col gap-1 rounded-2xl bg-card p-3 shadow-sm transition-shadow hover:shadow-md"
+                      className="focus-ring flex flex-col gap-1 p-3"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <SkillStatusBadge status={progress?.status ?? "not_started"} />
@@ -50,7 +50,7 @@ export default async function LearningPathStagePage({ params }: { params: Promis
                       </div>
                       <p className="text-sm font-medium">{skill.title}</p>
                       <p className="text-xs text-[var(--text-secondary)]">{skill.lesson.objective}</p>
-                    </Link>
+                    </CardLink>
                   </li>
                 );
               })}

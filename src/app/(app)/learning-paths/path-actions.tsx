@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { startPathAction, pausePathAction } from "./actions";
 import { track } from "@/lib/posthog-client";
+import { Button } from "@/components/ui/button";
 import type { PathSlug } from "@/lib/learning-paths/types";
 
 // M3 Slice 8 — every button here maps to a real persisted mutation (plan
@@ -36,14 +37,9 @@ export function StartPathButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isPending}
-      className="focus-ring self-start rounded-full bg-forest px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
-    >
+    <Button variant="leaf" onClick={handleClick} disabled={isPending} className="self-start">
       {isPending ? "…" : label}
-    </button>
+    </Button>
   );
 }
 
@@ -60,13 +56,8 @@ export function PausePathButton({ pathSlug }: { pathSlug: PathSlug }) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isPending}
-      className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
-    >
+    <Button variant="ghost" size="sm" onClick={handleClick} disabled={isPending} className="self-start">
       {isPending ? "…" : "Поставить на паузу"}
-    </button>
+    </Button>
   );
 }

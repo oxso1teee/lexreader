@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check, CircleDot, type LucideIcon } from "lucide-react";
+import { cardClassName } from "@/components/ui/card";
 import type { EnrollmentRow, LearningPath } from "@/lib/learning-paths/types";
 
 // M3 Slice 8 — Catalog card (plan doc's Path Catalog screen). No fake
@@ -16,7 +17,7 @@ export default function PathCard({ path, enrollment }: { path: LearningPath; enr
   return (
     <Link
       href={`/learning-paths/${path.slug}`}
-      className="focus-ring flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+      className={cardClassName({ interactive: true, className: "focus-ring flex flex-col gap-2" })}
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)] dark:bg-white/10">
