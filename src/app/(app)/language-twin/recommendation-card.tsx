@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { track } from "@/lib/posthog-client";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { reasonLabel } from "@/components/product/language-twin/badges";
 import { completeRecommendationAction, dismissRecommendationAction } from "./actions";
 
@@ -65,17 +66,12 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
       <p className="text-sm text-[var(--text-secondary)]">{reasonLabel(rec.reason_key)}</p>
       {!compact && (
         <div className="flex flex-wrap gap-2 pt-1">
-          <a href={target} onClick={handleOpen} className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white">
+          <ButtonLink href={target} onClick={handleOpen} variant="leaf" size="sm">
             {ACTION_LABEL[rec.action_type] ?? "Открыть"}
-          </a>
-          <button
-            type="button"
-            onClick={handleComplete}
-            disabled={isPending}
-            className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
-          >
+          </ButtonLink>
+          <Button variant="ghost" size="sm" onClick={handleComplete} disabled={isPending}>
             Выполнено
-          </button>
+          </Button>
           <button
             type="button"
             onClick={handleDismiss}
@@ -87,9 +83,9 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
         </div>
       )}
       {compact && (
-        <a href={target} onClick={handleOpen} className="focus-ring self-start rounded-full bg-forest px-4 py-2 text-sm font-medium text-white">
+        <ButtonLink href={target} onClick={handleOpen} variant="leaf" size="sm" className="self-start">
           {ACTION_LABEL[rec.action_type] ?? "Открыть"}
-        </a>
+        </ButtonLink>
       )}
     </div>
   );

@@ -2,7 +2,9 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Target } from "lucide-react";
 import EmptyState from "@/components/empty-state";
+import { Card } from "@/components/ui/card";
 import LanguageTwinSubHeader from "../sub-header";
+import { reasonLabel } from "@/components/product/language-twin/badges";
 import RecommendationCard, { type RecommendationCardData } from "../recommendation-card";
 
 export default async function LanguageTwinRecommendationsPage() {
@@ -39,19 +41,19 @@ export default async function LanguageTwinRecommendationsPage() {
       )}
 
       {(past ?? []).length > 0 && (
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <Card>
           <h2 className="mb-2 text-sm font-semibold">Завершено / скрыто</h2>
           <div className="flex flex-col divide-y divide-[var(--border)]">
             {(past ?? []).map((r) => (
               <div key={r.id} className="flex items-center justify-between gap-2 py-2 text-sm">
-                <span className="text-[var(--text-secondary)] line-through">{r.reason_key}</span>
+                <span className="text-[var(--text-secondary)] line-through">{reasonLabel(r.reason_key)}</span>
                 <span className="text-xs text-[var(--text-secondary)]">
                   {r.status === "completed" ? "Выполнено" : "Скрыто"}
                 </span>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

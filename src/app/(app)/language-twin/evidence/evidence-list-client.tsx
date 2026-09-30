@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { track } from "@/lib/posthog-client";
+import { Card } from "@/components/ui/card";
 import type { EvidenceRow, EvidenceSourceType } from "@/lib/language-twin/types";
 import { deleteEvidenceAction } from "../actions";
 
@@ -54,7 +55,7 @@ export default function EvidenceListClient({ evidence }: { evidence: EvidenceRow
             aria-pressed={filter === value}
             className={`focus-ring rounded-full border px-3 py-1.5 text-xs font-medium ${
               filter === value
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
                 : "border-[var(--border-strong)] text-[var(--text-secondary)]"
             }`}
           >
@@ -62,7 +63,7 @@ export default function EvidenceListClient({ evidence }: { evidence: EvidenceRow
           </button>
         ))}
       </div>
-      <div className="flex flex-col divide-y divide-[var(--border)] rounded-2xl bg-card p-2 shadow-sm">
+      <Card className="flex flex-col divide-y divide-[var(--border)] p-2">
         {filtered.length === 0 ? (
           <p className="p-3 text-sm text-[var(--text-secondary)]">Нет записей в этой категории.</p>
         ) : (
@@ -88,7 +89,7 @@ export default function EvidenceListClient({ evidence }: { evidence: EvidenceRow
             </div>
           ))
         )}
-      </div>
+      </Card>
     </div>
   );
 }
