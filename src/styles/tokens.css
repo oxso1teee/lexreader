@@ -64,9 +64,19 @@
      phase only establishes the values, no component reads them yet
      through anything but the forest/success/warning/info/danger aliases
      that already existed. */
-  --leaf: #4fce23;
-  --leaf-edge: #3aa617;
-  --leaf-deep: #2f8a12;
+  /* redesign/duolingo-flat phase 8 fix — the original #4fce23 gives white
+     label text on a leaf-filled button ~2:1 contrast (axe: serious
+     color-contrast violation on every leaf/forest button app-wide, old and
+     new alike, since --color-forest has always aliased this one value).
+     Darkened just enough to clear WCAG AA 4.5:1 with white text (computed
+     via the relative-luminance formula, not eyeballed — same method as
+     the -text values below), edge/deep scaled down proportionally so the
+     pressed-button 3D edge (box-shadow) and hover:bg-forest-deep states
+     stay visibly darker than the fill. -tint/-tint-strong/-text untouched
+     (independent values, not part of this contrast bug). */
+  --leaf: #2b820f;
+  --leaf-edge: #1c540a;
+  --leaf-deep: #123706;
   --leaf-tint: #e3f6d3;
   --leaf-tint-strong: #cdeeb0;
   --leaf-text: #166534;
@@ -143,9 +153,12 @@
      method as light-mode -text above, not yet axe-core-verified against a
      real dark --surface — deferred to the component-migration phase like
      everything else in this file. */
-  --leaf: #5fe038;
-  --leaf-edge: #4fce23;
-  --leaf-deep: #3aa617;
+  /* phase 8 fix (see :root above) — same white-on-leaf contrast problem,
+     independently computed for dark mode since the label stays white
+     regardless of theme; edge/deep scaled the same way. */
+  --leaf: #2e8412;
+  --leaf-edge: #1e560c;
+  --leaf-deep: #133708;
   --leaf-tint: #16371f;
   --leaf-tint-strong: #1c4a28;
   --leaf-text: #4ade80;
