@@ -22,7 +22,7 @@ function makeWords(seed: string): [string, string][] {
 
 async function createDeckWithCards(page: Page, words: [string, string][]): Promise<string> {
   await page.goto("/brain/vocabulary");
-  await page.getByRole("button", { name: "📚 Колоды" }).click();
+  await page.getByRole("button", { name: "Колоды", exact: true }).click();
   await page.getByRole("button", { name: "+ Новая колода" }).click();
   await page.getByPlaceholder("Название колоды...").fill(`E2E Deck Feedback ${Date.now()}`);
   await page.getByRole("button", { name: "Создать" }).click();

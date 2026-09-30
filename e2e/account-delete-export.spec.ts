@@ -87,7 +87,7 @@ test("deleting an account cascades across every user-owned table, not just auth.
 
   // 2. An explicit deck with a flashcard on it.
   await page.goto("/brain/vocabulary");
-  await page.getByRole("button", { name: "📚 Колоды" }).click();
+  await page.getByRole("button", { name: "Колоды", exact: true }).click();
   await page.getByRole("button", { name: "+ Новая колода" }).click();
   await page.getByPlaceholder("Название колоды...").fill(`E2E Delete Deck ${Date.now()}`);
   await page.getByRole("button", { name: "Создать" }).click();
