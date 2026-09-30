@@ -4,6 +4,8 @@ import { Check } from "lucide-react";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { track } from "@/lib/posthog-client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { checkCorrectionAction, saveCorrectionEvidenceAction, type CorrectionCheckResult } from "../actions";
 import { categoryLabel } from "@/components/product/language-twin/badges";
 import type { PatternCategory } from "@/lib/language-twin/types";
@@ -45,7 +47,7 @@ export default function CorrectionForm() {
   }
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <Card>
       <label htmlFor="correction-input" className="mb-1 block text-sm font-medium">
         Твоё предложение
       </label>
@@ -59,21 +61,12 @@ export default function CorrectionForm() {
         className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none"
       />
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={handleCheck}
-          disabled={isPending || text.trim().length === 0}
-          className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
+        <Button variant="leaf" size="sm" onClick={handleCheck} disabled={isPending || text.trim().length === 0}>
           {isPending ? "Проверяем…" : "Проверить"}
-        </button>
-        <button
-          type="button"
-          onClick={handleClear}
-          className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
-        >
+        </Button>
+        <Button variant="ghost" size="sm" onClick={handleClear}>
           Очистить
-        </button>
+        </Button>
       </div>
 
       {result && (
@@ -110,15 +103,10 @@ export default function CorrectionForm() {
             ))}
           {result.supported && result.matches.length > 0 && (
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isPending || saved}
-                className="focus-ring inline-flex items-center gap-1.5 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
-              >
+              <Button variant="ghost" size="sm" onClick={handleSave} disabled={isPending || saved} className="gap-1.5">
                 {saved && <Check aria-hidden="true" className="h-4 w-4" />}
                 {saved ? "Сохранено в профиль" : "Сохранить в профиль"}
-              </button>
+              </Button>
             </div>
           )}
           {saved && (
@@ -140,6 +128,6 @@ export default function CorrectionForm() {
           </p>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

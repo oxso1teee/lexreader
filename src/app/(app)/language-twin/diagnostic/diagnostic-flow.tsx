@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Compass } from "lucide-react";
 import { track } from "@/lib/posthog-client";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { DIAGNOSTIC_QUESTIONS } from "@/lib/language-twin/diagnostic";
 import { submitDiagnosticAction, type DiagnosticSubmitResult } from "../actions";
 
@@ -38,7 +40,7 @@ export default function DiagnosticFlow() {
 
   if (result) {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl bg-card p-6 shadow-sm">
+      <Card className="flex flex-col gap-3 p-6">
         <div className="flex flex-col items-center gap-1 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-forest-tint)]">
             <Compass aria-hidden="true" className="h-7 w-7 text-[var(--color-forest-text)]" />
@@ -61,12 +63,9 @@ export default function DiagnosticFlow() {
           ))}
         </ul>
         <div className="flex flex-col items-center gap-2 pt-1">
-          <Link
-            href="/language-twin"
-            className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
-          >
+          <ButtonLink href="/language-twin" variant="leaf" size="sm">
             Посмотреть мой профиль
-          </Link>
+          </ButtonLink>
           <button
             type="button"
             onClick={restart}
@@ -75,13 +74,13 @@ export default function DiagnosticFlow() {
             Пройти ещё раз
           </button>
         </div>
-      </div>
+      </Card>
     );
   }
 
   if (!started) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl bg-card p-6 text-center shadow-sm">
+      <Card className="flex flex-col items-center gap-3 p-6 text-center">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-forest-tint)]">
           <Compass aria-hidden="true" className="h-7 w-7 text-[var(--color-forest-text)]" />
         </span>
@@ -90,24 +89,21 @@ export default function DiagnosticFlow() {
           а просто добавляет новые данные в твой профиль.
         </p>
         <div className="flex gap-2">
-          <button
-            type="button"
+          <Button
+            variant="leaf"
+            size="sm"
             onClick={() => {
               track("diagnostic_started", {});
               setStarted(true);
             }}
-            className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
           >
             Начать ({DIAGNOSTIC_QUESTIONS.length} вопросов)
-          </button>
-          <Link
-            href="/language-twin"
-            className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
-          >
+          </Button>
+          <ButtonLink href="/language-twin" variant="ghost" size="sm">
             Позже
-          </Link>
+          </ButtonLink>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -123,7 +119,7 @@ export default function DiagnosticFlow() {
           style={{ width: `${(index / DIAGNOSTIC_QUESTIONS.length) * 100}%` }}
         />
       </div>
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <p className="mb-3 text-sm font-medium">{q.prompt}</p>
         <div className="flex flex-col gap-2">
           {q.options.map((opt, i) => (
@@ -138,7 +134,7 @@ export default function DiagnosticFlow() {
             </button>
           ))}
         </div>
-      </div>
+      </Card>
       <Link
         href="/language-twin"
         className="focus-ring self-start text-sm text-[var(--text-secondary)] underline-offset-2 hover:underline"

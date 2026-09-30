@@ -1,6 +1,7 @@
 import { AlertTriangle, Check, X } from "lucide-react";
 import LanguageTwinSubHeader from "../sub-header";
 import { requireProfile } from "@/lib/auth";
+import { Card } from "@/components/ui/card";
 import CorrectionForm from "./correction-form";
 
 export default async function LanguageTwinCorrectionPage() {
@@ -12,7 +13,7 @@ export default async function LanguageTwinCorrectionPage() {
         description="Напиши предложение на английском — проверим по известным правилам, без ИИ и без внешних сервисов"
       />
       <CorrectionForm />
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <h2 className="mb-2 text-sm font-semibold">Что реально умеет эта проверка (v1)</h2>
         <div className="flex flex-col gap-2 text-sm">
           <p>
@@ -35,7 +36,7 @@ export default async function LanguageTwinCorrectionPage() {
             Это не полноценный грамматический разбор и не ИИ — набор правил будет расширяться постепенно
           </p>
         </div>
-      </div>
+      </Card>
       <p className="text-xs text-[var(--text-secondary)]">
         Мы сохраняем предложение только если ты сам нажмёшь «Сохранить в профиль». По умолчанию текст
         никуда не отправляется и не остаётся на сервере.
