@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check, Gift } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getPlan } from "@/lib/subscription";
@@ -8,6 +9,8 @@ import CheckoutButton from "./checkout-button";
 import BillingPortalButton from "./billing-portal-button";
 import PricingFaq from "./pricing-faq";
 import PricingViewTracker from "./pricing-view-tracker";
+import { buttonClassName } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -73,27 +76,27 @@ export default async function PricingPage({
           ← Назад
         </Link>
         <h1 className="mt-2 text-2xl font-bold">Выберите ваш план</h1>
-        <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">
           Разблокируйте все премиум-функции и ускорьте изучение языка
         </p>
         {reason && REASONS[reason] && (
-          <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">{REASONS[reason]}</p>
+          <p className="mt-2 text-sm text-[var(--color-warning-text)]">{REASONS[reason]}</p>
         )}
       </div>
 
       {plan !== "free" ? (
-        <div className="rounded-2xl bg-card p-5 shadow-sm">
+        <Card className="p-5">
           <p className="font-medium">
             У тебя активна подписка: {plan === "premium_yearly" ? "годовая" : "месячная"}
           </p>
           {subscription?.status === "past_due" && (
-            <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
+            <p className="mt-1 text-sm text-[var(--color-warning-text)]">
               Последнее списание не прошло — обнови способ оплаты, доступ сохранится ещё
               некоторое время.
             </p>
           )}
           {subscription?.current_period_end && (
-            <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
               {subscription.status === "past_due" ? "Доступ до" : "Продление"}:{" "}
               {formatDate(subscription.current_period_end)}
             </p>
@@ -104,18 +107,21 @@ export default async function PricingPage({
             <form action={cancelSimulatedSubscription} className="mt-3">
               <button
                 type="submit"
-                className="text-sm text-black/50 underline hover:text-black dark:text-white/50 dark:hover:text-white"
+                className="text-sm text-[var(--text-secondary)] underline hover:text-[var(--foreground)]"
               >
                 Отменить (тестовый режим)
               </button>
             </form>
           )}
-        </div>
+        </Card>
       ) : (
         <>
           {showDevSimulation && (
-            <div className="rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-              <p className="font-semibold">🎁 Бета-тестирование: Premium сейчас бесплатно</p>
+            <div className="rounded-2xl border-2 border-[var(--color-warning)] bg-[var(--ember-tint)] p-4 text-sm">
+              <p className="flex items-center gap-1.5 font-semibold text-[var(--color-warning-text)]">
+                <Gift aria-hidden="true" className="h-4 w-4 shrink-0" />
+                Бета-тестирование: Premium сейчас бесплатно
+              </p>
               <p className="mt-1">
                 Оплата ещё не подключена — нажатие «Начать» ниже даст полный доступ без списания
                 денег. Цены на карточках — то, что будет после запуска настоящей оплаты, сейчас
@@ -124,44 +130,44 @@ export default async function PricingPage({
             </div>
           )}
           {showUnavailable && (
-            <div className="rounded-2xl border border-black/10 bg-card p-4 text-sm text-black/60 dark:border-white/15 dark:text-white/60">
+            <Card className="text-sm text-[var(--text-secondary)]">
               Оплата временно недоступна — попробуй чуть позже.
-            </div>
+            </Card>
           )}
-          <div className="rounded-2xl bg-card p-5 shadow-sm">
+          <Card className="p-5">
             <h2 className="text-lg font-bold">LexReader Premium — Ежемесячно</h2>
-            <p className="text-sm text-black/60 dark:text-white/60">
+            <p className="text-sm text-[var(--text-secondary)]">
               Полный доступ ко всем премиум-функциям
             </p>
             <p className="mt-3">
               <span className="text-3xl font-bold text-[var(--color-forest-text)]">449 ₽</span>
-              <span className="text-black/50 dark:text-white/50"> /месяц</span>
+              <span className="text-[var(--text-secondary)]"> /месяц</span>
             </p>
             <ul className="mt-4 flex flex-col gap-2 text-sm">
               {FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2">
-                  <span className="text-emerald-600 dark:text-emerald-400">✓</span>
+                  <Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-success-text)]" />
                   <span>{f}</span>
                 </li>
               ))}
             </ul>
-            {/* forest-text-contrast-fix: both border-forest and text-forest
-                on this outline button measured ~1.7:1 against bg-card in
-                dark (same failure as progress/stat-card.tsx) --
-                --color-forest-text for both keeps border/text matched. */}
+            {/* forest-text-contrast-fix: text-forest measured ~1.7:1 against
+                bg-card in dark (same failure as progress/stat-card.tsx) --
+                --color-forest-text keeps the secondary plan's label readable
+                on the ghost fill. Only the label is forest-tinted. */}
             {stripeReady ? (
               <div className="mt-4">
                 <CheckoutButton
                   plan="premium_monthly"
                   label="Начать — 3 дня бесплатно"
-                  className="w-full rounded-full border-2 border-[var(--color-forest-text)] py-3 font-semibold text-[var(--color-forest-text)]"
+                  className={buttonClassName({ variant: "ghost", className: "w-full text-[var(--color-forest-text)]" })}
                 />
               </div>
             ) : showDevSimulation ? (
               <form action={simulateSubscribe.bind(null, "premium_monthly")} className="mt-4">
                 <button
                   type="submit"
-                  className="w-full rounded-full border-2 border-[var(--color-forest-text)] py-3 font-semibold text-[var(--color-forest-text)]"
+                  className={buttonClassName({ variant: "ghost", className: "w-full text-[var(--color-forest-text)]" })}
                 >
                   Начать
                 </button>
@@ -170,32 +176,32 @@ export default async function PricingPage({
               <button
                 type="button"
                 disabled
-                className="mt-4 w-full rounded-full border-2 border-black/10 py-3 font-semibold text-black/30 dark:border-white/15 dark:text-white/30"
+                className={buttonClassName({ variant: "ghost", className: "mt-4 w-full" })}
               >
                 Временно недоступно
               </button>
             )}
-          </div>
+          </Card>
 
-          <div className="relative rounded-2xl border-2 border-forest bg-card p-5 shadow-sm">
+          <Card className="relative border-forest p-5">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-forest px-3 py-1 text-xs font-bold tracking-wide text-white uppercase">
               Популярный
             </span>
             <h2 className="mt-1 text-lg font-bold">LexReader Premium — Ежегодно</h2>
-            <p className="text-sm text-black/60 dark:text-white/60">
+            <p className="text-sm text-[var(--text-secondary)]">
               Полный доступ ко всем премиум-функциям
             </p>
             <p className="mt-3">
               <span className="text-3xl font-bold text-[var(--color-forest-text)]">4490 ₽</span>
-              <span className="text-black/50 dark:text-white/50"> /год</span>
+              <span className="text-[var(--text-secondary)]"> /год</span>
             </p>
-            <p className="text-sm text-black/50 dark:text-white/50">
+            <p className="text-sm text-[var(--text-secondary)]">
               ≈ 374 ₽/мес, экономия 17%
             </p>
             <ul className="mt-4 flex flex-col gap-2 text-sm">
               {FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2">
-                  <span className="text-emerald-600 dark:text-emerald-400">✓</span>
+                  <Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-success-text)]" />
                   <span>{f}</span>
                 </li>
               ))}
@@ -205,14 +211,14 @@ export default async function PricingPage({
                 <CheckoutButton
                   plan="premium_yearly"
                   label="Начать — 3 дня бесплатно"
-                  className="w-full rounded-full bg-forest py-3 font-semibold text-white"
+                  className={buttonClassName({ variant: "leaf", className: "w-full" })}
                 />
               </div>
             ) : showDevSimulation ? (
               <form action={simulateSubscribe.bind(null, "premium_yearly")} className="mt-4">
                 <button
                   type="submit"
-                  className="w-full rounded-full bg-forest py-3 font-semibold text-white"
+                  className={buttonClassName({ variant: "leaf", className: "w-full" })}
                 >
                   Начать
                 </button>
@@ -221,23 +227,23 @@ export default async function PricingPage({
               <button
                 type="button"
                 disabled
-                className="mt-4 w-full rounded-full bg-black/10 py-3 font-semibold text-black/30 dark:bg-white/10 dark:text-white/30"
+                className={buttonClassName({ variant: "ghost", className: "mt-4 w-full" })}
               >
                 Временно недоступно
               </button>
             )}
-          </div>
+          </Card>
 
           <PricingFaq />
 
           {!showUnavailable && (
-            <p className="text-xs text-black/40 dark:text-white/40">
+            <p className="text-xs text-[var(--text-secondary)]">
               {stripeReady
                 ? "Оплата через Stripe Checkout — карта не сохраняется в LexReader, всё проходит на стороне Stripe."
                 : "Это тестовая кнопка локальной разработки — она не проводит реальную оплату, а просто помечает подписку активной в базе. Настоящая оплата подключается через Stripe, когда будут заданы STRIPE_SECRET_KEY/STRIPE_PRICE_MONTHLY/STRIPE_PRICE_YEARLY."}
             </p>
           )}
-          <p className="text-xs text-black/40 dark:text-white/40">
+          <p className="text-xs text-[var(--text-secondary)]">
             Оформляя подписку, ты соглашаешься с{" "}
             <Link href="/terms" className="underline">
               условиями использования

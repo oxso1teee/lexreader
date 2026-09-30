@@ -15,7 +15,7 @@ export default function BillingPortalButton() {
   // доступно только на сайте, не внутри нативного приложения.
   if (isNative) {
     return (
-      <p className="mt-3 text-sm text-black/50 dark:text-white/50">
+      <p className="mt-3 text-sm text-[var(--text-secondary)]">
         Управление подпиской и оплатой — на сайте LexReader в браузере.
       </p>
     );
@@ -26,11 +26,11 @@ export default function BillingPortalButton() {
       <button
         type="submit"
         disabled={pending}
-        className="text-sm text-black/50 underline hover:text-black disabled:opacity-50 dark:text-white/50 dark:hover:text-white"
+        className="text-sm text-[var(--text-secondary)] underline hover:text-[var(--foreground)] disabled:opacity-50"
       >
         {pending ? "…" : "Управление подпиской и оплатой"}
       </button>
-      {state.error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.error && <p className="mt-2 text-sm text-[var(--color-danger-text)]">{state.error}</p>}
     </form>
   );
 }
