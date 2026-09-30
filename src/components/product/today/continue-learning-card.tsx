@@ -4,7 +4,6 @@ import Link from "next/link";
 import { BookOpen, ChevronRight } from "lucide-react";
 import { track } from "@/lib/posthog-client";
 import { coverGradient, coverInitials } from "@/lib/text-cover";
-import EmptyState from "@/components/empty-state";
 import ProgressBar from "@/components/product/progress-bar";
 import { Card, CardLink } from "@/components/ui/card";
 
@@ -20,19 +19,29 @@ export default function ContinueLearningCard({
   material: { textId: string; title: string; percentRead: number } | null;
   className?: string;
 }) {
+  // Пустое состояние — та же горизонтальная раскладка, что у заполненной
+  // карточки (плашка на месте обложки), а не общий EmptyState с py-16:
+  // в ячейке bento тот раздувал весь ряд и растягивал соседнюю плитку.
   if (!material) {
     return (
-      <Card className={className}>
-        <EmptyState
-          icon={BookOpen}
-          title="Пока нет материала в процессе"
-          body="Начни читать что-нибудь — прогресс появится здесь."
-          action={
-            <Link href="/library" className="focus-ring text-body-sm font-semibold text-[var(--color-forest-text)]">
-              Открыть библиотеку →
-            </Link>
-          }
-        />
+      <Card className={`flex items-center gap-4 ${className ?? ""}`}>
+        <span
+          aria-hidden="true"
+          className="flex h-[72px] w-[54px] shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-forest-tint)]"
+        >
+          <BookOpen className="h-6 w-6 text-[var(--color-forest-text)]" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <p className="text-xs font-bold tracking-wide text-[var(--text-secondary)] uppercase">Продолжить чтение</p>
+          <p className="font-bold">Пока нет материала в процессе</p>
+          <p className="text-sm text-[var(--text-secondary)]">Начни читать что-нибудь — прогресс появится здесь.</p>
+          <Link
+            href="/library"
+            className="focus-ring self-start text-body-sm font-semibold text-[var(--color-forest-text)]"
+          >
+            Открыть библиотеку →
+          </Link>
+        </div>
       </Card>
     );
   }
