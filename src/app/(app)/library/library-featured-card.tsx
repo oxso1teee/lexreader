@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { coverGradient, coverInitials, youtubeThumbnailUrl } from "@/lib/text-cover";
+import { youtubeThumbnailUrl } from "@/lib/text-cover";
+import { CoverArt } from "@/components/product/cover-art";
 import { typeLabel, type LibraryItem } from "./library-item";
 
 // docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
@@ -19,8 +20,6 @@ import { typeLabel, type LibraryItem } from "./library-item";
 // процентом внутри отступа.
 export default function LibraryFeaturedCard({ item }: { item: LibraryItem }) {
   const [thumbFailed, setThumbFailed] = useState(false);
-  const [gradientA, gradientB] = coverGradient(item.title);
-  const initials = coverInitials(item.title);
   const showThumb = item.youtubeVideoId && !thumbFailed;
 
   return (
@@ -29,23 +28,20 @@ export default function LibraryFeaturedCard({ item }: { item: LibraryItem }) {
       prefetch={false}
       aria-label={`Продолжить: ${typeLabel(item)} ${item.title}`}
       className="focus-ring group relative flex h-[108px] items-end overflow-hidden rounded-[20px] p-4 text-white shadow-[0_18px_50px_-20px_rgba(31,77,59,0.45)] sm:h-[140px]"
-      style={{ background: showThumb ? undefined : `linear-gradient(150deg, ${gradientA}, ${gradientB})` }}
     >
-      {showThumb && (
-        <Image
-          src={youtubeThumbnailUrl(item.youtubeVideoId!)}
-          alt=""
-          fill
-          sizes="(min-width: 1024px) 60vw, 100vw"
-          className="object-cover"
-          onError={() => setThumbFailed(true)}
-        />
-      )}
-      {!showThumb && (
-        <span aria-hidden className="absolute inset-0 flex items-center justify-center text-6xl font-bold text-white/15">
-          {initials}
-        </span>
-      )}
+      {/* Phase 7: та же иллюстрированная обложка, что у LibraryItemCard. */}
+      <CoverArt title={item.title} isVideo={Boolean(item.youtubeVideoId)} banner>
+        {showThumb ? (
+          <Image
+            src={youtubeThumbnailUrl(item.youtubeVideoId!)}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 60vw, 100vw"
+            className="object-cover"
+            onError={() => setThumbFailed(true)}
+          />
+        ) : undefined}
+      </CoverArt>
       <div className="absolute inset-0 bg-gradient-to-t from-black/[0.35] to-transparent" aria-hidden="true" />
       <div className="relative flex w-full flex-col gap-1">
         <span className="text-[10px] font-bold uppercase tracking-wide text-white/85">Продолжаешь</span>

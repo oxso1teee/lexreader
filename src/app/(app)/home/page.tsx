@@ -115,7 +115,7 @@ export default async function HomePage() {
     getDueCount(supabase, profile.id, profile.target_language),
     supabase
       .from("text_progress")
-      .select("percent_read, last_read_at, texts!inner(id, title, language, owner_id)")
+      .select("percent_read, last_read_at, texts!inner(id, title, language, owner_id, youtube_video_id)")
       .eq("owner_id", profile.id)
       .eq("texts.language", profile.target_language)
       .gt("percent_read", 4)
@@ -151,7 +151,12 @@ export default async function HomePage() {
   ]);
 
   const continuingRow = continueRows?.[0] as
-    | { percent_read: number; texts: { id: string; title: string } | { id: string; title: string }[] }
+    | {
+        percent_read: number;
+        texts:
+          | { id: string; title: string; youtube_video_id: string | null }
+          | { id: string; title: string; youtube_video_id: string | null }[];
+      }
     | undefined;
   const continueTextRaw = continuingRow
     ? (Array.isArray(continuingRow.texts) ? continuingRow.texts[0] : continuingRow.texts)
@@ -159,6 +164,9 @@ export default async function HomePage() {
   const continueReading = continueTextRaw
     ? { textId: continueTextRaw.id, title: continueTextRaw.title, percentRead: continuingRow!.percent_read }
     : null;
+  // Phase 7: только для обложки ContinueLearningCard ("video"-мотив) —
+  // decidePrimaryAction получает прежнюю форму continueReading.
+  const continueIsVideo = Boolean(continueTextRaw?.youtube_video_id);
 
   const primaryAction = decidePrimaryAction({ dueCount, continueReading });
   const greeting = greetingForHour(new Date().getHours());
@@ -326,7 +334,7 @@ export default async function HomePage() {
           className="md:col-span-2"
         />
 
-        <ContinueLearningCard material={continueReading} className="col-span-2 md:col-span-4" />
+        <ContinueLearningCard material={continueReading} isVideo={continueIsVideo} className="col-span-2 md:col-span-4" />
         <MetricCard
           icon={RotateCcw}
           value={String(dueCount)}
