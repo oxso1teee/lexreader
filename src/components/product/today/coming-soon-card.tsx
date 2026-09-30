@@ -1,4 +1,5 @@
 import { Target, MessageCircle } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 // Disabled/coming-soon entry points — визуально второстепенные, явно
 // помечены "Скоро", не кликабельны (никакой fake-функциональности за
@@ -8,27 +9,25 @@ import { Target, MessageCircle } from "lucide-react";
 // /language-twin (см. LanguageTwinSummaryCard на этой же странице).
 //
 // redesign/duolingo-flat phase 2: emoji icon-строки → lucide, единая
-// иконочная система.
+// иконочная система. Phase 6: Card с пунктирной рамкой без заливки —
+// "ещё не существует" читается отличием от сплошных ячеек вокруг.
 const ITEMS = [
   { icon: Target, label: "Персональные миссии" },
   { icon: MessageCircle, label: "AI-разговор" },
 ];
 
-export default function ComingSoonCard() {
+export default function ComingSoonCard({ className }: { className?: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-[var(--border-strong)] p-3">
+    <Card className={`border-dashed bg-transparent ${className ?? ""}`}>
       <p className="text-caption mb-2">Скоро</p>
-      <ul className="flex flex-col gap-1.5">
+      <ul className="flex flex-wrap gap-x-6 gap-y-1.5">
         {ITEMS.map((item) => (
-          <li
-            key={item.label}
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--text-secondary)]"
-          >
+          <li key={item.label} className="flex items-center gap-2 py-1 text-sm text-[var(--text-secondary)]">
             <item.icon aria-hidden="true" className="h-4 w-4" />
             <span>{item.label}</span>
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }
