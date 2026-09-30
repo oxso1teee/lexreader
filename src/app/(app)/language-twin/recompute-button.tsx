@@ -3,6 +3,7 @@
 import { RefreshCw } from "lucide-react";
 import { useState, useTransition } from "react";
 import { track } from "@/lib/posthog-client";
+import { Button } from "@/components/ui/button";
 import { recomputeAction } from "./actions";
 
 export default function RecomputeButton({ variant = "secondary" }: { variant?: "primary" | "secondary" }) {
@@ -18,17 +19,15 @@ export default function RecomputeButton({ variant = "secondary" }: { variant?: "
     });
   }
 
-  const className =
-    variant === "primary"
-      ? "focus-ring inline-flex items-center gap-1.5 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-      : "focus-ring inline-flex items-center gap-1.5 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50";
+  // Компонентный API (primary/secondary) не меняется — маппится на варианты Button.
+  const buttonVariant = variant === "primary" ? "leaf" : "ghost";
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button type="button" onClick={handleClick} disabled={isPending} className={className}>
+      <Button variant={buttonVariant} size="sm" onClick={handleClick} disabled={isPending} className="gap-1.5">
         <RefreshCw aria-hidden="true" className={`h-4 w-4 ${isPending ? "animate-spin" : ""}`} />
         {isPending ? "Пересчитываем…" : "Пересчитать"}
-      </button>
+      </Button>
       {error && (
         <p role="alert" className="text-xs text-[var(--color-danger-text)]">
           {error}
