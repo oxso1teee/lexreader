@@ -9,6 +9,7 @@ import { SELF_REPORT_LEVELS } from "@/lib/onboarding/self-report-levels";
 import { completeOnboarding, type OnboardingState } from "./actions";
 import { joinLanguageWaitlist, type WaitlistState } from "./waitlist-actions";
 import RateLimitNotice from "@/components/rate-limit-notice";
+import { Button } from "@/components/ui/button";
 import { track } from "@/lib/posthog-client";
 
 const STEP_COUNT = 6;
@@ -24,7 +25,7 @@ function WaitlistLanguageCell({ code, name }: { code: string; name: string }) {
 
   if (state.ok) {
     return (
-      <div className="flex items-center gap-1.5 rounded-lg border border-black/10 px-4 py-3 text-left text-sm text-black/50 dark:border-white/15 dark:text-white/50">
+      <div className="flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] px-4 py-3 text-left text-sm text-[var(--text-secondary)]">
         {name} — сообщим, когда будет готово
         <Check aria-hidden="true" className="h-4 w-4 shrink-0" />
       </div>
@@ -33,7 +34,7 @@ function WaitlistLanguageCell({ code, name }: { code: string; name: string }) {
 
   if (open) {
     return (
-      <form action={formAction} className="col-span-2 flex flex-col gap-2 rounded-lg border border-black/10 p-3 dark:border-white/15">
+      <form action={formAction} className="col-span-2 flex flex-col gap-2 rounded-lg border border-[var(--border-strong)] p-3">
         <input type="hidden" name="language" value={code} />
         <p className="text-sm font-medium">{name} — оставь почту, сообщим, когда будет готово</p>
         <input
@@ -41,24 +42,16 @@ function WaitlistLanguageCell({ code, name }: { code: string; name: string }) {
           name="email"
           required
           placeholder="Email"
-          className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
+          className="w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
         />
-        {state.error && <p className="text-xs text-red-600 dark:text-red-400">{state.error}</p>}
+        {state.error && <p className="text-xs text-[var(--color-danger-text)]">{state.error}</p>}
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium dark:border-white/15"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
             Отмена
-          </button>
-          <button
-            type="submit"
-            disabled={pending}
-            className="flex-1 rounded-full bg-black px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
-          >
+          </Button>
+          <Button type="submit" variant="leaf" size="sm" disabled={pending} className="flex-1">
             {pending ? "Сохраняем…" : "Сообщить мне"}
-          </button>
+          </Button>
         </div>
       </form>
     );
@@ -68,7 +61,7 @@ function WaitlistLanguageCell({ code, name }: { code: string; name: string }) {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="flex items-center justify-between rounded-lg border border-black/10 px-4 py-3 text-left text-sm text-black/50 transition-colors hover:border-black/30 dark:border-white/15 dark:text-white/50 dark:hover:border-white/40"
+      className="flex items-center justify-between rounded-lg border border-[var(--border-strong)] px-4 py-3 text-left text-sm text-[var(--text-secondary)] transition-colors hover:border-[var(--sky)]"
     >
       {name}
       <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide dark:bg-white/10">
@@ -105,10 +98,10 @@ function LanguagePicker({
         placeholder="Поиск языка…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
+        className="w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-4 py-2.5 text-base outline-none focus:border-[var(--color-forest)]"
       />
       {filtered.length === 0 ? (
-        <p className="py-4 text-center text-sm text-black/50 dark:text-white/50">
+        <p className="py-4 text-center text-sm text-[var(--text-secondary)]">
           Ничего не найдено — попробуй другой запрос.
         </p>
       ) : (
@@ -123,8 +116,8 @@ function LanguagePicker({
                 onClick={() => onChange(l.code)}
                 className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
                   value === l.code
-                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                    : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                    ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
+                    : "border-[var(--border-strong)] hover:border-[var(--sky)]"
                 }`}
               >
                 {l.name}
@@ -178,7 +171,7 @@ export default function OnboardingWizard() {
           <div
             key={i}
             className={`h-1 flex-1 rounded-full ${
-              i <= step ? "bg-black dark:bg-white" : "bg-black/10 dark:bg-white/15"
+              i <= step ? "bg-[var(--color-forest)]" : "bg-[var(--border-strong)]"
             }`}
           />
         ))}
@@ -189,11 +182,11 @@ export default function OnboardingWizard() {
           <h1 className="text-3xl font-semibold tracking-tight">
             Учи язык, читая то, что интересно
           </h1>
-          <p className="text-black/60 dark:text-white/60">
+          <p className="text-[var(--text-secondary)]">
             Никаких упражнений и геймификации. Читай реальные тексты, сохраняй
             незнакомые слова одним тапом и повторяй их по расписанию.
           </p>
-          <Link href="/login" className="text-sm text-black/50 underline dark:text-white/50">
+          <Link href="/login" className="text-sm text-[var(--text-secondary)] underline">
             Уже есть аккаунт? Войти
           </Link>
         </div>
@@ -213,8 +206,8 @@ export default function OnboardingWizard() {
                 }}
                 className={`rounded-lg border px-4 py-3 text-left transition-colors ${
                   primaryGoal === g.id
-                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                    : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                    ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
+                    : "border-[var(--border-strong)] hover:border-[var(--sky)]"
                 }`}
               >
                 {g.label}
@@ -247,7 +240,7 @@ export default function OnboardingWizard() {
       {step === 3 && (
         <div className="flex flex-1 flex-col gap-4">
           <h2 className="text-xl font-semibold">Какой у тебя родной язык?</h2>
-          <p className="text-sm text-black/60 dark:text-white/60">
+          <p className="text-sm text-[var(--text-secondary)]">
             Будем переводить на него.
           </p>
           <LanguagePicker
@@ -261,7 +254,7 @@ export default function OnboardingWizard() {
       {step === 4 && (
         <div className="flex flex-1 flex-col gap-4">
           <h2 className="text-xl font-semibold">Какой у тебя уровень английского?</h2>
-          <p className="text-sm text-black/60 dark:text-white/60">
+          <p className="text-sm text-[var(--text-secondary)]">
             Это не экзамен — просто ориентир. Дальше уточним коротким тестом.
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -277,8 +270,8 @@ export default function OnboardingWizard() {
                   l.value === "unsure" ? "col-span-2" : ""
                 } ${
                   selfReportedCefr === l.value
-                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                    : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                    ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
+                    : "border-[var(--border-strong)] hover:border-[var(--sky)]"
                 }`}
               >
                 {l.label}
@@ -301,7 +294,7 @@ export default function OnboardingWizard() {
             name="email"
             required
             placeholder="Email"
-            className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
+            className="w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-4 py-2.5 text-base outline-none focus:border-[var(--color-forest)]"
           />
           <input
             type="password"
@@ -309,7 +302,7 @@ export default function OnboardingWizard() {
             required
             minLength={6}
             placeholder="Пароль (мин. 6 символов)"
-            className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-base outline-none focus:border-black/30 dark:border-white/15 dark:focus:border-white/40"
+            className="w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-4 py-2.5 text-base outline-none focus:border-[var(--color-forest)]"
           />
 
           {blocked && state.retryAfterSeconds ? (
@@ -322,29 +315,21 @@ export default function OnboardingWizard() {
           ) : (
             state.error &&
             !state.retryAfterSeconds && (
-              <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+              <p role="alert" className="text-sm text-[var(--color-danger-text)]">
                 {state.error}
               </p>
             )
           )}
 
           <div className="mt-2 flex gap-3">
-            <button
-              type="button"
-              onClick={() => setStep(4)}
-              className="rounded-full border border-black/10 px-5 py-3 font-medium transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setStep(4)}>
               Назад
-            </button>
-            <button
-              type="submit"
-              disabled={pending || blocked}
-              className="flex-1 rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/80"
-            >
+            </Button>
+            <Button type="submit" variant="leaf" size="sm" disabled={pending || blocked} className="flex-1">
               {pending ? "Создаём…" : "Создать аккаунт и начать"}
-            </button>
+            </Button>
           </div>
-          <p className="text-center text-xs text-black/40 dark:text-white/40">
+          <p className="text-center text-xs text-[var(--text-secondary)]">
             Создавая аккаунт, ты соглашаешься с{" "}
             <Link href="/terms" className="underline">
               условиями использования
@@ -361,22 +346,13 @@ export default function OnboardingWizard() {
       {step < 5 && (
         <div className="mt-8 flex gap-3">
           {step > 0 && (
-            <button
-              type="button"
-              onClick={() => setStep((s) => s - 1)}
-              className="rounded-full border border-black/10 px-5 py-3 font-medium transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
-            >
+            <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
               Назад
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
-            disabled={!canAdvance}
-            onClick={() => setStep((s) => s + 1)}
-            className="flex-1 rounded-full bg-black px-5 py-3 font-medium text-white transition-colors hover:bg-black/80 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-white/80"
-          >
+          <Button variant="leaf" disabled={!canAdvance} onClick={() => setStep((s) => s + 1)} className="flex-1">
             Далее
-          </button>
+          </Button>
         </div>
       )}
     </div>
