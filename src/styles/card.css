@@ -1,0 +1,28 @@
+/* redesign/duolingo-flat, phase 4 — плоская карточка: сплошной --surface +
+   2px рамка вместо shadow-sm. Никаких blur/drop-shadow и transform.
+   Рамка — --border-strong: базовый --border (0.1 alpha) при 2px почти
+   теряется на светлом фоне, а -strong уже определён для обеих тем.
+
+   @layer components — как и .btn: Tailwind-утилиты на конкретной карточке
+   (p-6, flex, gap-3, border-forest и т.п.) побеждают базовые значения. */
+@layer components {
+  .card {
+    display: block;
+    border: 2px solid var(--border-strong);
+    border-radius: 20px;
+    background-color: var(--surface);
+    padding: 1rem;
+  }
+
+  /* Кликабельная карточка: при hover рамка становится акцентной. Только
+     цвет — без подъёма/scale, чтобы не спорить с механикой .btn. */
+  .card-interactive {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 120ms ease-out;
+  }
+
+  .card-interactive:hover {
+    border-color: var(--sky);
+  }
+}
