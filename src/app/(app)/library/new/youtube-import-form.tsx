@@ -316,7 +316,7 @@ export default function YoutubeImportForm({
       </p>
       <CollectionPicker collections={collections} />
       {state.error && (
-        <p className="text-sm text-[var(--color-danger)]" role="alert" aria-live="polite">
+        <p className="text-sm text-[var(--color-danger-text)]" role="alert" aria-live="polite">
           {state.error}
         </p>
       )}

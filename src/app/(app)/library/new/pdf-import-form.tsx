@@ -133,7 +133,7 @@ export default function PdfImportForm({
           </div>
         )}
         {pdfError && (
-          <p className="text-sm text-[var(--color-danger)]" role="alert">
+          <p className="text-sm text-[var(--color-danger-text)]" role="alert">
             {pdfError}
           </p>
         )}
@@ -178,7 +178,7 @@ export default function PdfImportForm({
       </div>
       <CollectionPicker collections={collections} />
       {state.error && (
-        <p className="text-sm text-[var(--color-danger)]" role="alert">
+        <p className="text-sm text-[var(--color-danger-text)]" role="alert">
           {state.error}
         </p>
       )}

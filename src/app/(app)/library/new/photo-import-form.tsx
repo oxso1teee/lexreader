@@ -109,7 +109,7 @@ export default function PhotoImportForm({
           </div>
         )}
         {ocrError && (
-          <p className="text-sm text-[var(--color-danger)]" role="alert">
+          <p className="text-sm text-[var(--color-danger-text)]" role="alert">
             {ocrError}
           </p>
         )}
@@ -152,7 +152,7 @@ export default function PhotoImportForm({
       </div>
       <CollectionPicker collections={collections} />
       {state.error && (
-        <p className="text-sm text-[var(--color-danger)]" role="alert">
+        <p className="text-sm text-[var(--color-danger-text)]" role="alert">
           {state.error}
         </p>
       )}

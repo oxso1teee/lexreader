@@ -778,7 +778,7 @@ export default function Reader({
                     </p>
                   )}
                   {parallel.statuses[i] === "error" && (
-                    <p className="mt-1 text-sm text-[var(--color-danger)]" role="alert">
+                    <p className="mt-1 text-sm text-[var(--color-danger-text)]" role="alert">
                       Не удалось перевести это предложение.
                     </p>
                   )}
@@ -904,7 +904,7 @@ export default function Reader({
           )}
 
           {finishError && (
-            <div className="px-5 pb-1 pt-3 text-center text-sm text-[var(--color-danger)]" role="alert">
+            <div className="px-5 pb-1 pt-3 text-center text-sm text-[var(--color-danger-text)]" role="alert">
               {finishError}
             </div>
           )}

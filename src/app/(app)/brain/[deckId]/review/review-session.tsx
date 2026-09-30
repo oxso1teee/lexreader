@@ -38,9 +38,9 @@ export interface ReviewCard {
 // already passed as-is.
 //
 // Review mockup alignment — reference asks for var(--color-danger)/forest
-// tokens. Again: --color-danger resolves to #dc2626, the exact same hex as
-// bg-red-600 already in use — switched to the token (zero visual change,
-// clearer intent). Hard: --color-warning resolves to #ea580c (Tailwind
+// tokens. Again: --color-danger — switched to the token for clearer intent
+// (since the phase 9 fix it resolves to #df2d2d / #e02f2f dark, 4.61:1 /
+// 4.55:1 with white text, see tokens.css). Hard: --color-warning resolves to #ea580c (Tailwind
 // orange-600) — hand-computed WCAG contrast for white-on-#ea580c is ~3.56:1,
 // BELOW the 4.5:1 AA floor that was the whole point of the darkening above
 // (and axe-core would very likely re-flag it), so kept the current

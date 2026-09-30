@@ -32,7 +32,7 @@ export default function UrlImportForm({ collections }: { collections: Collection
       </p>
       <CollectionPicker collections={collections} />
       {state.error && (
-        <p className="text-sm text-[var(--color-danger)]" role="alert">
+        <p className="text-sm text-[var(--color-danger-text)]" role="alert">
           {state.error}
         </p>
       )}

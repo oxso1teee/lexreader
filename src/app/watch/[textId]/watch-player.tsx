@@ -722,7 +722,7 @@ export default function WatchPlayer({
       </header>
 
       {finishError && (
-        <div className="px-4 pt-2 text-center text-sm text-[var(--color-danger)]" role="alert">
+        <div className="px-4 pt-2 text-center text-sm text-[var(--color-danger-text)]" role="alert">
           {finishError}
         </div>
       )}

@@ -128,7 +128,7 @@ export default function ReaderWordPanel({
             </p>
           ) : popup.error ? (
             <div className="mt-1 rounded-lg bg-[var(--danger-tint,transparent)] p-3">
-              <p className="text-sm text-[var(--color-danger)]" role="alert">
+              <p className="text-sm text-[var(--color-danger-text)]" role="alert">
                 {popup.error}
               </p>
               <div className="mt-2 flex gap-2">

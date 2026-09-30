@@ -96,8 +96,16 @@
   --sun-tint: #fff1b8;
   --sun-text: #7a5900;
 
-  --danger: #ff4b4b;
-  --danger-edge: #d93838;
+  /* phase 9 fix — same bug as --leaf above: the original #ff4b4b gives
+     white label text on a danger-filled button ~3.3:1 (axe: serious
+     color-contrast on "Не помню" in review and on every .btn-danger).
+     Darkened to clear WCAG AA 4.5:1 with white text (4.61:1, computed via
+     the relative-luminance formula, not eyeballed), keeping hue 0° so it
+     stays a clean red rather than a neon #ed0000 or a muddy brown; edge
+     scaled to keep the old edge/fill luminance ratio (0.67) so the
+     pressed-button edge stays visibly darker. -tint/-text untouched. */
+  --danger: #df2d2d;
+  --danger-edge: #bd1d1d;
   --danger-tint: #ffdede;
   --danger-text: #dc2626;
 
@@ -178,8 +186,12 @@
   --sun-tint: #3a2f0a;
   --sun-text: #fde68a;
 
-  --danger: #ff6b6b;
-  --danger-edge: #ff4b4b;
+  /* phase 9 fix (see :root above) — the label stays white in dark mode
+     too, so #ff6b6b (~2.8:1) fails the same way; independently computed
+     (4.55:1), edge scaled to the old dark edge/fill ratio (0.82). Red text
+     on dark surfaces must use --color-danger-text (#f87171), not this fill. */
+  --danger: #e02f2f;
+  --danger-edge: #d11f1f;
   --danger-tint: #3a1414;
   --danger-text: #f87171;
 }
