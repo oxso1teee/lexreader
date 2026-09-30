@@ -8,6 +8,7 @@ import {
   LEADERBOARD_OPT_IN_NUDGE,
 } from "@/lib/leaderboard";
 import PageHeader from "@/components/product/page-header";
+import { Card } from "@/components/ui/card";
 
 // docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
 // "Соревновательность — недельная лига/лидерборд". Только рендер —
@@ -41,7 +42,10 @@ export default async function LeaderboardPage() {
       />
 
       {!profile.leaderboard_opt_in && (
-        <section className="rounded-2xl bg-[var(--color-warning)]/10 p-4">
+        // redesign/duolingo-flat phase 11a: цветной notice остаётся закрашенным
+        // (не Card), но с тонкой рамкой в тон — рядом с карточками в рамке
+        // иначе выглядел как "текст без края".
+        <section className="rounded-2xl border border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 p-4">
           <p className="text-body-sm text-[var(--color-warning-text)]">{LEADERBOARD_OPT_IN_NUDGE}</p>
           <Link href="/settings" className="focus-ring mt-2 inline-block text-body-sm font-semibold text-[var(--color-forest-text)]">
             Открыть настройки →
@@ -50,11 +54,11 @@ export default async function LeaderboardPage() {
       )}
 
       {emptyReason ? (
-        <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+        <Card as="section" className="p-6 text-center">
           <p className="text-body-sm text-[var(--text-secondary)]">{LEADERBOARD_EMPTY_MESSAGE[emptyReason]}</p>
-        </section>
+        </Card>
       ) : (
-        <section className="rounded-2xl bg-[var(--surface)] p-2 shadow-sm">
+        <Card as="section" className="p-2">
           <ul className="flex flex-col">
             {rows.map((row) => (
               <li
@@ -71,10 +75,9 @@ export default async function LeaderboardPage() {
                 {/* Leaderboard mockup alignment — solid color instead of the
                     old tint+forest-text pill: forest-light for everyone,
                     forest (one shade deeper) for "you" specifically. Both
-                    are the same forest/forest-light values already
-                    hand-verified safe with white text elsewhere this
-                    session (~9.6:1 / ~6.28:1) — real background colors, not
-                    the bare --color-forest-as-text bug PR #81 fixed. */}
+                    are solid forest fills under white text — real
+                    background colors, not the bare --color-forest-as-text
+                    bug PR #81 fixed. */}
                 <span
                   aria-hidden="true"
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-body-sm font-semibold text-white ${
@@ -95,7 +98,7 @@ export default async function LeaderboardPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       )}
 
       <p className="text-caption text-center text-[var(--text-secondary)]">Неделя обновляется каждый понедельник.</p>
