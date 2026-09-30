@@ -57,7 +57,7 @@ export default function DeckCard({
               </span>
             )}
             {isStarter && (
-              <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
+              <span className="shrink-0 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
                 Стартовая
               </span>
             )}
@@ -73,7 +73,7 @@ export default function DeckCard({
             )}
           </p>
         </div>
-        <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-black/30 dark:text-white/30" />
+        <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--text-secondary)]" />
       </Link>
       {/* Найдено при живой проверке: удаление колоды "Главная" ломает
           addPhraseToDefaultDeck (сохранение слова из читалки в карточку) —
@@ -87,7 +87,7 @@ export default function DeckCard({
           disabled={isPending}
           onClick={handleDelete}
           aria-label="Удалить колоду"
-          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-red-500 disabled:opacity-40 dark:border-white/15"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[var(--color-danger-text)] disabled:opacity-40"
         >
           <X aria-hidden="true" className="h-4 w-4" />
         </button>

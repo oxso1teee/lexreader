@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { CalendarDays, RefreshCw, Settings2, Library, Palette, Save } from "lucide-react";
 import type { SrsSettings } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 import { updateSrsSettings, type SettingsFormState } from "./actions";
 
 function NumberField({
@@ -33,7 +34,7 @@ function NumberField({
         min={min}
         max={max}
         defaultValue={defaultValue}
-        className="w-28 rounded-lg border border-black/20 px-3 py-1.5 text-right outline-none focus:border-black dark:border-white/25 dark:focus:border-white"
+        className="w-28 rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-1.5 text-right outline-none focus:border-[var(--color-forest)]"
       />
     </div>
   );
@@ -56,11 +57,11 @@ function Toggle({
         type="button"
         onClick={() => setChecked((c) => !c)}
         className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-emerald-500" : "bg-black/20 dark:bg-white/20"
+          checked ? "bg-[var(--color-forest)]" : "bg-black/15 dark:bg-white/20"
         }`}
       >
         <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${
+          className={`absolute left-0 top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${
             checked ? "translate-x-5" : "translate-x-0.5"
           }`}
         />
@@ -107,13 +108,16 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
         </h2>
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm">Направление по умолчанию</span>
-          <button
-            type="button"
+          {/* ghost, не sky: белый на --sky меряется 2.4:1 (light) / 1.9:1 (dark).
+              min-h-11 — сохраняем прежнюю 44px-зону нажатия. */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="min-h-11"
             onClick={() => setDirection((d) => (d === "front_back" ? "back_front" : "front_back"))}
-            className="flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-4 text-sm font-medium text-white"
           >
             {direction === "front_back" ? "Слово → Перевод" : "Перевод → Слово"}
-          </button>
+          </Button>
         </div>
         <input type="hidden" name="study_direction" value={direction} />
         <p className="text-xs text-[var(--text-secondary)]">
@@ -193,14 +197,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
         />
       </section>
 
-      {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
-      {state.saved && <p className="text-sm text-emerald-600 dark:text-emerald-400">Сохранено.</p>}
+      {state.error && <p className="text-sm text-[var(--color-danger-text)]">{state.error}</p>}
+      {state.saved && <p className="text-sm text-[var(--color-success-text)]">Сохранено.</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="flex items-center justify-center gap-1.5 rounded-full bg-emerald-600 py-3 font-bold text-black disabled:opacity-50"
-      >
+      <Button type="submit" variant="leaf" disabled={pending} className="gap-1.5">
         {pending ? (
           "…"
         ) : (
@@ -209,7 +209,7 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
             Сохранить настройки
           </>
         )}
-      </button>
+      </Button>
     </form>
   );
 }

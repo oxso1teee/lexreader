@@ -9,6 +9,7 @@ import { TESSERACT_LANG } from "@/lib/ocr-lang-map";
 import { validateImageFile } from "@/lib/file-validation";
 import { log } from "@/lib/log";
 import { parseImportCards } from "@/lib/import-cards";
+import { Button } from "@/components/ui/button";
 
 interface ParsedCard {
   front: string;
@@ -155,14 +156,10 @@ export default function ImportModal({
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded-full border border-black/20 px-4 py-2 text-sm font-medium dark:border-white/25"
-      >
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)} className="gap-1.5">
         <FolderOpen aria-hidden="true" className="h-4 w-4" />
         Импорт
-      </button>
+      </Button>
     );
   }
 
@@ -174,20 +171,19 @@ export default function ImportModal({
         {result ? (
           <div className="flex flex-col items-center gap-4 py-4 text-center">
             <p>{result}</p>
-            <button
-              type="button"
+            <Button
+              variant="leaf"
               onClick={() => {
                 setOpen(false);
                 reset();
               }}
-              className="rounded-full bg-forest px-5 py-2.5 font-medium text-white"
             >
               Готово
-            </button>
+            </Button>
           </div>
         ) : cards.length > 0 ? (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-black/60 dark:text-white/60">
+            <p className="text-sm text-[var(--text-secondary)]">
               Найдено карточек: {cards.length}. Проверь и поправь при необходимости.
             </p>
             <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
@@ -198,19 +194,19 @@ export default function ImportModal({
                     onChange={(e) =>
                       setCards((cs) => cs.map((x, j) => (j === i ? { ...x, front: e.target.value } : x)))
                     }
-                    className="w-1/2 rounded border border-black/15 px-2 py-1 text-sm dark:border-white/20"
+                    className="w-1/2 rounded border border-[var(--border-strong)] bg-transparent px-2 py-1 text-sm outline-none focus:border-[var(--color-forest)]"
                   />
                   <input
                     value={c.back}
                     onChange={(e) =>
                       setCards((cs) => cs.map((x, j) => (j === i ? { ...x, back: e.target.value } : x)))
                     }
-                    className="w-1/2 rounded border border-black/15 px-2 py-1 text-sm dark:border-white/20"
+                    className="w-1/2 rounded border border-[var(--border-strong)] bg-transparent px-2 py-1 text-sm outline-none focus:border-[var(--color-forest)]"
                   />
                   <button
                     type="button"
                     onClick={() => setCards((cs) => cs.filter((_, j) => j !== i))}
-                    className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-red-500"
+                    className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-[var(--color-danger-text)]"
                     aria-label="Удалить"
                   >
                     <X aria-hidden="true" className="h-4 w-4" />
@@ -226,7 +222,7 @@ export default function ImportModal({
               id="import-deck"
               value={deckId}
               onChange={(e) => setDeckId(e.target.value)}
-              className="rounded-lg border border-black/20 px-3 py-2 dark:border-white/25 dark:bg-transparent"
+              className="rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 outline-none focus:border-[var(--color-forest)]"
             >
               {decks.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -235,30 +231,21 @@ export default function ImportModal({
               ))}
             </select>
 
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+            {error && <p className="text-sm text-[var(--color-danger-text)]">{error}</p>}
 
             <div className="mt-1 flex gap-2">
-              <button
-                type="button"
-                onClick={reset}
-                className="flex-1 rounded-full bg-black/10 py-2.5 font-medium dark:bg-white/10"
-              >
+              <Button variant="ghost" onClick={reset} className="flex-1">
                 Назад
-              </button>
-              <button
-                type="button"
-                disabled={busy || !deckId}
-                onClick={handleImport}
-                className="flex-1 rounded-full bg-forest py-2.5 font-medium text-white disabled:opacity-50"
-              >
+              </Button>
+              <Button variant="leaf" disabled={busy || !deckId} onClick={handleImport} className="flex-1">
                 {busy ? "…" : "Импортировать"}
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium">1. Выберите источник</p>
-            <label className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-black/20 px-4 py-3 text-center dark:border-white/25">
+            <label className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--border-strong)] px-4 py-3 text-center">
               <FolderOpen aria-hidden="true" className="h-4 w-4" />
               Выбрать файл с карточками
               <input
@@ -271,7 +258,7 @@ export default function ImportModal({
                 }}
               />
             </label>
-            <label className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-black/20 px-4 py-3 text-center dark:border-white/25">
+            <label className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--border-strong)] px-4 py-3 text-center">
               <Camera aria-hidden="true" className="h-4 w-4" />
               Импорт с фото (OCR)
               <input
@@ -287,9 +274,9 @@ export default function ImportModal({
             <p className="text-center text-xs text-[var(--text-secondary)]">
               CSV/TSV/TXT/JSON • Обязательны фраза и перевод • HTML-страницы не поддерживаются
             </p>
-            <details className="rounded-lg bg-black/5 px-3 py-2 text-xs dark:bg-white/5">
+            <details className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-xs">
               <summary className="cursor-pointer font-medium">Поддерживаемые форматы и примеры</summary>
-              <div className="mt-2 space-y-2 text-black/60 dark:text-white/60">
+              <div className="mt-2 space-y-2 text-[var(--text-secondary)]">
                 <p>
                   CSV: <code>phrase,translation,notes</code>
                 </p>
@@ -307,17 +294,17 @@ export default function ImportModal({
                 {progress > 0 ? `Распознаём текст… ${progress}%` : "Обрабатываем…"}
               </p>
             )}
-            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-            <button
-              type="button"
+            {error && <p className="text-sm text-[var(--color-danger-text)]">{error}</p>}
+            <Button
+              variant="ghost"
               onClick={() => {
                 setOpen(false);
                 reset();
               }}
-              className="mt-1 rounded-full bg-black/10 py-2.5 font-medium dark:bg-white/10"
+              className="mt-1"
             >
               Отмена
-            </button>
+            </Button>
           </div>
         )}
       </div>
