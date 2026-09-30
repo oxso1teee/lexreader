@@ -5,6 +5,7 @@ import { Check, Info, Plus, Volume2, X } from "lucide-react";
 import { WORD_LEVELS } from "@/lib/types";
 import { LEARNING_STATE_LABEL } from "@/lib/vocabulary/learning-state-label";
 import type { LearningState } from "@/lib/vocabulary-list";
+import { Button, buttonClassName } from "@/components/ui/button";
 
 export interface Popup {
   isPhrase: boolean;
@@ -58,11 +59,13 @@ export default function ReaderWordPanel({
   onAddPhrase: () => void;
   onClose: () => void;
 }) {
+  const isSaved = popup.isPhrase ? popup.saved : popup.level === 4;
+
   return (
     <div className="flex flex-col gap-3" role="status" aria-live="polite">
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <p className="text-[13px] font-bold">{popup.text}</p>
             <button
               type="button"
@@ -74,6 +77,38 @@ export default function ReaderWordPanel({
             </button>
             {popup.isPhrase && (
               <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs">фраза</span>
+            )}
+            {/* Тот же клик/disabled/aria-label, что и раньше (isPhrase ->
+                onAddPhrase, иначе onSetLevel(4)). Phase 8: вместо круглой
+                27×27 иконки — <Button leaf sm> с подписью "В словарь";
+                сохранённое состояние — ghost + галочка "Сохранено". Стоит
+                в строке со словом (ml-auto), а не в правой колонке — иначе
+                колонка перевода под ней сжимается до узкой полоски. */}
+            {!popup.loading && !popup.error && !popup.paywall && (
+              <Button
+                variant={isSaved ? "ghost" : "leaf"}
+                size="sm"
+                pill
+                onClick={popup.isPhrase ? onAddPhrase : () => onSetLevel(4)}
+                disabled={popup.isPhrase ? popup.saved : false}
+                aria-label={
+                  popup.isPhrase
+                    ? popup.saved
+                      ? "Сохранено"
+                      : "Сохранить фразу в словарь"
+                    : popup.level === 4
+                      ? "Сохранено"
+                      : "Добавить в словарь"
+                }
+                className="ml-auto shrink-0 gap-1 px-3 whitespace-nowrap"
+              >
+                {isSaved ? (
+                  <Check aria-hidden="true" className="h-4 w-4" />
+                ) : (
+                  <Plus aria-hidden="true" className="h-4 w-4" />
+                )}
+                {isSaved ? "Сохранено" : "В словарь"}
+              </Button>
             )}
           </div>
 
@@ -161,51 +196,6 @@ export default function ReaderWordPanel({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {/* Reader mockup alignment — тот же клик/disabled/aria-label,
-              что раньше был на широкой pill-кнопке ниже (isPhrase ->
-              onAddPhrase, иначе onSetLevel(4)) — просто круглая 27×27
-              forest-кнопка в шапке рядом со словом/переводом, а не
-              отдельный блок под уровнем знания. Функционал не менялся,
-              только позиция/форма. Заметно меньше обычного min-h-11
-              (44px) touch-target, принятого в остальном приложении —
-              литеральный спек попросил именно 27×27 для этой компактной
-              иконки-кнопки. */}
-          {!popup.loading && !popup.error && !popup.paywall && (
-            <button
-              type="button"
-              onClick={popup.isPhrase ? onAddPhrase : () => onSetLevel(4)}
-              disabled={popup.isPhrase ? popup.saved : false}
-              aria-label={
-                popup.isPhrase
-                  ? popup.saved
-                    ? "Сохранено"
-                    : "Сохранить фразу в словарь"
-                  : popup.level === 4
-                    ? "Сохранено"
-                    : "Добавить в словарь"
-              }
-              className={`focus-ring flex h-[27px] w-[27px] shrink-0 items-center justify-center rounded-full text-sm font-bold disabled:opacity-60 ${
-                !popup.isPhrase && popup.level === 4 ? "text-black" : "text-white"
-              }`}
-              style={{
-                // WORD_LEVELS[4].color (#a1a1aa, светло-серый) — та же пара,
-                // что уже была в исходной widescreen-кнопке ниже (text-black
-                // именно для этого фона, text-white для forest) — белый
-                // текст на этом сером даёт ~2:1, далеко ниже WCAG AA 4.5:1.
-                backgroundColor: popup.isPhrase
-                  ? "var(--color-forest)"
-                  : popup.level === 4
-                    ? WORD_LEVELS[4].color
-                    : "var(--color-forest)",
-              }}
-            >
-              {(popup.isPhrase ? popup.saved : popup.level === 4) ? (
-                <Check aria-hidden="true" className="h-4 w-4" />
-              ) : (
-                <Plus aria-hidden="true" className="h-4 w-4" />
-              )}
-            </button>
-          )}
           <button
             type="button"
             onClick={onClose}
@@ -240,7 +230,11 @@ export default function ReaderWordPanel({
         <Link
           href={`/brain/${popup.deckId}/review?wordIds=${popup.flashcardId}`}
           onClick={onPracticeClick}
-          className="focus-ring flex min-h-11 items-center justify-center rounded-lg border border-[var(--border-strong)] text-sm font-bold text-[var(--color-forest-text)]"
+          className={buttonClassName({
+            variant: "ghost",
+            size: "sm",
+            className: "min-h-11 w-full text-[var(--color-forest-text)]",
+          })}
         >
           Практика →
         </Link>

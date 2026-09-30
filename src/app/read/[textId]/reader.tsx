@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Check, Keyboard, X } from "lucide-react";
@@ -8,6 +8,9 @@ import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
 import { log } from "@/lib/log";
 import { track } from "@/lib/posthog-client";
+import { buttonClassName } from "@/components/ui/button";
+import { cardClassName } from "@/components/ui/card";
+import { CoverArt } from "@/components/product/cover-art";
 import {
   upsertWord,
   setWordLevel,
@@ -85,6 +88,16 @@ function paginate(sentences: string[]): [number, number][] {
 // посчитанный texts.word_count, без новых запросов к БД.
 const READING_WORDS_PER_MINUTE = 200;
 
+// redesign/duolingo-flat phase 8 — круглые 44×44 кнопки тулбара на "пухлой"
+// ghost-кнопке (src/styles/button.css) вместо полупрозрачных bg-white/70.
+// pb-[3px] центрирует иконку на "лицевой" части над 3px-кромкой.
+const TOOLBAR_ICON_BTN = buttonClassName({
+  variant: "ghost",
+  size: "sm",
+  pill: true,
+  className: "h-11 w-11 shrink-0 p-0 pb-[3px]",
+});
+
 export default function Reader({
   textId,
   title,
@@ -97,9 +110,12 @@ export default function Reader({
   initialPageIndex = 0,
   initialServerPrefs,
   chapter,
+  isVideo = false,
 }: {
   textId: string;
   title: string;
+  /** texts.youtube_video_id задан — только для "video"-мотива обложки (phase 8). */
+  isVideo?: boolean;
   body: string;
   sourceLang: string;
   targetLang: string;
@@ -540,16 +556,23 @@ export default function Reader({
       className="relative flex min-h-screen flex-1 flex-col bg-[#f7f4ee] dark:bg-background"
       style={themeColors ? { backgroundColor: themeColors.bg, color: themeColors.text } : undefined}
     >
+      {/* Phase 8: без стекла — непрозрачный --surface + 2px --border-strong,
+          как у Card. Тема чтения (сепия/тёмная) по-прежнему перекрашивает фон. */}
       <header
-        className="sticky top-0 z-10 border-b border-black/[0.07] bg-[#f7f4ee]/95 backdrop-blur-xl dark:border-white/10 dark:bg-background/95"
-        style={themeColors ? { backgroundColor: `${themeColors.bg}f2` } : undefined}
+        className="sticky top-0 z-10 border-b-2 border-[var(--border-strong)] bg-[var(--surface)]"
+        style={themeColors ? { backgroundColor: themeColors.surface } : undefined}
       >
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Link
               href="/library"
               aria-label="Библиотека"
-              className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+              className={buttonClassName({
+                variant: "ghost",
+                size: "sm",
+                pill: true,
+                className: "min-h-11 shrink-0 px-3 text-[var(--color-forest-text)]",
+              })}
             >
               <span aria-hidden="true">←</span>
               <span className="hidden sm:inline" aria-hidden="true">
@@ -580,7 +603,7 @@ export default function Reader({
               <Link
                 href="/brain/vocabulary"
                 aria-label="Словарь"
-                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/70 text-[var(--color-forest-text)] shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
+                className={`${TOOLBAR_ICON_BTN} text-[var(--color-forest-text)]`}
               >
                 <BookOpen aria-hidden="true" className="h-[18px] w-[18px]" />
               </Link>
@@ -588,7 +611,7 @@ export default function Reader({
                 type="button"
                 onClick={() => setSettingsOpen(true)}
                 aria-label="Настройки чтения"
-                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/70 text-[var(--color-forest-text)] shadow-sm transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/10"
+                className={`${TOOLBAR_ICON_BTN} text-[var(--color-forest-text)]`}
               >
                 <span aria-hidden="true" className="text-[12px] font-bold">
                   Aa
@@ -599,7 +622,7 @@ export default function Reader({
                 onClick={handleFinish}
                 disabled={finishing}
                 aria-label="Завершить чтение"
-                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/70 text-black/50 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-500 disabled:opacity-50 dark:border-white/15 dark:bg-white/10 dark:text-white/60"
+                className={`${TOOLBAR_ICON_BTN} text-[var(--text-secondary)] hover:text-[var(--color-danger)]`}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
                   <path strokeLinecap="round" d="m7 7 10 10M17 7 7 17" />
@@ -624,7 +647,7 @@ export default function Reader({
                   role="tab"
                   aria-selected={mode === value}
                   onClick={() => changeMode(value)}
-                  className={`focus-ring min-h-11 rounded-full border px-3.5 text-xs font-bold whitespace-nowrap ${
+                  className={`focus-ring min-h-11 rounded-full border-2 px-3.5 text-xs font-bold whitespace-nowrap ${
                     mode === value
                       ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
                       : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)]"
@@ -639,7 +662,7 @@ export default function Reader({
             <button
               type="button"
               onClick={() => changeMode("assisted")}
-              className="focus-ring flex min-h-11 items-center self-start gap-1 rounded-full border border-[var(--border-strong)] px-3.5 text-xs font-bold text-[var(--text-secondary)]"
+              className="focus-ring flex min-h-11 items-center self-start gap-1 rounded-full border-2 border-[var(--border-strong)] bg-[var(--surface)] px-3.5 text-xs font-bold text-[var(--text-secondary)]"
             >
               <X aria-hidden="true" className="h-3.5 w-3.5" />
               Выйти из Focus
@@ -665,9 +688,25 @@ export default function Reader({
         <main className="flex flex-1 flex-col">
           {!focusMode && (
             <>
+              {/* Phase 8: строка "обложка + название" над текстом — та же
+                  CoverArt, что в Library (Фаза 7), в миниатюре. Данные уже
+                  есть (title/chapter + texts.youtube_video_id из того же select *). */}
+              <div className="mb-3 flex items-center gap-3 px-1">
+                <span className="relative h-10 w-[30px] shrink-0 overflow-hidden rounded-[6px]">
+                  <CoverArt title={title} isVideo={isVideo} />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold">{title}</p>
+                  {chapter && <p className="truncate text-xs text-[var(--text-secondary)]">{chapter.collectionTitle}</p>}
+                </div>
+              </div>
+
               <section
                 aria-label="Статистика текста"
-                className="mb-4 grid grid-cols-5 divide-x divide-black/[0.06] rounded-2xl border border-black/[0.06] bg-white/55 px-2 py-3 text-center text-sm shadow-[0_8px_30px_rgba(80,60,35,0.04)] dark:divide-white/10 dark:border-white/10 dark:bg-white/[0.04] sm:px-5"
+                className={cardClassName({
+                  className:
+                    "mb-4 grid grid-cols-5 divide-x divide-[var(--border-strong)] px-2 py-3 text-center text-sm sm:px-5",
+                })}
               >
                 <div className="px-1">
                   <p className="font-bold">{stats.unique}</p>
@@ -708,8 +747,11 @@ export default function Reader({
 
           {mode === "parallel" ? (
             <div
-              className="mx-auto w-full flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8"
-              style={{ maxWidth: `${maxWidthPx}px` }}
+              className={cardClassName({ className: "mx-auto w-full flex-1 px-5 py-6 sm:px-9 sm:py-8" })}
+              style={{
+                maxWidth: `${maxWidthPx}px`,
+                ...(themeColors ? { backgroundColor: themeColors.surface, color: themeColors.text } : {}),
+              }}
             >
               <p className="mb-4 text-xs text-[var(--text-secondary)]">
                 Перевод по предложениям — переводится только эта страница, кэшируется для всех.
@@ -750,7 +792,9 @@ export default function Reader({
             </div>
           ) : (
             <article
-              className="font-reading mx-auto w-full flex-1 rounded-3xl border border-black/[0.06] bg-white/60 px-5 py-6 tracking-[-0.005em] shadow-[0_18px_60px_rgba(80,60,35,0.06)] dark:border-white/10 dark:bg-white/[0.035] sm:px-9 sm:py-8"
+              className={cardClassName({
+                className: "font-reading mx-auto w-full flex-1 px-5 py-6 tracking-[-0.005em] sm:px-9 sm:py-8",
+              })}
               style={{
                 maxWidth: `${maxWidthPx}px`,
                 fontSize: `${readerPrefs.fontSize}px`,
@@ -787,14 +831,51 @@ export default function Reader({
                         ? "focus-ring touch-none select-none rounded-[4px] px-[3px] py-0 font-semibold text-[var(--color-forest-text)] transition-colors [-webkit-touch-callout:none]"
                         : "focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40";
 
+                      const wordHandlers = {
+                        onPointerDown: () => onPointerDownWord(si, ti),
+                        onPointerEnter: () => onPointerEnterWord(si, ti),
+                        onPointerUp: () => onPointerUpWord(si, ti, tok.text, sentence),
+                        onClick: () => onClickWord(tok.text, sentence),
+                      };
+
+                      // Phase 8: буквица — только у самого первого слова текста
+                      // (первая страница, первое предложение, слово начинается
+                      // с буквы). Буква вынесена в плавающий span с ТЕМИ ЖЕ
+                      // обработчиками, что у кнопки (тап по ней = тап по слову),
+                      // а кнопка получает остаток слова + aria-label с полным
+                      // словом — для скринридера и клавиатуры это всё то же
+                      // одно слово. Почему не ::first-letter — см. reader.css.
+                      const letters = Array.from(tok.text);
+                      if (si === 0 && ti === 0 && letters.length > 1 && /^\p{L}/u.test(tok.text)) {
+                        return (
+                          <Fragment key={ti}>
+                            <span aria-hidden="true" className="reader-dropcap" {...wordHandlers}>
+                              {letters[0]}
+                            </span>
+                            <button
+                              type="button"
+                              aria-label={tok.text}
+                              {...wordHandlers}
+                              style={{
+                                backgroundColor: selected
+                                  ? "var(--color-forest-tint)"
+                                  : levelColor
+                                    ? `${levelColor}33`
+                                    : undefined,
+                              }}
+                              className={wordClassName}
+                            >
+                              {letters.slice(1).join("")}
+                            </button>
+                          </Fragment>
+                        );
+                      }
+
                       return (
                         <button
                           key={ti}
                           type="button"
-                          onPointerDown={() => onPointerDownWord(si, ti)}
-                          onPointerEnter={() => onPointerEnterWord(si, ti)}
-                          onPointerUp={() => onPointerUpWord(si, ti, tok.text, sentence)}
-                          onClick={() => onClickWord(tok.text, sentence)}
+                          {...wordHandlers}
                           style={{
                             backgroundColor: selected
                               ? "var(--color-forest-tint)"
@@ -828,7 +909,10 @@ export default function Reader({
             </div>
           )}
 
-          <footer className="sticky bottom-0 z-10 mt-4 -mx-4 border-t border-black/[0.07] bg-[#f7f4ee]/95 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-background/95 sm:-mx-6 sm:px-6">
+          <footer
+            className="sticky bottom-0 z-10 mt-4 -mx-4 border-t-2 border-[var(--border-strong)] bg-[#f7f4ee] px-4 py-3 dark:bg-background sm:-mx-6 sm:px-6"
+            style={themeColors ? { backgroundColor: themeColors.bg } : undefined}
+          >
             <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
               <button
                 type="button"
@@ -837,18 +921,23 @@ export default function Reader({
                   if (pageIndex > 0) setPageIndex((i) => i - 1);
                   else goPrevChapter();
                 }}
-                className="focus-ring flex min-h-11 min-w-24 items-center justify-center rounded-full px-4 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-black/[0.04] disabled:opacity-30 dark:hover:bg-white/[0.06]"
+                className={buttonClassName({
+                  variant: "ghost",
+                  size: "sm",
+                  pill: true,
+                  className: "min-h-11 min-w-24 text-[var(--color-forest-text)]",
+                })}
               >
                 {pageIndex === 0 && chapter?.prevTextId ? "← Часть назад" : "← Назад"}
               </button>
-              <span className="rounded-full bg-black/[0.04] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] dark:bg-white/[0.07]">
+              <span className="rounded-full bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)]">
                 {readingProgress}%
               </span>
               {pageIndex < pages.length - 1 ? (
                 <button
                   type="button"
                   onClick={() => setPageIndex((i) => Math.min(pages.length - 1, i + 1))}
-                  className="focus-ring flex min-h-11 min-w-24 items-center justify-center rounded-full bg-[var(--color-forest)] px-4 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-forest-deep)]"
+                  className={buttonClassName({ variant: "leaf", size: "sm", pill: true, className: "min-h-11 min-w-24" })}
                 >
                   Далее →
                 </button>
@@ -856,7 +945,7 @@ export default function Reader({
                 <button
                   type="button"
                   onClick={goNextChapter}
-                  className="focus-ring flex min-h-11 min-w-24 items-center justify-center rounded-full bg-[var(--color-forest)] px-4 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-forest-deep)]"
+                  className={buttonClassName({ variant: "leaf", size: "sm", pill: true, className: "min-h-11 min-w-24" })}
                 >
                   Часть далее →
                 </button>
@@ -894,14 +983,11 @@ export default function Reader({
               </div>
             )}
             {popup ? (
-              // Reader mockup alignment — карточка перевода: bg-surface-
-              // elevated ("raised" card, тот же токен, что уже используют
-              // модалки/поповеры — см. его комментарий в tokens.css),
-              // rounded-[14px]/px-[13px]/py-[12px] по спеке, тонированная
-              // forest-тень вместо обычной shadow-sm. Позиционирование
-              // (в потоке рядом с текстом на десктопе) не тронуто — уже
-              // "под текстом", не оверлей.
-              <div className="rounded-[14px] border border-[var(--border)] bg-[var(--surface-elevated)] px-[13px] py-[12px] shadow-[0_8px_30px_rgba(31,77,59,0.08)]">
+              // Карточка перевода — phase 8: плоская Card (2px --border-strong,
+              // непрозрачный --surface, без тени) + pop-in (reader.css).
+              // Позиционирование (в потоке рядом с текстом на десктопе) не
+              // тронуто — "под текстом", не оверлей.
+              <div className={cardClassName({ className: "reader-pop px-[13px] py-[12px]" })}>
                 <ReaderWordPanel
                   popup={popup}
                   manualTranslation={manualTranslation}
@@ -929,16 +1015,16 @@ export default function Reader({
       </div>
 
       {/* Mobile bottom sheet — same ReaderWordPanel content, different chrome.
-          Reader mockup alignment: цвет/тень приведены к тому же bg-surface-
-          elevated + тонированной тени, что и десктопная карточка, радиус
-          14px на видимых верхних углах. Позиционирование (fixed bottom
+          Phase 8: тот же язык, что у Card — непрозрачный --surface, 2px
+          --border-strong сверху, без тени, радиус 20px на верхних углах,
+          выезд снизу (reader-sheet-in). Позиционирование (fixed bottom
           sheet, не inline-under-text) намеренно НЕ тронуто — задача явно
           просит не рисковать взаимодействием (мобильная клавиатура для
           manual-translation-input) ради формы карточки; padding тоже
           оставлен прежним (p-5) — рассчитан на полноширинный sheet с
           drag-handle, не то же самое, что компактная карточка на десктопе. */}
       {popup && (
-        <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-[14px] border-t border-[var(--border)] bg-[var(--surface-elevated)] p-5 shadow-[0_-8px_30px_rgba(31,77,59,0.1)] lg:hidden">
+        <div className="reader-sheet-in fixed inset-x-0 bottom-0 z-20 rounded-t-[20px] border-t-2 border-[var(--border-strong)] bg-[var(--surface)] p-5 lg:hidden">
           <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-[var(--border-strong)]" aria-hidden="true" />
           <div className="mx-auto max-w-2xl">
             <ReaderWordPanel
@@ -957,7 +1043,7 @@ export default function Reader({
       )}
 
       {mode === "listening" && !popup && (
-        <div className="fixed inset-x-4 bottom-4 z-20 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-2xl lg:hidden">
+        <div className={cardClassName({ className: "fixed inset-x-4 bottom-4 z-20 p-4 lg:hidden" })}>
           <ReaderListening
             supported={listening.supported}
             playing={listening.playing}

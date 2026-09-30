@@ -166,6 +166,7 @@ export default async function ReadPage({
         initialPageIndex={progress?.last_page_index ?? 0}
         initialServerPrefs={initialServerPrefs}
         chapter={chapter}
+        isVideo={Boolean(text.youtube_video_id)}
         stats={{
           unique: uniqueTokens.size,
           new: statsNew,
