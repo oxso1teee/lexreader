@@ -1,3 +1,5 @@
+import { cardClassName } from "@/components/ui/card";
+
 export interface HardestWord {
   id: string;
   front: string;
@@ -10,7 +12,7 @@ export default function HardestWords({ words }: { words: HardestWord[] }) {
   if (words.length === 0) return null;
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className={cardClassName()}>
       <h2 className="mb-1 font-semibold">Сложные слова</h2>
       <p className="mb-3 text-xs text-[var(--text-secondary)]">
         По точности ответов за всё время, худшие сначала

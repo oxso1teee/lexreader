@@ -8,6 +8,7 @@ import { isoWeekStart } from "@/lib/iso-week";
 import { getActivePathStateAction } from "../learning-paths/actions";
 import LanguageTwinSummaryCard from "@/components/product/language-twin/summary-card";
 import Link from "next/link";
+import { cardClassName } from "@/components/ui/card";
 import { Share2 } from "lucide-react";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
@@ -344,7 +345,7 @@ export default async function ProgressPage({
           Тир 3 — недельная лига. Лёгкая ссылка-карточка, не отдельный
           RPC-запрос на этой и без того тяжёлой Promise.all-странице — вся
           реальная агрегация/приватность живёт на самой /leaderboard. */}
-      <Link href="/leaderboard" className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm">
+      <Link href="/leaderboard" className={cardClassName({ interactive: true, className: "focus-ring flex items-center justify-between gap-3" })}>
         <div>
           <p className="text-body-sm font-semibold">Недельная лига</p>
           <p className="text-caption text-[var(--text-secondary)]">Сравни активность за неделю с другими участниками</p>
@@ -355,7 +356,7 @@ export default async function ProgressPage({
       {/* docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C,
           Тир 3 — живые дуэли. Та же лёгкая ссылка-карточка, без своего
           RPC-запроса здесь — вся игровая логика на /duel. */}
-      <Link href="/duel" className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm">
+      <Link href="/duel" className={cardClassName({ interactive: true, className: "focus-ring flex items-center justify-between gap-3" })}>
         <div>
           <p className="text-body-sm font-semibold">Дуэль по словарю</p>
           <p className="text-caption text-[var(--text-secondary)]">Пригласи друга на дуэль 1 на 1 в реальном времени</p>
@@ -368,7 +369,7 @@ export default async function ProgressPage({
       {activePathState && (
         <Link
           href={`/learning-paths/${activePathState.path.slug}`}
-          className="focus-ring flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm"
+          className={cardClassName({ interactive: true, className: "focus-ring flex flex-col gap-2" })}
         >
           <div className="flex items-center justify-between">
             <span className="text-body-sm font-semibold">Мой путь: {activePathState.path.title}</span>
@@ -464,7 +465,7 @@ export default async function ProgressPage({
       <a
         href="/api/share-card"
         download="lexreader-progress.png"
-        className="flex items-center justify-center gap-1.5 rounded-2xl bg-card p-4 text-center text-sm font-medium shadow-sm"
+        className={cardClassName({ interactive: true, className: "flex items-center justify-center gap-1.5 text-center text-sm font-medium" })}
       >
         <Share2 aria-hidden="true" className="h-4 w-4" />
         Скачать карточку прогресса
@@ -476,7 +477,7 @@ export default async function ProgressPage({
         streakFreezeAvailable={profile.streak_freeze_available}
       />
 
-      <div className="overflow-x-auto rounded-2xl bg-card p-4 shadow-sm">
+      <div className={cardClassName({ className: "overflow-x-auto" })}>
         <h2 className="mb-2 font-semibold">Активность</h2>
         <ActivityHeatmap counts={activityCounts} />
       </div>

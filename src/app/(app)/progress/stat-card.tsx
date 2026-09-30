@@ -1,3 +1,5 @@
+import { cardClassName } from "@/components/ui/card";
+
 // feat/hybrid-gamification-visuals: раньше каждая карточка красилась в свой
 // цвет из радуги (neutral/orange/green/purple/blue/red) — на одном экране
 // с ~14 карточками это не читалось как иерархия, только как шум. Один
@@ -14,7 +16,7 @@ export default function StatCard({
   size?: "primary" | "secondary";
 }) {
   return (
-    <div className="rounded-2xl bg-card px-4 py-4 shadow-sm">
+    <div className={cardClassName()}>
       {/* forest-text-contrast-fix: text-forest resolves to --color-forest,
           which isn't overridden for dark theme in tokens.css — same dark
           green on a dark card, axe-core measured ~1.3-1.7:1 (found via PR

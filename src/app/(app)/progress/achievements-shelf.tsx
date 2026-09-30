@@ -1,5 +1,6 @@
 import { Snowflake } from "lucide-react";
 import { ACHIEVEMENTS, WEEKLY_QUEST_TARGET } from "@/lib/achievements";
+import { cardClassName } from "@/components/ui/card";
 
 export default function AchievementsShelf({
   earnedIds,
@@ -13,7 +14,7 @@ export default function AchievementsShelf({
   const questRatio = Math.min(1, weeklyQuestProgress / WEEKLY_QUEST_TARGET);
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className={cardClassName()}>
       <h2 className="mb-3 font-semibold">Достижения</h2>
 
       <div className="flex flex-wrap gap-2.5">

@@ -1,3 +1,5 @@
+import { cardClassName } from "@/components/ui/card";
+
 const WEEKDAYS = [
   { short: "Пн", full: "Понедельник" },
   { short: "Вт", full: "Вторник" },
@@ -17,7 +19,7 @@ const WEEKDAYS = [
 // Будущие дни недели (ещё не наступили) уже честно false в activityCounts
 // (там просто нет ключа для даты в будущем) — отдельной логики не нужно.
 //
-// Своя карточка (rounded-2xl bg-card p-4 shadow-sm), тот же приём, что и у
+// Своя карточка (cardClassName, phase 10 — была shadow-sm), тот же приём, что и у
 // StreakHero прямо над ней и у всех остальных секций этой страницы
 // (Недельная лига/Дуэль/Мой путь и т.д.) — референсный CSS-сниппет
 // (.week-row: только flex+justify-between+margin-top) описывает внутренний
@@ -27,7 +29,7 @@ export default function WeekActivityRow({ activeDays }: { activeDays: boolean[] 
   const activeCount = activeDays.filter(Boolean).length;
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className={cardClassName()}>
       <div
         className="flex justify-between"
         role="img"

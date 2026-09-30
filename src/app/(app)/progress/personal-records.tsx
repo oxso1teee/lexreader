@@ -1,4 +1,5 @@
 import { Flame, Award, CheckCircle2, Layers, type LucideIcon } from "lucide-react";
+import { cardClassName } from "@/components/ui/card";
 
 // Раздел 5 промта 2026-07-30 (полировка): те же данные, что уже считаются
 // на этом экране — просто собранные так, чтобы вызывать гордость, а не
@@ -31,7 +32,7 @@ export default function PersonalRecords({
   ];
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className={cardClassName()}>
       <h2 className="mb-3 font-semibold">Личные рекорды</h2>
       <div className="grid grid-cols-2 gap-3">
         {records.map((r) => (

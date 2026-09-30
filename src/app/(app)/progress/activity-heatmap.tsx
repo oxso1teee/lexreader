@@ -52,7 +52,9 @@ export default function ActivityHeatmap({ counts }: { counts: Record<string, num
             title={`${day.key}: ${day.count}`}
             aria-label={`${day.key}: ${day.count} действий`}
             onClick={() => setSelected(day)}
-            className={`h-3 w-3 rounded-sm ${levelClass(day.count)}`}
+            // Phase 10: 1px обводка --border — пустые дни (--surface-muted)
+            // в тёмной теме почти сливались с карточкой, сетка "рассыпалась".
+            className={`h-3 w-3 rounded-[3px] border border-[var(--border)] ${levelClass(day.count)}`}
           />
         ))}
       </div>
