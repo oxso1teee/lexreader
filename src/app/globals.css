@@ -75,9 +75,25 @@ body {
     transform: rotateX(0deg);
   }
 }
+/* redesign/duolingo-flat phase 9 — лёгкий наклон ВСЕЙ карточки повторения
+   в момент показа ответа, синхронно с flip-reveal на самом ответе: ощущение
+   "перевернули карточку", но вопрос остаётся на месте (не двусторонний
+   3D-flip). perspective() внутри transform — у родителя нет своей. */
+@keyframes card-tilt {
+  from {
+    transform: perspective(900px) rotateX(-8deg);
+  }
+  to {
+    transform: perspective(900px) rotateX(0deg);
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   .flip-reveal {
     transform-origin: top center;
     animation: flip-reveal 0.35s ease-out;
+  }
+  .card-tilt {
+    transform-origin: center bottom;
+    animation: card-tilt 0.35s ease-out;
   }
 }

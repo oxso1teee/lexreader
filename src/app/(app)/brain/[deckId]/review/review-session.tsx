@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Flame } from "lucide-react";
+import { AlertTriangle, BookmarkPlus, Check, Flame, Pencil, Star, Volume2, X } from "lucide-react";
 import { reviewWord, undoLastGrade, sendCardToNotebook, updateReviewBest, getCurrentStreak } from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
@@ -11,6 +11,8 @@ import { reviewFsrsCard, type FsrsStateRow } from "@/lib/fsrs";
 import { track } from "@/lib/posthog-client";
 import { loadReviewSession, saveReviewSession, clearReviewSession } from "@/lib/review-session-resume";
 import SessionComplete from "./session-complete";
+import { Button } from "@/components/ui/button";
+import { cardClassName } from "@/components/ui/card";
 
 export interface ReviewCard {
   flashcardId: string;
@@ -46,12 +48,26 @@ export interface ReviewCard {
 // same warm-orange hue family the reference asks for, just the shade that's
 // actually accessible. Good/Easy: --color-forest (~9.6:1) and
 // --color-forest-light (~6.28:1) both clear AA comfortably with white text.
-const GRADES: { value: 0 | 1 | 2 | 3; label: string; className: string }[] = [
-  { value: 0, label: "Не помню", className: "bg-[var(--color-danger)] hover:opacity-90" },
-  { value: 1, label: "Трудно", className: "bg-orange-700 hover:opacity-90" },
-  { value: 2, label: "Помню", className: "bg-[var(--color-forest)] hover:opacity-90" },
-  { value: 3, label: "Легко", className: "bg-[var(--color-forest-light)] hover:opacity-90" },
+//
+// redesign/duolingo-flat phase 9 — edge: цвет плотной нижней кромки
+// ("pressed edge", тот же принцип, что у .btn в src/styles/button.css) вместо
+// размытой drop-shadow. Для "Трудно" токена нет (фон — bg-orange-700, см.
+// выше), поэтому кромка — orange-800 из той же шкалы.
+const GRADES: { value: 0 | 1 | 2 | 3; label: string; className: string; edge: string }[] = [
+  { value: 0, label: "Не помню", className: "bg-[var(--color-danger)] hover:opacity-90", edge: "var(--danger-edge)" },
+  { value: 1, label: "Трудно", className: "bg-orange-700 hover:opacity-90", edge: "#9a3412" },
+  { value: 2, label: "Помню", className: "bg-[var(--color-forest)] hover:opacity-90", edge: "var(--leaf-edge)" },
+  { value: 3, label: "Легко", className: "bg-[var(--color-forest-light)] hover:opacity-90", edge: "var(--leaf-deep)" },
 ];
+
+// Phase 9 — счётчик оценок сессии: lucide-иконки вместо ❌🟠✅⭐, подпись
+// оценки — sr-only (эмодзи раньше хотя бы зачитывались скринридером).
+const TALLY_ICONS = [
+  { value: 0, Icon: X, color: "var(--color-danger-text)" },
+  { value: 1, Icon: AlertTriangle, color: "var(--ember-text)" },
+  { value: 2, Icon: Check, color: "var(--color-forest-text)" },
+  { value: 3, Icon: Star, color: "var(--sun-text)" },
+] as const;
 
 // Review mockup alignment — useSyncExternalStore, тот же паттерн, что уже
 // принят в src/lib/use-is-native.ts для точно такого же класса проблемы
@@ -445,7 +461,7 @@ export default function ReviewSession({
           title="Выйти (Esc)"
           className="flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
         >
-          ✕
+          <X aria-hidden="true" className="h-5 w-5" />
         </button>
         {/* Точки прогресса — одна на карточку, forest-light для пройденных
             (включая текущую), приглушённая для оставшихся. flex-wrap —
@@ -543,13 +559,17 @@ export default function ReviewSession({
         </form>
       ) : (
         <>
-          {/* Review mockup alignment — приподнятая карточка на
-              --surface-elevated/--border (тот же токен-язык, что уже принят
-              для /read), радиус 22px, мягкая тонированная тень (нет
-              литерального var(--shadow) в токенах — тот же приём "имени нет,
-              значение то же по духу", что --surface-elevated уже применял на
-              /read). */}
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-[18px] py-[30px] text-center shadow-[0_18px_60px_rgba(80,60,35,0.06)]">
+          {/* Phase 9: плоская Card (2px --border-strong, без тени). card-tilt —
+              лёгкий наклон всей карточки (rotateX -8deg → 0, globals.css) в
+              момент revealAnswer(), синхронно с flip-reveal ответа ниже:
+              класс появляется вместе с revealed, так что анимация
+              проигрывается заново на каждой карточке. Вопрос остаётся
+              видимым — это не двусторонний 3D-flip. */}
+          <div
+            className={cardClassName({
+              className: `flex flex-1 flex-col items-center justify-center gap-4 px-[18px] py-[30px] text-center ${revealed ? "card-tilt" : ""}`,
+            })}
+          >
             <div className="flex items-center gap-2">
               <p className="text-[25px] font-bold">{question}</p>
               {speechAvailable && (
@@ -559,7 +579,7 @@ export default function ReviewSession({
                   aria-label="Произнести"
                   className="flex min-h-9 min-w-9 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
                 >
-                  🔊
+                  <Volume2 aria-hidden="true" className="h-5 w-5" />
                 </button>
               )}
               <button
@@ -568,7 +588,7 @@ export default function ReviewSession({
                 aria-label="Редактировать карточку"
                 className="flex min-h-9 min-w-9 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
               >
-                ✎
+                <Pencil aria-hidden="true" className="h-4 w-4" />
               </button>
             </div>
 
@@ -628,15 +648,17 @@ export default function ReviewSession({
                   type="button"
                   onClick={handleSendToNotebook}
                   disabled={notebookStatus === "saving" || notebookStatus === "done"}
-                  className="mt-1 text-xs font-medium text-[var(--text-secondary)] underline-offset-2 hover:text-black hover:underline disabled:no-underline disabled:opacity-60 dark:hover:text-white"
+                  className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] underline-offset-2 hover:text-black hover:underline disabled:no-underline disabled:opacity-60 dark:hover:text-white"
                 >
+                  {notebookStatus === "done" && <Check aria-hidden="true" className="h-3.5 w-3.5" />}
+                  {notebookStatus === "idle" && <BookmarkPlus aria-hidden="true" className="h-3.5 w-3.5" />}
                   {notebookStatus === "done"
-                    ? "✓ Сохранено в слова из чтения"
+                    ? "Сохранено в слова из чтения"
                     : notebookStatus === "saving"
                       ? "Добавляем…"
                       : notebookStatus === "error"
                         ? "Не удалось — попробовать снова?"
-                        : "📥 Сохранить в слова из чтения"}
+                        : "Сохранить в слова из чтения"}
                 </button>
               </div>
             )}
@@ -648,13 +670,10 @@ export default function ReviewSession({
             // /home, /read и /library в этой серии задач (референс это
             // явно не описывает, но чёрно-белые кнопки — тот самый дрейф от
             // бренда, что зачищался на каждом предыдущем экране).
-            <button
-              type="button"
-              onClick={revealAnswer}
-              className="mt-4 rounded-full bg-[var(--color-forest)] px-5 py-3 font-medium text-white"
-            >
+            // Phase 9: общая "пухлая" кнопка (src/styles/button.css).
+            <Button variant="leaf" onClick={revealAnswer} className="mt-4">
               Показать ответ
-            </button>
+            </Button>
           ) : (
             <div className="mt-4 flex flex-col gap-3">
               {bestSessionCount > 0 && (
@@ -673,7 +692,11 @@ export default function ReviewSession({
                 </div>
               )}
               {/* Review mockup alignment — 4 в ряд вместо 2×2, радиус 16px
-                  вместо pill, тень снизу под каждой кнопкой. previewDays/
+                  вместо pill. Phase 9: вместо размытой тени — плотная 3px
+                  кромка снизу (inset box-shadow цвета g.edge через
+                  --grade-edge), при нажатии кнопка проседает на её высоту,
+                  как .btn; pb на 3px больше pt — метка остаётся по центру
+                  "лицевой" части над кромкой. previewDays/
                   formatInterval() ниже — та же самая формула, что и раньше,
                   не тронута, только разметка вокруг неё. */}
               <div className="grid grid-cols-4 gap-2">
@@ -696,7 +719,8 @@ export default function ReviewSession({
                     type="button"
                     disabled={isPending}
                     onClick={() => grade(g.value)}
-                    className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-2xl px-[3px] py-[10px] text-center font-medium text-white shadow-[0_4px_10px_-2px_rgba(0,0,0,0.3)] transition-opacity disabled:opacity-50 ${g.className}`}
+                    style={{ "--grade-edge": g.edge } as CSSProperties}
+                    className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-2xl px-[3px] pt-[10px] pb-[13px] text-center font-medium text-white shadow-[inset_0_-3px_0_0_var(--grade-edge)] transition-[opacity,transform,box-shadow] duration-75 active:translate-y-[3px] active:shadow-none disabled:translate-y-0 disabled:opacity-50 disabled:shadow-[inset_0_-3px_0_0_var(--grade-edge)] ${g.className}`}
                   >
                     <span className="text-xs leading-tight">{g.label}</span>
                     {/* M3 Slice 4.1: opacity-80 white blended over these
@@ -717,10 +741,13 @@ export default function ReviewSession({
       {/* Из разбора конкурента (п. "Живой счётчик ответов"): промежуточный
           итог ТЕКУЩЕЙ сессии, не за всё время. */}
       <div className="mt-4 flex justify-center gap-3 text-xs text-[var(--text-secondary)]">
-        <span>❌ {tally[0]}</span>
-        <span>🟠 {tally[1]}</span>
-        <span>✅ {tally[2]}</span>
-        <span>⭐ {tally[3]}</span>
+        {TALLY_ICONS.map(({ value, Icon, color }) => (
+          <span key={value} className="flex items-center gap-1">
+            <Icon aria-hidden="true" className="h-3.5 w-3.5" style={{ color }} strokeWidth={2.5} />
+            <span className="sr-only">{GRADES[value].label}:</span>
+            {tally[value]}
+          </span>
+        ))}
       </div>
 
       {/* M3 Slice 4 §6: клавиатурные подсказки — desktop only, мобильным
