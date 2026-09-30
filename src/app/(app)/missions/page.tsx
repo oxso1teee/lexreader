@@ -1,22 +1,12 @@
 import Link from "next/link";
-import { Playfair_Display } from "next/font/google";
 import { Target } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { getOrGenerateActiveMissions, getStartedMissionProgress } from "@/lib/missions/persist";
 import { createClient } from "@/lib/supabase/server";
 import EmptyState from "@/components/empty-state";
+import { ButtonLink } from "@/components/ui/button";
 import MissionCard from "@/components/product/missions/mission-card";
 import MissionsSubHeader from "./sub-header";
-
-// Missions mockup alignment — scoped Playfair Display for the hero banner's
-// title, same pattern as library/page.tsx (--font-library-serif) and
-// read/[textId]/page.tsx (--font-reading): local next/font/google load
-// right here, not the shared --font-serif (only wired up in
-// landing-page.tsx).
-const playfairDisplay = Playfair_Display({
-  variable: "--font-missions-hero",
-  subsets: ["latin", "cyrillic"],
-});
 
 // Missions has no nav entry of its own — this is the "see everything active"
 // page reached from Today's compact list, mirroring how
@@ -48,11 +38,11 @@ export default async function MissionsPage() {
       {startedProgress && (
         <Link
           href={`/missions/${startedProgress.mission.id}`}
-          className={`${playfairDisplay.variable} focus-ring block rounded-[20px] px-[17px] py-4 text-white`}
+          className="focus-ring block rounded-[20px] px-[17px] py-4 text-white"
           style={{ background: "linear-gradient(150deg, var(--color-forest), var(--color-forest-light))" }}
         >
           <p className="text-[10.5px] font-bold uppercase tracking-wide opacity-85">Миссия дня</p>
-          <p className="mt-1 mb-2.5 font-[family-name:var(--font-missions-hero)] text-[17px] font-bold italic">
+          <p className="mt-1 mb-2.5 font-display text-[17px] font-bold">
             {startedProgress.mission.title}
           </p>
           <div
@@ -74,12 +64,9 @@ export default async function MissionsPage() {
           title="Пока нет активных миссий"
           body="Миссии появляются, когда в профиле «Мой английский» накопится достаточно данных — почитай что-нибудь, повтори карточки в Мозге или пройди мини-диагностику."
           action={
-            <Link
-              href="/language-twin"
-              className="focus-ring mt-2 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
-            >
+            <ButtonLink href="/language-twin" variant="leaf" className="mt-2">
               Открыть «Мой английский»
-            </Link>
+            </ButtonLink>
           }
         />
       ) : (

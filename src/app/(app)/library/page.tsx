@@ -1,25 +1,10 @@
 import Link from "next/link";
-import { Playfair_Display } from "next/font/google";
 import { Plus, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 import LibraryBrowser from "./library-browser";
 import { materialsCountLabel, type LibraryItem } from "./library-item";
-
-// Library mockup alignment — заголовок "Библиотека" на Playfair Display
-// italic, тем же принципом, что уже применён в /read/[textId] (см.
-// --font-reading в src/app/read/[textId]/page.tsx): scoped-загрузка прямо
-// здесь, не через общий --font-serif/--font-playfair (тот подключён
-// только внутри landing-page.tsx, вне области видимости на /library —
-// PR #75, который добавлял его в корневой layout.tsx, ещё не смержен, и
-// его правка layout.tsx всё равно вне заявленного для этой задачи списка
-// файлов). page-header.tsx тоже не в списке файлов этой задачи — заголовок
-// собран прямо здесь, а не через правку общего компонента.
-const playfairDisplay = Playfair_Display({
-  variable: "--font-library-serif",
-  subsets: ["latin", "cyrillic"],
-});
 
 export default async function LibraryPage() {
   const profile = await requireProfile();
@@ -134,10 +119,10 @@ export default async function LibraryPage() {
   ];
 
   return (
-    <div className={`${playfairDisplay.variable} relative flex flex-1 flex-col`}>
+    <div className="relative flex flex-1 flex-col">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-5 py-6">
-        {/* Library mockup alignment — референс: заголовок (Playfair italic,
-            ~19px) слева, круглая иконка поиска справа. "+Добавить материал"
+        {/* Library mockup alignment — референс: заголовок (~19px, font-display —
+            Unbounded, как остальная система) слева, круглая иконка поиска справа. "+Добавить материал"
             и строка с числом материалов — существующая функциональность,
             не в референсе явно, но и не убрана: описание количества
             осталось отдельной строкой ниже, кнопка — рядом с иконкой
@@ -147,7 +132,7 @@ export default async function LibraryPage() {
             library-browser.tsx, тот не тронут) — обычная HTML-навигация
             по якорю, без нового client-side состояния. */}
         <div className="flex items-center justify-between gap-3">
-          <h1 className="font-[family-name:var(--font-library-serif)] text-[19px] font-bold italic">Библиотека</h1>
+          <h1 className="font-display text-[19px] font-bold">Библиотека</h1>
           <div className="flex shrink-0 items-center gap-2">
             <a
               href="#library-search"

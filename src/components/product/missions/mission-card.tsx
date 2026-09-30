@@ -62,7 +62,7 @@ export default function MissionCard({ mission }: { mission: MissionRow }) {
   return (
     <Link
       href={`/missions/${mission.id}`}
-      className="focus-ring flex items-center gap-2.5 rounded-[14px] border border-[var(--border)] bg-card px-[13px] py-[11px] transition-shadow hover:shadow-md"
+      className="focus-ring flex items-center gap-2.5 rounded-[14px] border border-[var(--border)] bg-card px-[13px] py-[11px] transition-colors hover:border-[var(--sky)]"
     >
       {/* aria-hidden: type is still conveyed to assistive tech via the
           sr-only text below, not lost, just moved off the visible icon. */}
