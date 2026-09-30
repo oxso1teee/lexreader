@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { track } from "@/lib/posthog-client";
 import { describeDuelError, DUEL_ROUND_TIME_LIMIT_MS, type DuelState } from "@/lib/duel";
 import { dealNextDuelRoundAction, createDuelAction } from "../actions";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 // docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
 // "Живые дуэли по словарю 1 на 1". Живое состояние: postgres_changes на
@@ -161,12 +163,12 @@ export default function DuelRoom({
 
   if (!state) {
     return (
-      <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+      <Card as="section" className="p-6 text-center">
         <p className="text-body-sm text-[var(--text-secondary)]">Дуэль не найдена — возможно, ссылка неверна.</p>
         <Link href="/duel" className="focus-ring mt-3 inline-block text-body-sm font-semibold text-[var(--color-forest-text)]">
           ← Создать свою дуэль
         </Link>
-      </section>
+      </Card>
     );
   }
 
@@ -185,57 +187,48 @@ export default function DuelRoom({
   return (
     <div className="flex flex-col gap-4">
       {error && (
-        <p role="alert" className="rounded-2xl bg-[var(--color-danger-text)]/10 p-3 text-body-sm text-[var(--color-danger-text)]">
+        <p role="alert" className="rounded-2xl border border-[var(--color-danger-text)]/25 bg-[var(--color-danger-text)]/10 p-3 text-body-sm text-[var(--color-danger-text)]">
           {error}
         </p>
       )}
 
       {!state.isParticipant && state.status === "waiting" && (
-        <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+        <Card as="section" className="p-6 text-center">
           <p className="text-h3 mb-1">{state.creatorInitials} приглашает тебя на дуэль по словарю</p>
           <p className="text-body-sm mb-4 text-[var(--text-secondary)]">{state.roundCount} раундов, одинаковые слова для обоих.</p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={handleJoin}
-            className="focus-ring mx-auto flex min-h-11 items-center rounded-full bg-forest px-6 text-body-sm font-medium text-white disabled:opacity-50"
-          >
+          <Button variant="leaf" disabled={busy} onClick={handleJoin}>
             {busy ? "…" : "Присоединиться"}
-          </button>
-        </section>
+          </Button>
+        </Card>
       )}
 
       {!state.isParticipant && state.status !== "waiting" && (
-        <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+        <Card as="section" className="p-6 text-center">
           <p className="text-body-sm text-[var(--text-secondary)]">Эта дуэль уже началась без тебя.</p>
-        </section>
+        </Card>
       )}
 
       {state.isParticipant && state.status === "waiting" && (
-        <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+        <Card as="section" className="p-6 text-center">
           <p className="text-h3 mb-1">Ждём соперника…</p>
           <p className="text-body-sm mb-4 text-[var(--text-secondary)]">Пришли ссылку другу, чтобы начать.</p>
           <div className="mx-auto flex max-w-sm items-center gap-2">
             <code className="min-w-0 flex-1 overflow-x-auto rounded-lg bg-[var(--background)] px-2 py-1.5 text-caption whitespace-nowrap">{inviteUrl}</code>
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="focus-ring flex min-h-11 shrink-0 items-center gap-1 rounded-full bg-forest px-3 text-body-sm font-medium text-white"
-            >
+            <Button variant="leaf" size="sm" onClick={handleCopyLink} className="min-h-11 shrink-0 gap-1 px-3">
               {copied ? "Скопировано" : "Копировать"}
               {copied && <Check aria-hidden="true" className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
-        </section>
+        </Card>
       )}
 
       {state.status === "active" && (
         <>
           {scoreRow}
           {!state.round ? (
-            <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+            <Card as="section" className="p-6 text-center">
               <p className="text-body-sm text-[var(--text-secondary)]">Готовим первый раунд…</p>
-            </section>
+            </Card>
           ) : (
             <RoundView round={state.round} onAnswer={handleAnswer} busy={busy} nowMs={nowMs} />
           )}
@@ -243,7 +236,7 @@ export default function DuelRoom({
       )}
 
       {state.status === "finished" && (
-        <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+        <Card as="section" className="p-6 text-center">
           <p className="text-h3 mb-1 flex items-center justify-center gap-1.5">
             {state.isDraw ? (
               "Ничья!"
@@ -259,18 +252,15 @@ export default function DuelRoom({
           {scoreRow}
           <div className="mt-4 flex flex-col items-center gap-2">
             <form action={createDuelAction}>
-              <button
-                type="submit"
-                className="focus-ring flex min-h-11 items-center rounded-full bg-forest px-5 text-body-sm font-medium text-white"
-              >
+              <Button type="submit" variant="leaf">
                 Играть ещё раз
-              </button>
+              </Button>
             </form>
             <Link href="/progress" className="focus-ring text-body-sm text-[var(--color-forest-text)]">
               К прогрессу
             </Link>
           </div>
-        </section>
+        </Card>
       )}
     </div>
   );
@@ -314,7 +304,7 @@ function RoundView({
 
   if (round.resolvedAt) {
     return (
-      <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+      <Card as="section" className="p-6 text-center">
         <p className="text-caption text-[var(--text-secondary)]">Раунд {round.index}</p>
         <p className="text-h3 my-2">{round.word}</p>
         {/* Duel mockup alignment — same 4-option grid as the unanswered
@@ -330,12 +320,12 @@ function RoundView({
             return (
               <div
                 key={opt}
-                className={`rounded-2xl border px-4 py-3 text-left ${
+                className={`rounded-2xl border-2 px-4 py-3 text-left ${
                   isCorrect
                     ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)] font-bold text-[var(--color-forest-text)]"
                     : isMyWrongPick
                       ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
-                      : "border-black/10 dark:border-white/15"
+                      : "border-[var(--border-strong)]"
                 }`}
               >
                 {opt}
@@ -354,24 +344,24 @@ function RoundView({
           </span>
         </div>
         <p className="text-caption mt-3 text-[var(--text-secondary)]">Следующий раунд скоро начнётся…</p>
-      </section>
+      </Card>
     );
   }
 
   if (round.myAnswer) {
     return (
-      <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+      <Card as="section" className="p-6 text-center">
         <p className="text-caption text-[var(--text-secondary)]">Раунд {round.index}</p>
         <p className="text-h3 my-2">{round.word}</p>
         <p className="text-body-sm text-[var(--text-secondary)]">
           {round.opponentAnswered ? "Соперник тоже ответил — подводим итог…" : "Ответ принят — ждём соперника…"}
         </p>
-      </section>
+      </Card>
     );
   }
 
   return (
-    <section className="rounded-2xl bg-[var(--surface)] p-6 text-center shadow-sm">
+    <Card as="section" className="p-6 text-center">
       <div className="mb-2 flex items-center justify-between text-caption text-[var(--text-secondary)]">
         <span>Раунд {round.index}</span>
         <span aria-live="polite">{remainingSeconds}с</span>
@@ -384,7 +374,7 @@ function RoundView({
             type="button"
             disabled={busy}
             onClick={() => onAnswer(opt)}
-            className="focus-ring rounded-2xl border border-black/10 px-4 py-3 text-left transition-colors hover:border-black/30 disabled:opacity-50 dark:border-white/15 dark:hover:border-white/40"
+            className="focus-ring rounded-2xl border-2 border-[var(--border-strong)] px-4 py-3 text-left transition-colors hover:border-[var(--sky)] disabled:opacity-50"
           >
             {opt}
           </button>
@@ -393,6 +383,6 @@ function RoundView({
       {round.opponentAnswered && (
         <p className="text-caption mt-3 text-[var(--text-secondary)]">Соперник уже ответил — твоя очередь.</p>
       )}
-    </section>
+    </Card>
   );
 }

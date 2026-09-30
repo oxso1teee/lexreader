@@ -3,6 +3,8 @@ import { requireProfile } from "@/lib/auth";
 import { READY_LANGUAGES } from "@/lib/languages";
 import PageHeader from "@/components/product/page-header";
 import { createDuelAction } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 // docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
 // "Живые дуэли по словарю 1 на 1". Живая проверка показала: случайный
@@ -23,12 +25,12 @@ export default async function DuelLandingPage({
       <PageHeader title="Дуэль по словарю" description="Тест на скорость и точность против друга — 1 на 1." />
 
       {error && (
-        <p role="alert" className="rounded-2xl bg-[var(--color-danger-text)]/10 p-3 text-body-sm text-[var(--color-danger-text)]">
+        <p role="alert" className="rounded-2xl border border-[var(--color-danger-text)]/25 bg-[var(--color-danger-text)]/10 p-3 text-body-sm text-[var(--color-danger-text)]">
           {decodeURIComponent(error)}
         </p>
       )}
 
-      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+      <Card as="section">
         <p className="text-body-sm text-[var(--text-secondary)]">
           Оба игрока получают одинаковые слова из общего частотного списка (не из твоей личной
           колоды) — {"7 раундов"}, по одному слову за раз. Ответ засчитывается, только если он
@@ -41,15 +43,12 @@ export default async function DuelLandingPage({
           </p>
         ) : (
           <form action={createDuelAction} className="mt-3">
-            <button
-              type="submit"
-              className="focus-ring flex min-h-11 items-center rounded-full bg-forest px-5 text-body-sm font-medium text-white"
-            >
+            <Button type="submit" variant="leaf">
               Создать дуэль и пригласить друга
-            </button>
+            </Button>
           </form>
         )}
-      </section>
+      </Card>
 
       <Link href="/progress" className="focus-ring self-start text-body-sm text-[var(--color-forest-text)]">
         ← К прогрессу
