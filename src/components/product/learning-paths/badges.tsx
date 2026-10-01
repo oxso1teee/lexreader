@@ -5,7 +5,7 @@ import type { SkillConfidence, SkillStatus } from "@/lib/learning-paths/types";
 // every badge pairs an icon + text label, color is a reinforcement only.
 // redesign/duolingo-flat phase 2: ○◐◑◕✓ glyphs → lucide (one icon system).
 const STATUS_META: Record<SkillStatus, { icon: LucideIcon; label: string; className: string }> = {
-  not_started: { icon: Circle, label: "Не начато", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
+  not_started: { icon: Circle, label: "Не начато", className: "bg-[var(--border)] text-[var(--text-secondary)]" },
   introduced: { icon: Sprout, label: "Изучается", className: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]" },
   practicing: { icon: Dumbbell, label: "Практика", className: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]" },
   improving: { icon: TrendingUp, label: "Улучшается", className: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]" },
@@ -29,7 +29,7 @@ export function SkillStatusBadge({ status }: { status: SkillStatus }) {
 }
 
 const CONFIDENCE_META: Record<SkillConfidence, { label: string; className: string }> = {
-  low: { label: "Уверенность: низкая", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
+  low: { label: "Уверенность: низкая", className: "bg-[var(--border)] text-[var(--text-secondary)]" },
   medium: { label: "Уверенность: средняя", className: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]" },
   high: { label: "Уверенность: высокая", className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },
 };

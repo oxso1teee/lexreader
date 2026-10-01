@@ -10,7 +10,7 @@ const CONFIDENCE_LABEL: Record<ConfidenceLevel, string> = {
   high: "Уверенность: высокая",
 };
 const CONFIDENCE_CLASS: Record<ConfidenceLevel, string> = {
-  low: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",
+  low: "bg-[var(--border)] text-[var(--text-secondary)]",
   medium: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
   high: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]",
 };
@@ -41,8 +41,8 @@ const STATUS_CLASS: Record<PatternStatus, string> = {
   active: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
   improving: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]",
   resolved: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]",
-  uncertain: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",
-  dismissed: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",
+  uncertain: "bg-[var(--border)] text-[var(--text-secondary)]",
+  dismissed: "bg-[var(--border)] text-[var(--text-secondary)]",
 };
 
 export function StatusBadge({ status }: { status: PatternStatus }) {
