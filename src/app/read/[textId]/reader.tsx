@@ -553,7 +553,7 @@ export default function Reader({
 
   return (
     <div
-      className="relative flex min-h-screen flex-1 flex-col bg-[#f7f4ee] dark:bg-background"
+      className="relative flex min-h-screen flex-1 flex-col bg-[var(--background)]"
       style={themeColors ? { backgroundColor: themeColors.bg, color: themeColors.text } : undefined}
     >
       {/* Phase 8: без стекла — непрозрачный --surface + 2px --border-strong,
@@ -757,7 +757,7 @@ export default function Reader({
                 Перевод по предложениям — переводится только эта страница, кэшируется для всех.
               </p>
               {pageSentences.map((sentence, i) => (
-                <div key={i} className="mb-4 border-b border-black/[0.05] pb-4 last:border-0 dark:border-white/[0.06]">
+                <div key={i} className="mb-4 border-b border-[var(--border)] pb-4 last:border-0">
                   {/* Reader mockup alignment — только шрифт приведён в
                       соответствие (font-serif -> font-reading), остальное
                       в parallel-режиме не тронуто (границы задачи). */}
@@ -829,7 +829,7 @@ export default function Reader({
                       // фоне", что уже используют бейджи по всему приложению.
                       const wordClassName = selected
                         ? "focus-ring touch-none select-none rounded-[4px] px-[3px] py-0 font-semibold text-[var(--color-forest-text)] transition-colors [-webkit-touch-callout:none]"
-                        : "focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40";
+                        : "focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-[var(--sun-tint)]";
 
                       const wordHandlers = {
                         onPointerDown: () => onPointerDownWord(si, ti),
@@ -897,7 +897,7 @@ export default function Reader({
 
           {boundaryHint && (
             <div className="pointer-events-none fixed inset-x-0 bottom-20 z-20 flex justify-center px-5">
-              <div className="rounded-full bg-black/80 px-4 py-2 text-xs text-white dark:bg-white/90 dark:text-black">
+              <div className="rounded-full bg-[var(--foreground)] px-4 py-2 text-xs text-[var(--background)]">
                 Фразу можно выделить только в пределах одного предложения
               </div>
             </div>
@@ -910,7 +910,7 @@ export default function Reader({
           )}
 
           <footer
-            className="sticky bottom-0 z-10 mt-4 -mx-4 border-t-2 border-[var(--border-strong)] bg-[#f7f4ee] px-4 py-3 dark:bg-background sm:-mx-6 sm:px-6"
+            className="sticky bottom-0 z-10 mt-4 -mx-4 border-t-2 border-[var(--border-strong)] bg-[var(--background)] px-4 py-3 sm:-mx-6 sm:px-6"
             style={themeColors ? { backgroundColor: themeColors.bg } : undefined}
           >
             <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
