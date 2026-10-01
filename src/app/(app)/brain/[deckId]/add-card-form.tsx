@@ -42,10 +42,10 @@ export default function AddCardForm({
       onSubmit={() => {
         submittedRef.current = true;
       }}
-      className="flex flex-col gap-2 rounded-xl border border-black/10 p-3 dark:border-white/15"
+      className="flex flex-col gap-2 rounded-xl border border-[var(--border-strong)] p-3"
     >
       <div className="flex gap-2">
-        <div className="flex w-1/2 items-center gap-1 rounded-lg border border-black/15 pr-1 focus-within:border-black/40 dark:border-white/20 dark:focus-within:border-white/40">
+        <div className="flex w-1/2 items-center gap-1 rounded-lg border border-[var(--border-strong)] pr-1 focus-within:border-[var(--color-forest)]">
           <input
             name="front"
             value={front}
@@ -56,7 +56,7 @@ export default function AddCardForm({
           />
           <MicButton lang={targetLanguage} onResult={setFront} />
         </div>
-        <div className="flex w-1/2 items-center gap-1 rounded-lg border border-black/15 pr-1 focus-within:border-black/40 dark:border-white/20 dark:focus-within:border-white/40">
+        <div className="flex w-1/2 items-center gap-1 rounded-lg border border-[var(--border-strong)] pr-1 focus-within:border-[var(--color-forest)]">
           <input
             name="back"
             value={back}
@@ -71,11 +71,11 @@ export default function AddCardForm({
       <input
         name="notes"
         placeholder="Заметка (необязательно)"
-        className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+        className="rounded-lg border border-[var(--border-strong)] px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
       />
-      {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.error && <p className="text-sm text-[var(--color-danger-text)]">{state.error}</p>}
       {state.paywall && (
-        <p className="text-sm text-black/60 dark:text-white/60">
+        <p className="text-sm text-[var(--text-secondary)]">
           На бесплатном тарифе можно держать до {FREE_FLASHCARD_LIMIT} карточек.
           {!isNative && (
             <>

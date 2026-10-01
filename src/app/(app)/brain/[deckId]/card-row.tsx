@@ -38,34 +38,34 @@ export default function CardRow({
         onSubmit={() => {
           submittedRef.current = true;
         }}
-        className="flex flex-col gap-2 rounded-lg border border-black/10 px-3 py-2 dark:border-white/15"
+        className="flex flex-col gap-2 rounded-lg border border-[var(--border-strong)] px-3 py-2"
       >
         <div className="flex gap-2">
           <input
             name="front"
             defaultValue={front}
             required
-            className="w-1/2 rounded-lg border border-black/15 px-2 py-1.5 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="w-1/2 rounded-lg border border-[var(--border-strong)] px-2 py-1.5 text-sm outline-none focus:border-[var(--color-forest)]"
           />
           <input
             name="back"
             defaultValue={back}
             required
-            className="w-1/2 rounded-lg border border-black/15 px-2 py-1.5 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="w-1/2 rounded-lg border border-[var(--border-strong)] px-2 py-1.5 text-sm outline-none focus:border-[var(--color-forest)]"
           />
         </div>
         <input
           name="notes"
           defaultValue={notes ?? ""}
           placeholder="Заметка (необязательно)"
-          className="rounded-lg border border-black/15 px-2 py-1.5 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+          className="rounded-lg border border-[var(--border-strong)] px-2 py-1.5 text-sm outline-none focus:border-[var(--color-forest)]"
         />
-        {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+        {state.error && <p className="text-sm text-[var(--color-danger-text)]">{state.error}</p>}
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setIsEditing(false)}
-            className="flex min-h-9 flex-1 items-center justify-center rounded-full border border-black/10 text-sm dark:border-white/15"
+            className="flex min-h-9 flex-1 items-center justify-center rounded-full border border-[var(--border-strong)] text-sm"
           >
             Отмена
           </button>
@@ -82,7 +82,7 @@ export default function CardRow({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-3 py-2 text-sm dark:border-white/15">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-strong)] px-3 py-2 text-sm">
       <div className="min-w-0">
         <p className="truncate font-medium">{front}</p>
         <p className="truncate text-[var(--text-secondary)]">{back}</p>
@@ -91,7 +91,7 @@ export default function CardRow({
         <button
           type="button"
           onClick={() => setIsEditing(true)}
-          className="flex min-h-11 min-w-11 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
+          className="flex min-h-11 min-w-11 items-center justify-center text-[var(--text-secondary)] hover:text-foreground"
           aria-label="Редактировать карточку"
         >
           <Pencil aria-hidden="true" className="h-4 w-4" />
@@ -100,7 +100,7 @@ export default function CardRow({
           type="button"
           disabled={isPending}
           onClick={() => startTransition(() => deleteFlashcard(deckId, id))}
-          className="flex min-h-11 min-w-11 items-center justify-center text-red-500 disabled:opacity-40"
+          className="flex min-h-11 min-w-11 items-center justify-center text-[var(--color-danger-text)] disabled:opacity-40"
           aria-label="Удалить карточку"
         >
           <X aria-hidden="true" className="h-4 w-4" />
