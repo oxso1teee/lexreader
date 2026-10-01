@@ -30,7 +30,7 @@ export default async function LanguageTwinCorrectionPage() {
             низкой уверенностью
           </p>
           <p>
-            <span className="mr-1 inline-flex rounded-full bg-black/5 px-2 py-0.5 align-middle text-[var(--text-secondary)] dark:bg-white/10">
+            <span className="mr-1 inline-flex rounded-full bg-[var(--border)] px-2 py-0.5 align-middle text-[var(--text-secondary)]">
               <X aria-label="Не поддерживается" className="h-3 w-3" />
             </span>
             Это не полноценный грамматический разбор и не ИИ — набор правил будет расширяться постепенно

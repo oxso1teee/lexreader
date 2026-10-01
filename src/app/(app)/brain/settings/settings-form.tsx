@@ -57,7 +57,7 @@ function Toggle({
         type="button"
         onClick={() => setChecked((c) => !c)}
         className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-[var(--color-forest)]" : "bg-black/15 dark:bg-white/20"
+          checked ? "bg-[var(--color-forest)]" : "bg-[var(--border-strong)]"
         }`}
       >
         <span

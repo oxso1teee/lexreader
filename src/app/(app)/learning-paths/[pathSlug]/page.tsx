@@ -40,13 +40,13 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
       <LearningPathsSubHeader title={path.title} description={path.goal} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)] dark:bg-white/10">
+        <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">
           {path.levelFrom} → {path.levelTo}
         </span>
-        <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)] dark:bg-white/10">
+        <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">
           {path.stages.length} этапа · {skillCount} навыков
         </span>
-        <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)] dark:bg-white/10">
+        <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">
           v{path.version}
         </span>
       </div>
@@ -83,7 +83,7 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
                     {activeState && status ? (
                       <Link
                         href={`/learning-paths/${pathSlug}/${stage.key}`}
-                        className="focus-ring flex items-center gap-2.5 rounded-2xl border border-[var(--border)] bg-card px-3.5 py-2.5 hover:border-black/30 dark:hover:border-white/40"
+                        className="focus-ring flex items-center gap-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 hover:border-black/30 dark:hover:border-white/40"
                       >
                         <span
                           aria-hidden="true"

@@ -10,7 +10,10 @@ const PRIORITY_LABEL: Record<string, string> = { high: "Высокий прио�
 const PRIORITY_CLASS: Record<string, string> = {
   high: "bg-[var(--color-danger)]/15 text-[var(--color-danger-text)]",
   medium: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
-  low: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",
+  // --foreground, не --text-secondary: карточка сама на bg-[var(--border)],
+  // и вторая полупрозрачная подложка опускала вторичный текст до 4.32:1 в
+  // тёмной теме (ниже AA). С --foreground — 7.18:1 dark / 11.68:1 light.
+  low: "bg-[var(--border)] text-[var(--foreground)]",
 };
 const ACTION_LABEL: Record<string, string> = {
   open_custom_session: "Начать сессию",
@@ -57,7 +60,7 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
           : "/brain/all/review";
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-[var(--surface-muted)] p-3">
+    <div className="flex flex-col gap-2 rounded-xl bg-[var(--border)] p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${PRIORITY_CLASS[rec.priority] ?? PRIORITY_CLASS.low}`}>
           {PRIORITY_LABEL[rec.priority] ?? rec.priority}
