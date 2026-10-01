@@ -75,7 +75,7 @@ export default function NotebookClient({
       {reviewDeckId && (
         <Link
           href={`/brain/${reviewDeckId}/review`}
-          className="mb-4 flex items-center justify-between rounded-2xl bg-forest p-4 text-white shadow-sm"
+          className="mb-4 flex items-center justify-between rounded-2xl bg-forest p-4 text-white"
         >
           <span className="flex items-center gap-1.5 font-medium">
             {reviewDueCount > 0 ? (
@@ -102,7 +102,7 @@ export default function NotebookClient({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск по тетради..."
-            className="w-full rounded-lg border border-black/15 bg-card py-2 pl-9 pr-4 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] py-2 pl-9 pr-4 text-sm outline-none focus:border-[var(--color-forest)]"
           />
         </div>
 
@@ -110,7 +110,7 @@ export default function NotebookClient({
           <a
             href="/api/export/vocabulary"
             download
-            className="text-sm text-black/50 underline hover:text-black dark:text-white/50 dark:hover:text-white"
+            className="text-sm text-[var(--text-secondary)] underline hover:text-foreground"
           >
             Экспорт CSV
           </a>
@@ -119,8 +119,8 @@ export default function NotebookClient({
             onClick={() => setFavoritesOnly((v) => !v)}
             className={`flex min-h-9 items-center gap-1 rounded-full border px-3 text-sm font-medium transition-colors ${
               favoritesOnly
-                ? "border-yellow-500 text-yellow-600 dark:text-yellow-400"
-                : "border-black/15 text-black/50 hover:border-black/30 dark:border-white/20 dark:text-white/50 dark:hover:border-white/40"
+                ? "border-[var(--sun-text)] text-[var(--sun-text)]"
+                : "border-[var(--border-strong)] text-[var(--text-secondary)] hover:border-black/30 dark:hover:border-white/40"
             }`}
           >
             <Star aria-hidden="true" className="h-4 w-4" fill={favoritesOnly ? "currentColor" : "none"} />
@@ -135,8 +135,8 @@ export default function NotebookClient({
               href={tab.value ? `/notebook?status=${tab.value}` : "/notebook"}
               className={`flex min-h-11 shrink-0 items-center rounded-full border px-3 text-sm font-medium transition-colors ${
                 status === tab.value
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                  ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
+                  : "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
               }`}
             >
               {tab.label}

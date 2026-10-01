@@ -88,13 +88,13 @@ export default function AddWordModal({
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 px-6">
-      <div className="w-full max-w-sm rounded-2xl bg-card p-5">
+      <div className="w-full max-w-sm rounded-2xl bg-[var(--surface)] p-5">
         <h2 className="mb-4 text-center text-lg font-bold">Добавить слово</h2>
 
         <div className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-black/50 dark:text-white/50">Слово или фраза</span>
-            <div className="flex items-center gap-1 rounded-lg border border-black/15 pr-1 focus-within:border-black/40 dark:border-white/20 dark:focus-within:border-white/40">
+            <span className="text-[var(--text-secondary)]">Слово или фраза</span>
+            <div className="flex items-center gap-1 rounded-lg border border-[var(--border-strong)] pr-1 focus-within:border-[var(--color-forest)]">
               <input
                 type="text"
                 autoFocus
@@ -108,10 +108,10 @@ export default function AddWordModal({
           </label>
 
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-black/50 dark:text-white/50">
+            <span className="text-[var(--text-secondary)]">
               Перевод {suggesting && "· подбираем…"}
             </span>
-            <div className="flex items-center gap-1 rounded-lg border border-black/15 pr-1 focus-within:border-black/40 dark:border-white/20 dark:focus-within:border-white/40">
+            <div className="flex items-center gap-1 rounded-lg border border-[var(--border-strong)] pr-1 focus-within:border-[var(--color-forest)]">
               <input
                 type="text"
                 value={translation}
@@ -133,22 +133,22 @@ export default function AddWordModal({
           </label>
 
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-black/50 dark:text-white/50">Заметка (необязательно)</span>
+            <span className="text-[var(--text-secondary)]">Заметка (необязательно)</span>
             <input
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Где услышал / контекст"
-              className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+              className="rounded-lg border border-[var(--border-strong)] px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
             />
           </label>
 
           {paywall && (
-            <p className="text-sm text-black/60 dark:text-white/60">
+            <p className="text-sm text-[var(--text-secondary)]">
               Бесплатный лимит слов на сегодня исчерпан.
             </p>
           )}
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="text-sm text-[var(--color-danger-text)]">{error}</p>}
 
           <div className="mt-1 flex gap-2">
             <button
@@ -157,7 +157,7 @@ export default function AddWordModal({
                 setOpen(false);
                 reset();
               }}
-              className="flex-1 rounded-full bg-black/10 py-2.5 font-medium dark:bg-white/10"
+              className="flex-1 rounded-full bg-[var(--surface-muted)] py-2.5 font-medium"
             >
               Отмена
             </button>
