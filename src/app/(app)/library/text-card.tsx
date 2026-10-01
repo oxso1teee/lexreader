@@ -40,14 +40,14 @@ export default function TextCard({
     <div className="flex items-center gap-2">
       <Link
         href={`/read/${id}`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-black/10 px-4 py-3 transition-colors hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-[var(--border-strong)] px-4 py-3 transition-colors hover:border-black/30 dark:hover:border-white/40"
       >
         <span className="min-w-0 flex-1">
         <p className="flex items-center gap-1.5 truncate font-medium">
           {youtubeVideoId && <Video aria-hidden="true" className="h-4 w-4 shrink-0" />}
           {title}
         </p>
-        <p className="text-sm text-black/50 dark:text-white/50">
+        <p className="text-sm text-[var(--text-secondary)]">
           {wordCount ?? "?"} слов
           {levelTag ? ` · ${levelTag}` : ""}
           {estimatedMinutes ? ` · ≈${estimatedMinutes} мин` : ""}
@@ -58,9 +58,9 @@ export default function TextCard({
           </p>
         )}
         {percentRead > 0 && (
-          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--border-strong)]">
             <div
-              className="h-full rounded-full bg-emerald-500"
+              className="h-full rounded-full bg-[var(--color-forest)]"
               style={{ width: `${percentRead}%` }}
             />
           </div>
@@ -71,7 +71,7 @@ export default function TextCard({
         <Link
           href={`/watch/${id}`}
           aria-label="Смотреть с субтитрами"
-          className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-black/10 px-3 text-sm font-medium dark:border-white/15"
+          className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[var(--border-strong)] px-3 text-sm font-medium"
         >
           <Video aria-hidden="true" className="h-4 w-4" />
           Смотреть
@@ -83,7 +83,7 @@ export default function TextCard({
           disabled={isPending}
           onClick={() => startTransition(() => deleteText(id))}
           aria-label="Удалить текст"
-          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-red-500 disabled:opacity-40 dark:border-white/15"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[var(--color-danger-text)] disabled:opacity-40"
         >
           <X aria-hidden="true" className="h-4 w-4" />
         </button>

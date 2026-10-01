@@ -36,7 +36,7 @@ export default function PersonalRecords({
       <h2 className="mb-3 font-semibold">Личные рекорды</h2>
       <div className="grid grid-cols-2 gap-3">
         {records.map((r) => (
-          <div key={r.label} className="flex items-center gap-3 rounded-xl bg-black/5 px-3 py-2.5 dark:bg-white/10">
+          <div key={r.label} className="flex items-center gap-3 rounded-xl bg-[var(--border)] px-3 py-2.5">
             <span
               aria-hidden="true"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-forest-tint)]"

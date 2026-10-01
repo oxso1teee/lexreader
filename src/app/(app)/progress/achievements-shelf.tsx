@@ -30,7 +30,7 @@ export default function AchievementsShelf({
             <div
               key={a.id}
               title={`${a.title} — ${a.description}`}
-              className={`flex h-14 w-14 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 ${
+              className={`flex h-14 w-14 items-center justify-center rounded-full bg-[var(--border)] ${
                 earned ? "border-2 border-forest" : "opacity-30 grayscale"
               }`}
             >
@@ -40,9 +40,9 @@ export default function AchievementsShelf({
         })}
       </div>
 
-      <div className="mt-4 rounded-lg bg-black/5 p-3 dark:bg-white/10">
+      <div className="mt-4 rounded-lg bg-[var(--border)] p-3">
         <p className="mb-1 text-sm font-medium">Квест недели: добавь {WEEKLY_QUEST_TARGET} новых слов</p>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--border-strong)]">
           <div className="h-full rounded-full bg-forest" style={{ width: `${questRatio * 100}%` }} />
         </div>
         <p className="mt-1 text-xs text-[var(--text-secondary)]">
@@ -50,7 +50,7 @@ export default function AchievementsShelf({
         </p>
       </div>
 
-      <div className="mt-2 flex items-center gap-2 rounded-lg bg-black/5 p-3 text-sm dark:bg-white/10">
+      <div className="mt-2 flex items-center gap-2 rounded-lg bg-[var(--border)] p-3 text-sm">
         <Snowflake aria-hidden="true" className="h-4 w-4 shrink-0" />
         <span>
           {streakFreezeAvailable
