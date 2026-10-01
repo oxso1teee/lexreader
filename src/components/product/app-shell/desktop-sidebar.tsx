@@ -20,7 +20,7 @@ export default function DesktopSidebar({
 
   return (
     <aside
-      className="sticky top-0 hidden h-screen w-[var(--container-sidebar)] shrink-0 flex-col border-r border-black/10 bg-card px-3 py-5 md:flex dark:border-white/10"
+      className="sticky top-0 hidden h-screen w-[var(--container-sidebar)] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] px-3 py-5 md:flex"
       aria-label="Боковая навигация"
     >
       <Link href="/home" className="focus-ring mb-6 flex items-center gap-2 px-2 text-lg font-bold tracking-tight">
@@ -39,8 +39,8 @@ export default function DesktopSidebar({
               onClick={() => track("app_nav_clicked", { destination: item.href, viewport_type: "desktop" })}
               className={`focus-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
-                  ? "bg-forest/15 text-black dark:text-white"
-                  : "text-black/60 hover:bg-black/5 hover:text-black/90 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white/90"
+                  ? "bg-forest/15 text-[var(--foreground)]"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--border)] hover:text-[var(--foreground)]"
               }`}
             >
               {/* Цвет бренда остаётся на иконке (декоративная графика —
@@ -68,7 +68,7 @@ export default function DesktopSidebar({
       {planLabel && (
         <Link
           href="/settings"
-          className="focus-ring mt-4 truncate rounded-xl border border-black/10 px-3 py-2 text-xs font-medium text-[var(--text-secondary)] dark:border-white/10"
+          className="focus-ring mt-4 truncate rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)]"
         >
           {planLabel}
         </Link>
