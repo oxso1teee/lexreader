@@ -157,7 +157,7 @@ export default function AddWordModal({
                 setOpen(false);
                 reset();
               }}
-              className="flex-1 rounded-full bg-[var(--surface-muted)] py-2.5 font-medium"
+              className="flex-1 rounded-full bg-[var(--border)] py-2.5 font-medium"
             >
               Отмена
             </button>
