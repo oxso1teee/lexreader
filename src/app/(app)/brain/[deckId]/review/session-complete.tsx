@@ -164,9 +164,9 @@ export default function SessionComplete({
         </p>
       )}
       {streak !== null && (
-        <p className="flex items-center gap-1 text-black/60 dark:text-white/60">
+        <p className="flex items-center gap-1 text-[var(--text-secondary)]">
           Стрик: {streak}
-          <Flame aria-hidden="true" className="h-4 w-4 text-orange-500" />
+          <Flame aria-hidden="true" className="h-4 w-4 text-[var(--ember)]" />
         </p>
       )}
       {/* Review mockup alignment — список слов сессии (новый элемент). Все
@@ -193,13 +193,13 @@ export default function SessionComplete({
             <StatusBadge status={twinUpdate.status} />
             <TrendIndicator trend={twinUpdate.trend} />
           </div>
-          <p className="text-xs text-black/60 dark:text-white/60">{twinUpdate.patternTitle}</p>
+          <p className="text-xs text-[var(--text-secondary)]">{twinUpdate.patternTitle}</p>
         </div>
       )}
       {missionId && missionDone && (
         <Link
           href={`/missions/${missionId}`}
-          className="mt-2 rounded-full border border-black/15 px-5 py-3 font-medium hover:border-black/30 dark:border-white/20 dark:hover:border-white/40"
+          className="mt-2 rounded-full border border-[var(--border-strong)] px-5 py-3 font-medium hover:border-black/30 dark:hover:border-white/40"
         >
           Посмотреть результат миссии →
         </Link>

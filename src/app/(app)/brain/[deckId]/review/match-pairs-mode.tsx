@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import { reviewWord } from "./actions";
 import type { ReviewCard } from "./review-session";
+import { Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import SessionComplete from "./session-complete";
 
 const ROUND_SIZE = 6;
@@ -152,24 +154,20 @@ export default function MatchPairsMode({
                 onClick={() => pickWord(w.flashcardId)}
                 className={`flex items-center justify-between gap-1.5 rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
                   matched
-                    ? "border-emerald-600 bg-emerald-50 opacity-50 dark:bg-emerald-950"
+                    ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)] opacity-50"
                     : isWrong
-                      ? "border-red-500 bg-red-50 dark:bg-red-950"
+                      ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
                       : isSelected
-                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                        : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                        ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
+                        : "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
                 }`}
               >
                 <span>{w.front}</span>
                 {matched && (
-                  <span aria-hidden="true" className="shrink-0 text-emerald-700 dark:text-emerald-400">
-                    ✓
-                  </span>
+                  <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--color-success-text)]" />
                 )}
                 {isWrong && (
-                  <span aria-hidden="true" className="shrink-0 text-red-600 dark:text-red-400">
-                    ✗
-                  </span>
+                  <X aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--color-danger-text)]" />
                 )}
               </button>
             );
@@ -189,24 +187,20 @@ export default function MatchPairsMode({
                 onClick={() => pickTranslation(t.flashcardId)}
                 className={`flex items-center justify-between gap-1.5 rounded-lg border px-3 py-3 text-left text-sm transition-colors ${
                   matched
-                    ? "border-emerald-600 bg-emerald-50 opacity-50 dark:bg-emerald-950"
+                    ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)] opacity-50"
                     : isWrong
-                      ? "border-red-500 bg-red-50 dark:bg-red-950"
+                      ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
                       : isSelected
-                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                        : "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+                        ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
+                        : "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
                 }`}
               >
                 <span>{t.back}</span>
                 {matched && (
-                  <span aria-hidden="true" className="shrink-0 text-emerald-700 dark:text-emerald-400">
-                    ✓
-                  </span>
+                  <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--color-success-text)]" />
                 )}
                 {isWrong && (
-                  <span aria-hidden="true" className="shrink-0 text-red-600 dark:text-red-400">
-                    ✗
-                  </span>
+                  <X aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--color-danger-text)]" />
                 )}
               </button>
             );
@@ -215,14 +209,9 @@ export default function MatchPairsMode({
       </div>
 
       {roundDone && (
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={nextRound}
-          className="mt-4 rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
-        >
+        <Button variant="leaf" disabled={isPending} onClick={nextRound} className="mt-4">
           Далее
-        </button>
+        </Button>
       )}
     </div>
   );

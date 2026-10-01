@@ -80,7 +80,7 @@ export default function ReviewModeSwitcher({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-5 text-center">
         <p className="text-xl font-semibold">Нечего повторять</p>
-        <p className="text-black/60 dark:text-white/60">
+        <p className="text-[var(--text-secondary)]">
           Все слова повторены на сегодня. Возвращайся завтра или почитай что-нибудь новое.
         </p>
       </div>
@@ -92,7 +92,7 @@ export default function ReviewModeSwitcher({
       <p className="px-5 pt-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
         {sessionTitle}
       </p>
-      <div className="flex items-center justify-between gap-2 border-b border-black/10 px-5 pt-1 dark:border-white/10">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-5 pt-1">
         <div className="flex gap-2">
           {MODES.map((m) => (
             <button
@@ -101,8 +101,8 @@ export default function ReviewModeSwitcher({
               onClick={() => setMode(m.value)}
               className={`-mb-px flex min-h-11 items-center border-b-2 px-2 text-sm font-medium transition-colors ${
                 mode === m.value
-                  ? "border-black text-black dark:border-white dark:text-white"
-                  : "border-transparent text-[var(--text-secondary)] hover:text-black/70 dark:hover:text-white/70"
+                  ? "border-[var(--color-forest)] text-[var(--color-forest-text)]"
+                  : "border-transparent text-[var(--text-secondary)] hover:text-foreground"
               }`}
             >
               {m.label}
@@ -116,7 +116,7 @@ export default function ReviewModeSwitcher({
           }
           aria-label="Поменять направление изучения"
           title="Поменять направление изучения (только для этой сессии)"
-          className="mb-2 flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-black/10 px-3 text-xs font-medium text-black/60 hover:border-black/30 hover:text-black dark:border-white/15 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
+          className="mb-2 flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-black/30 hover:text-foreground dark:hover:border-white/40"
         >
           ⇄ {direction === "front_back" ? "Слово → Перевод" : "Перевод → Слово"}
         </button>

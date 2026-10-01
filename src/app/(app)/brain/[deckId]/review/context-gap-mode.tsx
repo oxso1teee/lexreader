@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import { reviewWord, getContextGapCards, type ContextGapCard } from "./actions";
 import type { ReviewCard } from "./review-session";
+import { Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import SessionComplete from "./session-complete";
 
 // M3 Slice 10 (brief Phase C §14, task #277) — "Context Gap": the target word/phrase is blanked
@@ -55,7 +57,7 @@ export default function ContextGapMode({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-5 text-center">
         <p className="text-xl font-semibold">Пока нет карточек для этого режима</p>
-        <p className="text-black/60 dark:text-white/60">
+        <p className="text-[var(--text-secondary)]">
           «Контекст» работает со словами, у которых сохранено предложение и слово в нём встречается
           ровно один раз. Сохраняй слова во время чтения — и они появятся здесь.
         </p>
@@ -107,10 +109,10 @@ export default function ContextGapMode({
           <span
             className={`mx-1 inline-block min-w-16 border-b-2 px-1 font-semibold ${
               result === "correct"
-                ? "border-emerald-600 text-emerald-700 dark:border-emerald-500 dark:text-emerald-400"
+                ? "border-[var(--color-forest)] text-[var(--color-success-text)]"
                 : result === "wrong"
-                  ? "border-red-500 text-red-600 dark:text-red-400"
-                  : "border-black/40 dark:border-white/40"
+                  ? "border-[var(--color-danger-text)] text-[var(--color-danger-text)]"
+                  : "border-[var(--border-strong)]"
             }`}
           >
             {result ? item.blanked : " "}
@@ -126,11 +128,15 @@ export default function ContextGapMode({
             aria-live="polite"
             className={`flex items-center gap-1.5 font-medium ${
               result === "correct"
-                ? "text-emerald-700 dark:text-emerald-400"
-                : "text-red-600 dark:text-red-400"
+                ? "text-[var(--color-success-text)]"
+                : "text-[var(--color-danger-text)]"
             }`}
           >
-            <span aria-hidden="true">{result === "correct" ? "✓" : "✗"}</span>
+            {result === "correct" ? (
+              <Check aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <X aria-hidden="true" className="h-4 w-4" />
+            )}
             {result === "correct" ? "Верно!" : `Правильный ответ: ${item.front}`}
           </p>
         )}
@@ -143,22 +149,18 @@ export default function ContextGapMode({
         disabled={!!result}
         autoFocus
         placeholder="Впиши пропущенное слово"
-        className={`mb-4 w-full rounded-lg border px-4 py-2.5 text-base outline-none focus:border-black/30 disabled:opacity-60 dark:focus:border-white/40 ${
+        className={`mb-4 w-full rounded-lg border px-4 py-2.5 text-base outline-none focus:border-[var(--color-forest)] disabled:opacity-60 ${
           result === "correct"
-            ? "border-emerald-600 dark:border-emerald-500"
+            ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)]"
             : result === "wrong"
-              ? "border-red-500 dark:border-red-500"
-              : "border-black/10 dark:border-white/15"
+              ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
+              : "border-[var(--border-strong)]"
         }`}
       />
 
-      <button
-        type="submit"
-        disabled={isPending || (!result && value.trim() === "")}
-        className="rounded-full bg-black px-5 py-3 font-medium text-white disabled:opacity-40 dark:bg-white dark:text-black"
-      >
+      <Button type="submit" variant="leaf" disabled={isPending || (!result && value.trim() === "")}>
         {result ? "Далее" : "Проверить"}
-      </button>
+      </Button>
     </form>
   );
 }

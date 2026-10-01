@@ -411,7 +411,7 @@ export default function ReviewSession({
               type="button"
               onClick={undo}
               disabled={isUndoing}
-              className="flex min-h-9 items-center justify-center gap-1 rounded-full border border-black/10 px-3 text-xs font-medium text-black/60 hover:border-black/30 hover:text-black disabled:opacity-50 dark:border-white/15 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
+              className="flex min-h-9 items-center justify-center gap-1 rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-black/30 hover:text-foreground disabled:opacity-50 dark:hover:border-white/40"
             >
               ↩ {isUndoing ? "Отменяем…" : `Отменить оценку «${lastGraded.front}»`}
             </button>
@@ -444,7 +444,7 @@ export default function ReviewSession({
         <div
           aria-hidden
           className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${
-            flash === "good" ? "bg-emerald-500/15" : "bg-red-500/15"
+            flash === "good" ? "bg-[var(--color-forest)]/15" : "bg-[var(--color-danger)]/15"
           }`}
         />
       )}
@@ -490,7 +490,7 @@ export default function ReviewSession({
               className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]"
               title={`Стрик: ${streak} ${streak === 1 ? "день" : "дней"} подряд`}
             >
-              <Flame aria-hidden="true" className="h-3.5 w-3.5 text-orange-500" />
+              <Flame aria-hidden="true" className="h-3.5 w-3.5 text-[var(--ember)]" />
               {streak}
             </span>
           )}
@@ -506,7 +506,7 @@ export default function ReviewSession({
           type="button"
           onClick={undo}
           disabled={isUndoing}
-          className="mb-4 flex min-h-9 items-center justify-center gap-1 self-center rounded-full border border-black/10 px-3 text-xs font-medium text-black/60 hover:border-black/30 hover:text-black disabled:opacity-50 dark:border-white/15 dark:text-white/60 dark:hover:border-white/40 dark:hover:text-white"
+          className="mb-4 flex min-h-9 items-center justify-center gap-1 self-center rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-black/30 hover:text-foreground disabled:opacity-50 dark:hover:border-white/40"
         >
           ↩ {isUndoing ? "Отменяем…" : `Отменить оценку «${lastGraded.front}»`}
         </button>
@@ -515,36 +515,36 @@ export default function ReviewSession({
       {isEditing ? (
         <form
           action={handleEditSubmit}
-          className="flex flex-1 flex-col justify-center gap-2 rounded-lg border border-black/10 p-3 dark:border-white/15"
+          className="flex flex-1 flex-col justify-center gap-2 rounded-lg border border-[var(--border-strong)] p-3"
         >
           <input
             name="front"
             defaultValue={card.front}
             required
             placeholder="Слово"
-            className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
           />
           <input
             name="back"
             defaultValue={card.back}
             required
             placeholder="Перевод"
-            className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
           />
           <input
             name="notes"
             defaultValue={card.notes ?? ""}
             placeholder="Заметка (необязательно)"
-            className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
           />
           {editState.error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{editState.error}</p>
+            <p className="text-sm text-[var(--color-danger-text)]">{editState.error}</p>
           )}
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="flex min-h-11 flex-1 items-center justify-center rounded-full border border-black/10 text-sm dark:border-white/15"
+              className="flex min-h-11 flex-1 items-center justify-center rounded-full border border-[var(--border-strong)] text-sm"
             >
               Отмена
             </button>
