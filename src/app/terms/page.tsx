@@ -11,7 +11,7 @@ export default function TermsPage() {
         ← На главную
       </Link>
       <h1 className="text-2xl font-bold">Условия использования</h1>
-      <p className="text-black/50 dark:text-white/50">Действует с 2 сентября 2026.</p>
+      <p className="text-[var(--text-secondary)]">Действует с 2 сентября 2026.</p>
 
       <h2 className="mt-2 text-lg font-semibold">1. Что это за сервис</h2>
       <p>

@@ -41,10 +41,10 @@ export default function ChangelogPage() {
       <h1 className="text-2xl font-bold">Что нового</h1>
       <div className="flex flex-col gap-3">
         {ENTRIES.map((e) => (
-          <div key={e.title} className="rounded-2xl bg-card p-4 shadow-sm">
+          <div key={e.title} className="rounded-2xl bg-[var(--surface)] p-4">
             <p className="text-xs text-black/40 dark:text-white/40">{e.date}</p>
             <p className="mt-1 font-semibold">{e.title}</p>
-            <p className="mt-1 text-sm text-black/60 dark:text-white/60">{e.body}</p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{e.body}</p>
           </div>
         ))}
       </div>

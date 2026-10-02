@@ -16,7 +16,7 @@ export default function GlobalError({
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
       <Frown aria-hidden="true" className="h-10 w-10 text-[var(--text-secondary)]" />
       <h1 className="text-xl font-semibold">Что-то пошло не так</h1>
-      <p className="text-sm text-black/60 dark:text-white/60">
+      <p className="text-sm text-[var(--text-secondary)]">
         Произошла непредвиденная ошибка. Попробуй ещё раз — обычно это временный сбой.
       </p>
       <div className="mt-2 flex gap-2">
@@ -29,7 +29,7 @@ export default function GlobalError({
         </button>
         <a
           href="/home"
-          className="flex min-h-11 items-center justify-center rounded-full border border-black/15 px-5 font-medium dark:border-white/20"
+          className="flex min-h-11 items-center justify-center rounded-full border border-[var(--border-strong)] px-5 font-medium"
         >
           На главную
         </a>
