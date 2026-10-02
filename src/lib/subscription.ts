@@ -25,13 +25,8 @@ export async function getPlan(supabase: SupabaseServerClient, userId: string): P
   if (data.status === "active") return data.plan as Plan;
 
   if (data.status === "past_due") {
-    // P0-АУДИТ (раздел 4): раньше при отсутствующем current_period_end
-    // (например, событие вебхука пришло не по порядку) grace period
-    // пропускался целиком — пользователя мгновенно откатывало на free.
-    // Без даты окончания периода отсчитываем grace period от текущего
-    // момента — тот же результат по духу (P0-PAY-04), но без нулевого окна.
-    const graceStart = data.current_period_end ? new Date(data.current_period_end).getTime() : Date.now();
-    const graceEnd = graceStart + PAYMENT_GRACE_PERIOD_DAYS * 86_400_000;
+    if (!data.current_period_end) return "free";
+    const graceEnd = new Date(data.current_period_end).getTime() + PAYMENT_GRACE_PERIOD_DAYS * 86_400_000;
     if (Date.now() < graceEnd) return data.plan as Plan;
   }
 

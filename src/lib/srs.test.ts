@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reviewSrsState, type SrsState } from "./srs.ts";
+import { reviewSrsState, isLearned, DEFAULT_SRS_PARAMS, type SrsState } from "./srs.ts";
 
 // Базовая линия поведения текущего SM-2-подобного алгоритма (src/lib/srs.ts)
 // перед возможной будущей миграцией на ts-fsrs. Значения ниже получены
@@ -73,6 +73,24 @@ test("второе повторение (repetitions=1): фиксированн�
   assertEaseClose(result.easeFactor, 2.5);
 });
 
+test("третье+ повторение (repetitions>=2): interval = round(interval * ease * intervalModifier)", () => {
+  // Единственная ветка, где интервал реально считается формулой ease*interval,
+  // а не фиксированным значением. Из {ease 2.5, interval 6, reps 2} + grade 2:
+  // 6 * 2.5 * 1.0 = 15, без бонуса, без обрезки maxInterval.
+  const result = reviewSrsState({ easeFactor: 2.5, intervalDays: 6, repetitions: 2 }, 2);
+  assert.equal(result.repetitions, 3);
+  assert.equal(result.intervalDays, 15);
+  assertEaseClose(result.easeFactor, 2.5);
+});
+
+test("третье+ повторение с grade=3 (Легко): к формуле применяется easyBonus (1.3)", () => {
+  // Из {ease 2.5, interval 6, reps 2} + grade 3: 6 * 2.5 * 1.0 = 15,
+  // затем * easyBonus 1.3 = 19.5, round -> 20. easeFactor растёт до 2.6.
+  const result = reviewSrsState({ easeFactor: 2.5, intervalDays: 6, repetitions: 2 }, 3);
+  assert.equal(result.intervalDays, 20);
+  assertEaseClose(result.easeFactor, 2.6);
+});
+
 test("минимальный ease factor: повторные grade=0 стабилизируются на 1.3, не уходят ниже", () => {
   let state: SrsState = { easeFactor: 2.5, intervalDays: 10, repetitions: 3 };
   for (let i = 0; i < 10; i++) {
@@ -93,4 +111,21 @@ test("максимальный interval: результат не превыша�
 test("максимальный interval применяется и при grade=3 (Легко) с бонусом", () => {
   const result = reviewSrsState({ easeFactor: 2.5, intervalDays: 40000, repetitions: 5 }, 3);
   assert.equal(result.intervalDays, 36500);
+});
+
+test("кастомные params переопределяют дефолты (Study Settings в разделе «Мозг»)", () => {
+  const params = { ...DEFAULT_SRS_PARAMS, graduatingIntervalDays: 2, easyIntervalDays: 7, intervalModifier: 2.0 };
+  assert.equal(reviewSrsState(NEW_CARD, 2, params).intervalDays, 2);
+  assert.equal(reviewSrsState(NEW_CARD, 3, params).intervalDays, 7);
+  // intervalModifier применяется к фиксированному 6-дневному второму повтору:
+  // round(6 * 2.0) = 12.
+  assert.equal(reviewSrsState({ easeFactor: 2.5, intervalDays: 2, repetitions: 1 }, 2, params).intervalDays, 12);
+});
+
+test("isLearned: карточка считается выученной только при intervalDays>=21 И repetitions>=3", () => {
+  // Контракт используется в src/lib/vocabulary-list.ts для вывода
+  // status 'known' vs 'learning' — регрессия здесь меняет статистику прогресса.
+  assert.equal(isLearned({ easeFactor: 2.5, intervalDays: 21, repetitions: 3 }), true);
+  assert.equal(isLearned({ easeFactor: 2.5, intervalDays: 20, repetitions: 3 }), false);
+  assert.equal(isLearned({ easeFactor: 2.5, intervalDays: 21, repetitions: 2 }), false);
 });
