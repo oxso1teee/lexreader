@@ -129,7 +129,7 @@ test("Review Session has no serious/critical axe violations on mobile (390px)", 
   expect(seriousViolations(results), JSON.stringify(seriousViolations(results), null, 2)).toEqual([]);
 });
 
-test("Review Session is keyboard-navigable: Space reveals, 1-4 grades, Escape exits with confirm", async ({
+test("Review Session is keyboard-navigable: Space reveals, Escape with nothing graded exits without a confirm", async ({
   page,
 }) => {
   await login(page);
@@ -139,10 +139,19 @@ test("Review Session is keyboard-navigable: Space reveals, 1-4 grades, Escape ex
   await page.keyboard.press("Space");
   await expect(page.getByRole("button", { name: /Не помню/ })).toBeVisible();
 
-  page.once("dialog", (dialog) => dialog.dismiss());
+  // exitSession() (review-session.tsx) only asks "Выйти из сессии?" once at
+  // least one card has been graded (sessionTotal > 0) — there is no progress
+  // to lose yet, so Escape leaves straight for /brain. The old version of
+  // this test dismissed a confirm and expected to stay on the card; it only
+  // ever passed when the navigation lost a race against the 5s timeout.
+  let dialogShown = false;
+  page.once("dialog", (dialog) => {
+    dialogShown = true;
+    void dialog.dismiss();
+  });
   await page.keyboard.press("Escape");
-  // Dialog dismissed → session stays open, still on the same card.
-  await expect(page.getByRole("button", { name: /Не помню/ })).toBeVisible();
+  await expect(page).toHaveURL(/\/brain$/);
+  expect(dialogShown, "no confirm expected when nothing has been graded").toBe(false);
 });
 
 test("Review Session keyboard shortcuts don't fire while editing a card", async ({ page }) => {
