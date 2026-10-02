@@ -18,8 +18,8 @@ import type { MissionRow, MissionStatus, MissionType } from "@/lib/missions/type
 const STATUS_BADGE: Partial<Record<MissionStatus, { label: string; icon?: LucideIcon; className: string }>> = {
   started: { label: "В процессе", className: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]" },
   completed: { label: "Завершена", icon: Check, className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },
-  dismissed: { label: "Отклонена", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
-  expired: { label: "Истекла", className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
+  dismissed: { label: "Отклонена", className: "bg-[var(--border)] text-[var(--text-secondary)]" },
+  expired: { label: "Истекла", className: "bg-[var(--border)] text-[var(--text-secondary)]" },
 };
 
 // Missions mockup alignment — one icon per mission_type (9 values,
@@ -62,7 +62,7 @@ export default function MissionCard({ mission }: { mission: MissionRow }) {
   return (
     <Link
       href={`/missions/${mission.id}`}
-      className="focus-ring flex items-center gap-2.5 rounded-[14px] border border-[var(--border)] bg-card px-[13px] py-[11px] transition-colors hover:border-[var(--sky)]"
+      className="focus-ring flex items-center gap-2.5 rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-[13px] py-[11px] transition-colors hover:border-[var(--sky)]"
     >
       {/* aria-hidden: type is still conveyed to assistive tech via the
           sr-only text below, not lost, just moved off the visible icon. */}

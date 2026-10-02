@@ -64,7 +64,7 @@ function WaitlistLanguageCell({ code, name }: { code: string; name: string }) {
       className="flex items-center justify-between rounded-lg border border-[var(--border-strong)] px-4 py-3 text-left text-sm text-[var(--text-secondary)] transition-colors hover:border-[var(--sky)]"
     >
       {name}
-      <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide dark:bg-white/10">
+      <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
         Скоро
       </span>
     </button>

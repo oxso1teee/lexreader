@@ -45,7 +45,7 @@ export default async function CollectionPage({
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-5 py-6">
-      <Link href="/library" className="text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white">
+      <Link href="/library" className="text-[var(--text-secondary)] hover:text-foreground">
         ← Библиотека
       </Link>
       <h1 className="mb-4 mt-2 flex items-center gap-2 text-xl font-semibold">

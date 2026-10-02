@@ -9,7 +9,7 @@ import type { EnrollmentRow, LearningPath } from "@/lib/learning-paths/types";
 const STATUS_META: Record<EnrollmentRow["status"], { label: string; icon?: LucideIcon; className: string }> = {
   active: { label: "Активный путь", icon: CircleDot, className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },
   paused: { label: "На паузе", className: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]" },
-  completed: { label: "Завершён", icon: Check, className: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10" },
+  completed: { label: "Завершён", icon: Check, className: "bg-[var(--border)] text-[var(--text-secondary)]" },
 };
 
 export default function PathCard({ path, enrollment }: { path: LearningPath; enrollment: EnrollmentRow | null }) {
@@ -20,7 +20,7 @@ export default function PathCard({ path, enrollment }: { path: LearningPath; enr
       className={cardClassName({ interactive: true, className: "focus-ring flex flex-col gap-2" })}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)] dark:bg-white/10">
+        <span className="rounded-full bg-[var(--border)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">
           {path.levelFrom} → {path.levelTo}
         </span>
         {statusMeta && (
