@@ -103,11 +103,22 @@
      the relative-luminance formula, not eyeballed), keeping hue 0° so it
      stays a clean red rather than a neon #ed0000 or a muddy brown; edge
      scaled to keep the old edge/fill luminance ratio (0.67) so the
-     pressed-button edge stays visibly darker. -tint/-text untouched. */
+     pressed-button edge stays visibly darker. -tint/-text untouched.
+
+     Phase 13o — -text darkened #dc2626 → #c21b1b (same hue). #dc2626 was
+     only 4.83:1 on #fff and fell below AA 4.5:1 everywhere else it is
+     actually read: 3.86 on the bg-[var(--color-danger)]/15 badges
+     (weak-words-card/hardest-words), 4.29 on --background, 3.89 on
+     --surface-muted, 3.85 on --danger-tint (reader error), 3.68 in the
+     duel alerts (bg-[var(--color-danger-text)]/10 on --background).
+     #c21b1b is the lightest value measured in the browser (Tailwind's
+     oklab color-mix composited via canvas, not hand-mixed in sRGB) that
+     clears 4.5:1 in all of those: 4.85 / 5.38 / 4.88 / 4.83 / 4.56, and
+     6.06 on #fff. Dark theme value (#f87171) unchanged. */
   --danger: #df2d2d;
   --danger-edge: #bd1d1d;
   --danger-tint: #ffdede;
-  --danger-text: #dc2626;
+  --danger-text: #c21b1b;
 
   /* Semantic color roles — alias the palette primitives above rather than
      hardcoding hex a second time. --color-accent-green/orange/blue/red in
@@ -289,16 +300,25 @@
 /* Focus ring — applied explicitly via this class on custom interactive
    elements, and globally as a :focus-visible fallback so nothing in the
    new shell/Today components can end up keyboard-focusable without a
-   visible indicator. */
-.focus-ring:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
+   visible indicator.
 
-:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+   Phase 13o — both rules live in @layer base. Unlayered, they beat every
+   Tailwind utility regardless of specificity, so an input's own
+   `outline-none` (paired with its focus:/focus-within: forest border) was
+   silently ignored and the field showed two rings: the green border plus
+   this blue outline. In base, utilities can override them again; fields
+   with no indicator of their own simply don't carry `outline-none`. */
+@layer base {
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -131,7 +131,7 @@ export default function PhotoImportForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Название текста"
-          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base"
         />
       </div>
       <div className="flex flex-1 flex-col gap-1.5">
@@ -146,7 +146,7 @@ export default function PhotoImportForm({
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Распознанный текст (проверь и поправь ошибки OCR)"
-          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7 outline-none"
+          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7"
         />
         <p className="text-xs text-[var(--text-secondary)]">Распознавание не идеально — проверь текст перед сохранением.</p>
       </div>

@@ -24,7 +24,7 @@ export default function UrlImportForm({ collections }: { collections: Collection
           name="url"
           required
           placeholder="https://example.com/статья"
-          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base"
         />
       </div>
       <p className="text-sm text-[var(--text-secondary)]">

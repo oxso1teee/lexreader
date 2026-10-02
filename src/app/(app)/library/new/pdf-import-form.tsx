@@ -155,7 +155,7 @@ export default function PdfImportForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Название текста"
-          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base"
         />
       </div>
       <div className="flex flex-1 flex-col gap-1.5">
@@ -170,7 +170,7 @@ export default function PdfImportForm({
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Текст, извлечённый из PDF"
-          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7 outline-none"
+          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7"
         />
         <p className="text-xs text-[var(--text-secondary)]">
           Проверь текст перед сохранением — разметка страниц PDF иногда ломает порядок слов.

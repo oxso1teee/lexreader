@@ -54,7 +54,7 @@ export default function CollectionPicker({ collections }: { collections: Collect
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Название коллекции (например, «Идиот»)"
-            className="focus-ring rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-sm outline-none"
+            className="focus-ring rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-sm"
           />
         </>
       )}

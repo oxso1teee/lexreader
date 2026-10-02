@@ -58,7 +58,7 @@ export default function CorrectionForm() {
         maxLength={400}
         rows={3}
         placeholder="Например: It depends of the weather."
-        className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none"
+        className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm"
       />
       <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="leaf" size="sm" onClick={handleCheck} disabled={isPending || text.trim().length === 0}>
