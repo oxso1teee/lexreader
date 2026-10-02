@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { track } from "@/lib/posthog-client";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { reasonLabel } from "@/components/product/language-twin/badges";
 import { completeRecommendationAction, dismissRecommendationAction } from "./actions";
 
@@ -9,7 +10,10 @@ const PRIORITY_LABEL: Record<string, string> = { high: "Высокий прио�
 const PRIORITY_CLASS: Record<string, string> = {
   high: "bg-[var(--color-danger)]/15 text-[var(--color-danger-text)]",
   medium: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
-  low: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",
+  // --foreground, не --text-secondary: карточка сама на bg-[var(--border)],
+  // и вторая полупрозрачная подложка опускала вторичный текст до 4.32:1 в
+  // тёмной теме (ниже AA). С --foreground — 7.18:1 dark / 11.68:1 light.
+  low: "bg-[var(--border)] text-[var(--foreground)]",
 };
 const ACTION_LABEL: Record<string, string> = {
   open_custom_session: "Начать сессию",
@@ -56,7 +60,7 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
           : "/brain/all/review";
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-[var(--surface-muted)] p-3">
+    <div className="flex flex-col gap-2 rounded-xl bg-[var(--border)] p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${PRIORITY_CLASS[rec.priority] ?? PRIORITY_CLASS.low}`}>
           {PRIORITY_LABEL[rec.priority] ?? rec.priority}
@@ -65,17 +69,12 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
       <p className="text-sm text-[var(--text-secondary)]">{reasonLabel(rec.reason_key)}</p>
       {!compact && (
         <div className="flex flex-wrap gap-2 pt-1">
-          <a href={target} onClick={handleOpen} className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white">
+          <ButtonLink href={target} onClick={handleOpen} variant="leaf" size="sm">
             {ACTION_LABEL[rec.action_type] ?? "Открыть"}
-          </a>
-          <button
-            type="button"
-            onClick={handleComplete}
-            disabled={isPending}
-            className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
-          >
+          </ButtonLink>
+          <Button variant="ghost" size="sm" onClick={handleComplete} disabled={isPending}>
             Выполнено
-          </button>
+          </Button>
           <button
             type="button"
             onClick={handleDismiss}
@@ -87,9 +86,9 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
         </div>
       )}
       {compact && (
-        <a href={target} onClick={handleOpen} className="focus-ring self-start rounded-full bg-forest px-4 py-2 text-sm font-medium text-white">
+        <ButtonLink href={target} onClick={handleOpen} variant="leaf" size="sm" className="self-start">
           {ACTION_LABEL[rec.action_type] ?? "Открыть"}
-        </a>
+        </ButtonLink>
       )}
     </div>
   );

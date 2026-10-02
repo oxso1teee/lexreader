@@ -1,7 +1,9 @@
 "use client";
 
+import { Check, X } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { track } from "@/lib/posthog-client";
+import { Card } from "@/components/ui/card";
 import Dialog from "@/components/product/language-twin/dialog";
 import { ConfidenceBadge, StatusBadge, TrendIndicator, CategoryBadge, categoryLabel } from "@/components/product/language-twin/badges";
 import type { EvidenceRow, PatternRow } from "@/lib/language-twin/types";
@@ -88,9 +90,9 @@ function PatternDetail({
                     track("evidence_deleted", { source_type: e.source_type });
                     startTransition(() => deleteEvidenceAction(e.id));
                   }}
-                  className="focus-ring flex min-h-9 min-w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black disabled:opacity-40 dark:hover:text-white"
+                  className="focus-ring flex min-h-9 min-w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-foreground disabled:opacity-40"
                 >
-                  ✕
+                  <X aria-hidden="true" className="h-4 w-4" />
                 </button>
               </div>
             ))}
@@ -105,9 +107,10 @@ function PatternDetail({
               track("pattern_marked_inaccurate", { category: pattern.category });
               startTransition(() => markPatternInaccurateAction(pattern.id));
             }}
-            className="focus-ring rounded-full border border-[var(--border-strong)] px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+            className="focus-ring inline-flex items-center gap-1 rounded-full border border-[var(--border-strong)] px-3 py-1.5 text-xs font-medium disabled:opacity-50"
           >
-            {metadata.markedInaccurate ? "✓ Отмечено как неточное" : "Отметить как неточное"}
+            {metadata.markedInaccurate && <Check aria-hidden="true" className="h-3.5 w-3.5" />}
+            {metadata.markedInaccurate ? "Отмечено как неточное" : "Отметить как неточное"}
           </button>
           {pattern.status === "dismissed" ? (
             <button
@@ -172,7 +175,7 @@ export default function PatternListClient({
             aria-pressed={statusFilter === value}
             className={`focus-ring rounded-full border px-3 py-1.5 text-xs font-medium ${
               statusFilter === value
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
                 : "border-[var(--border-strong)] text-[var(--text-secondary)]"
             }`}
           >
@@ -186,7 +189,7 @@ export default function PatternListClient({
         </p>
       )}
 
-      <div className="flex flex-col gap-2 rounded-2xl bg-card p-2 shadow-sm">
+      <Card className="flex flex-col gap-2 p-2">
         {filtered.length === 0 ? (
           <p className="p-3 text-sm text-[var(--text-secondary)]">Нет паттернов в этом фильтре.</p>
         ) : (
@@ -215,7 +218,7 @@ export default function PatternListClient({
             </button>
           ))
         )}
-      </div>
+      </Card>
 
       {selected && (
         <PatternDetail

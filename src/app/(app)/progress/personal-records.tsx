@@ -1,3 +1,6 @@
+import { Flame, Award, CheckCircle2, Layers, type LucideIcon } from "lucide-react";
+import { cardClassName } from "@/components/ui/card";
+
 // Раздел 5 промта 2026-07-30 (полировка): те же данные, что уже считаются
 // на этом экране — просто собранные так, чтобы вызывать гордость, а не
 // только информировать.
@@ -21,24 +24,24 @@ export default function PersonalRecords({
   bestSession: number;
   bestReviewsDay: number;
 }) {
-  const records = [
-    { icon: "🔥", value: bestStreak, label: "лучший стрик" },
-    { icon: "💯", value: bestWordsDay, label: "слов за день" },
-    { icon: "✅", value: bestSession, label: "лучшая сессия" },
-    { icon: "📇", value: bestReviewsDay, label: "карточек за день" },
+  const records: { icon: LucideIcon; value: number; label: string }[] = [
+    { icon: Flame, value: bestStreak, label: "лучший стрик" },
+    { icon: Award, value: bestWordsDay, label: "слов за день" },
+    { icon: CheckCircle2, value: bestSession, label: "лучшая сессия" },
+    { icon: Layers, value: bestReviewsDay, label: "карточек за день" },
   ];
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className={cardClassName()}>
       <h2 className="mb-3 font-semibold">Личные рекорды</h2>
       <div className="grid grid-cols-2 gap-3">
         {records.map((r) => (
-          <div key={r.label} className="flex items-center gap-3 rounded-xl bg-black/5 px-3 py-2.5 dark:bg-white/10">
+          <div key={r.label} className="flex items-center gap-3 rounded-xl bg-[var(--border)] px-3 py-2.5">
             <span
               aria-hidden="true"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-forest-tint)] text-base"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-forest-tint)]"
             >
-              {r.icon}
+              <r.icon className="h-4 w-4 text-[var(--color-forest-text)]" />
             </span>
             <div className="min-w-0">
               {/* forest-text-contrast-fix: see stat-card.tsx for why

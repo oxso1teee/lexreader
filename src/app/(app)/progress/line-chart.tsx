@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cardClassName } from "@/components/ui/card";
 
 export default function LineChart({
   title,
@@ -22,14 +23,27 @@ export default function LineChart({
   const max = Math.max(1, ...points.map((p) => p.value));
   const w = 300;
   const h = 80;
-  const step = points.length > 1 ? w / (points.length - 1) : 0;
-
+  // redesign/duolingo-flat phase 10 — плоский bar chart вместо полилинии:
+  // по столбику на точку, сплошная заливка color, скруглены только верхние
+  // углы. Каждой точке — равный слот шириной w/n, coords[i].x — центр
+  // слота, поэтому pickNearestIndex ниже работает без изменений (ближайший
+  // центр = столбик под курсором). SVG без явной высоты (w-full, высота из
+  // viewBox 300×80) масштабируется равномерно, так что радиус не
+  // растягивается в эллипс. Нулевые дни — тонкая полупрозрачная "полочка"
+  // у основания, чтобы пустой период не выглядел как сломанный график.
+  const slot = points.length > 0 ? w / points.length : w;
+  const barW = slot * 0.7;
   const coords = points.map((p, i) => {
-    const x = points.length > 1 ? i * step : w / 2;
-    const y = h - (p.value / max) * (h - 10) - 5;
+    const x = i * slot + slot / 2;
+    const y = h - Math.max(1.5, (p.value / max) * (h - 4));
     return { x, y };
   });
-  const path = coords.map((c) => `${c.x},${c.y}`).join(" ");
+
+  function barPath(cx: number, top: number) {
+    const x = cx - barW / 2;
+    const r = Math.min(2.5, barW / 2, h - top);
+    return `M${x},${h} V${top + r} A${r},${r} 0 0 1 ${x + r},${top} H${x + barW - r} A${r},${r} 0 0 1 ${x + barW},${top + r} V${h} Z`;
+  }
 
   // Из разбора конкурента (docs/GROWTH_IDEAS_2026-07-24.md, "Дополнительно
   // найдено"): точное значение за день по наведению/тапу на график, а не
@@ -50,10 +64,10 @@ export default function LineChart({
     return nearest;
   }
 
-  const active = activeIndex !== null ? { point: points[activeIndex], coord: coords[activeIndex] } : null;
+  const active = activeIndex !== null ? { point: points[activeIndex] } : null;
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className={cardClassName()}>
       <h3 className="font-semibold">{title}</h3>
       <p className="mb-2 text-sm text-[var(--text-secondary)]">
         {active ? `${active.point.label}: ${active.point.value}` : `${total} за период`}
@@ -74,28 +88,23 @@ export default function LineChart({
         }}
         onTouchEnd={() => setActiveIndex(null)}
       >
-        <polyline
-          points={path}
-          fill="none"
-          stroke={color}
-          strokeWidth="2"
-          strokeDasharray={total === 0 ? "4 4" : undefined}
-          opacity={total === 0 ? 0.4 : 1}
-        />
-        {active && (
-          <>
-            <line
-              x1={active.coord.x}
-              y1={0}
-              x2={active.coord.x}
-              y2={h}
-              stroke={color}
-              strokeWidth="1"
-              opacity={0.3}
+        {coords.map((c, i) => {
+          const isActive = activeIndex === i;
+          const isZero = points[i].value === 0;
+          return (
+            <path
+              key={points[i].label + i}
+              d={barPath(c.x, c.y)}
+              fill={color}
+              opacity={isZero ? 0.25 : 1}
+              // Активный день: тот же цвет + обводка цветом текста — видна и
+              // на светлой, и на тёмной карточке (затемнение заливки на
+              // тёмном фоне читалось бы как "погасший" столбик).
+              stroke={isActive ? "var(--foreground)" : undefined}
+              strokeWidth={isActive ? 1 : undefined}
             />
-            <circle cx={active.coord.x} cy={active.coord.y} r={3.5} fill={color} />
-          </>
-        )}
+          );
+        })}
       </svg>
       <div className="mt-1 flex justify-between text-xs text-[var(--text-secondary)]">
         {points.length > 0 && (

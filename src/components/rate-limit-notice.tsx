@@ -48,7 +48,7 @@ export default function RateLimitNotice({
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      className="text-sm text-red-600 outline-none dark:text-red-400"
+      className="text-sm text-[var(--color-danger-text)] outline-none"
     >
       {message} Попробуй снова через {timeLabel}.
     </p>

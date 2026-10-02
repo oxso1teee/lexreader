@@ -27,7 +27,7 @@ export default function GreetingRow({ dateLabel, greeting }: { dateLabel: string
       <Link
         href="/settings"
         aria-label="Меню"
-        className="focus-ring flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-card"
+        className="focus-ring flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)]"
       >
         <Menu aria-hidden="true" className="h-5 w-5" />
       </Link>

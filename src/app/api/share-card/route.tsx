@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { OgAward, OgFlame } from "@/lib/og-icons";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 
@@ -50,15 +51,21 @@ export async function GET() {
                 (никогда не было e2e-покрыто — просто "скачай PNG", без UI-
                 assertion): Satori (движок next/og's ImageResponse) требует
                 явный display:flex/contents/none у любого <div> с больше чем
-                одним child-узлом — здесь их два ("🔥 " текстовый литерал +
+                одним child-узлом — здесь их два (иконка +
                 выражение {'{'}profile.streak_current{'}'}), без явного
                 display этот div падал с 500 на каждый реальный запрос.
                 Настоящий, пред-существующий баг, не связанный с цветом. */}
-            <div style={{ display: "flex", fontSize: 96, fontWeight: 800 }}>🔥 {profile.streak_current}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 96, fontWeight: 800 }}>
+              <OgFlame size={88} color="#fff" />
+              {profile.streak_current}
+            </div>
             <div style={{ fontSize: 28, opacity: 0.85 }}>дней подряд</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ display: "flex", fontSize: 96, fontWeight: 800 }}>💯 {wordCount ?? 0}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 96, fontWeight: 800 }}>
+              <OgAward size={88} color="#fff" />
+              {wordCount ?? 0}
+            </div>
             <div style={{ fontSize: 28, opacity: 0.85 }}>слов выучено</div>
           </div>
         </div>

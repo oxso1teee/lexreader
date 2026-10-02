@@ -1,5 +1,6 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { ClipboardList } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 import LanguageTwinSubHeader from "../sub-header";
 import EvidenceListClient from "./evidence-list-client";
@@ -26,7 +27,7 @@ export default async function LanguageTwinEvidencePage() {
       />
       {evidence.length === 0 ? (
         <EmptyState
-          icon="📋"
+          icon={ClipboardList}
           title="Записей пока нет"
           body="Записи появляются автоматически из истории повторений, чтения и проверок предложений."
         />

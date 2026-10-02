@@ -1,10 +1,13 @@
 "use client";
 
+import { Check, X } from "lucide-react";
 import { useState, useTransition } from "react";
 import { submitMissionStepAction, completeMissionAction, type CompleteMissionResult } from "../actions";
 import { track } from "@/lib/posthog-client";
 import type { GrammarQuestion } from "@/lib/missions/grammar-bank";
 import type { MissionAttemptRow, MissionType } from "@/lib/missions/types";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 // Deterministic multiple-choice runner for grammar_pattern/correction/
 // diagnostic_followup/maintenance missions (plan doc §9) — no LLM, no free
@@ -76,7 +79,7 @@ export default function GrammarRunner({
         />
       </div>
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <p className="mb-3 text-sm font-medium">{q.prompt}</p>
         {selected !== null && (
           <p role="status" aria-live="polite" className="sr-only">
@@ -89,11 +92,11 @@ export default function GrammarRunner({
             const isCorrect = i === q.correctIndex;
             const isSelectedWrong = showState && i === selected && !isCorrect;
             const stateClass = !showState
-              ? "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
+              ? "border-[var(--border-strong)] hover:border-[var(--sky)]"
               : isCorrect
-                ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950"
+                ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)]"
                 : isSelectedWrong
-                  ? "border-red-500 bg-red-50 dark:bg-red-950"
+                  ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
                   : "border-[var(--border-strong)] opacity-50";
             return (
               <button
@@ -105,13 +108,13 @@ export default function GrammarRunner({
               >
                 <span>{opt}</span>
                 {showState && isCorrect && (
-                  <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                    <span aria-hidden="true">✓</span> Верно
+                  <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[var(--color-success-text)]">
+                    <Check aria-hidden="true" className="h-3.5 w-3.5" /> Верно
                   </span>
                 )}
                 {isSelectedWrong && (
-                  <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                    <span aria-hidden="true">✗</span> Неверно
+                  <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[var(--color-danger-text)]">
+                    <X aria-hidden="true" className="h-3.5 w-3.5" /> Неверно
                   </span>
                 )}
               </button>
@@ -119,17 +122,12 @@ export default function GrammarRunner({
           })}
         </div>
         {selected !== null && <p className="mt-3 text-xs text-[var(--text-secondary)]">{q.explanation}</p>}
-      </div>
+      </Card>
 
       {selected !== null && (
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={next}
-          className="focus-ring self-start rounded-full bg-black px-5 py-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
-        >
+        <Button variant="leaf" disabled={isPending} onClick={next} className="self-start">
           {isPending ? "…" : index + 1 >= questions.length ? "Завершить" : "Далее"}
-        </button>
+        </Button>
       )}
     </div>
   );

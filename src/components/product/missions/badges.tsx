@@ -26,7 +26,7 @@ const PRIORITY_LABEL: Record<MissionPriority, string> = {
 const PRIORITY_CLASS: Record<MissionPriority, string> = {
   high: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
   medium: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]",
-  low: "bg-black/5 text-[var(--text-secondary)] dark:bg-white/10",
+  low: "bg-[var(--border)] text-[var(--text-secondary)]",
 };
 // The dot variant below reuses this text as its accessible name — real
 // solid colors, not the /15-tinted background above, since a 2x2px dot has

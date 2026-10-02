@@ -7,7 +7,7 @@ test("brain flow: create deck, add flashcard manually", async ({ page }) => {
   // M3 Slice 4: создание колоды переехало с /brain на вкладку "Колоды"
   // /brain/vocabulary (см. docs/ui/m3-slice4-practice-brain-review-plan.md §4).
   await page.goto("/brain/vocabulary");
-  await page.getByRole("button", { name: "📚 Колоды" }).click();
+  await page.getByRole("button", { name: "Колоды", exact: true }).click();
   await page.getByRole("button", { name: "+ Новая колода" }).click();
   const deckName = `E2E Deck ${Date.now()}`;
   await page.getByPlaceholder("Название колоды...").fill(deckName);

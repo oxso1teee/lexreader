@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Moon, Sprout, Share2 } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
@@ -7,6 +8,8 @@ import { getLatestAttempt } from "@/lib/placement/persist";
 import { buildTimelineEntries } from "@/lib/language-twin/timeline";
 import { MIN_EVIDENCE_FOR_PROFILE } from "@/lib/language-twin/constants";
 import EmptyState from "@/components/empty-state";
+import { ButtonLink, buttonClassName } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import PageHeader from "@/components/product/page-header";
 import { ConfidenceBadge, StatusBadge, TrendIndicator, CategoryBadge, categoryLabel } from "@/components/product/language-twin/badges";
 import LanguageTwinUnavailable from "@/components/product/language-twin/unavailable";
@@ -44,7 +47,7 @@ export default async function LanguageTwinPage() {
         <LanguageTwinAnalytics confidence="none" />
         <PageHeader title="Мой английский" description="Language Twin сейчас выключен" />
         <EmptyState
-          icon="🌙"
+          icon={Moon}
           title="Language Twin выключен"
           body="Мы не собираем новых данных и не строим выводов, пока функция выключена. Включить можно в любой момент — уже накопленные данные никуда не денутся."
           action={<EnableToggleInline />}
@@ -81,16 +84,13 @@ export default async function LanguageTwinPage() {
         <LanguageTwinAnalytics confidence="none" />
         <PageHeader title="Мой английский" description={OVERVIEW_SUBTITLE} />
         <EmptyState
-          icon="🌱"
+          icon={Sprout}
           title="Пока недостаточно данных"
           body="Language Twin учится на твоей реальной активности — почитай что-нибудь, повтори карточки в Мозге или пройди короткую диагностику, и здесь появятся первые выводы."
           action={
-            <Link
-              href="/language-twin/diagnostic"
-              className="focus-ring mt-2 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
-            >
+            <ButtonLink href="/language-twin/diagnostic" variant="leaf" size="sm" className="mt-2">
               Пройти мини-диагностику
-            </Link>
+            </ButtonLink>
           }
         />
         <LanguageTwinSections />
@@ -191,7 +191,7 @@ export default async function LanguageTwinPage() {
       <LanguageTwinAnalytics confidence={isLowConfidence ? "low" : twinProfile.confidence} />
       <PageHeader title="Мой английский" description={OVERVIEW_SUBTITLE} action={<RecomputeButton />} />
 
-      <div className="flex flex-col items-center gap-1 rounded-2xl bg-card p-4 shadow-sm">
+      <Card className="flex flex-col items-center gap-1">
         <TwinAvatar
           stage={stage}
           confidence={twinProfile.confidence}
@@ -205,27 +205,25 @@ export default async function LanguageTwinPage() {
         <a
           href="/api/language-twin/share-card"
           download="lexreader-language-twin.png"
-          className="focus-ring mt-2 rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
+          className={buttonClassName({ variant: "ghost", size: "sm", className: "mt-2 gap-1.5" })}
         >
-          📤 Поделиться прогрессом
+          <Share2 aria-hidden="true" className="h-4 w-4" />
+          Поделиться прогрессом
         </a>
-      </div>
+      </Card>
 
       {isLowConfidence ? (
-        <div className="flex flex-col gap-3 rounded-2xl bg-[var(--color-warning)]/10 p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 p-4">
           <p className="text-sm">
             Данных пока мало и они немного противоречат друг другу — общий диапазон уровня показать честно
             не можем.
           </p>
-          <Link
-            href="/language-twin/diagnostic"
-            className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
-          >
+          <ButtonLink href="/language-twin/diagnostic" variant="ghost" size="sm" className="self-start">
             Пройти мини-диагностику
-          </Link>
+          </ButtonLink>
         </div>
       ) : (
-        <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm">
+        <Card className="flex flex-col gap-3">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="flex flex-col gap-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -260,11 +258,11 @@ export default async function LanguageTwinPage() {
               <p className="text-xs text-[var(--text-secondary)]">то, что реально вспоминаешь</p>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {topPattern && (
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <Card>
           <h2 className="mb-2 text-sm font-semibold">Сейчас в фокусе</h2>
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -281,26 +279,23 @@ export default async function LanguageTwinPage() {
                 Открыть паттерн →
               </Link>
               {topPatternMissionId && (
-                <Link
-                  href={`/missions/${topPatternMissionId}`}
-                  className="focus-ring self-start rounded-full bg-forest px-3 py-1.5 text-xs font-medium text-white"
-                >
+                <ButtonLink href={`/missions/${topPatternMissionId}`} variant="leaf" size="sm" className="self-start">
                   Потренировать сейчас
-                </Link>
+                </ButtonLink>
               )}
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <Card>
           <h2 className="mb-2 text-sm font-semibold">Сильные стороны</h2>
           <div className="flex flex-col gap-1">
             <StrengthsList strengths={strengths} />
           </div>
-        </div>
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        </Card>
+        <Card>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold">Над чем работаем</h2>
             <Link href="/language-twin/patterns" className="text-sm text-[var(--color-forest-text)]">
@@ -333,11 +328,11 @@ export default async function LanguageTwinPage() {
               ))
             )}
           </div>
-        </div>
+        </Card>
       </div>
 
       {resolvedPatterns.length > 0 && (
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <Card>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold">Уже закрыто</h2>
             <Link href="/language-twin/patterns" className="text-sm text-[var(--color-forest-text)]">
@@ -365,10 +360,10 @@ export default async function LanguageTwinPage() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Что сделать сегодня</h2>
           <Link href="/language-twin/recommendations" className="text-sm text-[var(--color-forest-text)]">
@@ -384,10 +379,10 @@ export default async function LanguageTwinPage() {
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       {recentChanges.length > 0 && (
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <Card>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold">Последние изменения профиля</h2>
             <Link href="/language-twin/timeline" className="text-sm text-[var(--color-forest-text)]">
@@ -407,7 +402,7 @@ export default async function LanguageTwinPage() {
               </li>
             ))}
           </ol>
-        </div>
+        </Card>
       )}
 
       <LanguageTwinSections />

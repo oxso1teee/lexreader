@@ -25,7 +25,7 @@ export default function MobileBottomNav() {
   return (
     <nav
       aria-label="Основная навигация"
-      className="sticky bottom-4 z-20 mx-4 flex rounded-[20px] border border-[var(--border)] bg-card shadow-[0_8px_30px_-8px_rgba(0,0,0,0.25)] md:hidden"
+      className="sticky bottom-4 z-20 mx-4 flex rounded-[20px] border border-[var(--border)] bg-[var(--surface)] md:hidden"
       style={{ marginBottom: "env(safe-area-inset-bottom)" }}
     >
       {NAV_ITEMS.map((item) => {
@@ -40,7 +40,7 @@ export default function MobileBottomNav() {
             className={`focus-ring flex flex-1 flex-col items-center gap-0.5 py-2.5 text-center text-xs font-medium transition-colors ${
               active
                 ? "text-black dark:text-white"
-                : "text-[var(--text-secondary)] hover:text-black/70 dark:hover:text-white/70"
+                : "text-[var(--text-secondary)] hover:text-foreground"
             }`}
           >
             {/* Как и в DesktopSidebar — цвет бренда на иконке (декоративная
@@ -54,7 +54,7 @@ export default function MobileBottomNav() {
                 --card. --color-forest-text (~8.6:1 против --card в тёмной
                 теме) с большим запасом чист. */}
             <span className={active ? "text-[var(--color-forest-text)]" : ""} aria-hidden="true">
-              <Icon />
+              <Icon className="h-5 w-5" />
             </span>
             <span className="leading-none">{item.label}</span>
             <span

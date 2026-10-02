@@ -1,16 +1,30 @@
 /* M3 Unified UI — Slice 1 design tokens.
    Extends (does not replace) the existing --color-background/foreground/
-   card/caramel* tokens in src/app/globals.css — those stay as the single
-   source of truth for brand color, this file only adds the semantic
-   roles that were missing (border, surface variants, primary/success/
-   warning/danger/info, focus ring) plus a small typography scale and
-   container widths for the new App Shell/Today components.
+   card tokens in src/app/globals.css — those stay as the single source of
+   truth for page canvas color, this file only adds the semantic roles that
+   were missing (border, surface variants, primary/success/warning/danger/
+   info, focus ring) plus a small typography scale and container widths for
+   the App Shell/Today components.
 
    Existing pages (Library/Brain/Progress/Settings) keep using their
    current ad hoc `border-black/10 dark:border-white/10` etc. — retrofitting
    them is out of scope for this slice (see docs/ui/current-ui-audit.md
    §8). New product components use these tokens instead of hardcoded
-   colors. */
+   colors.
+
+   redesign/duolingo-flat, phase 1 (tokens + fonts only, no component
+   changes — see docs/pr-screenshots for the two rejected/approved mockup
+   rounds that led here): raw palette primitives below (--leaf/--sky/
+   --ember/--sun/--danger + edge/tint/text) replace the old forest/caramel
+   palette. Semantic roles (--color-forest and its light/deep/text/tint
+   variants, --color-primary, --color-success/--color-warning/--color-info/
+   --color-danger) now alias these
+   primitives instead of raw hex or the old accent-green/orange/blue/red
+   tokens — every existing component using bg-forest/text-forest-text/
+   --color-success etc. picks up the new colors automatically, with zero
+   component edits. Screens will look visually inconsistent with their old
+   hand-tuned spacing/weight until each is migrated in a later phase — that
+   mismatch is expected at this stage, not a bug. */
 
 :root {
   /* Surfaces — background is the page canvas, surface is a raised card
@@ -30,70 +44,115 @@
   --border: rgba(26, 26, 26, 0.1);
   --border-strong: rgba(26, 26, 26, 0.18);
 
-  /* Semantic color roles — alias the existing accent tokens from
-     globals.css rather than introducing a second palette. */
-  --color-primary: var(--color-forest);
+  /* Raw palette primitives (redesign/duolingo-flat) — exact values from
+     the approved direction brief. Two-layer token architecture: these are
+     the primitives (no --color- prefix, not directly Tailwind-utility-
+     generating), the --color-* semantic roles below alias them. -edge is
+     for borders/pressed-state/gradient-end (softer 3:1 non-text contrast
+     role); -tint is a pale background wash; -text is a separately
+     darkened, WCAG-AA-normal-text-safe (4.5:1+) variant — same pattern
+     already established by --color-caramel-text/--color-success-text
+     below, extended to every new hue. -text values for sky/ember/sun/
+     danger are computed against this file's own light-mode --surface
+     (#fff)/--background (#f5f1ea) using the WCAG relative-luminance
+     formula (not eyeballed); leaf-text/danger-text reuse this codebase's
+     already axe-core-verified old success-text (#166534/#4ade80) and
+     danger (#dc2626/#f87171) values since the hue family is close enough
+     to carry the same real-user verification forward. Real per-component
+     axe-core re-verification still happens when each screen actually
+     starts consuming these in the next phase (see file header) — this
+     phase only establishes the values, no component reads them yet
+     through anything but the forest/success/warning/info/danger aliases
+     that already existed. */
+  /* redesign/duolingo-flat phase 8 fix — the original #4fce23 gives white
+     label text on a leaf-filled button ~2:1 contrast (axe: serious
+     color-contrast violation on every leaf/forest button app-wide, old and
+     new alike, since --color-forest has always aliased this one value).
+     Darkened just enough to clear WCAG AA 4.5:1 with white text (computed
+     via the relative-luminance formula, not eyeballed — same method as
+     the -text values below), edge/deep scaled down proportionally so the
+     pressed-button 3D edge (box-shadow) and hover:bg-forest-deep states
+     stay visibly darker than the fill. -tint/-tint-strong/-text untouched
+     (independent values, not part of this contrast bug). */
+  --leaf: #2b820f;
+  --leaf-edge: #1c540a;
+  --leaf-deep: #123706;
+  --leaf-tint: #e3f6d3;
+  --leaf-tint-strong: #cdeeb0;
+  --leaf-text: #166534;
+
+  --sky: #1cb0f6;
+  --sky-edge: #1a94ce;
+  --sky-tint: #ddf4ff;
+  --sky-text: #0c7c9c;
+
+  --ember: #ff9500;
+  --ember-edge: #db7a00;
+  --ember-tint: #ffe8c2;
+  --ember-text: #c2410c;
+
+  --sun: #ffc700;
+  --sun-edge: #e0a500;
+  --sun-tint: #fff1b8;
+  --sun-text: #7a5900;
+
+  /* phase 9 fix — same bug as --leaf above: the original #ff4b4b gives
+     white label text on a danger-filled button ~3.3:1 (axe: serious
+     color-contrast on "Не помню" in review and on every .btn-danger).
+     Darkened to clear WCAG AA 4.5:1 with white text (4.61:1, computed via
+     the relative-luminance formula, not eyeballed), keeping hue 0° so it
+     stays a clean red rather than a neon #ed0000 or a muddy brown; edge
+     scaled to keep the old edge/fill luminance ratio (0.67) so the
+     pressed-button edge stays visibly darker. -tint/-text untouched.
+
+     Phase 13o — -text darkened #dc2626 → #c21b1b (same hue). #dc2626 was
+     only 4.83:1 on #fff and fell below AA 4.5:1 everywhere else it is
+     actually read: 3.86 on the bg-[var(--color-danger)]/15 badges
+     (weak-words-card/hardest-words), 4.29 on --background, 3.89 on
+     --surface-muted, 3.85 on --danger-tint (reader error), 3.68 in the
+     duel alerts (bg-[var(--color-danger-text)]/10 on --background).
+     #c21b1b is the lightest value measured in the browser (Tailwind's
+     oklab color-mix composited via canvas, not hand-mixed in sRGB) that
+     clears 4.5:1 in all of those: 4.85 / 5.38 / 4.88 / 4.83 / 4.56, and
+     6.06 on #fff. Dark theme value (#f87171) unchanged. */
+  --danger: #df2d2d;
+  --danger-edge: #bd1d1d;
+  --danger-tint: #ffdede;
+  --danger-text: #c21b1b;
+
+  /* Semantic color roles — alias the palette primitives above rather than
+     hardcoding hex a second time. --color-accent-green/orange/blue/red in
+     globals.css are untouched and still used directly by src/app/read/
+     [textId]/reader.tsx's text-accent-orange/text-accent-green classes —
+     those are independent of this semantic layer and out of scope here. */
+  --color-primary: var(--leaf);
   --color-primary-foreground: #ffffff;
-  /* --color-caramel сам по себе (#a67c52) даёт только 3.16-3.73:1 на
-     светлых поверхностях этого приложения — недостаточно для WCAG AA
-     4.5:1 обычного текста (найдено axe-core). Эта пара — та же марка,
-     но выдержана под контраст: используется ТОЛЬКО когда caramel нужен
-     именно как цвет ТЕКСТА (не фона/иконки/акцентной точки, для которых
-     порог мягче). */
-  --color-caramel-text: #7d5d3e;
-  --color-success: var(--color-accent-green);
-  --color-warning: var(--color-accent-orange);
-  --color-danger: var(--color-accent-red);
-  --color-info: var(--color-accent-blue);
-  /* M3 UI slice 2: тот же паттерн, что и caramel-text выше — accent-green
-     (#16a34a) на белом даёт только 3.29:1, accent-orange туда же. Отдельные
-     text-safe варианты (sRGB-линеаризованный контраст, точный расчёт, не на
-     глаз), используются ТОЛЬКО когда цвет нужен как текст (badge label в
-     SkillSection), не как фон/точка/иконка. */
-  --color-success-text: #166534;
-  --color-warning-text: #9a3412;
-  /* M3 Slice 4.1: same pattern again — --color-danger (#dc2626) reaches
-     ~4.8:1 as text on light surfaces (fine), but only ~3.4:1 against the
-     dark-mode surface (found via axe-core on Settings' account-deletion
-     card). Light mode keeps the raw danger red as-is (already passes);
-     dark mode gets a brighter red text-safe override, mirroring
-     success-text/warning-text/caramel-text/forest-text above. */
-  --color-danger-text: var(--color-danger);
-  /* --color-info (#2563eb) was the one semantic color still missing its own
-     -text variant — every badge using it as text.[var(--color-info)] on a
-     bg-[var(--color-info)]/15 tint (mission-card.tsx's "В процессе" status,
-     missions/badges.tsx's "medium" priority, language-twin/badges.tsx's
-     "improving" pattern, learning-paths/badges.tsx's "introduced"/
-     "practicing" skill) only reached 4.19:1 on that tint — found via
-     axe-core on /missions (e2e/missions-privacy.spec.ts), below WCAG AA's
-     4.5:1. Real, computed contrast (WCAG relative-luminance formula, not
-     eyeballed): #1d4ed8 gives 5.44:1 against the measured #dee8fc tint. */
-  --color-info-text: #1d4ed8;
+  --color-success: var(--leaf);
+  --color-success-text: var(--leaf-text);
+  --color-warning: var(--ember);
+  --color-warning-text: var(--ember-text);
+  --color-danger: var(--danger);
+  --color-danger-text: var(--danger-text);
+  --color-info: var(--sky);
+  --color-info-text: var(--sky-text);
 
   /* Focus ring — deliberately not the brand color, so keyboard focus is
-     never confused with a "you did something" accent state. */
+     never confused with a "you did something" accent state. Still
+     --color-accent-blue (globals.css), untouched by this palette swap. */
   --focus-ring: var(--color-accent-blue);
 
-  /* M3 Slice 3: dark-forest-green primary accent, additive — used only by
-     Library/Add Material/Reader. Does NOT repoint --color-primary above,
-     so Today/Progress/Settings keep their existing caramel buttons
-     unchanged in this slice (a full palette migration would be its own
-     separate, separately-approved slice).
-     #1f4d3b gives ~9.6:1 with white text and ~8.6:1 as text-on-cream —
-     unlike caramel, the same raw value clears AA/AAA in both roles, so
-     no separate "-text" variant is needed for LIGHT mode. Dark mode still
-     needs one: the raw value only reaches ~4:1 as text against the dark
-     surface, so --color-forest-text gets a brighter override there,
-     mirroring the --color-caramel-text/--color-success-text pattern. */
-  --color-forest: #1f4d3b;
-  --color-forest-deep: #163a2c;
-  --color-forest-light: #2f6b52;
-  --color-forest-text: #1f4d3b;
-  --color-forest-tint: #e4ede7;
-  --color-forest-tint-strong: #cfe0d6;
+  /* Brand primary — forest names kept as aliases (not renamed) so every
+     existing bg-forest/text-forest-text/--color-forest-tint consumer across
+     the app picks up the new leaf palette with zero component edits. */
+  --color-forest: var(--leaf);
+  --color-forest-deep: var(--leaf-deep);
+  --color-forest-light: var(--leaf-edge);
+  --color-forest-text: var(--leaf-text);
+  --color-forest-tint: var(--leaf-tint);
+  --color-forest-tint-strong: var(--leaf-tint-strong);
 
-  /* Container widths for the new App Shell (existing pages keep their
-     own inner max-w-2xl untouched). */
+  /* Container widths for the App Shell (existing pages keep their own
+     inner max-w-2xl untouched, for now). */
   --container-sidebar: 240px;
   --container-sidebar-compact: 72px;
   --container-dashboard: 1280px;
@@ -105,26 +164,47 @@
   --text-secondary: rgba(240, 236, 227, 0.68);
   --border: rgba(240, 236, 227, 0.12);
   --border-strong: rgba(240, 236, 227, 0.22);
-  --color-caramel-text: #c79562;
-  --color-success-text: #4ade80;
-  --color-warning-text: #fdba74;
-  --color-danger-text: #f87171;
-  /* Same info/15-tint badges above are worse in dark mode — the raw
-     #2563eb only reaches ~2.6:1 against the dark tint (computed against
-     #2563eb blended at 15% over --surface-elevated's dark value); #60a5fa
-     (a standard, well-known lighter blue, not an arbitrary pick) gives
-     ~5.3:1, mirroring every other -text token's brighter dark-mode
-     override above. */
-  --color-info-text: #60a5fa;
-  /* Button background stays the same deep green (still ~9.6:1 with white
-     text regardless of theme); hover gets lighter (not darker) so it
-     remains visible against the dark page; -text gets a brighter
-     emerald so it clears AA against the dark surface, distinct in hue
-     from --color-success-text's more chartreuse green. */
-  --color-forest-deep: #2c6b4f;
-  --color-forest-text: #34d399;
-  --color-forest-tint: #16281f;
-  --color-forest-tint-strong: #1c3427;
+
+  /* Dark-mode primitives — brighter/cleaner than their light counterparts
+     (same "readable against a dark surface" logic already used by the old
+     forest-deep/forest-tint dark overrides this replaces), tints inverted
+     to a dark muted wash instead of a pale one. Estimated by the same
+     method as light-mode -text above, not yet axe-core-verified against a
+     real dark --surface — deferred to the component-migration phase like
+     everything else in this file. */
+  /* phase 8 fix (see :root above) — same white-on-leaf contrast problem,
+     independently computed for dark mode since the label stays white
+     regardless of theme; edge/deep scaled the same way. */
+  --leaf: #2e8412;
+  --leaf-edge: #1e560c;
+  --leaf-deep: #133708;
+  --leaf-tint: #16371f;
+  --leaf-tint-strong: #1c4a28;
+  --leaf-text: #4ade80;
+
+  --sky: #4cc6ff;
+  --sky-edge: #1cb0f6;
+  --sky-tint: #123244;
+  --sky-text: #7dd3fc;
+
+  --ember: #ffab33;
+  --ember-edge: #ff9500;
+  --ember-tint: #3a2412;
+  --ember-text: #fdba74;
+
+  --sun: #ffd633;
+  --sun-edge: #ffc700;
+  --sun-tint: #3a2f0a;
+  --sun-text: #fde68a;
+
+  /* phase 9 fix (see :root above) — the label stays white in dark mode
+     too, so #ff6b6b (~2.8:1) fails the same way; independently computed
+     (4.55:1), edge scaled to the old dark edge/fill ratio (0.82). Red text
+     on dark surfaces must use --color-danger-text (#f87171), not this fill. */
+  --danger: #e02f2f;
+  --danger-edge: #d11f1f;
+  --danger-tint: #3a1414;
+  --danger-text: #f87171;
 }
 
 @theme inline {
@@ -141,7 +221,6 @@
   --color-danger: var(--color-danger);
   --color-info: var(--color-info);
   --color-focus-ring: var(--focus-ring);
-  --color-caramel-text: var(--color-caramel-text);
   --color-success-text: var(--color-success-text);
   --color-warning-text: var(--color-warning-text);
   --color-danger-text: var(--color-danger-text);
@@ -152,33 +231,21 @@
   --color-forest-text: var(--color-forest-text);
   --color-forest-tint: var(--color-forest-tint);
   --color-forest-tint-strong: var(--color-forest-tint-strong);
-  /* docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
-     §1.2 — serif только для hero/H1 лендинга и крупных section-заголовков
-     там же, весь остальной UI остаётся на --font-sans (Geist). Значение
-     задано здесь напрямую (как --font-sans/--font-mono в globals.css), а
-     НЕ через :root-алиас, как остальные токены в этом файле — Tailwind
-     v4 уже поставляет свой собственный --font-serif внутри
-     `@layer theme` (built-in default theme), а unlayered `:root` не
-     побеждает layered `@layer theme` для custom properties так, как
-     побеждает для остальных объявлений — самореференсный алиас
-     (`--font-serif: var(--font-serif)`) резолвился в invalid/пустую
-     строку вместо реального значения (проверено живьём через
-     getComputedStyle). --font-playfair сам по себе определён только
-     внутри src/app/landing-page.tsx (next/font/google, scoped, не в
-     корневом layout.tsx) — на страницах, где этот компонент не
-     рендерится, переменная не в области видимости, и var(--font-playfair)
-     просто проваливается на следующий фолбэк в списке, Georgia/serif —
-     не ошибка, ожидаемая деградация. */
-  --font-serif: var(--font-playfair), Georgia, serif;
-
-  /* Reader mockup alignment — отдельный токен для ТЕЛА читаемого текста,
-     не --font-serif выше (тот — дисплейный Playfair Display, для hero/H1/
-     крупных заголовков сайта, не для длинного чтения). Тот же паттерн
-     самореференсного алиаса (--font-reading: var(--font-reading)), что и
-     --font-serif — next/font/google подключает Source Serif 4 scoped
-     внутри src/app/read/[textId]/page.tsx (тот же паттерн, что и
-     --font-playfair в landing-page.tsx), не в корневом layout.tsx —
-     переменная в области видимости только там, где реально нужна. */
+  /* Sun has no pre-existing semantic role to ride along on (unlike leaf/
+     sky/ember/danger via forest/success/info/warning/danger above) — it's
+     net-new for gamification accents (streaks/rewards), so it needs its
+     own Tailwind-utility-generating aliases to be usable at all
+     (bg-sun/text-sun-text/etc.) once a future phase builds those screens. */
+  --color-sun: var(--sun);
+  --color-sun-edge: var(--sun-edge);
+  --color-sun-tint: var(--sun-tint);
+  --color-sun-text: var(--sun-text);
+  /* Reader mockup alignment — отдельный токен для ТЕЛА читаемого текста.
+     Самореференсный алиас (--font-reading: var(--font-reading)) —
+     next/font/google подключает Source Serif 4 scoped внутри
+     src/app/read/[textId]/page.tsx, не в корневом layout.tsx — переменная
+     в области видимости только там, где реально нужна; вне её значение
+     проваливается на Georgia/serif. */
   --font-reading: var(--font-reading), Georgia, serif;
 }
 
@@ -233,16 +300,25 @@
 /* Focus ring — applied explicitly via this class on custom interactive
    elements, and globally as a :focus-visible fallback so nothing in the
    new shell/Today components can end up keyboard-focusable without a
-   visible indicator. */
-.focus-ring:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
+   visible indicator.
 
-:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+   Phase 13o — both rules live in @layer base. Unlayered, they beat every
+   Tailwind utility regardless of specificity, so an input's own
+   `outline-none` (paired with its focus:/focus-within: forest border) was
+   silently ignored and the field showed two rings: the green border plus
+   this blue outline. In base, utilities can override them again; fields
+   with no indicator of their own simply don't carry `outline-none`. */
+@layer base {
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { PartyPopper } from "lucide-react";
 import { loadReviewSession, clearReviewSession, type ReviewSessionSnapshot } from "@/lib/review-session-resume";
 
 // useSyncExternalStore (not useState+useEffect): server and the first client
@@ -60,7 +61,7 @@ export default function PracticeHero({
   const total = dueCount + newCount;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-forest to-forest-light p-4 text-white shadow-sm">
+    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-forest to-forest-light p-4 text-white">
       {resumable ? (
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -105,7 +106,10 @@ export default function PracticeHero({
           </Link>
         </div>
       ) : (
-        <p className="font-medium">🎉 Всё повторено!</p>
+        <p className="flex items-center gap-1.5 font-medium">
+          <PartyPopper aria-hidden="true" className="h-4 w-4" />
+          Всё повторено!
+        </p>
       )}
     </div>
   );

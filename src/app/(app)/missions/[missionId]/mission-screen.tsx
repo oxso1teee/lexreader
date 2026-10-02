@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,6 +12,8 @@ import { MissionPriorityBadge, MissionTypeBadge, difficultyLabel } from "@/compo
 import { GRAMMAR_RUNNER_MISSION_TYPES, TARGETED_MISSION_TYPES, type GrammarMissionPayload, type TargetedMissionPayload } from "@/lib/missions/payload";
 import type { MissionAttemptRow, MissionRow, MissionType } from "@/lib/missions/types";
 import type { PatternRow } from "@/lib/language-twin/types";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import GrammarRunner from "./grammar-runner";
 
 const GRAMMAR_TYPES = new Set<MissionType>(GRAMMAR_RUNNER_MISSION_TYPES);
@@ -110,7 +113,7 @@ export default function MissionScreen({
   if (mission.status === "dismissed" || mission.status === "expired" || mission.status === "replaced") {
     const label = mission.status === "dismissed" ? "отклонена" : mission.status === "expired" ? "истекла" : "заменена на более актуальную";
     return (
-      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm">
+      <Card className="flex flex-col gap-3">
         {metaRow}
         <p className="text-sm">
           Эта миссия {label} и больше не активна.
@@ -118,7 +121,7 @@ export default function MissionScreen({
         <Link href="/missions" className="focus-ring self-start text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline">
           ← Ко всем миссиям
         </Link>
-      </div>
+      </Card>
     );
   }
 
@@ -126,18 +129,20 @@ export default function MissionScreen({
     const total = (attempt?.correct_count ?? 0) + (attempt?.incorrect_count ?? 0);
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-center gap-2 rounded-2xl bg-card p-6 text-center shadow-sm">
-          <span className="text-4xl" aria-hidden="true">✓</span>
+        <Card className="flex flex-col items-center gap-2 p-6 text-center">
+          <span aria-hidden="true" className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-success)]/15">
+            <Check className="h-8 w-8 text-[var(--color-success-text)]" />
+          </span>
           <h2 className="text-lg font-bold">Миссия завершена</h2>
           {total > 0 && (
             <p className="text-sm text-[var(--text-secondary)]">
               {attempt?.correct_count} из {total} правильно · {formatDuration(attempt?.duration_seconds ?? null)}
             </p>
           )}
-        </div>
+        </Card>
 
         {pattern && (
-          <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-card p-4 text-center shadow-sm">
+          <Card className="flex flex-col items-center gap-1.5 text-center">
             <p className="text-sm font-semibold">Мой английский обновлён</p>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <CategoryBadge category={pattern.category} />
@@ -145,19 +150,19 @@ export default function MissionScreen({
               <TrendIndicator trend={pattern.trend} />
             </div>
             <p className="text-xs text-[var(--text-secondary)]">{pattern.title}</p>
-          </div>
+          </Card>
         )}
 
         <div className="flex flex-wrap justify-center gap-2">
-          <Link href="/home" className="focus-ring rounded-full bg-black px-5 py-3 text-sm font-medium text-white dark:bg-white dark:text-black">
+          <ButtonLink href="/home" variant="leaf">
             На главную
-          </Link>
-          <Link href="/language-twin" className="focus-ring rounded-full border border-[var(--border-strong)] px-5 py-3 text-sm font-medium">
+          </ButtonLink>
+          <ButtonLink href="/language-twin" variant="ghost">
             Мой английский
-          </Link>
-          <Link href="/missions" className="focus-ring rounded-full border border-[var(--border-strong)] px-5 py-3 text-sm font-medium">
+          </ButtonLink>
+          <ButtonLink href="/missions" variant="ghost">
             Другие миссии
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     );
@@ -181,26 +186,22 @@ export default function MissionScreen({
     }
     if (TARGETED_TYPES.has(mission.mission_type)) {
       return (
-        <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm">
+        <Card className="flex flex-col gap-3">
           {metaRow}
           <p className="text-sm">
             Миссия начата — она завершится, когда ты повторишь эти карточки в Мозге.
           </p>
-          <button
-            type="button"
-            onClick={handleContinueTargeted}
-            className="focus-ring self-start rounded-full bg-black px-5 py-3 text-sm font-medium text-white dark:bg-white dark:text-black"
-          >
+          <Button variant="leaf" onClick={handleContinueTargeted} className="self-start">
             Продолжить в Мозге
-          </button>
-        </div>
+          </Button>
+        </Card>
       );
     }
     return (
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         {metaRow}
         <p className="mt-2 text-sm text-[var(--text-secondary)]">Этот тип миссии пока не поддерживается интерфейсом.</p>
-      </div>
+      </Card>
     );
   }
 
@@ -208,7 +209,7 @@ export default function MissionScreen({
   const isSupported = GRAMMAR_TYPES.has(mission.mission_type) || TARGETED_TYPES.has(mission.mission_type);
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm">
+      <Card className="flex flex-col gap-3">
         {metaRow}
         <p className="text-sm font-medium">{mission.title}</p>
         <p className="text-sm text-[var(--text-secondary)]">{reasonLabel(mission.reason_key)}</p>
@@ -217,28 +218,18 @@ export default function MissionScreen({
           <span>{difficultyLabel(mission.difficulty)}</span>
           <span>Шагов: {mission.step_count}</span>
         </div>
-      </div>
+      </Card>
 
       {!isSupported ? (
         <p className="text-sm text-[var(--text-secondary)]">Этот тип миссии пока не поддерживается интерфейсом.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleStart}
-            disabled={isStarting}
-            className="focus-ring rounded-full bg-black px-5 py-3 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
-          >
+          <Button variant="leaf" onClick={handleStart} disabled={isStarting}>
             {isStarting ? "Начинаем…" : "Начать"}
-          </button>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            disabled={isDismissing}
-            className="focus-ring rounded-full border border-[var(--border-strong)] px-5 py-3 text-sm font-medium disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="ghost" onClick={handleDismiss} disabled={isDismissing}>
             {isDismissing ? "…" : "Не сейчас"}
-          </button>
+          </Button>
         </div>
       )}
     </div>

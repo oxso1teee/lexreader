@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import {
   DEFAULT_READER_PREFS,
@@ -11,6 +12,7 @@ import {
   type ReaderPrefs,
   type ReadingTheme,
 } from "./reader-prefs";
+import { buttonClassName } from "@/components/ui/button";
 
 export type { ReadingTheme, ReadingWidth, ReaderPrefs } from "./reader-prefs";
 export { DEFAULT_READER_PREFS, READING_WIDTH_PX } from "./reader-prefs";
@@ -88,6 +90,10 @@ export function adoptServerReaderPrefs(prefs: ReaderPrefs): void {
   listeners.forEach((l) => l());
 }
 
+// redesign/duolingo-flat phase 8 — круглые ±-кнопки на ghost-варианте
+// "пухлой" кнопки (src/styles/button.css); 40×40 вместо прежних 32×32.
+const STEP_BTN = buttonClassName({ variant: "ghost", size: "sm", pill: true, className: "h-10 w-10 p-0 pb-[3px]" });
+
 const THEME_SWATCHES: { value: ReadingTheme; label: string; bg: string; fg: string }[] = [
   { value: "paper", label: "Бумага", bg: "#f7f4ee", fg: "#1a1a1a" },
   { value: "sepia", label: "Сепия", bg: "#f2e6cf", fg: "#5c4326" },
@@ -106,13 +112,13 @@ export default function ReaderSettings({
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
       <div
-        className="w-full max-w-sm rounded-t-2xl bg-[var(--surface)] p-5 sm:rounded-2xl"
+        className="reader-pop w-full max-w-sm rounded-t-[20px] border-2 border-b-0 border-[var(--border-strong)] bg-[var(--surface)] p-5 sm:rounded-[20px] sm:border-b-2"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-h3">Настройки чтения</h2>
           <button type="button" onClick={onClose} aria-label="Закрыть" className="focus-ring text-[var(--text-secondary)]">
-            ✕
+            <X aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
 
@@ -123,7 +129,7 @@ export default function ReaderSettings({
               type="button"
               aria-label="Уменьшить текст"
               onClick={() => onChange({ ...prefs, fontSize: Math.max(MIN_FONT_SIZE, prefs.fontSize - 1) })}
-              className="focus-ring flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-muted)] font-bold"
+              className={STEP_BTN}
             >
               A−
             </button>
@@ -132,7 +138,7 @@ export default function ReaderSettings({
               type="button"
               aria-label="Увеличить текст"
               onClick={() => onChange({ ...prefs, fontSize: Math.min(MAX_FONT_SIZE, prefs.fontSize + 1) })}
-              className="focus-ring flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-muted)] font-bold"
+              className={STEP_BTN}
             >
               A+
             </button>
@@ -148,7 +154,7 @@ export default function ReaderSettings({
               onClick={() =>
                 onChange({ ...prefs, lineHeight: Math.max(MIN_LINE_HEIGHT, Math.round((prefs.lineHeight - 0.1) * 10) / 10) })
               }
-              className="focus-ring flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-muted)] font-bold"
+              className={STEP_BTN}
             >
               −
             </button>
@@ -159,7 +165,7 @@ export default function ReaderSettings({
               onClick={() =>
                 onChange({ ...prefs, lineHeight: Math.min(MAX_LINE_HEIGHT, Math.round((prefs.lineHeight + 0.1) * 10) / 10) })
               }
-              className="focus-ring flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-muted)] font-bold"
+              className={STEP_BTN}
             >
               +
             </button>
@@ -173,7 +179,7 @@ export default function ReaderSettings({
               type="button"
               aria-pressed={prefs.width === "narrow"}
               onClick={() => onChange({ ...prefs, width: "narrow" })}
-              className={`focus-ring rounded-full border px-3 py-1.5 text-xs font-semibold ${prefs.width === "narrow" ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white" : "border-[var(--border-strong)]"}`}
+              className={`focus-ring rounded-full border-2 px-3 py-1.5 text-xs font-semibold ${prefs.width === "narrow" ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white" : "border-[var(--border-strong)]"}`}
             >
               Узкая
             </button>
@@ -181,7 +187,7 @@ export default function ReaderSettings({
               type="button"
               aria-pressed={prefs.width === "wide"}
               onClick={() => onChange({ ...prefs, width: "wide" })}
-              className={`focus-ring rounded-full border px-3 py-1.5 text-xs font-semibold ${prefs.width === "wide" ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white" : "border-[var(--border-strong)]"}`}
+              className={`focus-ring rounded-full border-2 px-3 py-1.5 text-xs font-semibold ${prefs.width === "wide" ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white" : "border-[var(--border-strong)]"}`}
             >
               Широкая
             </button>
@@ -211,7 +217,11 @@ export default function ReaderSettings({
         <button
           type="button"
           onClick={() => onChange(DEFAULT_READER_PREFS)}
-          className="focus-ring mt-3 min-h-11 w-full rounded-lg border border-[var(--border-strong)] text-sm font-semibold text-[var(--text-secondary)]"
+          className={buttonClassName({
+            variant: "ghost",
+            size: "sm",
+            className: "mt-3 min-h-11 w-full text-[var(--text-secondary)]",
+          })}
         >
           Сбросить настройки
         </button>

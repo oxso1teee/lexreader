@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { Library, Type, MessageSquare } from "lucide-react";
 import type { VocabularyRow } from "@/lib/vocabulary-list";
 import { bulkMoveToDeck, bulkMarkKnown, bulkDeleteFlashcards } from "./actions";
 import NewDeckModal from "../new-deck-modal";
@@ -10,6 +11,7 @@ import DeckList from "../deck-list";
 import StarterDeckCard from "../starter-deck-card";
 import { STARTER_DECKS } from "@/lib/starter-decks";
 import { track } from "@/lib/posthog-client";
+import { Card } from "@/components/ui/card";
 
 type Section = "vocabulary" | "decks";
 // M3 Slice 10 (brief Phase B §1) — one compact filter row combining both axes the brief asks
@@ -214,7 +216,7 @@ export default function VocabularyBrowser({
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex gap-2 border-b border-black/10 dark:border-white/10">
+      <div className="flex gap-2 border-b border-[var(--border)]">
         {(["vocabulary", "decks"] as const).map((s) => (
           <button
             key={s}
@@ -225,11 +227,18 @@ export default function VocabularyBrowser({
             }}
             className={`-mb-px flex min-h-11 items-center gap-1 border-b-2 px-2 text-sm font-medium transition-colors ${
               section === s
-                ? "border-black text-black dark:border-white dark:text-white"
-                : "border-transparent text-[var(--text-secondary)] hover:text-black/70 dark:hover:text-white/70"
+                ? "border-[var(--color-forest)] text-[var(--color-forest-text)]"
+                : "border-transparent text-[var(--text-secondary)] hover:text-foreground"
             }`}
           >
-            {s === "vocabulary" ? "Словарь" : "📚 Колоды"}
+            {s === "vocabulary" ? (
+              "Словарь"
+            ) : (
+              <>
+                <Library aria-hidden="true" className="h-4 w-4" />
+                Колоды
+              </>
+            )}
           </button>
         ))}
       </div>
@@ -241,7 +250,7 @@ export default function VocabularyBrowser({
             <ImportModal decks={decks.map((d) => ({ id: d.id, name: d.name }))} targetLanguage={targetLanguage} />
           </div>
           {showStarterDecks && (
-            <div className="rounded-2xl bg-card p-4 shadow-sm">
+            <Card>
               <h2 className="mb-1 font-semibold">Стартовые колоды</h2>
               <p className="mb-3 text-xs text-[var(--text-secondary)]">
                 Готовые наборы частых слов по уровням — не расходуют лимит бесплатного тарифа
@@ -251,7 +260,7 @@ export default function VocabularyBrowser({
                   <StarterDeckCard key={def.level} def={def} alreadyAdded={addedStarterTitles.includes(def.title)} />
                 ))}
               </div>
-            </div>
+            </Card>
           )}
           <DeckList decks={decks} />
         </div>
@@ -266,7 +275,7 @@ export default function VocabularyBrowser({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск слов и фраз..."
-            className="w-full rounded-lg border border-black/15 bg-card px-4 py-2.5 outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/40"
+            className="w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 outline-none focus:border-[var(--color-forest)]"
           />
 
           <div className="flex flex-wrap gap-2" role="group" aria-label="Фильтр словаря">
@@ -282,7 +291,7 @@ export default function VocabularyBrowser({
                 className={`focus-ring min-h-9 rounded-full border px-3 py-1.5 text-xs font-medium ${
                   filter === f
                     ? "border-forest bg-forest/15 text-[var(--color-forest-text)]"
-                    : "border-black/10 text-black/60 dark:border-white/15 dark:text-white/60"
+                    : "border-[var(--border-strong)] text-[var(--text-secondary)]"
                 }`}
               >
                 {FILTER_LABELS[f]}
@@ -303,7 +312,7 @@ export default function VocabularyBrowser({
                 // информацию в payload.
                 trackFilterChange("deck", value === "all" ? "all" : "specific");
               }}
-              className="rounded-lg border border-black/15 bg-card px-2 py-1.5 text-sm dark:border-white/20"
+              className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-sm outline-none focus:border-[var(--color-forest)]"
             >
               <option value="all">Все колоды</option>
               {decks.map((d) => (
@@ -320,7 +329,7 @@ export default function VocabularyBrowser({
                 setSort(value);
                 trackFilterChange("sort", value);
               }}
-              className="rounded-lg border border-black/15 bg-card px-2 py-1.5 text-sm dark:border-white/20"
+              className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-sm outline-none focus:border-[var(--color-forest)]"
             >
               {(Object.keys(SORT_LABELS) as SortKey[]).map((s) => (
                 <option key={s} value={s}>
@@ -328,7 +337,7 @@ export default function VocabularyBrowser({
                 </option>
               ))}
             </select>
-            <label className="flex items-center gap-1.5 text-xs text-black/60 dark:text-white/60">
+            <label className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
               <input
                 type="checkbox"
                 checked={sourceOnly}
@@ -346,7 +355,7 @@ export default function VocabularyBrowser({
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-forest/40 bg-forest/10 px-3 py-2 text-sm">
               <span className="font-medium">Выбрано: {selectedIds.size}</span>
               {canMarkKnown && (
-                <button type="button" disabled={isPending} onClick={handleBulkMarkKnown} className="rounded-full bg-white px-3 py-1.5 text-xs font-medium shadow-sm dark:bg-black/40">
+                <button type="button" disabled={isPending} onClick={handleBulkMarkKnown} className="rounded-full bg-[var(--surface)] px-3 py-1.5 text-xs font-medium">
                   Уже знаю
                 </button>
               )}
@@ -354,7 +363,7 @@ export default function VocabularyBrowser({
                 aria-label="Переместить в колоду"
                 value={moveTargetDeck}
                 onChange={(e) => setMoveTargetDeck(e.target.value)}
-                className="rounded-full border border-black/15 bg-white px-2 py-1.5 text-xs dark:border-white/20 dark:bg-black/40"
+                className="rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-forest)]"
               >
                 <option value="">Переместить в…</option>
                 {decks.map((d) => (
@@ -364,18 +373,18 @@ export default function VocabularyBrowser({
                 ))}
               </select>
               {moveTargetDeck && (
-                <button type="button" disabled={isPending} onClick={handleBulkMove} className="rounded-full bg-white px-3 py-1.5 text-xs font-medium shadow-sm dark:bg-black/40">
+                <button type="button" disabled={isPending} onClick={handleBulkMove} className="rounded-full bg-[var(--surface)] px-3 py-1.5 text-xs font-medium">
                   Переместить
                 </button>
               )}
-              <button type="button" onClick={handleExportSelected} className="rounded-full bg-white px-3 py-1.5 text-xs font-medium shadow-sm dark:bg-black/40">
+              <button type="button" onClick={handleExportSelected} className="rounded-full bg-[var(--surface)] px-3 py-1.5 text-xs font-medium">
                 Экспорт
               </button>
               <button
                 type="button"
                 disabled={isPending}
                 onClick={handleBulkDelete}
-                className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+                className="rounded-full bg-[var(--color-danger)] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
               >
                 Удалить
               </button>
@@ -388,7 +397,9 @@ export default function VocabularyBrowser({
 
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10 text-center">
-              <p className="text-2xl">🔤</p>
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-forest-tint)]">
+                <Type aria-hidden="true" className="h-6 w-6 text-[var(--color-forest-text)]" />
+              </span>
               <p className="font-medium">
                 {query || filter !== "all" || deckFilter !== "all" || sourceOnly
                   ? "Ничего не найдено по этим условиям"
@@ -403,10 +414,7 @@ export default function VocabularyBrowser({
           ) : (
             <div className="flex flex-col gap-2">
               {filtered.map((r) => (
-                <div
-                  key={r.flashcardId}
-                  className="flex items-center gap-3 rounded-xl bg-card px-3 py-2.5 shadow-sm"
-                >
+                <Card key={r.flashcardId} className="flex items-center gap-3 px-3 py-2.5">
                   <input
                     type="checkbox"
                     checked={selectedIds.has(r.flashcardId)}
@@ -419,8 +427,8 @@ export default function VocabularyBrowser({
                     className="focus-ring flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-medium">
-                        {r.isPhrase && <span aria-hidden="true">💬 </span>}
+                      <p className="flex items-center gap-1 truncate font-medium">
+                        {r.isPhrase && <MessageSquare aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />}
                         {r.front}
                       </p>
                       <p className="truncate text-sm text-[var(--text-secondary)]">
@@ -433,7 +441,7 @@ export default function VocabularyBrowser({
                       {r.schedulerBucket === "due" && <DueBadge />}
                     </div>
                   </Link>
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -445,11 +453,11 @@ export default function VocabularyBrowser({
 
 function LearningStateBadge({ state }: { state: VocabularyRow["learningState"] }) {
   const config: Record<VocabularyRow["learningState"], { label: string; className: string }> = {
-    new: { label: "Новое", className: "bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60" },
-    learning: { label: "Учу", className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" },
-    familiar: { label: "Знакомое", className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" },
-    active: { label: "Активное", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" },
-    maintenance: { label: "Поддерживается", className: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300" },
+    new: { label: "Новое", className: "bg-[var(--surface-muted)] text-[var(--text-secondary)]" },
+    learning: { label: "Учу", className: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]" },
+    familiar: { label: "Знакомое", className: "bg-[var(--sun-tint)] text-[var(--sun-text)]" },
+    active: { label: "Активное", className: "bg-[var(--color-success)]/15 text-[var(--color-success-text)]" },
+    maintenance: { label: "Поддерживается", className: "bg-[var(--color-info)]/15 text-[var(--color-info-text)]" },
   };
   const c = config[state];
   return <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${c.className}`}>{c.label}</span>;

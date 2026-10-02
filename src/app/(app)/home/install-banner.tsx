@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -48,9 +49,9 @@ export default function InstallBanner() {
   if (!visible) return null;
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-black p-3.5 text-white dark:bg-white dark:text-black">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-forest text-lg">
-        📲
+    <div className="flex items-center gap-3 rounded-2xl bg-[var(--foreground)] p-3.5 text-[var(--background)]">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-forest text-white">
+        <Download aria-hidden="true" className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">Установи LexReader</p>
@@ -59,14 +60,14 @@ export default function InstallBanner() {
       <button
         type="button"
         onClick={handleDismiss}
-        className="shrink-0 rounded-full border border-white/30 px-3 py-1.5 text-xs font-medium dark:border-black/20"
+        className="shrink-0 rounded-full border border-[var(--background)]/30 px-3 py-1.5 text-xs font-medium"
       >
         Не сейчас
       </button>
       <button
         type="button"
         onClick={handleInstall}
-        className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-black dark:bg-black dark:text-white"
+        className="shrink-0 rounded-full bg-[var(--background)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)]"
       >
         Установить
       </button>

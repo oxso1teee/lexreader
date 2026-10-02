@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
 
 const FAQ = [
   {
@@ -25,19 +26,19 @@ export default function PricingFaq() {
   return (
     <div className="flex flex-col gap-2">
       {FAQ.map((item, i) => (
-        <div key={item.q} className="rounded-2xl bg-card p-4 shadow-sm">
+        <Card key={item.q}>
           <button
             type="button"
             onClick={() => setOpen(open === i ? null : i)}
             className="flex w-full items-center justify-between text-left text-sm font-medium"
           >
             {item.q}
-            <span className="text-black/40 dark:text-white/40">{open === i ? "−" : "+"}</span>
+            <span className="text-[var(--text-secondary)]">{open === i ? "−" : "+"}</span>
           </button>
           {open === i && (
-            <p className="mt-2 text-sm text-black/60 dark:text-white/60">{item.a}</p>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">{item.a}</p>
           )}
-        </div>
+        </Card>
       ))}
     </div>
   );

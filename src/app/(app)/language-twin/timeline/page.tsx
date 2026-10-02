@@ -1,6 +1,8 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { TrendingUp } from "lucide-react";
 import EmptyState from "@/components/empty-state";
+import { Card } from "@/components/ui/card";
 import LanguageTwinSubHeader from "../sub-header";
 import { buildTimelineEntries } from "@/lib/language-twin/timeline";
 
@@ -29,9 +31,9 @@ export default async function LanguageTwinTimelinePage() {
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <LanguageTwinSubHeader title="История прогресса" description="Реальные обновления профиля, не витрина достижений" />
       {entries.length === 0 ? (
-        <EmptyState icon="📈" title="История пока пуста" body="Как только накопится активность, здесь появятся реальные изменения профиля." />
+        <EmptyState icon={TrendingUp} title="История пока пуста" body="Как только накопится активность, здесь появятся реальные изменения профиля." />
       ) : (
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <Card>
           <ol className="relative flex flex-col gap-4 border-l-2 border-[var(--border)] pl-4">
             {entries.slice(0, 30).map((e, i) => (
               <li key={i} className="relative">
@@ -42,7 +44,7 @@ export default async function LanguageTwinTimelinePage() {
               </li>
             ))}
           </ol>
-        </div>
+        </Card>
       )}
     </div>
   );

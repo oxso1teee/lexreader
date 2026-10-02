@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { CalendarDays, RefreshCw, Settings2, Library, Palette, Save } from "lucide-react";
 import type { SrsSettings } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 import { updateSrsSettings, type SettingsFormState } from "./actions";
 
 function NumberField({
@@ -32,7 +34,7 @@ function NumberField({
         min={min}
         max={max}
         defaultValue={defaultValue}
-        className="w-28 rounded-lg border border-black/20 px-3 py-1.5 text-right outline-none focus:border-black dark:border-white/25 dark:focus:border-white"
+        className="w-28 rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-1.5 text-right outline-none focus:border-[var(--color-forest)]"
       />
     </div>
   );
@@ -55,11 +57,11 @@ function Toggle({
         type="button"
         onClick={() => setChecked((c) => !c)}
         className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-emerald-500" : "bg-black/20 dark:bg-white/20"
+          checked ? "bg-[var(--color-forest)]" : "bg-[var(--border-strong)]"
         }`}
       >
         <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${
+          className={`absolute left-0 top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${
             checked ? "translate-x-5" : "translate-x-0.5"
           }`}
         />
@@ -79,7 +81,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
   return (
     <form action={formAction} className="flex flex-col gap-6 pb-6">
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">📅 Дневные лимиты</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <CalendarDays aria-hidden="true" className="h-4 w-4" />
+          Дневные лимиты
+        </h2>
         <NumberField
           name="new_cards_per_day"
           label="Новых карточек в день"
@@ -97,16 +102,22 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">🔄 Направление изучения</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <RefreshCw aria-hidden="true" className="h-4 w-4" />
+          Направление изучения
+        </h2>
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm">Направление по умолчанию</span>
-          <button
-            type="button"
+          {/* ghost, не sky: белый на --sky меряется 2.4:1 (light) / 1.9:1 (dark).
+              min-h-11 — сохраняем прежнюю 44px-зону нажатия. */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="min-h-11"
             onClick={() => setDirection((d) => (d === "front_back" ? "back_front" : "front_back"))}
-            className="flex min-h-11 items-center justify-center rounded-full bg-blue-600 px-4 text-sm font-medium text-white"
           >
             {direction === "front_back" ? "Слово → Перевод" : "Перевод → Слово"}
-          </button>
+          </Button>
         </div>
         <input type="hidden" name="study_direction" value={direction} />
         <p className="text-xs text-[var(--text-secondary)]">
@@ -115,7 +126,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">⚙️ Алгоритм повторения (для продвинутых)</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <Settings2 aria-hidden="true" className="h-4 w-4" />
+          Алгоритм повторения (для продвинутых)
+        </h2>
         <NumberField
           name="starting_ease"
           label="Стартовый коэффициент лёгкости"
@@ -150,7 +164,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">📚 Интервалы «выпуска» карточки</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <Library aria-hidden="true" className="h-4 w-4" />
+          Интервалы «выпуска» карточки
+        </h2>
         <NumberField
           name="graduating_interval_days"
           label="Интервал после первого успеха (дней)"
@@ -168,7 +185,10 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">🎨 Отображение</h2>
+        <h2 className="flex items-center gap-1.5 font-semibold">
+          <Palette aria-hidden="true" className="h-4 w-4" />
+          Отображение
+        </h2>
         <Toggle name="show_timer" label="Показывать таймер" defaultChecked={settings.show_timer} />
         <Toggle
           name="autoplay_audio"
@@ -177,16 +197,19 @@ export default function SettingsForm({ settings }: { settings: SrsSettings }) {
         />
       </section>
 
-      {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
-      {state.saved && <p className="text-sm text-emerald-600 dark:text-emerald-400">Сохранено.</p>}
+      {state.error && <p className="text-sm text-[var(--color-danger-text)]">{state.error}</p>}
+      {state.saved && <p className="text-sm text-[var(--color-success-text)]">Сохранено.</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-full bg-emerald-600 py-3 font-bold text-black disabled:opacity-50"
-      >
-        {pending ? "…" : "💾 Сохранить настройки"}
-      </button>
+      <Button type="submit" variant="leaf" disabled={pending} className="gap-1.5">
+        {pending ? (
+          "…"
+        ) : (
+          <>
+            <Save aria-hidden="true" className="h-4 w-4" />
+            Сохранить настройки
+          </>
+        )}
+      </Button>
     </form>
   );
 }

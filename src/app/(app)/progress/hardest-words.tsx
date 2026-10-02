@@ -1,3 +1,5 @@
+import { cardClassName } from "@/components/ui/card";
+
 export interface HardestWord {
   id: string;
   front: string;
@@ -10,7 +12,7 @@ export default function HardestWords({ words }: { words: HardestWord[] }) {
   if (words.length === 0) return null;
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className={cardClassName()}>
       <h2 className="mb-1 font-semibold">Сложные слова</h2>
       <p className="mb-3 text-xs text-[var(--text-secondary)]">
         По точности ответов за всё время, худшие сначала
@@ -27,10 +29,10 @@ export default function HardestWords({ words }: { words: HardestWord[] }) {
               <span
                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                   w.accuracy < 0.4
-                    ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                    ? "bg-[var(--color-danger)]/15 text-[var(--color-danger-text)]"
                     : w.accuracy < 0.7
-                      ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
-                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                      ? "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]"
+                      : "bg-[var(--color-success)]/15 text-[var(--color-success-text)]"
                 }`}
               >
                 {Math.round(w.accuracy * 100)}%

@@ -24,7 +24,7 @@ export default function NewTextForm({ collections }: { collections: CollectionOp
           name="title"
           required
           placeholder="Например: Утро в кофейне"
-          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base"
         />
       </div>
       <div className="flex flex-1 flex-col gap-1.5">
@@ -37,13 +37,13 @@ export default function NewTextForm({ collections }: { collections: CollectionOp
           required
           rows={16}
           placeholder="Вставь текст на изучаемом языке…"
-          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7 outline-none"
+          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7"
         />
         <p className="text-xs text-[var(--text-secondary)]">Минимум пара предложений, максимум 200 000 символов.</p>
       </div>
       <CollectionPicker collections={collections} />
       {state.error && (
-        <p className="text-sm text-[var(--color-danger)]" role="alert">
+        <p className="text-sm text-[var(--color-danger-text)]" role="alert">
           {state.error}
         </p>
       )}

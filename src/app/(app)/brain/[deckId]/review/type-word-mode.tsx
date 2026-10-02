@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { reviewWord } from "./actions";
 import type { ReviewCard } from "./review-session";
+import { Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import SessionComplete from "./session-complete";
 
 export default function TypeWordMode({
@@ -88,11 +90,15 @@ export default function TypeWordMode({
             transition={{ type: "spring", stiffness: 500, damping: 15 }}
             className={`flex items-center gap-1.5 font-medium ${
               result === "correct"
-                ? "text-emerald-700 dark:text-emerald-400"
-                : "text-red-600 dark:text-red-400"
+                ? "text-[var(--color-success-text)]"
+                : "text-[var(--color-danger-text)]"
             }`}
           >
-            <span aria-hidden="true">{result === "correct" ? "✓" : "✗"}</span>
+            {result === "correct" ? (
+              <Check aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <X aria-hidden="true" className="h-4 w-4" />
+            )}
             {result === "correct" ? "Верно!" : `Правильный ответ: ${answer}`}
           </motion.p>
         )}
@@ -107,22 +113,18 @@ export default function TypeWordMode({
         placeholder={
           studyDirection === "back_front" ? "Напиши слово на изучаемом языке" : "Напиши перевод"
         }
-        className={`mb-4 w-full rounded-lg border px-4 py-2.5 text-base outline-none focus:border-black/30 disabled:opacity-60 dark:focus:border-white/40 ${
+        className={`mb-4 w-full rounded-lg border px-4 py-2.5 text-base outline-none focus:border-[var(--color-forest)] disabled:opacity-60 ${
           result === "correct"
-            ? "border-emerald-600 dark:border-emerald-500"
+            ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)]"
             : result === "wrong"
-              ? "border-red-500 dark:border-red-500"
-              : "border-black/10 dark:border-white/15"
+              ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
+              : "border-[var(--border-strong)]"
         }`}
       />
 
-      <button
-        type="submit"
-        disabled={isPending || (!result && value.trim() === "")}
-        className="rounded-full bg-black px-5 py-3 font-medium text-white disabled:opacity-40 dark:bg-white dark:text-black"
-      >
+      <Button type="submit" variant="leaf" disabled={isPending || (!result && value.trim() === "")}>
         {result ? "Далее" : "Проверить"}
-      </button>
+      </Button>
     </form>
   );
 }

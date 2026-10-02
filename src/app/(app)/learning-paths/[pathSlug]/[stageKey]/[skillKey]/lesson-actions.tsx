@@ -1,9 +1,11 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { completeLessonAction } from "../../../actions";
 import { track } from "@/lib/posthog-client";
+import { Button } from "@/components/ui/button";
 import type { PathSlug } from "@/lib/learning-paths/types";
 
 // Content completion only (plan doc's "never collapse content completion
@@ -24,7 +26,7 @@ export default function CompleteLessonButton({
   if (alreadyCompleted) {
     return (
       <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-success-text)]">
-        <span aria-hidden="true">✓</span> Урок изучен
+        <Check aria-hidden="true" className="h-4 w-4" /> Урок изучен
       </span>
     );
   }
@@ -38,13 +40,8 @@ export default function CompleteLessonButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isPending}
-      className="focus-ring self-start rounded-full bg-forest px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
-    >
+    <Button variant="leaf" onClick={handleClick} disabled={isPending} className="self-start">
       {isPending ? "…" : "Отметить как изученное"}
-    </button>
+    </Button>
   );
 }

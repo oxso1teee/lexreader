@@ -35,7 +35,7 @@ test("Undo restores the previous grade and returns to a question screen", async 
 test("Deck rename persists and default/starter decks hide the delete button", async ({ page }) => {
   await login(page);
   await page.goto("/brain/vocabulary");
-  await page.getByRole("button", { name: "📚 Колоды" }).click();
+  await page.getByRole("button", { name: "Колоды", exact: true }).click();
   await page.getByRole("button", { name: "+ Новая колода" }).click();
   const originalName = `E2E Rename ${Date.now()}`;
   await page.getByPlaceholder("Название колоды...").fill(originalName);
@@ -57,7 +57,7 @@ test("Deck rename persists and default/starter decks hide the delete button", as
   await expect(page).toHaveURL(/\/brain\/vocabulary$/);
 
   // The default deck ("Основная колода") must never offer deletion.
-  await page.getByRole("button", { name: "📚 Колоды" }).click();
+  await page.getByRole("button", { name: "Колоды", exact: true }).click();
   await page.getByRole("link", { name: /Основная колода/ }).click();
   await expect(page.getByRole("button", { name: "Удалить колоду" })).toHaveCount(0);
 });

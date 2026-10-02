@@ -1,0 +1,58 @@
+/* redesign/duolingo-flat, phase 7 — технический слой иллюстрированной
+   обложки, перенесён из .artcover утверждённого артефакта. Общий для всех
+   обложек (library-item-card, library-featured-card, text-cover-card,
+   continue-learning-card), разметка — src/components/product/cover-art.tsx.
+
+   Порядок слоёв (isolation: isolate держит их внутри обложки):
+     фон-градиент (inline style) / YouTube-превью
+     z1 ::before — grain: fractalNoise из inline-SVG, mix-blend-mode overlay
+     z2 .artcover-motif — абстрактный SVG-мотив
+     z3 ::after — блик сверху-слева + тёмная тень-корешок справа
+   Обложки в обеих темах одинаковые — это "бумага" книги, а не поверхность UI. */
+@layer components {
+  .artcover {
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .artcover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 90px 90px;
+  }
+
+  .artcover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background:
+      linear-gradient(115deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 26%),
+      linear-gradient(to left, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0) 12%);
+  }
+
+  .artcover-motif {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Широкая плашка: квадратный мотив справа, левый край растворяется в
+     градиенте, чтобы не было видимой границы квадрата и текста под ним. */
+  .artcover-motif--banner {
+    left: auto;
+    width: auto;
+    aspect-ratio: 1;
+    mask-image: linear-gradient(to right, transparent, #000 45%);
+  }
+}

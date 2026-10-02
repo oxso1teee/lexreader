@@ -1,4 +1,4 @@
-import { HomeIcon, LibraryIcon, BrainIcon, ProgressIcon, SettingsIcon } from "@/components/nav-icons";
+import { BarChart3, Brain, House, Library, Settings, type LucideIcon } from "lucide-react";
 import { messages } from "@/lib/i18n";
 
 // Единственный источник правды для навигации — DesktopSidebar и
@@ -8,15 +8,15 @@ import { messages } from "@/lib/i18n";
 export interface NavItem {
   href: string;
   label: string;
-  Icon: React.ComponentType;
+  Icon: LucideIcon;
 }
 
 const nav = messages.appShell.nav;
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/home", label: nav.today, Icon: HomeIcon },
-  { href: "/library", label: nav.learn, Icon: LibraryIcon },
-  { href: "/brain", label: nav.practice, Icon: BrainIcon },
-  { href: "/progress", label: nav.progress, Icon: ProgressIcon },
-  { href: "/settings", label: nav.profile, Icon: SettingsIcon },
+  { href: "/home", label: nav.today, Icon: House },
+  { href: "/library", label: nav.learn, Icon: Library },
+  { href: "/brain", label: nav.practice, Icon: Brain },
+  { href: "/progress", label: nav.progress, Icon: BarChart3 },
+  { href: "/settings", label: nav.profile, Icon: Settings },
 ];

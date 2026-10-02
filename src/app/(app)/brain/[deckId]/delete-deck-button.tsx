@@ -27,7 +27,7 @@ export default function DeleteDeckButton({ deckId, name, cardCount }: { deckId: 
       type="button"
       disabled={isPending}
       onClick={handleDelete}
-      className="rounded-full border border-red-200 py-2 text-sm font-medium text-red-600 disabled:opacity-50 dark:border-red-900"
+      className="rounded-full border border-[var(--color-danger-text)]/40 py-2 text-sm font-medium text-[var(--color-danger-text)] disabled:opacity-50"
     >
       {isPending ? "…" : "Удалить колоду"}
     </button>

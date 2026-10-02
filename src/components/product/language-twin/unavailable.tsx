@@ -1,3 +1,4 @@
+import { Wrench } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 
 // Distinct from the "not enough data yet" empty state — this means the
@@ -8,7 +9,7 @@ import EmptyState from "@/components/empty-state";
 export default function LanguageTwinUnavailable() {
   return (
     <EmptyState
-      icon="🛠️"
+      icon={Wrench}
       title="Мой английский временно недоступен"
       body="Не получилось загрузить данные этой функции. Твои слова, карточки и история повторений не затронуты — попробуй зайти сюда чуть позже."
     />

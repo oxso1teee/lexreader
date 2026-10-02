@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useState, useTransition } from "react";
 import { addStarterDeck } from "./starter-deck-actions";
 import type { StarterDeckDef } from "@/lib/starter-decks";
@@ -28,14 +29,17 @@ export default function StarterDeckCard({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-3 py-2.5 text-sm dark:border-white/15">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-strong)] px-3 py-2.5 text-sm">
       <div className="min-w-0">
         <p className="font-medium">{def.title}</p>
         <p className="truncate text-[var(--text-secondary)]">{def.description}</p>
-        {error && <p className="mt-1 text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p className="mt-1 text-[var(--color-danger-text)]">{error}</p>}
       </div>
       {added ? (
-        <span className="shrink-0 text-[var(--text-secondary)]">✓ Добавлено</span>
+        <span className="inline-flex shrink-0 items-center gap-1 text-[var(--text-secondary)]">
+          <Check aria-hidden="true" className="h-4 w-4" />
+          Добавлено
+        </span>
       ) : (
         <button
           type="button"

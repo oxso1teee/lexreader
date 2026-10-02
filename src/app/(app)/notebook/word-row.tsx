@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
+import { Camera, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { deleteWord, markKnown, setPhotoUrl, toggleFavorite } from "./actions";
 import { validateImageFile } from "@/lib/file-validation";
@@ -78,11 +79,11 @@ export default function WordRow({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-4 py-3 dark:border-white/15">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-strong)] px-4 py-3">
       <div className="flex min-w-0 items-center gap-3">
         <label
           aria-label="Добавить фото к слову"
-          className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-black/15 text-black/30 hover:border-black/30 dark:border-white/20 dark:text-white/30 dark:hover:border-white/40"
+          className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-[var(--border-strong)] text-black/30 hover:border-[var(--sky)] dark:text-white/30"
         >
           {localPhotoUrl || photoUrl ? (
             // unoptimized — тот же приватный signed URL (TTL 1 час) с тем же
@@ -91,7 +92,7 @@ export default function WordRow({
           ) : uploading ? (
             <span className="text-xs">…</span>
           ) : (
-            <span className="text-lg">📷</span>
+            <Camera aria-hidden="true" className="h-5 w-5" />
           )}
           <input
             type="file"
@@ -109,17 +110,17 @@ export default function WordRow({
               type="button"
               onClick={handleToggleFavorite}
               aria-label={favorite ? "Убрать из избранного" : "Добавить в избранное"}
-              className={`shrink-0 ${favorite ? "text-yellow-500" : "text-black/20 hover:text-black/40 dark:text-white/20 dark:hover:text-white/40"}`}
+              className={`shrink-0 ${favorite ? "text-[var(--sun-text)]" : "text-black/20 hover:text-black/40 dark:text-white/20 dark:hover:text-white/40"}`}
             >
-              {favorite ? "★" : "☆"}
+              <Star aria-hidden="true" className="h-4 w-4" fill={favorite ? "currentColor" : "none"} />
             </button>
             <span className="truncate">{headword}</span>
           </p>
-          <p className="truncate text-sm text-black/50 dark:text-white/50">
+          <p className="truncate text-sm text-[var(--text-secondary)]">
             {translation}
             {sourceTitle ? ` · ${sourceTitle}` : ""}
           </p>
-          {photoError && <p className="text-xs text-red-600 dark:text-red-400">{photoError}</p>}
+          {photoError && <p className="text-xs text-[var(--color-danger-text)]">{photoError}</p>}
         </div>
       </div>
       <div className="flex shrink-0 gap-2">
@@ -128,7 +129,7 @@ export default function WordRow({
             type="button"
             disabled={isPending}
             onClick={() => startTransition(() => markKnown(id))}
-            className="flex min-h-11 items-center justify-center rounded-full border border-black/10 px-3 text-xs font-medium hover:border-black/30 disabled:opacity-40 dark:border-white/15 dark:hover:border-white/40"
+            className="flex min-h-11 items-center justify-center rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium hover:border-[var(--sky)] disabled:opacity-40"
           >
             Уже знаю
           </button>
@@ -137,7 +138,7 @@ export default function WordRow({
           type="button"
           disabled={isPending}
           onClick={() => startTransition(() => deleteWord(id))}
-          className="flex min-h-11 items-center justify-center rounded-full border border-black/10 px-3 text-xs font-medium text-red-600 hover:border-red-300 disabled:opacity-40 dark:border-white/15 dark:text-red-400 dark:hover:border-red-800"
+          className="flex min-h-11 items-center justify-center rounded-full border border-[var(--color-danger-text)] px-3 text-xs font-medium text-[var(--color-danger-text)] hover:border-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 disabled:opacity-40"
         >
           Удалить
         </button>

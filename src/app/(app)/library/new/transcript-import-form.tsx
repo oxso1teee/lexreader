@@ -28,7 +28,7 @@ export default function TranscriptImportForm({ collections }: { collections: Col
           name="title"
           required
           placeholder="Например: подкаст об истории Лондона"
-          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base"
         />
       </div>
       <div className="flex flex-1 flex-col gap-1.5">
@@ -41,7 +41,7 @@ export default function TranscriptImportForm({ collections }: { collections: Col
           required
           rows={16}
           placeholder="Скопируй транскрипт из любого источника и вставь сюда…"
-          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7 outline-none"
+          className="focus-ring w-full flex-1 resize-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-base leading-7"
         />
         <p className="text-xs text-[var(--text-secondary)]">
           Сохраняется как обычный текст, без синхронизации с аудио/видео.
@@ -49,7 +49,7 @@ export default function TranscriptImportForm({ collections }: { collections: Col
       </div>
       <CollectionPicker collections={collections} />
       {state.error && (
-        <p className="text-sm text-[var(--color-danger)]" role="alert">
+        <p className="text-sm text-[var(--color-danger-text)]" role="alert">
           {state.error}
         </p>
       )}

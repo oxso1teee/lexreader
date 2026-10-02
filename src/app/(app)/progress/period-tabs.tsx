@@ -16,8 +16,8 @@ export default function PeriodTabs({ current }: { current: string }) {
           href={`/progress?period=${p.value}`}
           className={`focus-ring flex min-h-11 items-center rounded-full border px-3 text-sm font-medium transition-colors ${
             current === p.value
-              ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-              : "border-black/15 hover:border-black/30 dark:border-white/20 dark:hover:border-white/40"
+              ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
+              : "border-[var(--border-strong)] hover:border-[var(--sky)]"
           }`}
         >
           {p.label}

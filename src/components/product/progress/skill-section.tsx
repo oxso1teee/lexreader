@@ -12,7 +12,7 @@ const STATUS_COLOR: Record<SkillStatus, string> = {
 function SkillCard({ label, count, suffix }: { label: string; count: number; suffix?: string }) {
   const status = skillStatus(count);
   return (
-    <div className="flex flex-col gap-1 rounded-xl bg-[var(--surface)] p-3 shadow-sm">
+    <div className="flex flex-col gap-1 rounded-xl bg-[var(--surface)] p-3">
       <span className="text-caption">{label}</span>
       <span className={`text-body-sm font-semibold ${STATUS_COLOR[status]}`}>{SKILL_STATUS_LABEL[status]}</span>
       <span className="text-caption text-[var(--text-secondary)]">

@@ -64,7 +64,12 @@ test("reading flow: open text, tap word, translate, change level, finish", async
 
   // Долистываем до конца и завершаем чтение (не путать с кнопкой
   // "Завершить чтение" в шапке — это тот же экшен, но другая кнопка).
-  const finishButton = page.getByRole("button", { name: "Завершить ✓" });
+  // Раньше здесь была буквальная "✓" в имени — та же категория regression,
+  // что и 8 файлов, исправленных после фазы 2 (эмодзи -> lucide-иконки):
+  // сама кнопка ещё в фазе 2 стала текстом "Завершить" + отдельная
+  // aria-hidden Check-иконка (см. reader.tsx), которая ничего не добавляет
+  // в accessible name — этот файл тогда пропустили.
+  const finishButton = page.getByRole("button", { name: "Завершить", exact: true });
   await expect(finishButton).toBeVisible();
   await finishButton.click();
   await expect(page).toHaveURL(/\/library$/);

@@ -1,3 +1,4 @@
+import { FolderOpen } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { getMissionHistoryAction } from "../actions";
 import EmptyState from "@/components/empty-state";
@@ -18,7 +19,7 @@ export default async function MissionHistoryPage() {
       />
       {missions.length === 0 ? (
         <EmptyState
-          icon="🗂️"
+          icon={FolderOpen}
           title="История пуста"
           body="Здесь появятся миссии, которые ты завершишь, отклонишь или которые истекут."
         />

@@ -287,7 +287,7 @@ export default function YoutubeImportForm({
           name="url"
           required
           placeholder="https://www.youtube.com/watch?v=…"
-          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none"
+          className="focus-ring w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2.5 text-base"
         />
       </div>
       <p className="text-sm text-[var(--text-secondary)]">
@@ -316,7 +316,7 @@ export default function YoutubeImportForm({
       </p>
       <CollectionPicker collections={collections} />
       {state.error && (
-        <p className="text-sm text-[var(--color-danger)]" role="alert" aria-live="polite">
+        <p className="text-sm text-[var(--color-danger-text)]" role="alert" aria-live="polite">
           {state.error}
         </p>
       )}

@@ -42,7 +42,7 @@ export default function QuickPracticeGrid({ dueCount }: { dueCount: number }) {
             <Link
               key={m.mode}
               href={`/brain/all/review?mode=${m.mode}`}
-              className="focus-ring flex flex-col rounded-[16px] border border-[var(--border)] bg-card px-[14px] py-[13px] transition-colors hover:bg-[var(--surface-muted)]"
+              className="focus-ring flex flex-col rounded-[16px] border border-[var(--border)] bg-[var(--surface)] px-[14px] py-[13px] transition-colors hover:bg-[var(--surface-muted)]"
             >
               <span className="mb-[18px] flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-[var(--color-forest-tint)]">
                 {/* color: var(--forest) in the reference measures ~1.6-1.7:1
@@ -61,7 +61,7 @@ export default function QuickPracticeGrid({ dueCount }: { dueCount: number }) {
             tile. Stays a plain div (not a Link) -- there's nowhere real for
             it to navigate to yet. */}
         <div className="col-span-2 flex flex-col rounded-[16px] border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] px-[14px] py-[13px] text-[var(--text-secondary)]">
-          <span className="mb-[18px] flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-black/5 dark:bg-white/10">
+          <span className="mb-[18px] flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-[var(--surface)]">
             <Headphones aria-hidden="true" className="h-[15px] w-[15px]" />
           </span>
           <span className="text-[12.5px] font-bold">На слух</span>

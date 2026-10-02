@@ -22,7 +22,7 @@ export default function AppShell({
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col bg-background">
         <header
-          className="sticky top-0 z-20 flex items-center justify-center bg-background/95 px-4 py-3 backdrop-blur md:hidden"
+          className="sticky top-0 z-20 flex items-center justify-center bg-[var(--background)] px-4 py-3 md:hidden"
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
           <span className="text-lg font-bold tracking-tight">{messages.appShell.brand}</span>

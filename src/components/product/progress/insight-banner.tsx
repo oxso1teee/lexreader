@@ -6,7 +6,7 @@ import type { ProgressInsight } from "@/lib/progress-insight";
 
 export default function InsightBanner({ insight }: { insight: ProgressInsight }) {
   return (
-    <div className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm" role="status" aria-live="polite">
+    <div className="rounded-2xl bg-[var(--surface)] p-4" role="status" aria-live="polite">
       <p className="text-body">{insight.message}</p>
       {insight.ctaHref && insight.ctaLabel && (
         <Link

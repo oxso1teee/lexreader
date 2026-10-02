@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Play, Pause, Square } from "lucide-react";
 
 function detectSpeechSupport(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window;
@@ -122,7 +123,17 @@ export default function ReaderListening({
           onClick={playing ? onPause : onPlay}
           className="focus-ring flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--color-forest)] px-4 text-sm font-bold text-white"
         >
-          {playing ? "⏸ Пауза" : "▶ Слушать"}
+          {playing ? (
+            <>
+              <Pause aria-hidden="true" className="h-4 w-4" />
+              Пауза
+            </>
+          ) : (
+            <>
+              <Play aria-hidden="true" className="h-4 w-4" />
+              Слушать
+            </>
+          )}
         </button>
         <button
           type="button"
@@ -130,7 +141,7 @@ export default function ReaderListening({
           aria-label="Остановить"
           className="focus-ring flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border-strong)]"
         >
-          ⏹
+          <Square aria-hidden="true" className="h-4 w-4" />
         </button>
       </div>
       <div className="flex items-center justify-between gap-2 text-sm">

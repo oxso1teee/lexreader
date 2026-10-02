@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowDown, ExternalLink } from "lucide-react";
 import { tokenizeSentence } from "@/lib/tokenize";
 import { WORD_LEVELS } from "@/lib/types";
 import type { TranscriptSourceTag } from "@/lib/types";
@@ -687,13 +688,13 @@ export default function WatchPlayer({
   const playerFallback = getYouTubePlayerFallback(playerState, videoId);
 
   return (
-    <div className="relative flex min-h-screen flex-1 flex-col bg-[#f7f4ee] dark:bg-background">
-      <header className="sticky top-0 z-10 border-b border-black/[0.07] bg-[#f7f4ee]/95 backdrop-blur-xl dark:border-white/10 dark:bg-background/95">
+    <div className="relative flex min-h-screen flex-1 flex-col bg-[var(--background)]">
+      <header className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--background)]">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link
             href="/library"
             aria-label="Библиотека"
-            className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+            className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-[var(--border)]"
           >
             <span aria-hidden="true">←</span>
             <span className="hidden sm:inline" aria-hidden="true">
@@ -711,7 +712,7 @@ export default function WatchPlayer({
             onClick={handleFinish}
             disabled={finishing}
             aria-label="Завершить просмотр"
-            className="focus-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white/70 text-black/50 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-500 disabled:opacity-50 dark:border-white/15 dark:bg-white/10 dark:text-white/60"
+            className="focus-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] transition hover:-translate-y-0.5 hover:border-[var(--color-danger-text)]/40 hover:text-[var(--color-danger-text)] disabled:opacity-50"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5" aria-hidden="true">
               <path strokeLinecap="round" d="m7 7 10 10M17 7 7 17" />
@@ -721,14 +722,14 @@ export default function WatchPlayer({
       </header>
 
       {finishError && (
-        <div className="px-4 pt-2 text-center text-sm text-[var(--color-danger)]" role="alert">
+        <div className="px-4 pt-2 text-center text-sm text-[var(--color-danger-text)]" role="alert">
           {finishError}
         </div>
       )}
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 px-4 py-5 sm:px-6 sm:py-7 lg:flex-row lg:items-start">
         <main className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="sticky top-[68px] z-[5] overflow-hidden rounded-2xl bg-black shadow-[0_18px_60px_rgba(80,60,35,0.12)]">
+          <div className="sticky top-[68px] z-[5] overflow-hidden rounded-2xl bg-black">
             <div className="relative aspect-video w-full">
               {/* Экран 9/11 редизайна: "дать этому экрану визуальный вес" —
                   плашка источника субтитров прямо на видео, как watch-badge в
@@ -747,10 +748,10 @@ export default function WatchPlayer({
                 {playerFallback ? (
                   <>
                     <div
-                      className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-xl text-white"
+                      className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white"
                       aria-hidden="true"
                     >
-                      ↗
+                      <ExternalLink className="h-5 w-5" />
                     </div>
                     <h2 className="text-base font-bold text-white sm:text-lg">{playerFallback.title}</h2>
                     <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/70">
@@ -777,7 +778,7 @@ export default function WatchPlayer({
                 : "Транскрипт для этого видео недоступен."}
             </div>
           ) : (
-            <div className="relative flex flex-col gap-1 rounded-3xl border border-black/[0.06] bg-white/60 px-3 py-4 dark:border-white/10 dark:bg-white/[0.035] sm:px-5">
+            <div className="relative flex flex-col gap-1 rounded-3xl border border-[var(--border)] bg-[var(--surface)] px-3 py-4 sm:px-5">
               {segments.map((seg, si) => {
                 const isActive = si === activeIndex;
                 return (
@@ -792,14 +793,14 @@ export default function WatchPlayer({
                       type="button"
                       onClick={() => handleSeek(seg.startMs)}
                       aria-label={`Перейти к ${formatTimestamp(seg.startMs)}`}
-                      className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md px-1.5 font-mono text-xs tabular-nums text-[var(--text-secondary)] hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                      className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md px-1.5 font-mono text-xs tabular-nums text-[var(--text-secondary)] hover:bg-[var(--border)]"
                     >
                       {formatTimestamp(seg.startMs)}
                     </button>
                     <p
                       onClick={() => handleSeek(seg.startMs)}
                       className={`min-w-0 flex-1 cursor-pointer py-1.5 leading-relaxed ${
-                        isActive ? "text-base font-medium" : "text-[15px] text-black/60 dark:text-white/60"
+                        isActive ? "text-base font-medium" : "text-[15px] text-[var(--text-secondary)]"
                       }`}
                     >
                       {segmentTokens[si].map((tok, ti) => {
@@ -832,7 +833,7 @@ export default function WatchPlayer({
                               // "#1f4d3b66" = --color-forest с той же альфой (0x66≈40%).
                               backgroundColor: selected ? "#1f4d3b66" : levelColor ? `${levelColor}33` : undefined,
                             }}
-                            className="focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                            className="focus-ring touch-none select-none rounded px-0.5 transition-colors [-webkit-touch-callout:none] hover:bg-[var(--sun-tint)]"
                           >
                             {tok.text}
                           </button>
@@ -848,7 +849,7 @@ export default function WatchPlayer({
 
         {popup ? (
           <aside className="hidden w-full shrink-0 lg:sticky lg:top-[68px] lg:flex lg:w-[340px] lg:flex-col">
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
               <ReaderWordPanel
                 popup={popup}
                 manualTranslation={manualTranslation}
@@ -873,7 +874,7 @@ export default function WatchPlayer({
 
       {boundaryHint && (
         <div className="pointer-events-none fixed inset-x-0 bottom-20 z-20 flex justify-center px-5">
-          <div className="rounded-full bg-black/80 px-4 py-2 text-xs text-white dark:bg-white/90 dark:text-black">
+          <div className="rounded-full bg-[var(--foreground)] px-4 py-2 text-xs text-[var(--background)]">
             Фразу можно выделить только в пределах одной строки субтитров
           </div>
         </div>
@@ -883,15 +884,16 @@ export default function WatchPlayer({
         <button
           type="button"
           onClick={resumeFollowing}
-          className="focus-ring fixed inset-x-0 bottom-24 z-20 mx-auto flex min-h-11 w-fit items-center gap-1.5 rounded-full bg-[var(--color-forest)] px-4 text-sm font-bold text-white shadow-lg lg:bottom-6"
+          className="focus-ring fixed inset-x-0 bottom-24 z-20 mx-auto flex min-h-11 w-fit items-center gap-1.5 rounded-full bg-[var(--color-forest)] px-4 text-sm font-bold text-white lg:bottom-6"
         >
-          ↓ Вернуться к текущей строке
+          <ArrowDown aria-hidden="true" className="h-4 w-4" />
+          Вернуться к текущей строке
         </button>
       )}
 
       {/* Mobile bottom sheet — same ReaderWordPanel content, different chrome */}
       {popup && (
-        <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl border-t border-black/10 bg-[var(--surface)] p-5 shadow-2xl dark:border-white/10 lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl border-t border-[var(--border)] bg-[var(--surface)] p-5 lg:hidden">
           <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-[var(--border-strong)]" aria-hidden="true" />
           <div className="mx-auto max-w-2xl">
             <ReaderWordPanel

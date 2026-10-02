@@ -1,6 +1,11 @@
+import { Flame, Award, BookOpen, Zap, type LucideIcon } from "lucide-react";
+
 // docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 5.2: каталог достижений —
 // фиксированный список в коде (не таблица), чтобы не городить конструктор
 // произвольных ачивок заранее. Факт получения хранится в user_achievements.
+//
+// redesign/duolingo-flat phase 2: icon был emoji-строкой — единая иконочная
+// система (lucide-react).
 
 export interface AchievementStats {
   totalWords: number;
@@ -11,7 +16,7 @@ export interface AchievementStats {
 
 export interface Achievement {
   id: string;
-  icon: string;
+  icon: LucideIcon;
   title: string;
   description: string;
   check: (s: AchievementStats) => boolean;
@@ -20,28 +25,28 @@ export interface Achievement {
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: "streak_7",
-    icon: "🔥",
+    icon: Flame,
     title: "Неделя подряд",
     description: "7 дней подряд в приложении",
     check: (s) => s.currentStreak >= 7,
   },
   {
     id: "words_100",
-    icon: "💯",
+    icon: Award,
     title: "Сто слов",
     description: "100 сохранённых слов",
     check: (s) => s.totalWords >= 100,
   },
   {
     id: "first_book",
-    icon: "📖",
+    icon: BookOpen,
     title: "Первая книга",
     description: "Дочитан первый текст до конца",
     check: (s) => s.finishedTexts >= 1,
   },
   {
     id: "perfect_session",
-    icon: "⚡",
+    icon: Zap,
     title: "Идеальная сессия",
     description: "Личный рекорд повторения — 20+ карточек за раз",
     check: (s) => s.bestSessionCount >= 20,

@@ -1,9 +1,10 @@
+import { Search, Notebook } from "lucide-react";
 import SharedEmptyState from "@/components/empty-state";
 
 export default function EmptyState({ filtered = false }: { filtered?: boolean }) {
   return (
     <SharedEmptyState
-      icon={filtered ? "🔍" : "📓"}
+      icon={filtered ? Search : Notebook}
       title={filtered ? "Ничего не найдено" : "Пока нет слов"}
       body={
         filtered

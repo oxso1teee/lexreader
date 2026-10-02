@@ -1,6 +1,5 @@
-import { Playfair_Display } from "next/font/google";
 import Link from "next/link";
-import { Award, CalendarCheck, Flame, RotateCcw, Target } from "lucide-react";
+import { Clock, Flame, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getDueCount } from "@/lib/brain-stats";
@@ -13,11 +12,14 @@ import { findMatchingMissionForSkill } from "@/lib/learning-paths/mission-match"
 import { getActivePathStateAction } from "../learning-paths/actions";
 import { isoWeekStart } from "@/lib/iso-week";
 import { messages } from "@/lib/i18n";
-import SectionHeader from "@/components/product/section-header";
+import { Card, CardLink } from "@/components/ui/card";
+import { ReadingCompanion } from "@/components/product/mascot/reading-companion";
 import GreetingRow from "@/components/product/today/greeting-row";
 import HeroCard from "@/components/product/today/hero-card";
-import StatStrip, { type StatStripItem } from "@/components/product/today/stat-strip";
+import DailyGoalCard from "@/components/product/today/daily-goal-card";
+import MetricCard from "@/components/product/today/metric-card";
 import ContinueLearningCard from "@/components/product/today/continue-learning-card";
+import QuickActionsCard from "@/components/product/today/quick-actions-card";
 import ComingSoonCard from "@/components/product/today/coming-soon-card";
 import InstallBanner from "./install-banner";
 import TodayAnalytics from "./today-analytics";
@@ -32,17 +34,6 @@ const PATTERN_STATUS_PHRASE: Partial<Record<PatternStatus, string>> = {
   improving: "улучшается",
   uncertain: "нужно проверить",
 };
-
-// Задача "точная композиция /home под референс" — не трогает корневой
-// layout.tsx (за пределами заявленного скоупа "/home и mobile-bottom-nav.tsx"),
-// поэтому Playfair Display грузится здесь локально, тем же паттерном, что
-// уже использует landing-page.tsx (next/font/google, scoped, не в общем
-// layout.tsx) — переменная другая (--font-home-serif, не --font-playfair),
-// чтобы не создавать иллюзию, что это тот же общий токен из tokens.css.
-const playfairDisplay = Playfair_Display({
-  variable: "--font-home-serif",
-  subsets: ["latin", "cyrillic"],
-});
 
 const GRAMMAR_RUNNER_TYPES = new Set<MissionType>(["grammar_pattern", "correction", "diagnostic_followup", "maintenance"]);
 
@@ -99,6 +90,11 @@ function todayStartUtc(): string {
 // экрана — тот же streak_current теперь первая плитка в StatStrip, второго
 // места для него в референсе нет (Progress по-прежнему показывает свой
 // собственный StreakHero, тот файл не тронут).
+//
+// redesign/duolingo-flat phase 6: та же логика, новая раскладка — hero-ряд
+// (HeroCard + панель с маскотом) и bento-сетка из Card (6 колонок на
+// desktop, 2 на мобильном). StatStrip разложен по ячейкам bento; streak
+// теперь и чипом в hero, и тёплой ячейкой в сетке.
 export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
@@ -119,7 +115,7 @@ export default async function HomePage() {
     getDueCount(supabase, profile.id, profile.target_language),
     supabase
       .from("text_progress")
-      .select("percent_read, last_read_at, texts!inner(id, title, language, owner_id)")
+      .select("percent_read, last_read_at, texts!inner(id, title, language, owner_id, youtube_video_id)")
       .eq("owner_id", profile.id)
       .eq("texts.language", profile.target_language)
       .gt("percent_read", 4)
@@ -134,7 +130,11 @@ export default async function HomePage() {
       .eq("user_id", profile.id)
       .eq("status", "pending"),
     getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date()).toISOString()),
-    supabase.from("reading_sessions").select("started_at").eq("owner_id", profile.id).gte("started_at", sevenDaysAgo),
+    supabase
+      .from("reading_sessions")
+      .select("started_at, ended_at")
+      .eq("owner_id", profile.id)
+      .gte("started_at", sevenDaysAgo),
     supabase
       .from("review_log")
       .select("reviewed_at, flashcards!inner(owner_id, language)")
@@ -151,7 +151,12 @@ export default async function HomePage() {
   ]);
 
   const continuingRow = continueRows?.[0] as
-    | { percent_read: number; texts: { id: string; title: string } | { id: string; title: string }[] }
+    | {
+        percent_read: number;
+        texts:
+          | { id: string; title: string; youtube_video_id: string | null }
+          | { id: string; title: string; youtube_video_id: string | null }[];
+      }
     | undefined;
   const continueTextRaw = continuingRow
     ? (Array.isArray(continuingRow.texts) ? continuingRow.texts[0] : continuingRow.texts)
@@ -159,6 +164,9 @@ export default async function HomePage() {
   const continueReading = continueTextRaw
     ? { textId: continueTextRaw.id, title: continueTextRaw.title, percentRead: continuingRow!.percent_read }
     : null;
+  // Phase 7: только для обложки ContinueLearningCard ("video"-мотив) —
+  // decidePrimaryAction получает прежнюю форму continueReading.
+  const continueIsVideo = Boolean(continueTextRaw?.youtube_video_id);
 
   const primaryAction = decidePrimaryAction({ dueCount, continueReading });
   const greeting = greetingForHour(new Date().getHours());
@@ -225,11 +233,6 @@ export default async function HomePage() {
             actionType: "add_material" as const,
           };
 
-  // Кольцо прогресса на hero-card — единственная метрика, честно доступная
-  // во всех 4 состояниях карточки без новых запросов: дневная цель по
-  // словам. См. комментарий в hero-card.tsx.
-  const heroProgressPercent = profile.daily_word_goal > 0 ? ((newWordsToday ?? 0) / profile.daily_word_goal) * 100 : 0;
-
   // Today v2 §4: compact "Мой английский" — up to 2 real patterns, gated on
   // the same enabled flag Language Twin itself uses (getLanguageTwinEntryState
   // does the identical check) so a disabled profile never leaks pattern data
@@ -265,27 +268,28 @@ export default async function HomePage() {
     ...(activityReviews ?? []).map((r) => isoDate(r.reviewed_at)),
   ]).size;
 
-  // Референс — ровно 3 плитки в ряд (streak/к повторению/дневная цель),
-  // без пёстрой стопки из 4-6 карточек. activeDaysThisWeek/missionWeekStats
-  // — те же запросы, что были (data-fetching не тронут), просто больше не
-  // рендерятся безусловно: 0 активных дней/0 миссий за неделю — не
-  // содержательная плитка, поэтому эти две остаются опциональной 4-й/5-й
-  // плиткой (как и missionsCompleted было условным и раньше), а не
-  // обязательной частью базового набора из референса.
-  const statItems: StatStripItem[] = [
-    { label: "Дней подряд", value: String(profile.streak_current), icon: Flame },
-    { label: "К повторению", value: String(dueCount), icon: RotateCcw },
-    { label: "Дневная цель", value: `${newWordsToday ?? 0}/${profile.daily_word_goal}`, icon: Target },
-    ...(activeDaysThisWeek > 0 ? [{ label: t.weekProgress.activeDays, value: String(activeDaysThisWeek), icon: CalendarCheck }] : []),
-    ...(missionWeekStats.completed > 0
-      ? [{ label: t.weekProgress.missionsCompleted, value: String(missionWeekStats.completed), icon: Award }]
-      : []),
-  ];
+  // redesign/duolingo-flat phase 6: те же метрики, что раньше жили в
+  // StatStrip, разложены по ячейкам bento. Минуты чтения — единственное
+  // новое число, и оно тоже реальное: сумма ended_at − started_at по
+  // сессиям, начатым сегодня (reader.tsx/watch-player.tsx пишут их через
+  // finishReading(), только для завершённых сессий). Граница "сегодня" —
+  // UTC-полночь, как у newWordsToday выше.
+  const todayStart = new Date(todayStartUtc()).getTime();
+  const readingMinutesToday = (activitySessions ?? []).reduce((sum, s) => {
+    const started = new Date(s.started_at).getTime();
+    if (started < todayStart || !s.ended_at) return sum;
+    return sum + Math.max(0, Math.round((new Date(s.ended_at).getTime() - started) / 60_000));
+  }, 0);
+  const weekHint =
+    activeDaysThisWeek > 0 || missionWeekStats.completed > 0
+      ? [
+          `${t.weekProgress.activeDays}: ${activeDaysThisWeek}`,
+          ...(missionWeekStats.completed > 0 ? [`${t.weekProgress.missionsCompleted}: ${missionWeekStats.completed}`] : []),
+        ].join(" · ")
+      : undefined;
 
   return (
-    <div
-      className={`${playfairDisplay.variable} mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4 md:max-w-3xl md:gap-5 md:px-0 md:py-8`}
-    >
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4 md:max-w-5xl md:gap-5 md:px-8 md:py-8">
       <TodayAnalytics
         dueCountBucket={dueCountBucket(dueCount)}
         hasActiveMaterial={continueReading !== null}
@@ -296,51 +300,77 @@ export default async function HomePage() {
 
       <InstallBanner />
 
-      <HeroCard
-        eyebrow={heroCardData.eyebrow}
-        title={heroCardData.title}
-        subtitle={heroCardData.subtitle}
-        ctaLabel={heroCardData.ctaLabel}
-        href={heroCardData.href}
-        actionType={heroCardData.actionType}
-        progressPercent={heroProgressPercent}
-      />
-      {heroMatchesPath && pathLevelLabel && (
-        <p className="-mt-2 text-xs text-[var(--text-secondary)]">Из твоего пути: {pathLevelLabel}</p>
-      )}
+      <div className="grid gap-4 md:grid-cols-2">
+        <HeroCard
+          eyebrow={heroCardData.eyebrow}
+          title={heroCardData.title}
+          subtitle={heroCardData.subtitle}
+          ctaLabel={heroCardData.ctaLabel}
+          href={heroCardData.href}
+          actionType={heroCardData.actionType}
+          streak={profile.streak_current}
+          footnote={heroMatchesPath && pathLevelLabel ? `Из твоего пути: ${pathLevelLabel}` : undefined}
+        />
+        <div className="flex min-h-[200px] items-center justify-center rounded-[20px] border-2 border-[var(--border-strong)] bg-[var(--leaf-tint)] py-6 md:min-h-[260px]">
+          <ReadingCompanion size={140} />
+        </div>
+      </div>
 
-      {showPathSecondaryCard && activePathState && focusSkill && (
-        <Link
-          href={`/learning-paths/${activePathState.path.slug}`}
-          className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-[var(--surface)] p-4 shadow-sm"
-        >
-          <div className="min-w-0">
-            <p className="text-xs text-[var(--text-secondary)]">Мой путь · {pathLevelLabel}</p>
-            <p className="text-body-sm truncate font-medium">{focusSkill.title}</p>
-          </div>
-          <span className="shrink-0 text-body-sm font-semibold text-[var(--color-forest-text)]">Продолжить →</span>
-        </Link>
-      )}
+      <section aria-label={t.summary.title} className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4">
+        <DailyGoalCard done={newWordsToday ?? 0} goal={profile.daily_word_goal} className="col-span-2" />
+        <MetricCard
+          icon={Clock}
+          value={String(readingMinutesToday)}
+          label="Минут чтения"
+          hint="сегодня"
+          className="md:col-span-2"
+        />
+        <MetricCard
+          icon={Flame}
+          tone="ember"
+          value={String(profile.streak_current)}
+          label="Дней подряд"
+          hint={`Рекорд: ${profile.streak_longest}`}
+          className="md:col-span-2"
+        />
 
-      <section className="flex flex-col gap-2">
-        <SectionHeader title={t.summary.title} />
-        <StatStrip items={statItems} />
-        <ContinueLearningCard material={continueReading} />
+        <ContinueLearningCard material={continueReading} isVideo={continueIsVideo} className="col-span-2 md:col-span-4" />
+        <MetricCard
+          icon={RotateCcw}
+          value={String(dueCount)}
+          label="К повторению"
+          hint={weekHint}
+          className="col-span-2 md:col-span-2"
+        />
+
+        <QuickActionsCard className="col-span-2 md:col-span-6" />
+
+        {showPathSecondaryCard && activePathState && focusSkill && (
+          <CardLink
+            href={`/learning-paths/${activePathState.path.slug}`}
+            className="col-span-2 flex items-center justify-between gap-3 md:col-span-6"
+          >
+            <div className="min-w-0">
+              <p className="text-xs text-[var(--text-secondary)]">Мой путь · {pathLevelLabel}</p>
+              <p className="text-body-sm truncate font-medium">{focusSkill.title}</p>
+            </div>
+            <span className="shrink-0 text-body-sm font-semibold text-[var(--color-forest-text)]">Продолжить →</span>
+          </CardLink>
+        )}
+
         {(pendingRecommendationsCount ?? 0) > 0 && (
-          <Link
+          <CardLink
             href="/language-twin/recommendations"
-            className="focus-ring flex items-center justify-between rounded-2xl bg-[var(--surface)] p-4 shadow-sm"
+            className="col-span-2 flex items-center justify-between md:col-span-6"
           >
             <p className="text-body-sm text-[var(--text-secondary)]">Новых рекомендаций: {pendingRecommendationsCount}</p>
             <span className="text-body-sm font-semibold text-[var(--color-forest-text)]">Открыть →</span>
-          </Link>
+          </CardLink>
         )}
-      </section>
 
-      {topPatterns.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <SectionHeader title={t.myEnglish.title} />
-          <div className="flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm">
+        {topPatterns.length > 0 && (
+          <Card className="col-span-2 flex flex-col gap-2 md:col-span-6">
+            <h2 className="text-sm font-bold">{t.myEnglish.title}</h2>
             {topPatterns.map((p, i) => (
               <Link key={i} href="/language-twin" className="focus-ring text-sm hover:underline">
                 {categoryLabel(p.category as PatternCategory)}
@@ -354,11 +384,11 @@ export default async function HomePage() {
             >
               Весь профиль →
             </Link>
-          </div>
-        </section>
-      )}
+          </Card>
+        )}
 
-      <ComingSoonCard />
+        <ComingSoonCard className="col-span-2 md:col-span-6" />
+      </section>
     </div>
   );
 }

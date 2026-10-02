@@ -19,7 +19,7 @@ export default function ScreenHeader({
         <span>{title}</span>
       </span>
       {metaChip && (
-        <span className="rounded-lg border border-black/20 px-2.5 py-1 text-sm font-medium dark:border-white/25">
+        <span className="rounded-lg border border-[var(--border-strong)] px-2.5 py-1 text-sm font-medium">
           {metaChip}
         </span>
       )}

@@ -50,7 +50,7 @@ test("Vocabulary (Decks tab) has no serious/critical axe violations, incl. the N
   await page.setViewportSize({ width: 1280, height: 800 });
   await login(page);
   await page.goto("/brain/vocabulary");
-  await page.getByRole("button", { name: "📚 Колоды" }).click();
+  await page.getByRole("button", { name: "Колоды", exact: true }).click();
 
   let results = await new AxeBuilder({ page }).include("body").analyze();
   expect(seriousViolations(results), JSON.stringify(seriousViolations(results), null, 2)).toEqual([]);
@@ -164,7 +164,7 @@ test("Deck Details page has no serious/critical axe violations", async ({ page }
   test.setTimeout(45_000);
   await login(page);
   await page.goto("/brain/vocabulary");
-  await page.getByRole("button", { name: "📚 Колоды" }).click();
+  await page.getByRole("button", { name: "Колоды", exact: true }).click();
   await page.getByRole("link", { name: /Основная колода/ }).click();
   await expect(page).toHaveURL(/\/brain\/[\w-]+(\?created=true)?$/);
 

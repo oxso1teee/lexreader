@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Mic } from "lucide-react";
 import { SPEECH_LANG } from "@/lib/speech-lang-map";
 
 // SpeechRecognition — нестандартный, вендор-префиксный API, поэтому его нет
@@ -90,13 +91,13 @@ export default function MicButton({
       onClick={toggle}
       aria-label={listening ? "Остановить голосовой ввод" : "Голосовой ввод"}
       title={listening ? "Слушаю…" : "Голосовой ввод"}
-      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base transition-colors ${
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${
         listening
-          ? "animate-pulse bg-red-500 text-white"
-          : "text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
+          ? "animate-pulse bg-[var(--color-danger)] text-white"
+          : "text-[var(--text-secondary)] hover:text-foreground"
       }`}
     >
-      🎤
+      <Mic aria-hidden="true" className="h-4 w-4" />
     </button>
   );
 }

@@ -2,21 +2,23 @@
 
 import { useTransition } from "react";
 import { track } from "@/lib/posthog-client";
+import { Button } from "@/components/ui/button";
 import { updateSettingsAction } from "./actions";
 
 export default function EnableToggleInline() {
   const [isPending, startTransition] = useTransition();
   return (
-    <button
-      type="button"
+    <Button
+      variant="leaf"
+      size="sm"
       disabled={isPending}
       onClick={() => {
         track("language_twin_enabled", {});
         startTransition(() => updateSettingsAction({ enabled: true }));
       }}
-      className="focus-ring mt-2 rounded-full bg-forest px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+      className="mt-2"
     >
       {isPending ? "Включаем…" : "Включить Language Twin"}
-    </button>
+    </Button>
   );
 }

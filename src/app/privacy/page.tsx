@@ -11,7 +11,7 @@ export default function PrivacyPage() {
         ← На главную
       </Link>
       <h1 className="text-2xl font-bold">Политика конфиденциальности</h1>
-      <p className="text-black/50 dark:text-white/50">
+      <p className="text-[var(--text-secondary)]">
         Действует с 2 сентября 2026. Описывает реальную практику LexReader — что
         собирается, зачем и кем обрабатывается.
       </p>

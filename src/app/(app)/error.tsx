@@ -1,5 +1,6 @@
 "use client";
 
+import { Frown } from "lucide-react";
 import { log } from "@/lib/log";
 
 export default function AppError({
@@ -13,9 +14,9 @@ export default function AppError({
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-      <p className="text-4xl">😕</p>
+      <Frown aria-hidden="true" className="h-10 w-10 text-[var(--text-secondary)]" />
       <h1 className="text-xl font-semibold">Не получилось выполнить действие</h1>
-      <p className="text-sm text-black/60 dark:text-white/60">
+      <p className="text-sm text-[var(--text-secondary)]">
         Похоже, это временный сбой — попробуй ещё раз.
       </p>
       <div className="mt-2 flex gap-2">
@@ -28,7 +29,7 @@ export default function AppError({
         </button>
         <a
           href="/home"
-          className="flex min-h-11 items-center justify-center rounded-full border border-black/15 px-5 font-medium dark:border-white/20"
+          className="flex min-h-11 items-center justify-center rounded-full border border-[var(--border-strong)] px-5 font-medium"
         >
           На главную
         </a>

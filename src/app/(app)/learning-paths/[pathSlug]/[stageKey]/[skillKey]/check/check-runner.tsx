@@ -1,12 +1,14 @@
 "use client";
 
+import { Check, PartyPopper, X } from "lucide-react";
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { submitKnowledgeCheckAction, type KnowledgeCheckSubmitResult } from "../../../../actions";
 import { track } from "@/lib/posthog-client";
 import type { GrammarQuestion } from "@/lib/missions/grammar-bank";
 import type { PathSlug } from "@/lib/learning-paths/types";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 // Deterministic multiple-choice check, scored server-side only (plan doc:
 // "never trust a client-computed score/bucket") — mirrors
@@ -66,7 +68,7 @@ export default function CheckRunner({
         <span className="block h-full rounded-full bg-forest transition-[width]" style={{ width: `${(index / questions.length) * 100}%` }} />
       </div>
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <p className="mb-3 text-sm font-medium">{q.prompt}</p>
         {selected !== null && (
           <p role="status" aria-live="polite" className="sr-only">
@@ -79,11 +81,11 @@ export default function CheckRunner({
             const isCorrect = i === q.correctIndex;
             const isSelectedWrong = showState && i === selected && !isCorrect;
             const stateClass = !showState
-              ? "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
+              ? "border-[var(--border-strong)] hover:border-[var(--sky)]"
               : isCorrect
-                ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950"
+                ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)]"
                 : isSelectedWrong
-                  ? "border-red-500 bg-red-50 dark:bg-red-950"
+                  ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
                   : "border-[var(--border-strong)] opacity-50";
             return (
               <button
@@ -95,13 +97,13 @@ export default function CheckRunner({
               >
                 <span>{opt}</span>
                 {showState && isCorrect && (
-                  <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                    <span aria-hidden="true">✓</span> Верно
+                  <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[var(--color-success-text)]">
+                    <Check aria-hidden="true" className="h-3.5 w-3.5" /> Верно
                   </span>
                 )}
                 {isSelectedWrong && (
-                  <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                    <span aria-hidden="true">✗</span> Неверно
+                  <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[var(--color-danger-text)]">
+                    <X aria-hidden="true" className="h-3.5 w-3.5" /> Неверно
                   </span>
                 )}
               </button>
@@ -109,17 +111,12 @@ export default function CheckRunner({
           })}
         </div>
         {selected !== null && <p className="mt-3 text-xs text-[var(--text-secondary)]">{q.explanation}</p>}
-      </div>
+      </Card>
 
       {selected !== null && (
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={next}
-          className="focus-ring self-start rounded-full bg-forest px-5 py-3 text-sm font-medium text-white disabled:opacity-50"
-        >
+        <Button variant="leaf" disabled={isPending} onClick={next} className="self-start">
           {isPending ? "…" : index + 1 >= questions.length ? "Завершить" : "Далее"}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -148,38 +145,37 @@ function ResultScreen({
   // separate onboarding-only screen.
   if (result.firstWinJustCompleted) {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm" role="status" aria-live="polite">
-        <p className="text-lg font-bold">Отличное начало! 🎉</p>
+      <Card className="flex flex-col gap-3" role="status" aria-live="polite">
+        <p className="flex items-center gap-2 text-lg font-bold">
+          <PartyPopper aria-hidden="true" className="h-5 w-5 text-[var(--color-forest-text)]" />
+          Отличное начало!
+        </p>
         <p className="text-sm text-[var(--text-secondary)]">
           {meta.body} Результат: {percent}%. Твой путь сохранён — дальше Today будет каждый день показывать, что делать
           следующим.
         </p>
-        <Link href="/home" onClick={onRefresh} className="focus-ring self-start rounded-full bg-forest px-4 py-2 text-sm font-medium text-white">
+        <ButtonLink href="/home" onClick={onRefresh} variant="leaf" size="sm" className="self-start">
           Перейти в Today
-        </Link>
-      </div>
+        </ButtonLink>
+      </Card>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm" role="status" aria-live="polite">
+    <Card className="flex flex-col gap-3" role="status" aria-live="polite">
       <p className="text-lg font-bold">{meta.title}</p>
       <p className="text-sm text-[var(--text-secondary)]">{meta.body}</p>
       <p className="text-sm font-medium">Результат: {percent}%</p>
       <div className="flex flex-wrap gap-2">
-        <Link
-          href={`/learning-paths/${pathSlug}`}
-          onClick={onRefresh}
-          className="focus-ring rounded-full bg-forest px-4 py-2 text-sm font-medium text-white"
-        >
+        <ButtonLink href={`/learning-paths/${pathSlug}`} onClick={onRefresh} variant="leaf" size="sm">
           К пути
-        </Link>
+        </ButtonLink>
         {result.outcome.bucket !== "strong" && (
-          <Link href="/missions" className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium">
+          <ButtonLink href="/missions" variant="ghost" size="sm">
             Найти миссию
-          </Link>
+          </ButtonLink>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

@@ -121,7 +121,7 @@ export default async function VocabularyItemPage({ params }: { params: Promise<{
         action={
           <Link
             href="/brain/vocabulary"
-            className="focus-ring flex min-h-11 items-center rounded-full border border-black/10 px-3 text-sm font-medium text-[var(--text-secondary)] dark:border-white/15"
+            className="focus-ring flex min-h-11 items-center rounded-full border border-[var(--border-strong)] px-3 text-sm font-medium text-[var(--text-secondary)]"
           >
             ← Словарь
           </Link>

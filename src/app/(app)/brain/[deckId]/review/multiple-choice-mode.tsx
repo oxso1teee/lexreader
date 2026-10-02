@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { reviewWord } from "./actions";
 import type { ReviewCard } from "./review-session";
+import { Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import SessionComplete from "./session-complete";
 
 function shuffle<T>(arr: T[]): T[] {
@@ -81,7 +83,7 @@ export default function MultipleChoiceMode({
     return (
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-2 px-5 text-center">
         <p className="text-xl font-semibold">Пока маловато карточек</p>
-        <p className="text-black/60 dark:text-white/60">
+        <p className="text-[var(--text-secondary)]">
           Для режима &laquo;Выбор&raquo; нужно больше карточек, чтобы было из чего выбирать.
           Попробуй режим &laquo;Карточки&raquo; или добавь ещё слов.
         </p>
@@ -132,12 +134,12 @@ export default function MultipleChoiceMode({
           const showState = selected !== null;
           const isSelectedWrong = showState && opt === selected && !isCorrect;
           const stateClass = !showState
-            ? "border-black/10 hover:border-black/30 dark:border-white/15 dark:hover:border-white/40"
+            ? "border-[var(--border-strong)] hover:border-[var(--sky)]"
             : isCorrect
-              ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950"
+              ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)]"
               : isSelectedWrong
-                ? "border-red-500 bg-red-50 dark:bg-red-950"
-                : "border-black/10 opacity-50 dark:border-white/15";
+                ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
+                : "border-[var(--border-strong)] opacity-50";
           return (
             <motion.button
               key={opt}
@@ -153,13 +155,13 @@ export default function MultipleChoiceMode({
             >
               <span>{opt}</span>
               {showState && isCorrect && (
-                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                  <span aria-hidden="true">✓</span> Верно
+                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[var(--color-success-text)]">
+                  <Check aria-hidden="true" className="h-3.5 w-3.5" /> Верно
                 </span>
               )}
               {isSelectedWrong && (
-                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                  <span aria-hidden="true">✗</span> Неверно
+                <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[var(--color-danger-text)]">
+                  <X aria-hidden="true" className="h-3.5 w-3.5" /> Неверно
                 </span>
               )}
             </motion.button>
@@ -168,14 +170,9 @@ export default function MultipleChoiceMode({
       </div>
 
       {selected !== null && (
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={next}
-          className="mt-4 rounded-full bg-black px-5 py-3 font-medium text-white dark:bg-white dark:text-black"
-        >
+        <Button variant="leaf" disabled={isPending} onClick={next} className="mt-4">
           Далее
-        </button>
+        </Button>
       )}
     </div>
   );

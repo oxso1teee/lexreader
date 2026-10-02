@@ -24,7 +24,7 @@ export default function ProfileCard({
   );
 
   return (
-    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+    <section className="rounded-2xl bg-[var(--surface)] p-4">
       <SectionHeader title="Профиль" />
       <div className="mt-3 flex items-center gap-3">
         <span

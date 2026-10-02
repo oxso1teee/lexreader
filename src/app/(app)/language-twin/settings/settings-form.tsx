@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { RotateCw, Compass, Download, Trash2 } from "lucide-react";
 import { track } from "@/lib/posthog-client";
+import { Button, ButtonLink, buttonClassName } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import Dialog from "@/components/product/language-twin/dialog";
 import type { LanguageTwinSettings } from "@/lib/language-twin/types";
 import { resetLanguageTwinAction, updateSettingsAction, recomputeAction } from "../actions";
@@ -26,8 +28,8 @@ function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: 
         className="peer sr-only"
         aria-label={label}
       />
-      <span className="absolute inset-0 rounded-full bg-black/15 transition-colors peer-checked:bg-forest peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-[var(--focus-ring)] peer-focus-visible:outline-offset-2 dark:bg-white/20" />
-      <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+      <span className="absolute inset-0 rounded-full bg-[var(--border-strong)] transition-colors peer-checked:bg-forest peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-[var(--focus-ring)] peer-focus-visible:outline-offset-2" />
+      <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
     </label>
   );
 }
@@ -62,7 +64,7 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-semibold">Language Twin включён</p>
@@ -72,9 +74,9 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
           </div>
           <Switch checked={settings.enabled} onChange={toggleEnabled} label="Включить Language Twin" />
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <h2 className="mb-3 text-sm font-semibold">Источники данных</h2>
         <div className="flex flex-col gap-3">
           {SOURCES.map((s) => (
@@ -91,54 +93,53 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <h2 className="mb-2 text-sm font-semibold">Обработка данных</h2>
         <p className="text-sm text-[var(--text-secondary)]">
           Все вычисления происходят на нашем сервере, на основе твоих собственных данных. Мы не отправляем
           текст, слова или предложения во внешние ИИ-сервисы и не используем платные API для этой функции.
         </p>
-      </div>
+      </Card>
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <h2 className="mb-3 text-sm font-semibold">Управление данными</h2>
         <div className="flex flex-col gap-2">
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={handleRecompute}
-            className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium disabled:opacity-50"
-          >
-            ↻ Пересчитать профиль сейчас
-          </button>
-          <Link
-            href="/language-twin/diagnostic"
-            className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
-          >
-            🧭 Обновить оценку (пройти диагностику ещё раз)
-          </Link>
+          <Button variant="ghost" size="sm" disabled={isPending} onClick={handleRecompute} className="gap-1.5 self-start">
+            <RotateCw aria-hidden="true" className="h-4 w-4" />
+            Пересчитать профиль сейчас
+          </Button>
+          <ButtonLink href="/language-twin/diagnostic" variant="ghost" size="sm" className="gap-1.5 self-start">
+            <Compass aria-hidden="true" className="h-4 w-4" />
+            Обновить оценку (пройти диагностику ещё раз)
+          </ButtonLink>
           <a
             href="/api/export/data"
             download
-            className="focus-ring self-start rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
+            className={buttonClassName({ variant: "ghost", size: "sm", className: "gap-1.5 self-start" })}
           >
-            ⬇ Экспортировать все данные (включая Language Twin)
+            <Download aria-hidden="true" className="h-4 w-4" />
+            Экспортировать все данные (включая Language Twin)
           </a>
-          <button
-            type="button"
+          {/* ghost + красный текст, а не variant="danger": полная красная заливка
+              остаётся только у финального «Да, сбросить» в диалоге ниже. */}
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setConfirmingReset(true)}
-            className="focus-ring self-start rounded-full border border-[var(--color-danger)] px-4 py-2 text-sm font-medium text-[var(--color-danger-text)]"
+            className="gap-1.5 self-start text-[var(--color-danger-text)]"
           >
-            🗑 Сбросить Language Twin
-          </button>
+            <Trash2 aria-hidden="true" className="h-4 w-4" />
+            Сбросить Language Twin
+          </Button>
         </div>
         {toast && (
           <p role="status" className="mt-2 text-xs text-[var(--text-secondary)]">
             {toast}
           </p>
         )}
-      </div>
+      </Card>
 
       {confirmingReset && (
         <Dialog titleId="reset-title" title="Сбросить Language Twin?" onClose={() => setConfirmingReset(false)}>
@@ -147,21 +148,12 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
             история повторений в Мозге и Читалке не пострадают — это касается только Language Twin.
           </p>
           <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handleReset}
-              className="focus-ring rounded-full bg-[var(--color-danger)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
+            <Button variant="danger" size="sm" disabled={isPending} onClick={handleReset}>
               Да, сбросить
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingReset(false)}
-              className="focus-ring rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium"
-            >
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmingReset(false)}>
               Отмена
-            </button>
+            </Button>
           </div>
         </Dialog>
       )}

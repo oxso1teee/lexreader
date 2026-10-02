@@ -20,7 +20,7 @@ export default function CheckoutButton({
   // см. src/lib/use-is-native.ts — v1 мобильной обёртки не показывает
   // покупку подписки внутри самого приложения вообще.
   if (isNative) {
-    return <p className="text-sm text-black/50 dark:text-white/50">Оформление подписки доступно на сайте LexReader в браузере.</p>;
+    return <p className="text-sm text-[var(--text-secondary)]">Оформление подписки доступно на сайте LexReader в браузере.</p>;
   }
 
   return (
@@ -28,7 +28,7 @@ export default function CheckoutButton({
       <button type="submit" disabled={pending} className={className}>
         {pending ? "…" : label}
       </button>
-      {state.error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.error && <p className="mt-2 text-sm text-[var(--color-danger-text)]">{state.error}</p>}
     </form>
   );
 }

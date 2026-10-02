@@ -3,13 +3,19 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Type, MessageSquare, Volume2, type LucideIcon } from "lucide-react";
 import { track } from "@/lib/posthog-client";
 import { bulkMoveToDeck, bulkMarkKnown, bulkDeleteFlashcards } from "../actions";
 import { updateFlashcard, type UpdateCardState } from "../../[deckId]/actions";
 import { LEARNING_STATE_LABEL } from "@/lib/vocabulary/learning-state-label";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { VocabularyDetail } from "./page";
 
-const ITEM_TYPE_LABEL = { word: "🔤 Слово", phrase: "💬 Фраза" } as const;
+const ITEM_TYPE_LABEL: Record<"word" | "phrase", { icon: LucideIcon; label: string }> = {
+  word: { icon: Type, label: "Слово" },
+  phrase: { icon: MessageSquare, label: "Фраза" },
+};
 const SOURCE_LABEL = {
   reader: "Из чтения",
   manual: "Добавлено вручную",
@@ -95,15 +101,23 @@ export default function VocabularyItemDetail({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
-            {ITEM_TYPE_LABEL[detail.itemType]}
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
+            {(() => {
+              const { icon: Icon, label } = ITEM_TYPE_LABEL[detail.itemType];
+              return (
+                <>
+                  <Icon aria-hidden="true" className="h-3 w-3" />
+                  {label}
+                </>
+              );
+            })()}
           </span>
           <span className="rounded-full bg-forest/15 px-2 py-0.5 text-xs font-medium text-[var(--color-forest-text)]">
             {LEARNING_STATE_LABEL[detail.learningState]}
           </span>
-          <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-black/60 dark:bg-white/10 dark:text-white/60">
+          <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
             {SOURCE_LABEL[detail.sourceType]}
           </span>
         </div>
@@ -121,33 +135,33 @@ export default function VocabularyItemDetail({
               defaultValue={detail.front}
               required
               aria-label={detail.itemType === "phrase" ? "Фраза" : "Слово"}
-              className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20"
+              className="rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
             />
             <input
               name="back"
               defaultValue={detail.back}
               required
               aria-label="Перевод"
-              className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20"
+              className="rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
             />
             <input
               name="notes"
               defaultValue={detail.notes ?? ""}
               placeholder="Заметка (необязательно)"
-              className="rounded-lg border border-black/15 px-3 py-2 text-sm outline-none focus:border-black/40 dark:border-white/20"
+              className="rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
             />
             {editState.error && (
-              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+              <p className="text-sm text-[var(--color-danger-text)]" role="alert">
                 {editState.error}
               </p>
             )}
             <div className="mt-1 flex gap-2">
-              <button type="button" onClick={() => setIsEditing(false)} className="focus-ring min-h-11 flex-1 rounded-full bg-black/10 text-sm font-medium dark:bg-white/10">
+              <Button variant="ghost" onClick={() => setIsEditing(false)} className="flex-1">
                 Отмена
-              </button>
-              <button type="submit" disabled={editPending} className="focus-ring min-h-11 flex-1 rounded-full bg-forest text-sm font-medium text-white disabled:opacity-50">
+              </Button>
+              <Button type="submit" variant="leaf" disabled={editPending} className="flex-1">
                 {editPending ? "…" : "Сохранить"}
-              </button>
+              </Button>
             </div>
           </form>
         ) : (
@@ -155,10 +169,10 @@ export default function VocabularyItemDetail({
             <div className="mb-1 flex items-center gap-2">
               <h2 className="text-2xl font-bold">{detail.front}</h2>
               <button type="button" onClick={speak} aria-label="Произнести" className="focus-ring flex min-h-11 min-w-11 items-center justify-center">
-                🔊
+                <Volume2 aria-hidden="true" className="h-5 w-5" />
               </button>
             </div>
-            <p className="mb-3 text-lg text-black/70 dark:text-white/70">{detail.back}</p>
+            <p className="mb-3 text-lg text-[var(--text-secondary)]">{detail.back}</p>
             {detail.notes && <p className="mb-3 text-sm text-[var(--text-secondary)]">{detail.notes}</p>}
 
             <dl className="mb-4 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
@@ -193,20 +207,17 @@ export default function VocabularyItemDetail({
             {message && <p className="mb-2 text-xs text-[var(--text-secondary)]">{message}</p>}
 
             <div className="flex flex-col gap-2">
-              <Link
-                href={`/brain/${detail.deckId}/review?wordIds=${detail.flashcardId}`}
-                className="focus-ring flex min-h-11 items-center justify-center rounded-full bg-forest text-sm font-medium text-white"
-              >
+              <ButtonLink href={`/brain/${detail.deckId}/review?wordIds=${detail.flashcardId}`} variant="leaf">
                 Практика сейчас
-              </Link>
+              </ButtonLink>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setIsEditing(true)} className="focus-ring min-h-11 flex-1 rounded-full border border-black/10 text-sm font-medium dark:border-white/15">
+                <Button variant="ghost" onClick={() => setIsEditing(true)} className="flex-1">
                   Редактировать
-                </button>
+                </Button>
                 {detail.vocabularyItemId && detail.knowledgeStatus !== "known" && (
-                  <button type="button" disabled={isPending} onClick={handleMarkKnown} className="focus-ring min-h-11 flex-1 rounded-full border border-black/10 text-sm font-medium dark:border-white/15">
+                  <Button variant="ghost" disabled={isPending} onClick={handleMarkKnown} className="flex-1">
                     Уже знаю
-                  </button>
+                  </Button>
                 )}
               </div>
               <div className="flex gap-2">
@@ -214,7 +225,7 @@ export default function VocabularyItemDetail({
                   aria-label="Переместить в колоду"
                   value={moveTarget}
                   onChange={(e) => setMoveTarget(e.target.value)}
-                  className="focus-ring min-h-11 flex-1 rounded-full border border-black/15 px-3 text-sm dark:border-white/20"
+                  className="focus-ring min-h-11 flex-1 rounded-full border border-[var(--border-strong)] bg-transparent px-3 text-sm outline-none focus:border-[var(--color-forest)]"
                 >
                   <option value="">Переместить в колоду…</option>
                   {decks.filter((d) => d.id !== detail.deckId).map((d) => (
@@ -224,25 +235,23 @@ export default function VocabularyItemDetail({
                   ))}
                 </select>
                 {moveTarget && (
-                  <button type="button" disabled={isPending} onClick={handleMove} className="focus-ring min-h-11 rounded-full bg-black/10 px-3 text-sm font-medium dark:bg-white/10">
+                  <Button variant="ghost" disabled={isPending} onClick={handleMove}>
                     OK
-                  </button>
+                  </Button>
                 )}
               </div>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleDelete}
-                className="focus-ring min-h-11 rounded-full border border-red-200 text-sm font-medium text-red-600 disabled:opacity-50 dark:border-red-900 dark:text-red-400"
-              >
+              {/* ghost + красный текст, а не variant="danger" — как «Сбросить» в
+                  Language Twin (фаза 11e-3): кнопка только открывает confirm(),
+                  финальное подтверждение — сам диалог. */}
+              <Button variant="ghost" disabled={isPending} onClick={handleDelete} className="text-[var(--color-danger-text)]">
                 Удалить карточку
-              </button>
+              </Button>
             </div>
           </>
         )}
-      </div>
+      </Card>
 
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <Card>
         <h3 className="mb-3 font-semibold">Контексты ({detail.contexts.length})</h3>
         {detail.contexts.length === 0 ? (
           <p className="text-sm text-[var(--text-secondary)]">
@@ -252,8 +261,8 @@ export default function VocabularyItemDetail({
         ) : (
           <ul className="flex flex-col gap-3">
             {detail.contexts.map((ctx) => (
-              <li key={ctx.id} className="rounded-lg bg-black/5 px-3 py-2 text-sm dark:bg-white/5">
-                <p className="text-black/70 dark:text-white/70">{ctx.contextText}</p>
+              <li key={ctx.id} className="rounded-lg bg-[var(--surface-muted)] px-3 py-2 text-sm">
+                <p>{ctx.contextText}</p>
                 {ctx.contextTranslation && <p className="mt-0.5 text-[var(--text-secondary)]">{ctx.contextTranslation}</p>}
                 <div className="mt-1 flex items-center justify-between text-xs text-[var(--text-secondary)]">
                   {ctx.sourceTextId && ctx.sourceTextTitle ? (
@@ -269,7 +278,7 @@ export default function VocabularyItemDetail({
             ))}
           </ul>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

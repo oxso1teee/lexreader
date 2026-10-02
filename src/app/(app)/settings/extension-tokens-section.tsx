@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useState } from "react";
 import SectionHeader from "@/components/product/section-header";
 import { track } from "@/lib/posthog-client";
@@ -57,7 +58,7 @@ export default function ExtensionTokensSection({ initialTokens }: { initialToken
   }
 
   return (
-    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+    <section className="rounded-2xl bg-[var(--surface)] p-4">
       <SectionHeader title="Браузерное расширение" />
       <p className="text-body-sm mt-2 text-[var(--text-secondary)]">
         Тап по незнакомому слову на любой странице — перевод в контексте и сохранение в словарь,
@@ -76,9 +77,10 @@ export default function ExtensionTokensSection({ initialTokens }: { initialToken
             <button
               type="button"
               onClick={handleCopy}
-              className="focus-ring flex min-h-11 shrink-0 items-center rounded-full bg-forest px-3 text-body-sm font-medium text-white"
+              className="focus-ring flex min-h-11 shrink-0 items-center gap-1 rounded-full bg-forest px-3 text-body-sm font-medium text-white"
             >
-              {copied ? "Скопировано ✓" : "Копировать"}
+              {copied ? "Скопировано" : "Копировать"}
+              {copied && <Check aria-hidden="true" className="h-4 w-4" />}
             </button>
           </div>
         </div>

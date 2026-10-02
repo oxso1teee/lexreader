@@ -50,7 +50,7 @@ test("Today primary CTA shows review action once a due flashcard exists", async 
   // M3 Slice 4: создание колоды переехало с /brain на вкладку "Колоды"
   // /brain/vocabulary (см. docs/ui/m3-slice4-practice-brain-review-plan.md §4).
   await page.goto("/brain/vocabulary");
-  await page.getByRole("button", { name: "📚 Колоды" }).click();
+  await page.getByRole("button", { name: "Колоды", exact: true }).click();
   await page.getByRole("button", { name: "+ Новая колода" }).click();
   await page.getByPlaceholder("Название колоды...").fill(`Today CTA ${Date.now()}`);
   await page.getByRole("button", { name: "Создать" }).click();

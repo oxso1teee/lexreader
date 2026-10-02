@@ -1,0 +1,244 @@
+/* redesign/duolingo-flat, phase 5 — маскот «искра для чтения»
+   (src/components/product/mascot/reading-companion.tsx). Каждая анимация
+   висит на своей обёртке, потому что все они пишут в transform и на одном
+   элементе перебивали бы друг друга:
+     .mascot-entrance  — однократное появление (scale + подъём);
+     .mascot-bob       — бесконечное покачивание, стартует после entrance;
+     .mascot-squash    — squash-stretch, только пока есть .mascot-excited.
+   Искры-«взрыв» — фиксированные 6 <span>; анимация висит на классе
+   .mascot-excited, поэтому снятие/возврат класса перезапускает её без
+   создания DOM-узлов. Размеры — от --mascot-size (ширина в px). */
+@layer components {
+  .mascot {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--mascot-size);
+    height: calc(var(--mascot-size) * 150 / 128);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mascot-entrance,
+  .mascot-bob,
+  .mascot-squash {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mascot svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .mascot-entrance {
+    animation: mascot-entrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .mascot-bob {
+    animation: mascot-bob 3.4s ease-in-out 0.8s infinite;
+  }
+
+  /* Опора — «ноги» капли (y≈128 из 150), чтобы сплющивание шло к полу. */
+  .mascot-squash {
+    transform-origin: 50% 85%;
+  }
+
+  .mascot-excited .mascot-squash {
+    animation: mascot-squash 0.6s ease-out;
+  }
+
+  /* Halo: два пунктирных кольца вокруг центра тела (y≈60/150 = 40%),
+     вращаются в разные стороны. */
+  .mascot-halo {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    border-radius: 999px;
+    border: 2px dashed var(--color-forest);
+    pointer-events: none;
+    translate: -50% -50%;
+  }
+
+  .mascot-halo-outer {
+    width: var(--mascot-size);
+    height: var(--mascot-size);
+    opacity: 0.28;
+    animation: mascot-spin 22s linear infinite;
+  }
+
+  .mascot-halo-inner {
+    width: calc(var(--mascot-size) * 0.76);
+    height: calc(var(--mascot-size) * 0.76);
+    border-color: var(--sun);
+    opacity: 0.45;
+    animation: mascot-spin 16s linear infinite reverse;
+  }
+
+  .mascot-spark {
+    position: absolute;
+    width: calc(var(--mascot-size) * 0.045);
+    height: calc(var(--mascot-size) * 0.045);
+    min-width: 4px;
+    min-height: 4px;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+
+  /* Постоянные плавающие искры — фон, с excited не связаны. */
+  .mascot-float .mascot-spark {
+    animation: mascot-float 3s ease-in-out infinite;
+  }
+  .mascot-float .mascot-spark:nth-child(1) {
+    top: 18%;
+    left: 8%;
+    background: var(--sun);
+  }
+  .mascot-float .mascot-spark:nth-child(2) {
+    top: 10%;
+    right: 12%;
+    background: var(--ember);
+    animation-duration: 3.6s;
+    animation-delay: -1.2s;
+  }
+  .mascot-float .mascot-spark:nth-child(3) {
+    top: 52%;
+    right: 2%;
+    background: var(--sun);
+    animation-duration: 2.8s;
+    animation-delay: -0.6s;
+  }
+  .mascot-float .mascot-spark:nth-child(4) {
+    top: 60%;
+    left: 4%;
+    background: var(--leaf-tint-strong);
+    animation-duration: 3.8s;
+    animation-delay: -2s;
+  }
+
+  /* Excited-взрыв: разлетаются из-под маскота (центр «пола»). */
+  .mascot-burst .mascot-spark {
+    top: 80%;
+    left: 50%;
+    opacity: 0;
+  }
+  .mascot-excited .mascot-burst .mascot-spark {
+    animation: mascot-burst 0.7s ease-out both;
+  }
+  .mascot-burst .mascot-spark:nth-child(odd) {
+    background: var(--sun);
+  }
+  .mascot-burst .mascot-spark:nth-child(even) {
+    background: var(--ember);
+  }
+  .mascot-burst .mascot-spark:nth-child(1) {
+    --dx: -0.44;
+    --dy: -0.18;
+  }
+  .mascot-burst .mascot-spark:nth-child(2) {
+    --dx: -0.3;
+    --dy: -0.4;
+    animation-delay: 40ms;
+  }
+  .mascot-burst .mascot-spark:nth-child(3) {
+    --dx: -0.08;
+    --dy: -0.3;
+    animation-delay: 80ms;
+  }
+  .mascot-burst .mascot-spark:nth-child(4) {
+    --dx: 0.12;
+    --dy: -0.42;
+    animation-delay: 20ms;
+  }
+  .mascot-burst .mascot-spark:nth-child(5) {
+    --dx: 0.34;
+    --dy: -0.26;
+    animation-delay: 60ms;
+  }
+  .mascot-burst .mascot-spark:nth-child(6) {
+    --dx: 0.46;
+    --dy: -0.08;
+    animation-delay: 100ms;
+  }
+
+  /* Глобальное правило в tokens.css лишь сжимает длительность до 0.01ms —
+     для маскота выключаем анимации полностью: статичная фигура без искр. */
+  @media (prefers-reduced-motion: reduce) {
+    .mascot * {
+      animation: none !important;
+    }
+  }
+
+  @keyframes mascot-entrance {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.55);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes mascot-bob {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-7px) rotate(-1.5deg);
+    }
+  }
+
+  @keyframes mascot-squash {
+    0% {
+      transform: scale(1);
+    }
+    30% {
+      transform: scale(1.14, 0.88);
+    }
+    60% {
+      transform: scale(0.94, 1.08);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes mascot-spin {
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  @keyframes mascot-float {
+    0%,
+    100% {
+      opacity: 0.35;
+      transform: translateY(0) scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(-10px) scale(1);
+    }
+  }
+
+  /* --dx/--dy — безразмерные доли --mascot-size (задаются по nth-child). */
+  @keyframes mascot-burst {
+    0% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(
+          calc(-50% + var(--mascot-size) * var(--dx)),
+          calc(-50% + var(--mascot-size) * var(--dy))
+        )
+        scale(0.3);
+    }
+  }
+}

@@ -3,7 +3,9 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { coverGradient, coverInitials, youtubeThumbnailUrl } from "@/lib/text-cover";
+import { X } from "lucide-react";
+import { youtubeThumbnailUrl } from "@/lib/text-cover";
+import { CoverArt } from "@/components/product/cover-art";
 import { typeLabel, type LibraryItem } from "./library-item";
 import { deleteText } from "./actions";
 
@@ -22,12 +24,10 @@ import { deleteText } from "./actions";
 export default function LibraryItemCard({ item }: { item: LibraryItem }) {
   const [thumbFailed, setThumbFailed] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [gradientA, gradientB] = coverGradient(item.title);
-  const initials = coverInitials(item.title);
   const showThumb = item.youtubeVideoId && !thumbFailed;
 
   return (
-    <div className="group relative aspect-[3/4] overflow-hidden rounded-[14px] text-white shadow-sm">
+    <div className="group relative aspect-[3/4] overflow-hidden rounded-[14px] text-white">
       {/* prefetch={false}: /read|/watch/[id] have no loading.js boundary, so
           Next's default prefetch fetches the FULL dynamic route (every DB
           query the Reader page makes) for every card the moment it enters
@@ -41,25 +41,25 @@ export default function LibraryItemCard({ item }: { item: LibraryItem }) {
         prefetch={false}
         aria-label={`${typeLabel(item)}: ${item.title}`}
         className="focus-ring flex h-full w-full flex-col justify-end p-[9px]"
-        style={{ background: showThumb ? undefined : `linear-gradient(150deg, ${gradientA}, ${gradientB})` }}
       >
-        {showThumb && (
-          // Free, keyless YouTube thumbnail — i.ytimg.com allowlisted in
-          // next.config.ts's images.remotePatterns.
-          <Image
-            src={youtubeThumbnailUrl(item.youtubeVideoId!)}
-            alt=""
-            fill
-            sizes="(min-width: 1024px) 20vw, 45vw"
-            className="object-cover"
-            onError={() => setThumbFailed(true)}
-          />
-        )}
-        {!showThumb && (
-          <span aria-hidden className="absolute inset-0 flex items-center justify-center text-5xl font-bold text-white/15">
-            {initials}
-          </span>
-        )}
+        {/* Phase 7: иллюстрированная обложка. Реальное YouTube-превью, если
+            загрузилось, остаётся (это настоящий кадр, а не декорация) и
+            получает тот же grain/блик/корешок; если нет — фиксированный
+            "video"-мотив, не случайный из общего набора. */}
+        <CoverArt title={item.title} isVideo={Boolean(item.youtubeVideoId)}>
+          {showThumb ? (
+            // Free, keyless YouTube thumbnail — i.ytimg.com allowlisted in
+            // next.config.ts's images.remotePatterns.
+            <Image
+              src={youtubeThumbnailUrl(item.youtubeVideoId!)}
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 20vw, 45vw"
+              className="object-cover"
+              onError={() => setThumbFailed(true)}
+            />
+          ) : undefined}
+        </CoverArt>
         <div className="absolute inset-0 bg-gradient-to-t from-black/[0.35] to-transparent" aria-hidden="true" />
         <p className="relative line-clamp-2 text-[10.5px] font-bold leading-tight">{item.title}</p>
       </Link>
@@ -76,7 +76,7 @@ export default function LibraryItemCard({ item }: { item: LibraryItem }) {
           aria-label={`Удалить «${item.title}»`}
           className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/35 text-white opacity-0 backdrop-blur-sm transition-opacity focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-40"
         >
-          ✕
+          <X aria-hidden="true" className="h-4 w-4" />
         </button>
       )}
     </div>
