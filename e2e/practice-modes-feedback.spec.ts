@@ -78,10 +78,15 @@ test("Choice mode: correct/incorrect differ by more than color (icon, label, ari
     await options.nth(wrongIndex).click();
 
     // Non-color cues on the two specific buttons: visible icon + text label...
+    // (Phase 2 swapped the ✗/✓ text glyphs for lucide <X>/<Check> SVGs —
+    // lucide stamps each icon's name as a class, so this still checks WHICH
+    // icon each button shows, not merely that some svg exists.)
     await expect(options.nth(wrongIndex).getByText("Неверно")).toBeVisible();
-    await expect(options.nth(wrongIndex).getByText("✗")).toBeVisible();
+    await expect(options.nth(wrongIndex).locator('svg.lucide-x[aria-hidden="true"]')).toBeVisible();
+    await expect(options.nth(wrongIndex).locator("svg.lucide-check")).toHaveCount(0);
     await expect(options.nth(correctIndex).getByText("Верно")).toBeVisible();
-    await expect(options.nth(correctIndex).getByText("✓")).toBeVisible();
+    await expect(options.nth(correctIndex).locator('svg.lucide-check[aria-hidden="true"]')).toBeVisible();
+    await expect(options.nth(correctIndex).locator("svg.lucide-x")).toHaveCount(0);
     // ...and a live-region announcement a screen reader picks up without color.
     const liveRegion = page.locator('[role="status"][aria-live="polite"]');
     await expect(liveRegion).toContainText("Неверно");
@@ -107,8 +112,9 @@ test("Type mode: correct/incorrect differ by more than color (icon, label, aria-
 
     const resultEl = page.locator('[role="status"][aria-live="polite"]');
     await expect(resultEl).toContainText("Правильный ответ");
-    // Icon is a separate aria-hidden glyph, not just a color change.
-    await expect(resultEl.locator('span[aria-hidden="true"]')).toHaveText("✗");
+    // Icon is a separate aria-hidden lucide <X> svg, not just a color change.
+    await expect(resultEl.locator('svg.lucide-x[aria-hidden="true"]')).toBeVisible();
+    await expect(resultEl.locator("svg.lucide-check")).toHaveCount(0);
   } finally {
     await deleteDeck(page, deckId);
   }
@@ -148,7 +154,8 @@ test("Match mode: mismatched pairs differ by more than color (icon + aria-live)"
     await wordButtons.nth(0).click();
     await translationButtons.nth(wrongTranslationIndex).click();
     await expect(liveRegion).toContainText("Неверно");
-    await expect(wordButtons.nth(0).getByText("✗")).toBeVisible();
+    await expect(wordButtons.nth(0).locator('svg.lucide-x[aria-hidden="true"]')).toBeVisible();
+    await expect(wordButtons.nth(0).locator("svg.lucide-check")).toHaveCount(0);
   } finally {
     await deleteDeck(page, deckId);
   }
