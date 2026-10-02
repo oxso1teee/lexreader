@@ -90,7 +90,7 @@ function PatternDetail({
                     track("evidence_deleted", { source_type: e.source_type });
                     startTransition(() => deleteEvidenceAction(e.id));
                   }}
-                  className="focus-ring flex min-h-9 min-w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black disabled:opacity-40 dark:hover:text-white"
+                  className="focus-ring flex min-h-9 min-w-9 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-foreground disabled:opacity-40"
                 >
                   <X aria-hidden="true" className="h-4 w-4" />
                 </button>

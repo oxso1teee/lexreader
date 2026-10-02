@@ -58,7 +58,7 @@ export default function ExtensionTokensSection({ initialTokens }: { initialToken
   }
 
   return (
-    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+    <section className="rounded-2xl bg-[var(--surface)] p-4">
       <SectionHeader title="Браузерное расширение" />
       <p className="text-body-sm mt-2 text-[var(--text-secondary)]">
         Тап по незнакомому слову на любой странице — перевод в контексте и сохранение в словарь,

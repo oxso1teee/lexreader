@@ -93,8 +93,8 @@ export default function MicButton({
       title={listening ? "Слушаю…" : "Голосовой ввод"}
       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${
         listening
-          ? "animate-pulse bg-red-500 text-white"
-          : "text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
+          ? "animate-pulse bg-[var(--color-danger)] text-white"
+          : "text-[var(--text-secondary)] hover:text-foreground"
       }`}
     >
       <Mic aria-hidden="true" className="h-4 w-4" />

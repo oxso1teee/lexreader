@@ -694,7 +694,7 @@ export default function WatchPlayer({
           <Link
             href="/library"
             aria-label="Библиотека"
-            className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+            className="focus-ring flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[var(--color-forest-text)] transition-colors hover:bg-[var(--border)]"
           >
             <span aria-hidden="true">←</span>
             <span className="hidden sm:inline" aria-hidden="true">
@@ -793,7 +793,7 @@ export default function WatchPlayer({
                       type="button"
                       onClick={() => handleSeek(seg.startMs)}
                       aria-label={`Перейти к ${formatTimestamp(seg.startMs)}`}
-                      className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md px-1.5 font-mono text-xs tabular-nums text-[var(--text-secondary)] hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                      className="focus-ring flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md px-1.5 font-mono text-xs tabular-nums text-[var(--text-secondary)] hover:bg-[var(--border)]"
                     >
                       {formatTimestamp(seg.startMs)}
                     </button>

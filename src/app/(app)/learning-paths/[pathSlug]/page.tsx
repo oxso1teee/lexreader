@@ -83,7 +83,7 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
                     {activeState && status ? (
                       <Link
                         href={`/learning-paths/${pathSlug}/${stage.key}`}
-                        className="focus-ring flex items-center gap-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 hover:border-black/30 dark:hover:border-white/40"
+                        className="focus-ring flex items-center gap-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 hover:border-[var(--sky)]"
                       >
                         <span
                           aria-hidden="true"

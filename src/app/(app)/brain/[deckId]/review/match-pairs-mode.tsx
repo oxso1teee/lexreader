@@ -159,7 +159,7 @@ export default function MatchPairsMode({
                       ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
                       : isSelected
                         ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
-                        : "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
+                        : "border-[var(--border-strong)] hover:border-[var(--sky)]"
                 }`}
               >
                 <span>{w.front}</span>
@@ -192,7 +192,7 @@ export default function MatchPairsMode({
                       ? "border-[var(--color-danger-text)] bg-[var(--color-danger)]/10"
                       : isSelected
                         ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
-                        : "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
+                        : "border-[var(--border-strong)] hover:border-[var(--sky)]"
                 }`}
               >
                 <span>{t.back}</span>

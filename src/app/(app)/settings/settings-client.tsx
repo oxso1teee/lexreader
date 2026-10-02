@@ -170,7 +170,7 @@ export default function SettingsClient({
           только с двумя ссылками — теперь третий раздел внутри "Учебные
           настройки" (тот же паттерн разделителей hr, что уже отделял push-
           уведомления от формы) вместо ещё одной карточки в стопке. */}
-      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+      <section className="rounded-2xl bg-[var(--surface)] p-4">
         <SectionHeader title="Учебные настройки" />
         <div className="mt-3">
           <LearningPreferencesForm
@@ -258,7 +258,7 @@ export default function SettingsClient({
         </div>
       </section>
 
-      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+      <section className="rounded-2xl bg-[var(--surface)] p-4">
         <SectionHeader title="Подписка" />
         <p className="text-body-sm mt-2">
           Текущий тариф: <strong>{planLabel(plan)}</strong>
@@ -300,7 +300,7 @@ export default function SettingsClient({
       {/* Тема + вибро-отклик — раньше две отдельные карточки, каждая с одной
           строкой настройки, теперь одна карточка "Оформление и устройство"
           (та же группировка, что уже применена выше к "Учебным настройкам"). */}
-      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+      <section className="rounded-2xl bg-[var(--surface)] p-4">
         <SectionHeader title="Оформление и устройство" />
         <div className="mt-3 flex flex-col gap-4">
           <ThemeToggle />
@@ -314,7 +314,7 @@ export default function SettingsClient({
 
       <LeaderboardOptInSection initialOptIn={leaderboardOptIn} />
 
-      <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+      <section className="rounded-2xl bg-[var(--surface)] p-4">
         <SectionHeader title="Аккаунт и безопасность" />
         <div className="mt-3 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">

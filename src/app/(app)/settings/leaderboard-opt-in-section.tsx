@@ -33,7 +33,7 @@ export default function LeaderboardOptInSection({ initialOptIn }: { initialOptIn
   }
 
   return (
-    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+    <section className="rounded-2xl bg-[var(--surface)] p-4">
       <SectionHeader title="Недельная лига" />
       <p className="text-body-sm mt-2 text-[var(--text-secondary)]">
         Сравнивай активность за неделю (слова и повторения) с другими участниками. Виден только

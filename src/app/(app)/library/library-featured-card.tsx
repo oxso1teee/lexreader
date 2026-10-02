@@ -27,7 +27,7 @@ export default function LibraryFeaturedCard({ item }: { item: LibraryItem }) {
       href={item.href}
       prefetch={false}
       aria-label={`Продолжить: ${typeLabel(item)} ${item.title}`}
-      className="focus-ring group relative flex h-[108px] items-end overflow-hidden rounded-[20px] p-4 text-white shadow-[0_18px_50px_-20px_rgba(31,77,59,0.45)] sm:h-[140px]"
+      className="focus-ring group relative flex h-[108px] items-end overflow-hidden rounded-[20px] p-4 text-white sm:h-[140px]"
     >
       {/* Phase 7: та же иллюстрированная обложка, что у LibraryItemCard. */}
       <CoverArt title={item.title} isVideo={Boolean(item.youtubeVideoId)} banner>

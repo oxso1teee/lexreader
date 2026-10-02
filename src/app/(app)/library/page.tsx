@@ -137,7 +137,7 @@ export default async function LibraryPage() {
             <a
               href="#library-search"
               aria-label="Поиск по библиотеке"
-              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-card"
+              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)]"
             >
               <Search aria-hidden="true" className="h-4 w-4" />
             </a>
@@ -157,7 +157,7 @@ export default async function LibraryPage() {
         )}
         <Link
           href="/learning-paths"
-          className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm"
+          className="focus-ring flex items-center justify-between gap-3 rounded-2xl bg-[var(--surface)] p-4"
         >
           <div>
             <p className="text-body-sm font-semibold">Пути обучения</p>
@@ -182,7 +182,7 @@ export default async function LibraryPage() {
           на вырезных экранах. */}
       <Link
         href="/library/new"
-        className="focus-ring fixed right-5 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-forest)] text-2xl text-white shadow-lg hover:bg-[var(--color-forest-deep)] sm:hidden"
+        className="focus-ring fixed right-5 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-forest)] text-2xl text-white hover:bg-[var(--color-forest-deep)] sm:hidden"
         style={{ bottom: "calc(96px + env(safe-area-inset-bottom))" }}
         aria-label="Добавить материал"
       >

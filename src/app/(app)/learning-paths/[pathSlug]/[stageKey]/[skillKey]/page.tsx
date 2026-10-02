@@ -58,7 +58,7 @@ export default async function LearningPathSkillPage({
               restyled (flat bg-black/5 li -> its own bordered card). */}
           <ul className="flex flex-col gap-1.5 text-sm">
             {skill.lesson.examples.map((ex, i) => (
-              <li key={i} className="rounded-xl border border-[var(--border)] bg-card px-3 py-2.5">
+              <li key={i} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5">
                 {ex}
               </li>
             ))}

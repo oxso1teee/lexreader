@@ -32,7 +32,7 @@ export default function CollectionCard({
   return (
     <Link
       href={`/library/collections/${id}`}
-      className="block rounded-lg border border-[var(--border-strong)] px-4 py-3 transition-colors hover:border-black/30 dark:hover:border-white/40"
+      className="block rounded-lg border border-[var(--border-strong)] px-4 py-3 transition-colors hover:border-[var(--sky)]"
     >
       <p className="flex items-center gap-1.5 truncate font-medium">
         <Library aria-hidden="true" className="h-4 w-4 shrink-0" />

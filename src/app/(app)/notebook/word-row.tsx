@@ -83,7 +83,7 @@ export default function WordRow({
       <div className="flex min-w-0 items-center gap-3">
         <label
           aria-label="Добавить фото к слову"
-          className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-[var(--border-strong)] text-black/30 hover:border-black/30 dark:text-white/30 dark:hover:border-white/40"
+          className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-[var(--border-strong)] text-black/30 hover:border-[var(--sky)] dark:text-white/30"
         >
           {localPhotoUrl || photoUrl ? (
             // unoptimized — тот же приватный signed URL (TTL 1 час) с тем же
@@ -129,7 +129,7 @@ export default function WordRow({
             type="button"
             disabled={isPending}
             onClick={() => startTransition(() => markKnown(id))}
-            className="flex min-h-11 items-center justify-center rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium hover:border-black/30 disabled:opacity-40 dark:hover:border-white/40"
+            className="flex min-h-11 items-center justify-center rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium hover:border-[var(--sky)] disabled:opacity-40"
           >
             Уже знаю
           </button>

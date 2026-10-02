@@ -40,7 +40,7 @@ export default function TextCard({
     <div className="flex items-center gap-2">
       <Link
         href={`/read/${id}`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-[var(--border-strong)] px-4 py-3 transition-colors hover:border-black/30 dark:hover:border-white/40"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-[var(--border-strong)] px-4 py-3 transition-colors hover:border-[var(--sky)]"
       >
         <span className="min-w-0 flex-1">
         <p className="flex items-center gap-1.5 truncate font-medium">

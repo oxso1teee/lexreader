@@ -8,7 +8,7 @@ export default function FeedbackForm() {
   const [state, formAction, pending] = useActionState<FeedbackState, FormData>(sendFeedback, {});
 
   return (
-    <section className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+    <section className="rounded-2xl bg-[var(--surface)] p-4">
       <h2 className="text-h3 mb-2">Обратная связь</h2>
       {state.ok ? (
         <p role="status" className="inline-flex items-center gap-1 text-body-sm text-[var(--color-success)]">

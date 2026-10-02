@@ -46,7 +46,7 @@ export default function DeckCard({
     <div className="flex items-center gap-2">
       <Link
         href={`/brain/${id}`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border-l-4 border-forest bg-card px-4 py-3 shadow-sm"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border-l-4 border-forest bg-[var(--surface)] px-4 py-3"
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

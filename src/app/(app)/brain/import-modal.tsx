@@ -165,7 +165,7 @@ export default function ImportModal({
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 px-6">
-      <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-card p-5">
+      <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-[var(--surface)] p-5">
         <h2 className="mb-4 text-center text-lg font-bold">Импорт карточек</h2>
 
         {result ? (

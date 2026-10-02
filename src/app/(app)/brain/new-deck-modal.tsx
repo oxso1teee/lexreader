@@ -50,7 +50,7 @@ export default function NewDeckModal({
 
       {open && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 px-6">
-          <div className="w-full max-w-sm rounded-2xl bg-card p-5">
+          <div className="w-full max-w-sm rounded-2xl bg-[var(--surface)] p-5">
             <h2 className="mb-1 text-center text-lg font-bold">Новая колода</h2>
             <p className="mb-4 text-center text-xs text-[var(--text-secondary)]">
               {deckCount} / {FREE_DECK_LIMIT} колод использовано

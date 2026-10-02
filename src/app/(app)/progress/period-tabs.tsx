@@ -17,7 +17,7 @@ export default function PeriodTabs({ current }: { current: string }) {
           className={`focus-ring flex min-h-11 items-center rounded-full border px-3 text-sm font-medium transition-colors ${
             current === p.value
               ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
-              : "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
+              : "border-[var(--border-strong)] hover:border-[var(--sky)]"
           }`}
         >
           {p.label}

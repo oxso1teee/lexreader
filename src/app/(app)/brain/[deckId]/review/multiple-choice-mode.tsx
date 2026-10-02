@@ -134,7 +134,7 @@ export default function MultipleChoiceMode({
           const showState = selected !== null;
           const isSelectedWrong = showState && opt === selected && !isCorrect;
           const stateClass = !showState
-            ? "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
+            ? "border-[var(--border-strong)] hover:border-[var(--sky)]"
             : isCorrect
               ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)]"
               : isSelectedWrong

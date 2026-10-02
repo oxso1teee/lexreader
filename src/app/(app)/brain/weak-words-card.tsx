@@ -7,7 +7,7 @@ import type { HardestWord } from "@/lib/brain-stats";
 // history yet (fewer than MIN_ATTEMPTS_FOR_ACCURACY attempts on any card).
 export default function WeakWordsCard({ words }: { words: HardestWord[] }) {
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className="rounded-2xl bg-[var(--surface)] p-4">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">Слабые слова</h2>
         <Link href="/brain/vocabulary" className="text-sm text-[var(--color-forest-text)]">
@@ -29,10 +29,10 @@ export default function WeakWordsCard({ words }: { words: HardestWord[] }) {
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                   w.accuracy < 0.4
-                    ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                    ? "bg-[var(--color-danger)]/15 text-[var(--color-danger-text)]"
                     : w.accuracy < 0.7
-                      ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
-                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                      ? "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]"
+                      : "bg-[var(--color-success)]/15 text-[var(--color-success-text)]"
                 }`}
               >
                 точность {Math.round(w.accuracy * 100)}%

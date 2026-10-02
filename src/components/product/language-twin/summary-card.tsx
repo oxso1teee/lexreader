@@ -19,7 +19,7 @@ export default function LanguageTwinSummaryCard({
 
   if (state.kind === "invite") {
     return (
-      <div className="flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm">
+      <div className="flex flex-col gap-2 rounded-2xl bg-[var(--surface)] p-4">
         <span className="text-sm font-semibold">Мой английский</span>
         <p className="text-sm text-[var(--text-secondary)]">
           {variant === "today"
@@ -45,7 +45,7 @@ export default function LanguageTwinSummaryCard({
   // focus without opening a separate diagnostic-style screen every day.
   if (variant === "today" && summary.focusTitle) {
     return (
-      <div className="flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm">
+      <div className="flex flex-col gap-2 rounded-2xl bg-[var(--surface)] p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs font-medium text-[var(--text-secondary)]">Твой фокус сегодня</span>
           <ConfidenceBadge level={summary.confidence} />
@@ -73,7 +73,7 @@ export default function LanguageTwinSummaryCard({
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl bg-card p-4 shadow-sm">
+    <div className="flex flex-col gap-2 rounded-2xl bg-[var(--surface)] p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm font-semibold">Мой английский</span>
         <ConfidenceBadge level={summary.confidence} />

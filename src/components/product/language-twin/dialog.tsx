@@ -63,7 +63,7 @@ export default function Dialog({
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card p-5 sm:rounded-2xl"
+        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-[var(--surface)] p-5 sm:rounded-2xl"
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 id={titleId} className="text-lg font-bold">

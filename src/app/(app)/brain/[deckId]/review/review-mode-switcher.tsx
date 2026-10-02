@@ -116,7 +116,7 @@ export default function ReviewModeSwitcher({
           }
           aria-label="Поменять направление изучения"
           title="Поменять направление изучения (только для этой сессии)"
-          className="mb-2 flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-black/30 hover:text-foreground dark:hover:border-white/40"
+          className="mb-2 flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--sky)] hover:text-foreground"
         >
           ⇄ {direction === "front_back" ? "Слово → Перевод" : "Перевод → Слово"}
         </button>

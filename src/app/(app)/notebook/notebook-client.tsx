@@ -120,7 +120,7 @@ export default function NotebookClient({
             className={`flex min-h-9 items-center gap-1 rounded-full border px-3 text-sm font-medium transition-colors ${
               favoritesOnly
                 ? "border-[var(--sun-text)] text-[var(--sun-text)]"
-                : "border-[var(--border-strong)] text-[var(--text-secondary)] hover:border-black/30 dark:hover:border-white/40"
+                : "border-[var(--border-strong)] text-[var(--text-secondary)] hover:border-[var(--sky)]"
             }`}
           >
             <Star aria-hidden="true" className="h-4 w-4" fill={favoritesOnly ? "currentColor" : "none"} />
@@ -136,7 +136,7 @@ export default function NotebookClient({
               className={`flex min-h-11 shrink-0 items-center rounded-full border px-3 text-sm font-medium transition-colors ${
                 status === tab.value
                   ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
-                  : "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
+                  : "border-[var(--border-strong)] hover:border-[var(--sky)]"
               }`}
             >
               {tab.label}

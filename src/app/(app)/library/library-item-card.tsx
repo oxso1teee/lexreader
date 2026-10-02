@@ -27,7 +27,7 @@ export default function LibraryItemCard({ item }: { item: LibraryItem }) {
   const showThumb = item.youtubeVideoId && !thumbFailed;
 
   return (
-    <div className="group relative aspect-[3/4] overflow-hidden rounded-[14px] text-white shadow-sm">
+    <div className="group relative aspect-[3/4] overflow-hidden rounded-[14px] text-white">
       {/* prefetch={false}: /read|/watch/[id] have no loading.js boundary, so
           Next's default prefetch fetches the FULL dynamic route (every DB
           query the Reader page makes) for every card the moment it enters

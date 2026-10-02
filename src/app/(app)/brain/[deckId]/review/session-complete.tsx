@@ -199,7 +199,7 @@ export default function SessionComplete({
       {missionId && missionDone && (
         <Link
           href={`/missions/${missionId}`}
-          className="mt-2 rounded-full border border-[var(--border-strong)] px-5 py-3 font-medium hover:border-black/30 dark:hover:border-white/40"
+          className="mt-2 rounded-full border border-[var(--border-strong)] px-5 py-3 font-medium hover:border-[var(--sky)]"
         >
           Посмотреть результат миссии →
         </Link>

@@ -17,7 +17,7 @@ export default function ActivityWeekCard({ data }: { data: ActivityWeekData }) {
     data.readingDays > 0 || data.sessionsCompleted > 0 || data.wordsAdded > 0 || data.reviewsDone > 0;
 
   return (
-    <div className="rounded-2xl bg-[var(--surface)] p-4 shadow-sm">
+    <div className="rounded-2xl bg-[var(--surface)] p-4">
       <SectionHeader title="Активность за 7 дней" />
       {hasActivity ? (
         <div className="mt-3 grid grid-cols-2 gap-3">

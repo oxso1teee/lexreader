@@ -29,7 +29,7 @@ function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: 
         aria-label={label}
       />
       <span className="absolute inset-0 rounded-full bg-[var(--border-strong)] transition-colors peer-checked:bg-forest peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-[var(--focus-ring)] peer-focus-visible:outline-offset-2" />
-      <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+      <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
     </label>
   );
 }

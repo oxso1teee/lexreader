@@ -92,7 +92,7 @@ export default function GrammarRunner({
             const isCorrect = i === q.correctIndex;
             const isSelectedWrong = showState && i === selected && !isCorrect;
             const stateClass = !showState
-              ? "border-[var(--border-strong)] hover:border-black/30 dark:hover:border-white/40"
+              ? "border-[var(--border-strong)] hover:border-[var(--sky)]"
               : isCorrect
                 ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)]"
                 : isSelectedWrong

@@ -411,7 +411,7 @@ export default function ReviewSession({
               type="button"
               onClick={undo}
               disabled={isUndoing}
-              className="flex min-h-9 items-center justify-center gap-1 rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-black/30 hover:text-foreground disabled:opacity-50 dark:hover:border-white/40"
+              className="flex min-h-9 items-center justify-center gap-1 rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--sky)] hover:text-foreground disabled:opacity-50"
             >
               ↩ {isUndoing ? "Отменяем…" : `Отменить оценку «${lastGraded.front}»`}
             </button>
@@ -459,7 +459,7 @@ export default function ReviewSession({
           onClick={exitSession}
           aria-label="Завершить сессию"
           title="Выйти (Esc)"
-          className="flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
+          className="flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-foreground"
         >
           <X aria-hidden="true" className="h-5 w-5" />
         </button>
@@ -506,7 +506,7 @@ export default function ReviewSession({
           type="button"
           onClick={undo}
           disabled={isUndoing}
-          className="mb-4 flex min-h-9 items-center justify-center gap-1 self-center rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-black/30 hover:text-foreground disabled:opacity-50 dark:hover:border-white/40"
+          className="mb-4 flex min-h-9 items-center justify-center gap-1 self-center rounded-full border border-[var(--border-strong)] px-3 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--sky)] hover:text-foreground disabled:opacity-50"
         >
           ↩ {isUndoing ? "Отменяем…" : `Отменить оценку «${lastGraded.front}»`}
         </button>
@@ -577,7 +577,7 @@ export default function ReviewSession({
                   type="button"
                   onClick={speak}
                   aria-label="Произнести"
-                  className="flex min-h-9 min-w-9 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
+                  className="flex min-h-9 min-w-9 items-center justify-center text-[var(--text-secondary)] hover:text-foreground"
                 >
                   <Volume2 aria-hidden="true" className="h-5 w-5" />
                 </button>
@@ -586,7 +586,7 @@ export default function ReviewSession({
                 type="button"
                 onClick={() => setIsEditing(true)}
                 aria-label="Редактировать карточку"
-                className="flex min-h-9 min-w-9 items-center justify-center text-[var(--text-secondary)] hover:text-black dark:hover:text-white"
+                className="flex min-h-9 min-w-9 items-center justify-center text-[var(--text-secondary)] hover:text-foreground"
               >
                 <Pencil aria-hidden="true" className="h-4 w-4" />
               </button>
@@ -648,7 +648,7 @@ export default function ReviewSession({
                   type="button"
                   onClick={handleSendToNotebook}
                   disabled={notebookStatus === "saving" || notebookStatus === "done"}
-                  className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] underline-offset-2 hover:text-black hover:underline disabled:no-underline disabled:opacity-60 dark:hover:text-white"
+                  className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] underline-offset-2 hover:text-foreground hover:underline disabled:no-underline disabled:opacity-60"
                 >
                   {notebookStatus === "done" && <Check aria-hidden="true" className="h-3.5 w-3.5" />}
                   {notebookStatus === "idle" && <BookmarkPlus aria-hidden="true" className="h-3.5 w-3.5" />}
@@ -681,7 +681,7 @@ export default function ReviewSession({
                   <p className="text-center text-xs text-[var(--text-secondary)]">
                     Сегодня {sessionTotal} · рекорд {Math.max(bestSessionCount, sessionTotal)}
                   </p>
-                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[var(--border)]">
                     <div
                       className="h-full rounded-full bg-forest transition-[width]"
                       style={{

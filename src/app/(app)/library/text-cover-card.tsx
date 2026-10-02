@@ -15,7 +15,7 @@ export default function TextCoverCard({
   return (
     <Link
       href={`/read/${id}`}
-      className="group relative flex aspect-[4/3] flex-col justify-between overflow-hidden rounded-2xl p-3 text-white shadow-sm transition-transform hover:scale-[1.02]"
+      className="group relative flex aspect-[4/3] flex-col justify-between overflow-hidden rounded-2xl p-3 text-white transition-transform hover:scale-[1.02]"
     >
       {/* Phase 7: иллюстрированная обложка. Системные тексты — без видео. */}
       <CoverArt title={title} angle={135} />
