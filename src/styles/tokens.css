@@ -229,40 +229,12 @@
   --color-sun-edge: var(--sun-edge);
   --color-sun-tint: var(--sun-tint);
   --color-sun-text: var(--sun-text);
-  /* docs/release-2026-08-26/12_VIZUALNAYA_IDENTICHNOST_RESHENIE_2026-08-26.md
-     §1.2 — serif только для hero/H1 лендинга и крупных section-заголовков
-     там же, весь остальной UI остаётся на --font-sans (Geist). Значение
-     задано здесь напрямую (как --font-sans/--font-mono в globals.css), а
-     НЕ через :root-алиас, как остальные токены в этом файле — Tailwind
-     v4 уже поставляет свой собственный --font-serif внутри
-     `@layer theme` (built-in default theme), а unlayered `:root` не
-     побеждает layered `@layer theme` для custom properties так, как
-     побеждает для остальных объявлений — самореференсный алиас
-     (`--font-serif: var(--font-serif)`) резолвился в invalid/пустую
-     строку вместо реального значения (проверено живьём через
-     getComputedStyle). --font-playfair сам по себе определён только
-     внутри src/app/landing-page.tsx (next/font/google, scoped, не в
-     корневом layout.tsx) — на страницах, где этот компонент не
-     рендерится, переменная не в области видимости, и var(--font-playfair)
-     просто проваливается на следующий фолбэк в списке, Georgia/serif —
-     не ошибка, ожидаемая деградация.
-
-     redesign/duolingo-flat: направление A (Editorial/serif) полностью
-     отброшено, но landing-page.tsx/reader.tsx этой фазой не трогаются
-     (только токены/шрифты) — оба всё ещё реально используют font-serif/
-     --font-reading локально. Удалять эти две строки сейчас сломало бы их
-     прямо сейчас, ничего не отредактировав в самих файлах — оставлено до
-     фазы, где эти конкретные экраны переводятся на Unbounded/без serif. */
-  --font-serif: var(--font-playfair), Georgia, serif;
-
-  /* Reader mockup alignment — отдельный токен для ТЕЛА читаемого текста,
-     не --font-serif выше (тот — дисплейный Playfair Display, для hero/H1/
-     крупных заголовков сайта, не для длинного чтения). Тот же паттерн
-     самореференсного алиаса (--font-reading: var(--font-reading)), что и
-     --font-serif — next/font/google подключает Source Serif 4 scoped
-     внутри src/app/read/[textId]/page.tsx (тот же паттерн, что и
-     --font-playfair в landing-page.tsx), не в корневом layout.tsx —
-     переменная в области видимости только там, где реально нужна. */
+  /* Reader mockup alignment — отдельный токен для ТЕЛА читаемого текста.
+     Самореференсный алиас (--font-reading: var(--font-reading)) —
+     next/font/google подключает Source Serif 4 scoped внутри
+     src/app/read/[textId]/page.tsx, не в корневом layout.tsx — переменная
+     в области видимости только там, где реально нужна; вне её значение
+     проваливается на Georgia/serif. */
   --font-reading: var(--font-reading), Georgia, serif;
 }
 
