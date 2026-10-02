@@ -10,9 +10,8 @@ const PRIORITY_LABEL: Record<string, string> = { high: "Высокий прио�
 const PRIORITY_CLASS: Record<string, string> = {
   high: "bg-[var(--color-danger)]/15 text-[var(--color-danger-text)]",
   medium: "bg-[var(--color-warning)]/15 text-[var(--color-warning-text)]",
-  // --foreground, не --text-secondary: карточка сама на bg-[var(--border)],
-  // и вторая полупрозрачная подложка опускала вторичный текст до 4.32:1 в
-  // тёмной теме (ниже AA). С --foreground — 7.18:1 dark / 11.68:1 light.
+  // --foreground, не --text-secondary: на полупрозрачной подложке вторичный
+  // текст проседал ниже AA. С --foreground — 14.20:1 light / 10.03:1 dark.
   low: "bg-[var(--border)] text-[var(--foreground)]",
 };
 const ACTION_LABEL: Record<string, string> = {
@@ -59,8 +58,14 @@ export default function RecommendationCard({ rec, compact = false }: { rec: Reco
           ? "/language-twin/diagnostic"
           : "/brain/all/review";
 
+  // Карточка — непрозрачная --surface с рамкой (как строки «Уже закрыто» на
+  // обзоре), не серая bg-[var(--border)]: та ложилась второй полупрозрачной
+  // подложкой под /15-бейджи приоритета и роняла их ниже AA 4.5:1 (axe,
+  // e2e/language-twin-privacy.spec.ts: «Средний» 3.47:1, «Высокий» 3.59:1
+  // light / 3.98:1 dark). На --surface: high 4.85/5.35, medium 4.59/7.34
+  // (light/dark), измерено в браузере на обоих фонах страницы.
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-[var(--border)] p-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${PRIORITY_CLASS[rec.priority] ?? PRIORITY_CLASS.low}`}>
           {PRIORITY_LABEL[rec.priority] ?? rec.priority}

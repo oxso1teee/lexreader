@@ -69,7 +69,10 @@ test("Settings: learning preferences save shows success confirmation", async ({ 
   await page.goto("/settings");
 
   await page.getByRole("button", { name: "Сохранить" }).click();
-  await expect(page.getByText("Сохранено ✓")).toBeVisible();
+  // Phase 2: the ✓ glyph became a lucide <Check> svg next to the label.
+  const saved = page.getByText("Сохранено", { exact: true });
+  await expect(saved).toBeVisible();
+  await expect(saved.locator('svg.lucide-check[aria-hidden="true"]')).toBeVisible();
 });
 
 test("Settings: subscription section never shows a renewal date for the free plan", async ({ page }) => {
