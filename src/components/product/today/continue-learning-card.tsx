@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, ChevronRight } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { track } from "@/lib/posthog-client";
-import ProgressBar from "@/components/product/progress-bar";
 import { Card, CardLink } from "@/components/ui/card";
 import { CoverArt } from "@/components/product/cover-art";
 
@@ -50,24 +49,32 @@ export default function ContinueLearningCard({
     );
   }
 
+  // v7 (docs/moments/mockups/Main.dc.html): обложка 52×68, подпись, название,
+  // тонкая полоса прогресса, процент справа — без шеврона.
   return (
     <CardLink
       href={`/read/${material.textId}`}
       onClick={() => track("continue_learning_clicked", { destination: `/read/${material.textId}` })}
-      className={`flex items-center gap-4 ${className ?? ""}`}
+      className={`flex items-center gap-3 !p-3 ${className ?? ""}`}
     >
-      <span className="relative h-[72px] w-[54px] shrink-0 overflow-hidden rounded-[10px]">
+      <span className="relative h-[68px] w-[52px] shrink-0 overflow-hidden rounded-[10px]">
         <CoverArt title={material.title} isVideo={isVideo} />
       </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <p className="text-xs font-bold tracking-wide text-[var(--text-secondary)] uppercase">Продолжить чтение</p>
-        <p className="truncate font-bold">{material.title}</p>
-        <div className="flex items-center gap-2">
-          <ProgressBar ratio={material.percentRead / 100} label="Прочитано" />
-          <span className="shrink-0 font-mono text-xs font-bold">{material.percentRead}%</span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-bold tracking-[.05em] text-[var(--text-secondary)] uppercase">Продолжить чтение</p>
+        <p className="mt-[3px] truncate text-base font-bold">{material.title}</p>
+        <div
+          className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--surface-muted)]"
+          role="progressbar"
+          aria-label="Прочитано"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={material.percentRead}
+        >
+          <div className="h-full rounded-full bg-[var(--leaf)]" style={{ width: `${material.percentRead}%` }} />
         </div>
       </div>
-      <ChevronRight aria-hidden="true" className="h-5 w-5 shrink-0 text-[var(--text-secondary)]" />
+      <span className="shrink-0 text-[13px] font-semibold text-[var(--text-secondary)]">{material.percentRead}%</span>
     </CardLink>
   );
 }

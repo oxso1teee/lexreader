@@ -1,4 +1,4 @@
-import { BarChart3, Brain, House, Library, Settings, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, Copy, House, UserRound, type LucideIcon } from "lucide-react";
 import { messages } from "@/lib/i18n";
 
 // Единственный источник правды для навигации — DesktopSidebar и
@@ -15,8 +15,8 @@ const nav = messages.appShell.nav;
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/home", label: nav.today, Icon: House },
-  { href: "/library", label: nav.learn, Icon: Library },
-  { href: "/brain", label: nav.practice, Icon: Brain },
+  { href: "/library", label: nav.learn, Icon: BookOpen },
+  { href: "/brain", label: nav.practice, Icon: Copy },
   { href: "/progress", label: nav.progress, Icon: BarChart3 },
-  { href: "/settings", label: nav.profile, Icon: Settings },
+  { href: "/settings", label: nav.profile, Icon: UserRound },
 ];

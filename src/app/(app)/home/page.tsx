@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Clock, Flame, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getDueCount } from "@/lib/brain-stats";
@@ -12,28 +10,16 @@ import { findMatchingMissionForSkill } from "@/lib/learning-paths/mission-match"
 import { getActivePathStateAction } from "../learning-paths/actions";
 import { isoWeekStart } from "@/lib/iso-week";
 import { messages } from "@/lib/i18n";
-import { Card, CardLink } from "@/components/ui/card";
-import { ReadingCompanion } from "@/components/product/mascot/reading-companion";
-import GreetingRow from "@/components/product/today/greeting-row";
-import HeroCard from "@/components/product/today/hero-card";
-import DailyGoalCard from "@/components/product/today/daily-goal-card";
-import MetricCard from "@/components/product/today/metric-card";
-import ContinueLearningCard from "@/components/product/today/continue-learning-card";
-import QuickActionsCard from "@/components/product/today/quick-actions-card";
-import ComingSoonCard from "@/components/product/today/coming-soon-card";
+import { weekMarks } from "@/lib/week-marks";
+import TodayView from "@/components/product/today/v7/today-view";
 import InstallBanner from "./install-banner";
 import TodayAnalytics from "./today-analytics";
 import type { MissionRow, MissionType } from "@/lib/missions/types";
-import type { PatternCategory, PatternStatus, PatternRow } from "@/lib/language-twin/types";
+import type { PatternRow } from "@/lib/language-twin/types";
 
 const t = messages.today;
 
 const SEVERITY_WEIGHT: Record<"high" | "medium" | "low", number> = { high: 3, medium: 2, low: 1 };
-const PATTERN_STATUS_PHRASE: Partial<Record<PatternStatus, string>> = {
-  active: "в фокусе",
-  improving: "улучшается",
-  uncertain: "нужно проверить",
-};
 
 const GRAMMAR_RUNNER_TYPES = new Set<MissionType>(["grammar_pattern", "correction", "diagnostic_followup", "maintenance"]);
 
@@ -169,10 +155,14 @@ export default async function HomePage() {
   const continueIsVideo = Boolean(continueTextRaw?.youtube_video_id);
 
   const primaryAction = decidePrimaryAction({ dueCount, continueReading });
+  // Профиль имени не хранит; берём из входа через Google/Apple, если есть.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+  const fullName = [meta.given_name, meta.full_name, meta.name].find((v): v is string => typeof v === "string" && v.trim().length > 0);
+  const firstName = fullName?.trim().split(/\s+/)[0] ?? null;
   const greeting = greetingForHour(new Date().getHours());
-  const dateLabel = new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long" }).format(
-    new Date(),
-  );
 
   // Today v2 §4: the hero mission's reason line comes from real fields only
   // — the pattern's own evidence_count when one exists, otherwise the same
@@ -205,6 +195,7 @@ export default async function HomePage() {
         ctaLabel: heroMission.status === "started" ? t.hero.continueCta : t.hero.startCta,
         href: `/missions/${heroMission.id}`,
         actionType: "mission" as const,
+        meta: [`~${heroMission.estimated_minutes} мин`, ...(heroReasonText ? [heroReasonText] : [])],
       }
     : primaryAction.type === "review"
       ? {
@@ -214,6 +205,7 @@ export default async function HomePage() {
           ctaLabel: t.primaryAction.reviewCta,
           href: "/brain/all/review",
           actionType: "review" as const,
+          meta: [`${primaryAction.dueCount} карточек`, `~${Math.max(1, Math.round(primaryAction.dueCount / 4))} мин`],
         }
       : primaryAction.type === "continue_reading"
         ? {
@@ -223,6 +215,7 @@ export default async function HomePage() {
             ctaLabel: t.primaryAction.continueCta,
             href: `/read/${primaryAction.textId}`,
             actionType: "continue_reading" as const,
+            meta: [`${primaryAction.percentRead}% прочитано`],
           }
         : {
             eyebrow: undefined,
@@ -231,6 +224,7 @@ export default async function HomePage() {
             ctaLabel: t.primaryAction.addMaterialCta,
             href: "/library/new",
             actionType: "add_material" as const,
+            meta: [] as string[],
           };
 
   // Today v2 §4: compact "Мой английский" — up to 2 real patterns, gated on
@@ -288,107 +282,56 @@ export default async function HomePage() {
         ].join(" · ")
       : undefined;
 
+  const activeDates = [
+    ...(activitySessions ?? []).map((s) => isoDate(s.started_at)),
+    ...(activityReviews ?? []).map((r) => isoDate(r.reviewed_at)),
+  ];
+  const marks = weekMarks(activeDates);
+  const wordsToday = newWordsToday ?? 0;
+  const goal = profile.daily_word_goal;
+  const langCode = profile.target_language.slice(0, 2).toUpperCase();
+  const level = profile.level ?? profile.self_reported_cefr;
+  void readingMinutesToday;
+  void weekHint;
+
+  // docs/moments/mockups/Main.dc.html — раскладка 1:1 с макетом v7. Решения
+  // «что показать» выше не менялись; ниже макета — карточки, которых нет на
+  // макете, но которые несут реальную функциональность (путь, рекомендации,
+  // «Мой английский», быстрые действия) — их не убираем.
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4 md:max-w-5xl md:gap-5 md:px-8 md:py-8">
-      <TodayAnalytics
-        dueCountBucket={dueCountBucket(dueCount)}
-        hasActiveMaterial={continueReading !== null}
-        missionCount={missions.length}
-      />
-
-      <GreetingRow dateLabel={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)} greeting={`${greeting}!`} />
-
-      <InstallBanner />
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <HeroCard
-          eyebrow={heroCardData.eyebrow}
-          title={heroCardData.title}
-          subtitle={heroCardData.subtitle}
-          ctaLabel={heroCardData.ctaLabel}
-          href={heroCardData.href}
-          actionType={heroCardData.actionType}
-          streak={profile.streak_current}
-          footnote={heroMatchesPath && pathLevelLabel ? `Из твоего пути: ${pathLevelLabel}` : undefined}
+    <TodayView
+      analytics={
+        <TodayAnalytics
+          dueCountBucket={dueCountBucket(dueCount)}
+          hasActiveMaterial={continueReading !== null}
+          missionCount={missions.length}
         />
-        <div className="flex min-h-[200px] items-center justify-center rounded-[20px] border-2 border-[var(--border-strong)] bg-[var(--leaf-tint)] py-6 md:min-h-[260px]">
-          <ReadingCompanion size={140} />
-        </div>
-      </div>
-
-      <section aria-label={t.summary.title} className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4">
-        <DailyGoalCard done={newWordsToday ?? 0} goal={profile.daily_word_goal} className="col-span-2" />
-        <MetricCard
-          icon={Clock}
-          value={String(readingMinutesToday)}
-          label="Минут чтения"
-          hint="сегодня"
-          className="md:col-span-2"
-        />
-        <MetricCard
-          icon={Flame}
-          tone="ember"
-          value={String(profile.streak_current)}
-          label="Дней подряд"
-          hint={`Рекорд: ${profile.streak_longest}`}
-          className="md:col-span-2"
-        />
-
-        <ContinueLearningCard material={continueReading} isVideo={continueIsVideo} className="col-span-2 md:col-span-4" />
-        <MetricCard
-          icon={RotateCcw}
-          value={String(dueCount)}
-          label="К повторению"
-          hint={weekHint}
-          className="col-span-2 md:col-span-2"
-        />
-
-        <QuickActionsCard className="col-span-2 md:col-span-6" />
-
-        {showPathSecondaryCard && activePathState && focusSkill && (
-          <CardLink
-            href={`/learning-paths/${activePathState.path.slug}`}
-            className="col-span-2 flex items-center justify-between gap-3 md:col-span-6"
-          >
-            <div className="min-w-0">
-              <p className="text-xs text-[var(--text-secondary)]">Мой путь · {pathLevelLabel}</p>
-              <p className="text-body-sm truncate font-medium">{focusSkill.title}</p>
-            </div>
-            <span className="shrink-0 text-body-sm font-semibold text-[var(--color-forest-text)]">Продолжить →</span>
-          </CardLink>
-        )}
-
-        {(pendingRecommendationsCount ?? 0) > 0 && (
-          <CardLink
-            href="/language-twin/recommendations"
-            className="col-span-2 flex items-center justify-between md:col-span-6"
-          >
-            <p className="text-body-sm text-[var(--text-secondary)]">Новых рекомендаций: {pendingRecommendationsCount}</p>
-            <span className="text-body-sm font-semibold text-[var(--color-forest-text)]">Открыть →</span>
-          </CardLink>
-        )}
-
-        {topPatterns.length > 0 && (
-          <Card className="col-span-2 flex flex-col gap-2 md:col-span-6">
-            <h2 className="text-sm font-bold">{t.myEnglish.title}</h2>
-            {topPatterns.map((p, i) => (
-              <Link key={i} href="/language-twin" className="focus-ring text-sm hover:underline">
-                {categoryLabel(p.category as PatternCategory)}
-                {" — "}
-                {PATTERN_STATUS_PHRASE[p.status] ?? p.title}
-              </Link>
-            ))}
-            <Link
-              href="/language-twin"
-              className="focus-ring self-start text-xs font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
-            >
-              Весь профиль →
-            </Link>
-          </Card>
-        )}
-
-        <ComingSoonCard className="col-span-2 md:col-span-6" />
-      </section>
-    </div>
+      }
+      installBanner={<InstallBanner />}
+      langCode={langCode}
+      level={level}
+      streak={profile.streak_current}
+      streakLongest={profile.streak_longest}
+      xp={profile.xp}
+      greeting={greeting}
+      firstName={firstName}
+      wordsToday={wordsToday}
+      goal={goal}
+      dueCount={dueCount}
+      marks={marks}
+      hero={{
+        ...heroCardData,
+        footnote: heroMatchesPath && pathLevelLabel ? `Из твоего пути: ${pathLevelLabel}` : undefined,
+      }}
+      continueReading={continueReading}
+      continueIsVideo={continueIsVideo}
+      pathCard={
+        showPathSecondaryCard && activePathState && focusSkill
+          ? { href: `/learning-paths/${activePathState.path.slug}`, label: pathLevelLabel ?? "", title: focusSkill.title }
+          : null
+      }
+      pendingRecommendationsCount={pendingRecommendationsCount ?? 0}
+      topPatterns={topPatterns}
+    />
   );
 }
