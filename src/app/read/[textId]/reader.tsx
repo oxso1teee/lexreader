@@ -553,7 +553,7 @@ export default function Reader({
 
   return (
     <div
-      className="relative flex min-h-screen flex-1 flex-col bg-[var(--background)]"
+      className="relative flex min-h-dvh flex-1 flex-col bg-[var(--background)]"
       style={themeColors ? { backgroundColor: themeColors.bg, color: themeColors.text } : undefined}
     >
       {/* Phase 8: без стекла — непрозрачный --surface + 2px --border-strong,

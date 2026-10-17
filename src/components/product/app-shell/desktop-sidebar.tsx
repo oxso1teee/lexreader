@@ -20,7 +20,7 @@ export default function DesktopSidebar({
 
   return (
     <aside
-      className="sticky top-0 hidden h-screen w-[var(--container-sidebar)] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] px-3 py-5 md:flex"
+      className="sticky top-0 hidden h-dvh w-[var(--container-sidebar)] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] px-3 py-5 md:flex"
       aria-label="Боковая навигация"
     >
       <Link href="/home" className="focus-ring mb-6 flex items-center gap-2 px-2 text-lg font-bold tracking-tight">

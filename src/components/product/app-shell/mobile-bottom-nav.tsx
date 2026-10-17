@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { track } from "@/lib/posthog-client";
+import { haptic } from "@/lib/native";
 import { NAV_ITEMS } from "./nav-items";
 
 // Today mockup alignment — раньше сплошная полоса снизу (border-top,
@@ -36,8 +37,11 @@ export default function MobileBottomNav() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            onClick={() => track("app_nav_clicked", { destination: item.href, viewport_type: "mobile" })}
-            className={`focus-ring flex flex-1 flex-col items-center gap-0.5 py-2.5 text-center text-xs font-medium transition-colors ${
+            onClick={() => {
+              if (!active) void haptic("light");
+              track("app_nav_clicked", { destination: item.href, viewport_type: "mobile" });
+            }}
+            className={`focus-ring flex flex-1 flex-col items-center gap-0.5 py-2.5 text-center text-xs font-medium transition-[color,transform] duration-100 active:scale-90 ${
               active
                 ? "text-black dark:text-white"
                 : "text-[var(--text-secondary)] hover:text-foreground"

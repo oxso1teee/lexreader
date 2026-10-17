@@ -688,7 +688,7 @@ export default function WatchPlayer({
   const playerFallback = getYouTubePlayerFallback(playerState, videoId);
 
   return (
-    <div className="relative flex min-h-screen flex-1 flex-col bg-[var(--background)]">
+    <div className="relative flex min-h-dvh flex-1 flex-col bg-[var(--background)]">
       <header className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--background)]">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link

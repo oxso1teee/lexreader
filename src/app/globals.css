@@ -97,3 +97,70 @@ body {
     animation: card-tilt 0.35s ease-out;
   }
 }
+
+/* Нативное ощущение. Правила ниже включаются только когда LexReader запущен
+   как приложение: установленная PWA (display-mode: standalone) или Capacitor-
+   обёртка (класс `native-app` на <html> ставит src/app/native-bridge.tsx).
+   В обычной вкладке браузера ничего не меняется — pull-to-refresh и
+   выделение текста там привычны и нужны. Выделение текста в самих текстах и
+   карточках НЕ отключается: это читалка, пользователю нужно копировать. */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Двойной тап по кнопкам/ссылкам не должен зумить страницу и ждать 300 мс. */
+  a,
+  button,
+  [role="button"],
+  [role="tab"],
+  summary,
+  label,
+  select {
+    touch-action: manipulation;
+  }
+
+  @media (display-mode: standalone) {
+    html,
+    body {
+      overscroll-behavior-y: none;
+    }
+    a,
+    button,
+    nav,
+    header {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+    nav,
+    header {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  }
+
+  :root.native-app,
+  :root.native-app body {
+    overscroll-behavior-y: none;
+  }
+  :root.native-app a,
+  :root.native-app button,
+  :root.native-app nav,
+  :root.native-app header {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  :root.native-app nav,
+  :root.native-app header {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Боковые вырезки в ландшафте (iPhone с островом/вырезом). Верх и низ
+     уже обработаны в app-shell и mobile-bottom-nav. */
+  :root.native-app body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

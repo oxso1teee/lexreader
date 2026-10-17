@@ -17,10 +17,10 @@ export default function AppShell({
   planLabel: string | null;
 }) {
   return (
-    <div className="flex min-h-screen flex-1">
+    <div className="flex min-h-dvh flex-1">
       <DesktopSidebar planLabel={planLabel} />
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col bg-background">
+      <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-background">
         <header
           className="sticky top-0 z-20 flex items-center justify-center bg-[var(--background)] px-4 py-3 md:hidden"
           style={{ paddingTop: "env(safe-area-inset-top)" }}

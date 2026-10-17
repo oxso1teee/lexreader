@@ -21,12 +21,34 @@ const config: CapacitorConfig = {
   appId: "com.lexreader.app",
   appName: "LexReader",
   webDir: "www",
+  // Цвет фона окна WebView до загрузки сайта — без него на старте мелькает
+  // белый экран (совпадает с --background светлой темы).
+  backgroundColor: "#f5f1ea",
   server: {
     url: "https://lexreader.vercel.app",
     cleartext: false,
   },
   android: {
     allowMixedContent: false,
+  },
+  ios: {
+    // Долгий тап по ссылке в WebView не должен открывать превью-попап Safari.
+    allowsLinkPreview: false,
+  },
+  plugins: {
+    // Сплэш закрывает src/app/native-bridge.tsx сразу после гидрации; таймер —
+    // страховка, если сайт не загрузился (нет сети) и JS не отработал.
+    SplashScreen: {
+      launchShowDuration: 1500,
+      launchAutoHide: true,
+      launchFadeOutDuration: 200,
+      backgroundColor: "#f5f1ea",
+      showSpinner: false,
+    },
+    Keyboard: {
+      // Страница сжимается под клавиатуру, а не уезжает вверх целиком.
+      resize: "body",
+    },
   },
 };
 
