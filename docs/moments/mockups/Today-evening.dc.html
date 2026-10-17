@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Сегодня вечером</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l)}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-white{--f:#fff;--e:#ffd9a3;--l:#c2410c}
+.card{background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tabbar{position:absolute;left:16px;right:16px;bottom:16px;display:flex;background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px;padding:6px 4px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;font:600 11px/1 Onest,sans-serif;color:rgba(26,26,26,.68);text-decoration:none;background:none;border:0;border-radius:14px;cursor:pointer}
+.tab .ico{width:24px;height:24px}
+.tab.on{color:#1a1a1a;background:#e3f6d3}
+.tab.on .ico{color:#166534}
+@keyframes flick{0%,100%{transform:scale(1) rotate(-4deg)}25%{transform:scale(1.12) rotate(3deg)}50%{transform:scale(.96) rotate(-2deg)}75%{transform:scale(1.08) rotate(4deg)}}
+.flick{animation:flick .9s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,149,0,.45)}50%{box-shadow:0 0 0 10px rgba(255,149,0,0)}}
+.pulse{animation:pulse 1.6s ease-out infinite}
+</style>
+</helmet>
+<div class="app">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 56px 20px 8px">
+  <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; background: #fff; border: 2px solid rgba(26,26,26,.18); font-weight: 700; font-size: 15px">
+    <span style="width: 26px; height: 26px; border-radius: 999px; background: #e3f6d3; color: #166534; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">EN</span>B1
+  </div>
+  <div style="display: flex; gap: 8px">
+    <div class="pulse" aria-label="Стрик 12 дней, сегодня ещё не продлён" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #fff; border: 2px dashed #ff9500; color: #c2410c; font-weight: 700; font-size: 15px">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#ffd9a3"></path></svg>12
+    </div>
+    <div aria-label="1240 XP" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #fff1b8; color: #7a5900; font-weight: 700; font-size: 15px">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#ffc700" stroke="#e0a500" stroke-width="1.5" stroke-linejoin="round"></path></svg>1 240
+    </div>
+  </div>
+</div>
+
+<div style="margin: 14px 16px 0; border-radius: 24px; background: #c2410c; color: #fff; padding: 22px 20px 20px; box-shadow: inset 0 -6px 0 0 #9a330a; position: relative; overflow: hidden">
+  <div class="flick" style="position: absolute; right: 14px; top: 10px; opacity: .95">
+    <svg viewBox="0 0 24 24" width="96" height="96" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#ff9500"></path><path d="M12 12c.6 2 3 3 3 5.5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3.5.2 1 .7 1.5 1.2 1.5 0-1.5-.4-2.5.3-3.5z" fill="#ffc700"></path></svg>
+  </div>
+  <div style="font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .9">Стрик под угрозой</div>
+  <div class="disp" style="font-size: 26px; line-height: 1.15; font-weight: 900; margin-top: 8px; max-width: 220px">12 дней сгорят в полночь</div>
+  <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 15px; font-weight: 600">
+    <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Осталось 2 ч 47 мин
+  </div>
+  <div style="font-size: 14px; margin-top: 4px; opacity: .92">Одно короткое занятие сохранит серию</div>
+  <a class="btn b-white" href="Lesson-choice.dc.html" style="margin-top: 16px; width: 100%">Спасти стрик · 3 мин</a>
+</div>
+
+<div class="card" style="margin: 12px 16px 0; padding: 14px 16px">
+  <div style="display: flex; justify-content: space-between; align-items: baseline">
+    <div style="font-weight: 700; font-size: 15px">Неделя</div>
+    <div style="font-size: 13px; font-weight: 600; color: #c2410c">Рекорд: 21 день</div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-top: 10px; text-align: center; font-size: 12px; font-weight: 600">
+    <div><div style="height: 34px; border-radius: 12px; background: #ff9500; display: flex; align-items: center; justify-content: center"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#fff"></path></svg></div><div class="muted" style="margin-top: 4px">Пн</div></div>
+    <div><div style="height: 34px; border-radius: 12px; background: #ff9500; display: flex; align-items: center; justify-content: center"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#fff"></path></svg></div><div class="muted" style="margin-top: 4px">Вт</div></div>
+    <div><div style="height: 34px; border-radius: 12px; background: #ff9500; display: flex; align-items: center; justify-content: center"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#fff"></path></svg></div><div class="muted" style="margin-top: 4px">Ср</div></div>
+    <div><div class="pulse" style="height: 34px; border-radius: 12px; background: #fff; border: 2px dashed #ff9500; display: flex; align-items: center; justify-content: center; color: #c2410c; font-weight: 700">?</div><div style="margin-top: 4px; color: #c2410c">Чт</div></div>
+    <div><div style="height: 34px; border-radius: 12px; background: #ece6db"></div><div class="muted" style="margin-top: 4px">Пт</div></div>
+    <div><div style="height: 34px; border-radius: 12px; background: #ece6db"></div><div class="muted" style="margin-top: 4px">Сб</div></div>
+    <div><div style="height: 34px; border-radius: 12px; background: #ece6db"></div><div class="muted" style="margin-top: 4px">Вс</div></div>
+  </div>
+</div>
+
+<div class="card" style="margin: 12px 16px 0; padding: 14px 16px; display: flex; align-items: center; gap: 12px">
+  <div style="width: 44px; height: 44px; border-radius: 14px; background: #ddf4ff; color: #0c7c9c; display: flex; align-items: center; justify-content: center; flex: none">
+    <svg class="ico" viewBox="0 0 24 24" style="width: 24px; height: 24px"><path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9"></path></svg>
+  </div>
+  <div style="flex: 1">
+    <div style="font-weight: 700; font-size: 15px">Заморозка: 1 на этой неделе</div>
+    <div class="muted" style="font-size: 13px; margin-top: 2px">Сработает сама, если пропустишь день</div>
+  </div>
+</div>
+
+<div class="card" style="margin: 12px 16px 0; padding: 12px 14px; display: flex; align-items: center; gap: 12px; background: #fff; border-style: dashed">
+  <div style="width: 36px; height: 36px; border-radius: 10px; background: #2b820f; flex: none; display: flex; align-items: center; justify-content: center">
+    <svg viewBox="0 0 128 150" width="24" height="28" aria-hidden="true"><path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="#fff"></path></svg>
+  </div>
+  <div style="flex: 1; min-width: 0">
+    <div style="display: flex; justify-content: space-between; font-size: 12px"><b>LexReader</b><span class="muted">21:13</span></div>
+    <div style="font-size: 14px; margin-top: 2px">Твоя серия 12 дней ждёт. 3 минуты, и она в безопасности</div>
+  </div>
+</div>
+<div class="muted" style="font-size: 12px; text-align: center; margin-top: 6px">Вечернее уведомление в выбранный час</div>
+
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab on" href="Main.dc.html" aria-current="page"><svg class="ico" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Сегодня</a>
+  <a class="tab" href="Path.dc.html"><svg class="ico" viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg>Учиться</a>
+  <a class="tab" href="Lesson-choice.dc.html"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="14" rx="2"></rect><path d="M7 2h12a2 2 0 0 1 2 2v12"></path></svg>Практика</a>
+  <a class="tab" href="Progress.dc.html"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>Прогресс</a>
+  <button class="tab" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>Профиль</button>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

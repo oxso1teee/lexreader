@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Оцени приложение</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:#2b820f;--e:#1c540a;--l:#fff}
+.b-sky{--f:#0b79b0;--e:#075a85;--l:#fff}
+.b-off{--f:#ece6db;--e:#d6cfc3;--l:rgba(26,26,26,.55);cursor:not-allowed}
+.muted{color:rgba(26,26,26,.68)}
+.ghost{background:#fff;border:2px solid rgba(26,26,26,.12);border-radius:20px}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.scrim{position:absolute;inset:0;background:rgba(26,26,26,.55);animation:fadein .25s ease-out both}
+@keyframes up{0%{transform:translateY(100%)}75%{transform:translateY(-2%)}100%{transform:none}}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:30px 30px 0 0;padding:12px 22px 30px;animation:up .4s .1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bob{animation:bob 2.4s ease-in-out infinite}
+.star{width:52px;height:52px;border:0;background:none;padding:0;cursor:pointer;transition:transform .12s}
+.star:active{transform:scale(.88)}
+@keyframes spop{0%{transform:scale(.6) rotate(-20deg)}60%{transform:scale(1.25) rotate(8deg)}100%{transform:none}}
+.spop{animation:spop .35s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .35s cubic-bezier(.2,.8,.2,1) both}
+@keyframes react{0%{transform:scale(1)}30%{transform:scale(1.15,.88)}60%{transform:scale(.95,1.08) translateY(-10px)}100%{transform:none}}
+.react{animation:react .45s cubic-bezier(.2,.9,.3,1.3) both;transform-origin:50% 100%}
+@keyframes react2{0%{transform:scale(1)}30%{transform:scale(1.15,.88)}60%{transform:scale(.95,1.08) translateY(-10px)}100%{transform:none}}
+.react2{animation:react2 .45s cubic-bezier(.2,.9,.3,1.3) both;transform-origin:50% 100%}
+@keyframes sp{0%{transform:translate(0,0) scale(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}}
+.sp{position:absolute;left:50%;top:50%;animation:sp .6s ease-out both}
+.link2{display:block;text-align:center;font:600 15px/1 Onest,sans-serif;color:rgba(26,26,26,.68);padding:16px 0 0;text-decoration:underline}
+</style>
+</helmet>
+<div class="app">
+  <div aria-hidden="true" style="padding: 60px 16px 0">
+    <div style="height: 40px; width: 70%; border-radius: 12px; background: #ece6db"></div>
+    <div style="height: 230px; margin-top: 20px; border-radius: 24px; background: #2b820f"></div>
+    <div style="display: flex; gap: 12px; margin-top: 14px"><div class="ghost" style="flex: 1; height: 80px"></div><div class="ghost" style="flex: 1; height: 80px"></div></div>
+  </div>
+  <div class="scrim" aria-hidden="true"></div>
+
+  <div class="sheet" role="dialog" aria-label="Оцени LexReader">
+    <div style="width: 44px; height: 5px; border-radius: 99px; background: rgba(26,26,26,.18); margin: 0 auto 14px"></div>
+    <div style="position: relative; display: flex; justify-content: center"><sc-if value="{{five}}" hint-placeholder-val="{{ false }}"><sc-for list="{{sparks}}" as="k" hint-placeholder-count="0"><svg class="sp" viewBox="0 0 24 24" width="16" height="16" style="{{k}}" aria-hidden="true"><path d="M12 0l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="#ffc700"></path></svg></sc-for></sc-if><div class="bob"><div class="{{rcls}}" style="{{rkey}}"><svg viewBox="0 0 128 150" width="90" height="105" aria-hidden="true"><path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="#2b820f"></path><path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="#e3f6d3" opacity="0.9"></path><ellipse cx="54" cy="62" rx="3.2" ry="{{eyeRy}}" fill="#1c540a"></ellipse><ellipse cx="66" cy="62" rx="3.2" ry="{{eyeRy}}" fill="#1c540a"></ellipse><path d="{{mouth}}" fill="none" stroke="#1c540a" stroke-width="2.4" stroke-linecap="round"></path><ellipse cx="90" cy="100" rx="19" ry="12" fill="#ff9500" transform="rotate(-28 90 100)"></ellipse><ellipse cx="94" cy="96" rx="8" ry="5" fill="#ffc700" transform="rotate(-28 94 96)" opacity="0.85"></ellipse></svg></div></div></div>
+    <h1 class="disp" style="margin: 10px 0 0; text-align: center; font-size: 23px; line-height: 1.2; font-weight: 900">Как тебе LexReader?</h1>
+    <p class="muted" style="margin: 8px 0 0; text-align: center; font-size: 15px; min-height: 22px" aria-live="polite">{{say}}</p>
+    <div style="display: flex; justify-content: center; gap: 4px; margin-top: 14px" role="radiogroup" aria-label="Оценка от 1 до 5">
+      <sc-for list="{{stars}}" as="s" hint-placeholder-count="5">
+        <button class="star" type="button" role="radio" aria-checked="{{s.checked}}" aria-label="{{s.label}}" onClick="{{s.pick}}">
+          <svg class="{{s.cls}}" viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5L2.6 9.3l6.5-.9z" fill="{{s.fill}}" stroke="{{s.stroke}}" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+        </button>
+      </sc-for>
+    </div>
+    <div style="margin-top: 16px">
+      <sc-if value="{{none}}" hint-placeholder-val="{{ true }}"><button class="btn b-off" type="button" aria-disabled="true">Выбери оценку</button></sc-if>
+      <sc-if value="{{good}}" hint-placeholder-val="{{ false }}"><a class="btn b-leaf rise" href="Main.dc.html">Оценить в магазине</a></sc-if>
+      <sc-if value="{{bad}}" hint-placeholder-val="{{ false }}"><a class="btn b-sky rise" href="Main.dc.html">Рассказать, что улучшить</a></sc-if>
+      <a class="link2" href="Main.dc.html">Не сейчас</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { n: 0 };
+  }
+  renderVals() {
+    const n = this.state.n;
+    const says = ['Ты занимаешься уже 2 недели. Скажи честно', 'Ой. Расскажи, что не так, мы исправим', 'Понял. Что нам улучшить?', 'Неплохо. Чего не хватает до пятёрки?', 'Спасибо! Поделишься в магазине?', 'Ура! Ты лучший читатель'];
+    const mouths = ['M54 72q6 5 12 0', 'M53 76q7-7 14 0', 'M54 75q6-4 12 0', 'M54 73h12', 'M54 72q6 5 12 0', 'M52 70q8 10 16 0'];
+    const sparks = [];
+    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; sparks.push('--dx:' + Math.round(Math.cos(a) * 80 - 8) + 'px;--dy:' + Math.round(Math.sin(a) * 60 - 8) + 'px;margin:-8px 0 0 -8px;animation-delay:' + (k % 2 * 0.05) + 's'); }
+    return {
+      say: says[n], mouth: mouths[n], eyeRy: n === 1 ? 3 : (n === 5 ? 2.2 : 4.4),
+      five: n === 5, sparks,
+      rcls: n ? (n % 2 ? 'react' : 'react2') : '', rkey: '',
+      none: n === 0, good: n >= 4, bad: n > 0 && n < 4,
+      stars: [1, 2, 3, 4, 5].map((k) => ({
+        label: k + ' из 5',
+        checked: k === n ? 'true' : 'false',
+        fill: k <= n ? '#ffc700' : '#fff',
+        stroke: k <= n ? '#e0a500' : '#d6cfc3',
+        cls: k <= n ? 'spop' : '',
+        pick: () => this.setState({ n: k })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

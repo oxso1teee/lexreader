@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Тебя обогнали</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:#2b820f;--e:#1c540a;--l:#fff}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+@keyframes dash{0%{transform:translateX(-260px)}60%{transform:translateX(16px)}80%{transform:translateX(-4px)}100%{transform:none}}
+.dash{animation:dash .7s .2s cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes lines{0%,100%{opacity:0;transform:translateX(0)}50%{opacity:1;transform:translateX(-16px)}}
+.sp{animation:lines .5s .2s ease-out 2 both}
+@keyframes up{0%,30%{transform:translateY(0)}100%{transform:translateY(-68px)}}
+@keyframes down{0%,30%{transform:translateY(0)}100%{transform:translateY(68px)}}
+.mup{animation:up .7s 1s cubic-bezier(.4,0,.2,1) both;z-index:2}
+.mdown{animation:down .7s 1s cubic-bezier(.4,0,.2,1) both}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes arrow{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.arr{animation:arrow 1s 1.8s ease-in-out infinite}
+.row{position:absolute;left:0;right:0;height:60px;display:flex;align-items:center;gap:12px;padding:0 14px;border-radius:16px;font-size:15px;background:#fff;border:2px solid rgba(26,26,26,.1)}
+.sm{width:36px;height:36px;border-radius:999px;display:flex;align-items:center;justify-content:center;font:700 14px/1 Onest,sans-serif;color:#fff;flex:none}
+.link2{display:block;text-align:center;font:600 15px/1 Onest,sans-serif;color:rgba(26,26,26,.68);padding:16px 0 0;text-decoration:underline}
+</style>
+</helmet>
+<div class="app">
+  <div style="text-align: center; padding-top: 110px">
+    <div style="position: relative; display: inline-block">
+      <div class="dash" style="position: relative; display: inline-flex">
+        <span style="width: 108px; height: 108px; border-radius: 999px; background: #0b79b0; color: #fff; display: flex; align-items: center; justify-content: center; font: 900 42px/1 Unbounded, sans-serif; border: 5px solid #fff; box-shadow: 0 0 0 4px #0b79b0">М</span>
+      </div>
+      <svg class="sp" viewBox="0 0 60 60" width="60" height="60" aria-hidden="true" style="position: absolute; left: -66px; top: 24px"><path d="M10 14h44M2 30h48M14 46h36" stroke="#0b79b0" stroke-width="5" stroke-linecap="round"></path></svg>
+    </div>
+    <h1 class="disp rise" style="margin: 22px 24px 0; font-size: 25px; line-height: 1.2; font-weight: 900; animation-delay: .7s">Макс обогнал тебя!</h1>
+    <p class="muted rise" style="margin: 10px 30px 0; font-size: 16px; animation-delay: .8s">До 4 места тебе не хватает 20 XP. Это одно короткое занятие</p>
+  </div>
+
+  <div class="rise" style="position: relative; margin: 26px 20px 0; height: 200px; animation-delay: .9s" role="img" aria-label="Рейтинг недели: Лена 3, Макс 4, ты 5">
+    <div class="row" style="top: 0"><span style="width: 18px; font-weight: 700" class="muted">3</span><span class="sm" style="background: #c2410c">Л</span><span style="flex: 1">Лена</span><span class="muted" style="font-weight: 700">350 XP</span></div>
+    <div class="row mdown" style="top: 68px; background: #e3f6d3; border-color: #2b820f"><span style="width: 18px; font-weight: 700; color: #166534">{{myPos}}</span><span class="sm" style="background: #2b820f">С</span><b style="flex: 1">Ты</b><span style="font-weight: 700; color: #166534">310 XP</span></div>
+    <div class="row mup" style="top: 136px; border-color: #0b79b0"><span style="width: 18px; font-weight: 700; color: #0c7c9c">{{maxPos}}</span><span class="sm" style="background: #0b79b0">М</span><b style="flex: 1">Макс</b><svg class="ico arr" viewBox="0 0 24 24" style="color: #0c7c9c"><path d="M12 19V5M5 12l7-7 7 7"></path></svg><span style="font-weight: 700; color: #0c7c9c">330 XP</span></div>
+  </div>
+
+  <div class="rise" style="margin: 6px 20px 0; padding: 12px 14px; border-radius: 16px; background: #fff1b8; display: flex; align-items: center; gap: 12px; animation-delay: 1.9s">
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#ffc700" stroke="#e0a500" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+    <div style="flex: 1">
+      <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #4d3800"><span>Разрыв с Максом</span><span>{{gap}} XP</span></div>
+      <div style="height: 10px; border-radius: 99px; background: rgba(122,89,0,.15); margin-top: 6px; overflow: hidden"><div style="height: 100%; width: {{gapW}}; border-radius: 99px; background: #c2410c"></div></div>
+    </div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 30px; animation-delay: 1.8s">
+    <a class="btn b-leaf" href="Lesson-start.dc.html">Вернуть место · 3 мин</a>
+    <a class="link2" href="Main.dc.html">Позже</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.s = Date.now();
+    this.iv = setInterval(() => { this.forceUpdate(); if (Date.now() - this.s > 3000) clearInterval(this.iv); }, 33);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const swapped = this.s ? Date.now() - this.s > 1400 : false;
+    const el = this.s ? Date.now() - this.s : 0;
+    const p = Math.min(1, Math.max(0, (el - 2000) / 700));
+    const g = Math.round((1 - Math.pow(1 - p, 3)) * 20);
+    return { myPos: swapped ? 5 : 4, maxPos: swapped ? 4 : 5, gap: g, gapW: (g / 20 * 30) + '%' };
+  }
+}
+</script>
+</body>
+</html>

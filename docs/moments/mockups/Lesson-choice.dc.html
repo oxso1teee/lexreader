@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Занятие: выбор ответа</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:#2b820f;--e:#1c540a;--l:#fff}
+.b-danger{--f:#df2d2d;--e:#bd1d1d;--l:#fff}
+.b-off{--f:#ece6db;--e:#d6cfc3;--l:rgba(26,26,26,.55);cursor:not-allowed}
+.b-off:active{transform:none;box-shadow:inset 0 -4px 0 0 var(--e)}
+.card{background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.iconbtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:none;border-radius:12px;color:rgba(26,26,26,.68);cursor:pointer;text-decoration:none}
+.bar{flex:1;height:16px;border-radius:99px;background:#ece6db;overflow:hidden}
+.fill{height:100%;border-radius:99px;background:#2b820f;box-shadow:inset 0 -4px 0 0 rgba(0,0,0,.12);transition:width .4s ease-out;position:relative}
+.fill::after{content:"";position:absolute;left:10px;right:10px;top:3px;height:4px;border-radius:99px;background:rgba(255,255,255,.35)}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px 18px;border-radius:16px;font:600 17px/1.3 Onest,sans-serif;cursor:pointer;transition:background .12s,border-color .12s}
+.num{width:28px;height:28px;border-radius:8px;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:13px;opacity:.6;flex:none}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.panel{position:absolute;left:0;right:0;bottom:0;padding:18px 20px 34px;animation:up .22s ease-out}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+.pop{animation:pop .3s ease-out}
+.linkbtn{border:0;background:none;font:600 14px/1 Onest,sans-serif;cursor:pointer;padding:12px 4px;text-decoration:underline}
+</style>
+</helmet>
+<div class="app">
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 52px 12px 0 8px">
+  <a class="iconbtn" href="Main.dc.html" aria-label="Закрыть занятие"><svg class="ico" viewBox="0 0 24 24" style="width: 26px; height: 26px"><path d="M6 6l12 12M18 6 6 18"></path></svg></a>
+  <div class="bar" role="progressbar" aria-label="Прогресс занятия" aria-valuemin="0" aria-valuemax="12" aria-valuenow="{{done}}"><div class="fill" style="width: {{progress}}"></div></div>
+  <div aria-label="Серия верных ответов" style="display: flex; align-items: center; gap: 4px; font-weight: 700; color: #c2410c; font-size: 15px; padding-right: 6px">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#ff9500"></path></svg>{{combo}}
+  </div>
+</div>
+
+<div style="padding: 26px 20px 0">
+  <div style="font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #0c7c9c">Новое слово · задание 3 из 12</div>
+  <h1 class="disp" style="margin: 8px 0 0; font-size: 22px; line-height: 1.25; font-weight: 700">Что значит выделенное слово?</h1>
+
+  <div class="card" style="margin-top: 18px; padding: 16px; display: flex; gap: 12px; align-items: flex-start">
+    <button class="iconbtn" type="button" aria-label="Прослушать предложение" style="background: #0b79b0; color: #fff; box-shadow: inset 0 -4px 0 0 #075a85; flex: none"><svg class="ico" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg></button>
+    <div>
+      <p style="margin: 0; font: 400 19px/1.5 'Source Serif 4', Georgia, serif">She was <span style="background: #fff1b8; border-bottom: 3px solid #ffc700; padding: 0 3px; border-radius: 4px; font-weight: 600">reluctant</span> to leave the lighthouse.</p>
+      <div class="muted" style="font-size: 12px; margin-top: 6px">из «The Last Lighthouse», глава 3</div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px">
+    <sc-for list="{{options}}" as="o" hint-placeholder-count="4">
+      <button class="opt" type="button" onClick="{{o.pick}}" style="{{o.style}}"><span class="num">{{o.n}}</span>{{o.text}}</button>
+    </sc-for>
+  </div>
+</div>
+
+<sc-if value="{{idle}}" hint-placeholder-val="{{ true }}">
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; border-top: 2px solid rgba(26,26,26,.1)">
+    <sc-if value="{{canCheck}}" hint-placeholder-val="{{ false }}">
+      <button class="btn b-leaf" type="button" onClick="{{check}}">Проверить</button>
+    </sc-if>
+    <sc-if value="{{cantCheck}}" hint-placeholder-val="{{ true }}">
+      <button class="btn b-off" type="button" aria-disabled="true">Проверить</button>
+    </sc-if>
+  </div>
+</sc-if>
+
+<sc-if value="{{showCorrect}}" hint-placeholder-val="{{ false }}">
+  <div class="panel" style="background: #e3f6d3" role="status">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px">
+      <div class="pop" style="width: 44px; height: 44px; border-radius: 999px; background: #fff; color: #2b820f; display: flex; align-items: center; justify-content: center"><svg class="ico" viewBox="0 0 24 24" style="width: 26px; height: 26px; stroke-width: 3"><path d="M5 12l5 5L20 7"></path></svg></div>
+      <div style="flex: 1">
+        <div class="disp" style="font-size: 20px; font-weight: 700; color: #166534">Отлично!</div>
+        <div style="font-size: 14px; font-weight: 600; color: #166534">+10 XP · 4 верных подряд</div>
+      </div>
+    </div>
+    <a class="btn b-leaf" href="Lesson-build.dc.html">Продолжить</a>
+  </div>
+</sc-if>
+
+<sc-if value="{{showWrong}}" hint-placeholder-val="{{ false }}">
+  <div class="panel" style="background: #ffdede" role="status">
+    <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px">
+      <div class="pop" style="width: 44px; height: 44px; border-radius: 999px; background: #fff; color: #df2d2d; display: flex; align-items: center; justify-content: center; flex: none"><svg class="ico" viewBox="0 0 24 24" style="width: 24px; height: 24px; stroke-width: 3"><path d="M6 6l12 12M18 6 6 18"></path></svg></div>
+      <div style="flex: 1">
+        <div class="disp" style="font-size: 20px; font-weight: 700; color: #c21b1b">Не совсем</div>
+        <div style="font-size: 15px; color: #c21b1b; margin-top: 2px">Правильно: <b>неохотный</b>. Слово вернётся в конце занятия.</div>
+      </div>
+    </div>
+    <a class="btn b-danger" href="Lesson-build.dc.html">Понятно</a>
+    <div style="text-align: center"><button class="linkbtn" type="button" onClick="{{reset}}" style="color: #c21b1b">Ответить ещё раз</button></div>
+  </div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { picked: null, checked: false };
+  }
+  renderVals() {
+    const texts = ['неохотный', 'уверенный', 'усталый', 'вежливый'];
+    const correct = 0;
+    const picked = this.state.picked;
+    const checked = this.state.checked;
+    const base = 'border-width: 2px; border-style: solid; ';
+    const S = {
+      idle: base + 'border-color: rgba(26,26,26,.18); background: #fff; color: #1a1a1a; box-shadow: inset 0 -4px 0 0 rgba(26,26,26,.12);',
+      sel: base + 'border-color: #1cb0f6; background: #ddf4ff; color: #0c7c9c; box-shadow: inset 0 -4px 0 0 #1cb0f6;',
+      ok: base + 'border-color: #2b820f; background: #e3f6d3; color: #166534; box-shadow: inset 0 -4px 0 0 #2b820f;',
+      bad: base + 'border-color: #df2d2d; background: #ffdede; color: #c21b1b; box-shadow: inset 0 -4px 0 0 #df2d2d;',
+      dim: base + 'border-color: rgba(26,26,26,.12); background: #fff; color: rgba(26,26,26,.5); box-shadow: inset 0 -4px 0 0 rgba(26,26,26,.06);'
+    };
+    const options = texts.map((t, i) => {
+      let style = S.idle;
+      if (checked) style = i === correct ? S.ok : (i === picked ? S.bad : S.dim);
+      else if (i === picked) style = S.sel;
+      return { text: t, n: i + 1, style, pick: () => { if (!this.state.checked) this.setState({ picked: i }); } };
+    });
+    const isRight = checked && picked === correct;
+    return {
+      options,
+      done: checked ? 3 : 2,
+      progress: checked ? '25%' : '16.7%',
+      combo: isRight ? 4 : 3,
+      idle: !checked,
+      canCheck: !checked && picked !== null,
+      cantCheck: !checked && picked === null,
+      showCorrect: isRight,
+      showWrong: checked && picked !== correct,
+      check: () => { if (this.state.picked !== null) this.setState({ checked: true }); },
+      reset: () => this.setState({ picked: null, checked: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Твой уровень</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.muted{color:rgba(26,26,26,.68)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:54px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:#2b820f;--e:#1c540a;--l:#fff}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes stamp{0%{transform:scale(2.4) rotate(-20deg);opacity:0}60%{transform:scale(.92) rotate(4deg);opacity:1}100%{transform:none;opacity:1}}
+.stamp{animation:stamp .5s 1.9s cubic-bezier(.3,.7,.4,1) both}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bob{animation:bob 2.2s ease-in-out infinite}
+@keyframes burst{0%{transform:translate(0,0) rotate(0) scale(.2);opacity:1}75%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1);opacity:0}}
+.cf{position:absolute;left:0;top:0;animation:burst var(--t) var(--d) cubic-bezier(.1,.7,.3,1) both}
+.seg{flex:1;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:900 13px/1 Unbounded,sans-serif;transition:background .2s,color .2s}
+.can{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:15px;line-height:1.35;animation:rise .35s var(--d) both}
+.ck{width:22px;height:22px;border-radius:99px;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px}
+</style>
+</helmet>
+<div class="app">
+  <div style="position: relative; text-align: center; padding-top: 60px">
+    <div style="position: absolute; left: 50%; top: 150px; width: 0; height: 0">
+      <sc-for list="{{cf}}" as="c" hint-placeholder-count="0"><span class="cf" style="{{c.style}}"></span></sc-for>
+    </div>
+    <div class="bob" style="display: inline-block"><svg viewBox="0 0 128 150" width="96" height="112" aria-hidden="true"><ellipse cx="64" cy="128" rx="34" ry="9" fill="rgba(0,0,0,0.06)"></ellipse><path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="#2b820f"></path><path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="#e3f6d3" opacity="0.9"></path><path d="M50 62q4-5 8 0M62 62q4-5 8 0" fill="none" stroke="#1c540a" stroke-width="2.6" stroke-linecap="round"></path><path d="M52 70q8 10 16 0z" fill="#1c540a"></path><ellipse cx="90" cy="100" rx="19" ry="12" fill="#ff9500" transform="rotate(-28 90 100)"></ellipse><ellipse cx="94" cy="96" rx="8" ry="5" fill="#ffc700" transform="rotate(-28 94 96)" opacity="0.85"></ellipse></svg></div>
+    <div class="rise muted" style="font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-top: 10px">Мини-тест пройден</div>
+    <h1 class="disp rise" style="margin: 6px 24px 0; font-size: 24px; line-height: 1.2; font-weight: 900; animation-delay: .1s">Твой уровень</h1>
+    <div class="stamp disp" style="display: inline-block; margin-top: 10px; padding: 8px 20px; border-radius: 18px; background: #2b820f; color: #fff; font-size: 44px; font-weight: 900; box-shadow: inset 0 -6px 0 0 #1c540a">B1</div>
+  </div>
+
+  <div class="rise" style="margin: 20px 20px 0; animation-delay: .3s" role="img" aria-label="Шкала уровней от A1 до C2, твой уровень B1">
+    <div style="display: flex; gap: 6px">
+      <sc-for list="{{lv}}" as="l" hint-placeholder-count="6"><span class="seg" style="{{l.style}}">{{l.t}}</span></sc-for>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-top: 6px" class="muted"><span>новичок</span><span>свободно</span></div>
+  </div>
+
+  <div class="rise" style="margin: 16px 20px 0; padding: 6px 16px; border-radius: 20px; background: #fff; border: 2px solid rgba(26,26,26,.12); animation-delay: 2.1s">
+    <div class="can" style="--d: 2.2s; border-bottom: 2px solid #f0ebe2"><span class="ck" style="background: #2b820f"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M5 12l5 5L20 7" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Читаешь адаптированные книги и понимаешь суть</div>
+    <div class="can" style="--d: 2.3s; border-bottom: 2px solid #f0ebe2"><span class="ck" style="background: #2b820f"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M5 12l5 5L20 7" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Знаешь примерно 2 000 слов</div>
+    <div class="can" style="--d: 2.4s"><span class="ck" style="background: #fff1b8"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="#7a5900" stroke-width="3.4" stroke-linecap="round"></path></svg></span>Подтянем: фразовые глаголы и времена</div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; animation-delay: 2.6s">
+    <a class="btn b-leaf" href="Goal-pick.dc.html">Подобрать тексты под B1</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.t0 = Date.now();
+    this.iv = setInterval(() => { this.forceUpdate(); if (Date.now() - this.t0 > 2000) clearInterval(this.iv); }, 40);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const el = this.t0 ? Date.now() - this.t0 : 0;
+    const names = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    const step = Math.min(2, Math.floor(Math.max(0, el - 500) / 400));
+    const lit = el >= 500;
+    const lv = names.map((t, k) => {
+      let style = 'background: #ece6db; color: rgba(26,26,26,.45)';
+      if (lit && k < step) style = 'background: #cdeeb0; color: #166534';
+      if (lit && k === step) style = 'background: #2b820f; color: #fff; box-shadow: inset 0 -4px 0 0 #1c540a';
+      return { t, style };
+    });
+    let s = 13;
+    const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const cols = ['#2b820f', '#ffc700', '#1cb0f6', '#ff9500', '#cdeeb0'];
+    const cf = [];
+    for (let i = 0; i < 26; i++) {
+      const a = r() * Math.PI * 2;
+      const d = 100 + r() * 120;
+      const w = 6 + Math.round(r() * 5);
+      cf.push({ style: 'width:' + w + 'px;height:' + (r() < .5 ? w : w * 2) + 'px;background:' + cols[i % 5] + ';border-radius:' + (r() < .3 ? '99px' : '2px') + ';--dx:' + Math.round(Math.cos(a) * d) + 'px;--dy:' + Math.round(Math.sin(a) * d) + 'px;--r:' + Math.round(r() * 720 - 360) + 'deg;--d:' + (2 + r() * 0.15).toFixed(2) + 's;--t:' + (1.1 + r() * 0.6).toFixed(2) + 's' });
+    }
+    return { lv, cf };
+  }
+}
+</script>
+</body>
+</html>
