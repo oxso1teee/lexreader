@@ -6,6 +6,7 @@ import { getPlan } from "@/lib/subscription";
 import { resolveOnboardingUrl } from "@/lib/onboarding/resolve";
 import PostHogProvider from "../posthog-provider";
 import AppShell from "@/components/product/app-shell/app-shell";
+import { MomentProvider } from "@/components/product/moments/moment-provider";
 
 const PLAN_LABELS: Record<string, string> = {
   premium_monthly: "Premium",
@@ -46,7 +47,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <PostHogProvider userId={profile.id} />
-      <AppShell planLabel={PLAN_LABELS[plan] ?? null}>{children}</AppShell>
+      <MomentProvider>
+        <AppShell planLabel={PLAN_LABELS[plan] ?? null}>{children}</AppShell>
+      </MomentProvider>
     </>
   );
 }

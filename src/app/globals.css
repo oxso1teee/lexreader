@@ -5,6 +5,7 @@
 @import "../styles/mascot.css";
 @import "../styles/cover.css";
 @import "../styles/reader.css";
+@import "../styles/moments.css";
 
 /* Ручной переключатель темы (раздел B файла 10): src/app/theme-init-script.ts
    всегда резолвит системную/сохранённую тему в data-theme на <html> ещё до
