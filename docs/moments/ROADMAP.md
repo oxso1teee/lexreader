@@ -117,7 +117,53 @@ Main (Сегодня), Today-evening (стрик под угрозой), Path (�
 сразу даёт видимый результат в приложении, а рискованная новая логика идёт
 отдельными миграциями.
 
+
+## Сверка: все 47 экранов v7 против приложения (2026-10-17)
+
+✅ сделан 1:1 · 🟡 есть в приложении, но в старом виде (переделать по макету) ·
+❌ нет совсем.
+
+| Экран | Статус | Где сейчас / что нужно |
+|---|---|---|
+| Goal-done | ✅ галерея | 1:1, сдвиг 0 px; в живом сценарии — этап 1 (нужен дневной XP) |
+| Streak-up | ✅ галерея | 1:1, сдвиг 0 px; в живом сценарии — этап 1 (нужна история дней) |
+| Main | 🟡 | `/home` — старая раскладка |
+| Today-evening | ❌ | вечернее состояние `/home` |
+| Path | 🟡 | `/learning-paths` — список, не карта |
+| Reader | 🟡 | `/read/[textId]` — без тоста «слово сохранено» из макета |
+| Progress | 🟡 | `/progress` — старая раскладка |
+| Result | 🟡 | `review/session-complete.tsx` — другой вид |
+| Lesson-choice | 🟡 | `review/multiple-choice-mode.tsx` — другой вид |
+| Lesson-build | ❌ | режима «собери фразу» нет |
+| Lesson-listen | ❌ | режима «на слух» нет |
+| Placement-result | 🟡 | `/onboarding/result` — другой вид |
+| Goal-pick | 🟡 | шаг `onboarding-wizard.tsx`, цель в словах |
+| Streak-commit | ❌ | |
+| First-text | ❌ | |
+| Splash | 🟡 | нативный сплэш Capacitor, веб-заставки нет |
+| Offline | 🟡 | `/offline` — другой вид |
+| Weekly-rank | 🟡 | `/leaderboard` — страница, не момент итогов |
+| Duel-invite | 🟡 | `/duel` — страница, не всплывающее окно |
+| Duel-won | 🟡 | `duel-room.tsx` — без экрана победы |
+| Twin-insight | 🟡 | `/language-twin` — страница, не момент |
+| Achievement | 🟡 | `progress/achievements-shelf.tsx` — полка, без экрана получения |
+| Notify-ask | 🟡 | время напоминания в настройках, без экрана-просьбы |
+| Lesson-start, Combo, Halfway, Mistakes, Quit-confirm, Perfect | ❌ | этап 3 |
+| Unit-done, Level-up, Word-mastered, Chapter-done, Review-due | ❌ | этапы 1 и 4 |
+| Streak-30, Perfect-week, Freeze-used, Earn-back, Streak-calendar, Friend-streak | ❌ | этап 2 (Friend-streak — этап 6) |
+| Daily-quests, Chest, Double-XP | ❌ | этап 5, новая механика |
+| Overtaken, Welcome-back, Rate-app, Week-recap | ❌ | этапы 6–7 |
+
+Итого: ✅ 2 · 🟡 19 · ❌ 26.
+
 ## Журнал
 
 - 2026-10-17: план, макеты v7 и эталонные скриншоты добавлены в репо.
 - 2026-10-17: этап 0 — фундамент и первые два экрана, PR открыт.
+- 2026-10-17: перепроверка. Обновлены 7 устаревших эталонов (Freeze-used,
+  Halfway, Offline, Overtaken, Quit-confirm, Streak-30, Streak-up), добавлены
+  эталоны открытых состояний (Chest--open, Rate-app--5-stars,
+  Week-recap--story-4). Исправлено в приложении: сдвиг вниз на 5–8 px
+  (line-height), рассинхрон гидрации счётчиков при reduced motion, ошибка
+  vibrate() до первого касания, нечитаемая кнопка и мутный круг стрика в
+  тёмной теме.

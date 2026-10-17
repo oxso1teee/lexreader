@@ -14,6 +14,9 @@
   background: var(--mo-bg, var(--background));
   color: var(--mo-fg, var(--foreground));
   font-family: var(--font-onest), system-ui, sans-serif;
+  /* Как в макетах: line-height normal, а не 1.5 из preflight — иначе
+     inline-block блоки (пламя, кольцо) уезжают вниз на 5–8px. */
+  line-height: normal;
   overscroll-behavior: contain;
 }
 
@@ -123,6 +126,8 @@
   100% { opacity: 0.55; transform: scale(1); }
 }
 .mo-glow { animation: mo-glow 0.8s 0.7s ease-out both; }
+.mo-glow-ember { background: #ffd9a3; }
+:root[data-theme="dark"] .mo-glow-ember { background: #5a3412; }
 
 @keyframes mo-ember {
   0% { transform: translate(0, 0) scale(1); opacity: 0; }

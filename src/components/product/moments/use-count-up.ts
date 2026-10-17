@@ -10,7 +10,12 @@ export function useCountUp(target: number, { delay = 0, duration = 1000 }: { del
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (reduce) return;
+    // Сервер не знает про reduced motion — рендерит 0. На клиенте сразу
+    // ставим итог следующим кадром, без анимации и без рассинхрона гидрации.
+    if (reduce) {
+      const id = requestAnimationFrame(() => setValue(target));
+      return () => cancelAnimationFrame(id);
+    }
     let raf = 0;
     const start = performance.now() + delay;
     const tick = (now: number) => {
@@ -22,7 +27,7 @@ export function useCountUp(target: number, { delay = 0, duration = 1000 }: { del
     return () => cancelAnimationFrame(raf);
   }, [target, delay, duration, reduce]);
 
-  return reduce ? target : value;
+  return value;
 }
 
 /** То же, но 0..1 — для колец и полос. */

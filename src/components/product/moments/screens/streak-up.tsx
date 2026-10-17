@@ -49,14 +49,14 @@ export function StreakUpScreen({
       onClose={onClose}
       footerDelay={1.9}
       footer={
-        <Button variant="ember" className="mo-cta" onClick={onClose} style={{ ["--btn-fill" as string]: "var(--ember-text)", ["--btn-edge" as string]: "#9a330a" }}>
+        <Button variant="ember" className="mo-cta" onClick={onClose} style={{ ["--btn-fill" as string]: "#c2410c", ["--btn-edge" as string]: "#9a330a", ["--btn-label" as string]: "#fff" }}>
           Продолжить
         </Button>
       }
     >
       <div style={{ textAlign: "center", paddingTop: 86 }}>
         <div style={{ position: "relative", display: "inline-block", width: 220, height: 200 }}>
-          <div className="mo-glow" aria-hidden="true" style={{ position: "absolute", left: 20, top: 30, width: 180, height: 180, borderRadius: 999, background: "#ffd9a3" }} />
+          <div className="mo-glow mo-glow-ember" aria-hidden="true" style={{ position: "absolute", left: 20, top: 30, width: 180, height: 180, borderRadius: 999 }} />
           {EMBERS.map((st, i) => (
             <span key={i} className="mo-em" style={st} aria-hidden="true" />
           ))}
