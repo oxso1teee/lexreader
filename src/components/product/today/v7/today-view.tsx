@@ -62,7 +62,7 @@ export default function TodayView(props: TodayViewProps) {
           {level ?? "Язык"}
         </Link>
         <div style={{ display: "flex", gap: 8 }}>
-          <Link href="/progress" className="td-chip td-streak" aria-label={`Стрик ${props.streak}`}>
+          <Link href="/streak" className="td-chip td-streak" aria-label={`Стрик ${props.streak}`}>
             <FlameIcon size={20} />
             {props.streak}
           </Link>

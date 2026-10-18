@@ -1,5 +1,6 @@
 import type { Moment, WeekdayMark } from "./types.ts";
 import { levelForXp, xpForLevel } from "../level.ts";
+import { STREAK_MILESTONES } from "../streak-engine.ts";
 
 // docs/moments/ROADMAP.md, этап 1 — чистая функция "что из этого набора
 // before/after-снимков стало Moment-ом". Не трогает Supabase сама: вызывающий
@@ -17,10 +18,21 @@ export interface CollectMomentsInput {
   /** null — addXp не вызывался в этом действии (нет XP-события). */
   xp: { before: XpCheckpoint; after: XpCheckpoint; goal: number; minutesHint: number } | null;
   /** null — touchStreak не вызывался / не нашёл профиль. */
-  streak: { before: number; after: number } | null;
-  /** Пн..Вс текущей ISO-недели по activity_days.goal_met — нужна для
-   *  Goal-done/Streak-up, даже если именно эти моменты в итоге не сработают. */
-  week: WeekdayMark[];
+  streak: {
+    before: number;
+    after: number;
+    usedFreeze: boolean;
+    repairStarted: boolean;
+    milestonesCrossed: readonly number[];
+    /** Заполнено только когда repairStarted. */
+    streakBeforeBreak: number | null;
+  } | null;
+  /** Пн..Вс текущей ISO-недели по activity_days.goal_met — для Goal-done. */
+  goalWeek: WeekdayMark[];
+  /** Пн..Вс по реальной активности + freeze_used (а не по цели дня) — для
+   *  Streak-up/Freeze-used: серию двигает любое занятие, не только то, что
+   *  добралось до цели в XP. */
+  streakWeek: WeekdayMark[];
   /** achievement_id новых (не ранее полученных) достижений, в порядке получения. */
   newAchievementIds: readonly string[];
   /** null — recomputeAndPersistLearningState не вызывался в этом действии. */
@@ -51,7 +63,7 @@ export function collectMoments(input: CollectMomentsInput): Moment[] {
         xpToday: after.today,
         xpGoal: goal,
         minutesHint,
-        week: input.week,
+        week: input.goalWeek,
       });
     }
 
@@ -69,13 +81,25 @@ export function collectMoments(input: CollectMomentsInput): Moment[] {
     }
   }
 
-  if (input.streak && input.streak.after > input.streak.before) {
-    moments.push({
-      kind: "streak_up",
-      id: `streak_up:${input.today}`,
-      streak: input.streak.after,
-      week: input.week,
-    });
+  // docs/moments/ROADMAP.md, этап 2 — streak_up/freeze_used/earn_back
+  // взаимоисключающие: один и тот же "рост серии" объясняется ровно одной
+  // историей. Earn-back показывается на САМОМ обрыве (repairStarted),
+  // Freeze-used — когда выручила заморозка, иначе (включая успешное
+  // восстановление — у него своего экрана нет) обычный streak_up.
+  if (input.streak) {
+    const s = input.streak;
+    if (s.repairStarted) {
+      moments.push({ kind: "earn_back", id: `earn_back:${input.today}`, streakBeforeBreak: s.streakBeforeBreak as number });
+    } else if (s.usedFreeze) {
+      moments.push({ kind: "freeze_used", id: `freeze_used:${input.today}`, streak: s.after, week: input.streakWeek });
+    } else if (s.after > s.before) {
+      moments.push({ kind: "streak_up", id: `streak_up:${input.today}`, streak: s.after, week: input.streakWeek });
+    }
+
+    for (const milestone of s.milestonesCrossed) {
+      const nextMilestone = STREAK_MILESTONES.find((m) => m > milestone) ?? null;
+      moments.push({ kind: "streak_milestone", id: `streak_milestone:${milestone}`, milestone, nextMilestone });
+    }
   }
 
   for (const achievementId of input.newAchievementIds) {

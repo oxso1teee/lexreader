@@ -19,6 +19,8 @@ import type { PracticeMode } from "@/lib/vocabulary/state-engine";
 import { buildContextGapBlank } from "@/lib/vocabulary/context-gap";
 import { collectMoments, type CollectMomentsInput } from "@/lib/moments/collect";
 import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
+import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
+import { awardPerfectWeekIfEligible } from "@/lib/moments/perfect-week-award";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
 
@@ -238,11 +240,13 @@ export async function reviewWord(
   revalidatePath("/brain");
   revalidatePath("/progress");
 
-  // docs/moments/ROADMAP.md, этап 1 — собираем снимки для collectMoments()
-  // только когда они реально нужны: неделя (goal_done/streak_up) стоит
-  // одного лишнего запроса на почти каждое ревью, но слова-мастер — только
-  // на самом переходе в "maintenance", не на каждой карточке.
-  const week = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
+  // docs/moments/ROADMAP.md, этап 1/2 — собираем снимки для collectMoments()
+  // только когда они реально нужны: недели (goal_done/streak_up) стоят двух
+  // лишних запросов на почти каждое ревью, но слова-мастер — только на самом
+  // переходе в "maintenance", не на каждой карточке.
+  const goalWeek = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
+  const streakWeek = streakTransition ? await fetchStreakWeekMarks(supabase, user.id) : [];
+  const perfectWeek = xpResult ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
 
   let wordMastered: CollectMomentsInput["wordMastered"] = null;
   if (learningTransition && learningTransition.before !== "maintenance" && learningTransition.after === "maintenance") {
@@ -281,13 +285,14 @@ export async function reviewWord(
         }
       : null,
     streak: streakTransition,
-    week,
+    goalWeek,
+    streakWeek,
     newAchievementIds,
     wordMastered,
     today: todayUtcIso(),
   });
 
-  return { reviewLogId: logRow?.id ?? null, moments, xpAwarded: xpResult ? 1 : 0, isNewCard: wasNew };
+  return { reviewLogId: logRow?.id ?? null, moments: [...moments, ...perfectWeek.moments], xpAwarded: xpResult ? 1 : 0, isNewCard: wasNew };
 }
 
 // docs/moments/mockups/Perfect.dc.html — "+10 XP бонус за чистое занятие".
@@ -305,7 +310,7 @@ export async function awardPerfectBonus(cardCount: number, durationSec: number):
   const xpResult = await addXp(supabase, user.id, PERFECT_SESSION_BONUS_XP);
   if (!xpResult) return { moments: [] };
 
-  const week = await fetchGoalWeekMarks(supabase, user.id);
+  const goalWeek = await fetchGoalWeekMarks(supabase, user.id);
   // Бонус — это тоже XP: сам способен довести до цели дня или уровня, те же
   // правила, что и у обычного addXp в reviewWord выше.
   const extraMoments = collectMoments({
@@ -316,7 +321,8 @@ export async function awardPerfectBonus(cardCount: number, durationSec: number):
       minutesHint: minutesHintForGoal(xpResult.goal),
     },
     streak: null,
-    week,
+    goalWeek,
+    streakWeek: [],
     newAchievementIds: [],
     wordMastered: null,
     today: todayUtcIso(),

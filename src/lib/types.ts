@@ -13,6 +13,13 @@ export interface Profile {
   last_active_date: string | null;
   streak_freeze_available: boolean;
   streak_freeze_week: string | null;
+  /** docs/moments/ROADMAP.md, этап 2 — Earn-back: оба NOT NULL ровно когда
+   *  восстановление серии активно (src/lib/streak-engine.ts). */
+  streak_before_break: number | null;
+  streak_repair_until: string | null;
+  /** Понедельник ISO-недели, за которую уже начислен бонус Perfect-week —
+   *  сторож от повторного начисления. */
+  perfect_week_awarded_week: string | null;
   review_best_session_count: number;
   completed_first_win: boolean;
   preferred_notify_hour: number | null;
