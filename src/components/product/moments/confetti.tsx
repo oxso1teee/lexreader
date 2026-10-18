@@ -16,6 +16,9 @@ export interface ConfettiProps {
   delay?: number;
   /** Ограничить сектор разлёта (радианы от, до). По умолчанию — круг. */
   arc?: [number, number];
+  /** "leaf" — Word-mastered.dc.html: одинаковые 14px «листья», не случайные
+   *  квадраты/кружки. */
+  shape?: "default" | "leaf";
 }
 
 const DEFAULT_COLORS = ["var(--sun)", "var(--leaf)", "var(--sky)", "var(--ember)", "var(--danger)"];
@@ -28,6 +31,7 @@ export function confettiPieces({
   fall = 40,
   delay = 0,
   arc = [0, Math.PI * 2],
+  shape = "default",
 }: ConfettiProps): CSSProperties[] {
   let s = seed;
   const r = () => {
@@ -40,10 +44,10 @@ export function confettiPieces({
     const d = reach[0] + r() * reach[1];
     const w = 6 + Math.round(r() * 6);
     pieces.push({
-      width: w,
-      height: r() < 0.5 ? w : w * 2,
+      width: shape === "leaf" ? 14 : w,
+      height: shape === "leaf" ? 14 : r() < 0.5 ? w : w * 2,
       background: colors[i % colors.length],
-      borderRadius: r() < 0.3 ? 99 : 2,
+      borderRadius: shape === "leaf" ? "0 70% 0 70%" : r() < 0.3 ? 99 : 2,
       ["--dx" as string]: `${Math.round(Math.cos(a) * d)}px`,
       ["--dy" as string]: `${Math.round(Math.sin(a) * d + fall)}px`,
       ["--r" as string]: `${Math.round(r() * 720 - 360)}deg`,

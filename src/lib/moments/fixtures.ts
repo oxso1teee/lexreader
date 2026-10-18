@@ -18,4 +18,33 @@ export const MOMENT_FIXTURES: Record<string, Moment> = {
     week: ["done", "done", "done", "today", "empty", "empty", "empty"],
     friend: { name: "Аня", initial: "А", sharedStreak: 9 },
   },
+  Perfect: {
+    kind: "perfect",
+    id: "fixture-perfect",
+    cardCount: 12,
+    durationSec: 192,
+    bonusXp: 10,
+  },
+  "Level-up": {
+    kind: "level_up",
+    id: "fixture-level-up",
+    level: 8,
+    totalXp: 1500,
+    xpIntoLevel: 40,
+    xpForNextLevel: 100,
+  },
+  Achievement: {
+    kind: "achievement",
+    id: "fixture-achievement",
+    achievementId: "first_book",
+  },
+  "Word-mastered": {
+    kind: "word_mastered",
+    id: "fixture-word-mastered",
+    front: "reluctant",
+    back: "неохотный",
+    timesSeen: 7,
+    timesCorrect: 5,
+    totalMastered: 843,
+  },
 };

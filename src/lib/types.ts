@@ -4,6 +4,10 @@ export interface Profile {
   native_language: string;
   level: string | null;
   daily_word_goal: number;
+  /** docs/moments/ROADMAP.md, этап 1 — цель дня в XP (20/50/80/120 =
+   *  5/10/15/20 минут занятия), заменяет daily_word_goal как основную
+   *  метрику на главном экране; daily_word_goal сохранён для совместимости. */
+  daily_xp_goal: number;
   streak_current: number;
   streak_longest: number;
   last_active_date: string | null;

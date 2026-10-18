@@ -6,6 +6,7 @@ import RegisterServiceWorker from "./register-service-worker";
 import NativeBridge from "./native-bridge";
 import { THEME_INIT_SCRIPT } from "./theme-init-script";
 import { siteUrl } from "@/lib/site-url";
+import { MomentProvider } from "@/components/product/moments/moment-provider";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -91,7 +92,12 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <RegisterServiceWorker />
         <NativeBridge />
-        {children}
+        {/* docs/moments/ROADMAP.md, этап 1 — /read и /watch живут вне
+            (app)/layout.tsx (не в той же route group), но finishReading()
+            тоже возвращает moments[] (сессия чтения) — провайдер поднят на
+            уровень выше (app)/layout.tsx раньше его держал, чтобы оба дерева
+            маршрутов делили одну очередь, а не плодили вторую копию. */}
+        <MomentProvider>{children}</MomentProvider>
       </body>
     </html>
   );

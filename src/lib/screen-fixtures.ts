@@ -10,8 +10,8 @@ export const TODAY_FIXTURE: TodayViewProps = {
   xp: 1240,
   greeting: "Доброе утро",
   firstName: "Сергей",
-  wordsToday: 30,
-  goal: 50,
+  xpToday: 30,
+  xpGoal: 50,
   dueCount: 18,
   marks: ["done", "done", "done", "today", "future", "future", "future"],
   hero: {

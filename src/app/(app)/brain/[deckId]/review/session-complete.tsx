@@ -3,44 +3,23 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import { Check, Flame, Trophy } from "lucide-react";
-import { getCurrentStreak, getLanguageTwinUpdateAction, type LanguageTwinSessionUpdate } from "./actions";
+import { Flame, Trophy, Zap } from "lucide-react";
+import { getLanguageTwinUpdateAction, type LanguageTwinSessionUpdate } from "./actions";
 import { completeMissionAction } from "@/app/(app)/missions/actions";
 import { track } from "@/lib/posthog-client";
 import { StatusBadge, TrendIndicator, CategoryBadge } from "@/components/product/language-twin/badges";
 import type { PatternCategory, PatternStatus, Trend } from "@/lib/language-twin/types";
 import { cardClassName } from "@/components/ui/card";
+import { ReadingCompanion } from "@/components/product/mascot/reading-companion";
+import { useMoments } from "@/components/product/moments/moment-provider";
+import type { Moment } from "@/lib/moments/types";
 
-// docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел B.1 —
-// первая установка motion (framer-motion) в проекте. Same
-// prefers-reduced-motion discipline as globals.css's existing flip-reveal
-// keyframe (useReducedMotion() is motion's own hook for the identical media
-// query) — purely decorative, no layout/timing dependency for anything
-// below (the "К практике" / mission-result links are interactive
-// immediately regardless of whether this plays).
-//
-// redesign/duolingo-flat phase 9 — вместо 4 эмодзи плоские конфетти:
-// прямоугольники/кружки сплошными цветами палитры (без градиентов), разлёт
-// от бейджа-галочки в стороны, короткий подскок вверх и падение вниз с
-// вращением. Траектории заданы константами, а не Math.random() — рендер
-// остаётся чистым и одинаковым между SSR/CSR.
-const CONFETTI: { color: string; w: number; h: number; round: boolean; x: number; lift: number; fall: number; spin: number }[] = [
-  { color: "var(--leaf)", w: 10, h: 6, round: false, x: -130, lift: -70, fall: 150, spin: -420 },
-  { color: "var(--sky)", w: 8, h: 8, round: true, x: -95, lift: -95, fall: 120, spin: 300 },
-  { color: "var(--ember)", w: 6, h: 12, round: false, x: -60, lift: -80, fall: 175, spin: -260 },
-  { color: "var(--sun)", w: 9, h: 9, round: true, x: -25, lift: -105, fall: 135, spin: 380 },
-  { color: "var(--danger)", w: 11, h: 6, round: false, x: 10, lift: -90, fall: 160, spin: -340 },
-  { color: "var(--leaf)", w: 7, h: 7, round: true, x: 40, lift: -100, fall: 125, spin: 260 },
-  { color: "var(--sky)", w: 6, h: 12, round: false, x: 75, lift: -75, fall: 170, spin: -300 },
-  { color: "var(--ember)", w: 8, h: 8, round: true, x: 105, lift: -85, fall: 140, spin: 420 },
-  { color: "var(--sun)", w: 10, h: 6, round: false, x: 140, lift: -65, fall: 155, spin: -380 },
-  { color: "var(--danger)", w: 7, h: 7, round: true, x: -150, lift: -55, fall: 110, spin: 240 },
-];
+// docs/moments/mockups/Result.dc.html — итог занятия, этап 1
+// (docs/moments/ROADMAP.md). Порядок показа после занятия: Result (этот
+// экран) → Perfect → Goal-done → Streak-up → Level-up/Achievement →
+// Word-mastered — остальные экраны приходят через queuedMoments и
+// показываются MomentProvider'ом после нажатия кнопки ниже.
 
-// Review mockup alignment — правильное русское склонение "слово" для
-// подзаголовка ("Ты повторил N слов/слово/слова за сессию"), тот же приём,
-// что materialsCountLabel/formatPartsCount уже применяют для похожих счётчиков
-// в library-item.ts/library-item-card.tsx.
 function wordCountLabel(count: number): string {
   const mod10 = count % 10;
   const mod100 = count % 100;
@@ -51,6 +30,20 @@ function wordCountLabel(count: number): string {
   return `${count} ${word}`;
 }
 
+function daysWord(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "день";
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return "дня";
+  return "дней";
+}
+
+function formatDuration(totalSec: number): string {
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export default function SessionComplete({
   count,
   newRecord = false,
@@ -58,6 +51,11 @@ export default function SessionComplete({
   missionCorrectCount = 0,
   missionIncorrectCount = 0,
   cards = [],
+  xpEarned = 0,
+  newWordsCount = 0,
+  durationSec = 0,
+  streakLongest = 0,
+  queuedMoments = [],
 }: {
   count: number;
   newRecord?: boolean;
@@ -73,14 +71,22 @@ export default function SessionComplete({
   // review-session.tsx (прямой родитель, cards уже было в его состоянии).
   // front — язык изучения, back — родной (см. speak() в review-session.tsx).
   cards?: { front: string; back: string }[];
+  /** Сумма реально начисленного addXp() за сессию (review-session.tsx). */
+  xpEarned?: number;
+  /** Карточек, пройденных в первый раз (wasNew), за эту сессию. */
+  newWordsCount?: number;
+  durationSec?: number;
+  streakLongest?: number;
+  /** Собранные за сессию moments (reviewWord + бонус за Perfect) — этот
+   *  экран их только передаёт в очередь по кнопке, сам не решает, что было. */
+  queuedMoments?: Moment[];
 }) {
-  const [streak, setStreak] = useState<number | null>(null);
   const [twinUpdate, setTwinUpdate] = useState<LanguageTwinSessionUpdate | null>(null);
   const [missionDone, setMissionDone] = useState(false);
   const reduceMotion = useReducedMotion();
+  const { pushMoments } = useMoments();
 
   useEffect(() => {
-    getCurrentStreak().then(setStreak);
     if (missionId) {
       completeMissionAction(missionId, { correct: missionCorrectCount, incorrect: missionIncorrectCount }).then(
         (result) => {
@@ -108,67 +114,80 @@ export default function SessionComplete({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const totalGraded = missionCorrectCount + missionIncorrectCount;
+  const accuracyPercent = totalGraded > 0 ? Math.round((missionCorrectCount / totalGraded) * 100) : 100;
+  const streakUpMoment = queuedMoments.find((m): m is Moment & { kind: "streak_up" } => m.kind === "streak_up");
+
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center gap-3 px-5 text-center">
-      {/* Review mockup alignment — бейдж-кружок (новый элемент, референс не
-          описывал ничего похожего в прежней версии этого экрана). Check из
-          lucide-react — отдельная от круга галочка, а не готовая
-          комбинированная иконка "check-in-circle" (референс рисует их как
-          два слоя: круг с бордером + иконка внутри). */}
-      <div className="relative">
-        <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full border-2 border-[var(--color-forest)] bg-[var(--color-forest-tint)]">
-          <Check aria-hidden="true" className="h-10 w-10 text-[var(--color-forest)]" strokeWidth={2.5} />
-        </div>
-        {!reduceMotion && (
-          <div aria-hidden="true" className="pointer-events-none absolute top-1/2 left-1/2">
-            {CONFETTI.map((p, i) => (
-              <motion.span
-                key={i}
-                className="absolute block"
-                style={{
-                  width: p.w,
-                  height: p.h,
-                  left: -p.w / 2,
-                  top: -p.h / 2,
-                  borderRadius: p.round ? 999 : 2,
-                  backgroundColor: p.color,
-                }}
-                initial={{ opacity: 0, x: 0, y: 0, rotate: 0 }}
-                animate={{ opacity: [0, 1, 1, 0], x: p.x, y: [0, p.lift, p.fall], rotate: p.spin }}
-                transition={{ duration: 1.4, delay: i * 0.03, ease: "easeOut" }}
-              />
-            ))}
-          </div>
-        )}
+      <div style={{ marginTop: -24 }}>
+        <ReadingCompanion size={120} withHalo={false} autoExcite={!reduceMotion} />
       </div>
-      {/* Playfair Display сознательно не подключаем здесь — тот же
-          компромисс, что и у контекст-предложения в review-session.tsx:
-          "use client"-компонент, next/font/google в таком контексте не
-          задокументирован явно, а протянуть шрифт через layout.tsx/
-          review-mode-switcher.tsx — вне границ задачи (обе эти правки
-          запрещены). Курсив+bold на существующем sans-стеке — тот же
-          визуальный вес без нового font-loading. */}
-      <motion.p
+      <motion.h1
         initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 320, damping: 18 }}
-        className="text-[20px] font-bold italic"
+        className="font-display text-[22px] font-bold text-[var(--sun-text)]"
       >
-        Сессия завершена
-      </motion.p>
-      <p className="text-[12px] text-[var(--text-secondary)]">Ты повторил {wordCountLabel(count)} за сессию</p>
+        Занятие завершено!
+      </motion.h1>
+      <p className="text-[13px] text-[var(--text-secondary)]">
+        {newWordsCount > 0
+          ? `${wordCountLabel(newWordsCount)} ушли в повторение`
+          : `Ты повторил ${wordCountLabel(count)}`}
+      </p>
       {newRecord && (
         <p className="flex items-center gap-1.5 font-medium text-[var(--color-forest-text)]">
           <Trophy aria-hidden="true" className="h-4 w-4" />
           Новый личный рекорд сессии!
         </p>
       )}
-      {streak !== null && (
-        <p className="flex items-center gap-1 text-[var(--text-secondary)]">
-          Стрик: {streak}
-          <Flame aria-hidden="true" className="h-4 w-4 text-[var(--ember)]" />
-        </p>
+
+      {/* docs/moments/mockups/Result.dc.html — три плитки реальной статистики
+          сессии: Опыт (сумма addXp), Точность (из тэлли), Время (клиентский
+          таймер review-session.tsx). */}
+      <div className="mt-1 grid w-full max-w-sm grid-cols-3 gap-2">
+        <div className="overflow-hidden rounded-2xl border-2 border-[var(--sun)] bg-[var(--surface)] text-center">
+          <div className="bg-[var(--sun)] py-1.5 text-[11px] font-bold tracking-wide text-foreground uppercase">Опыт</div>
+          <div className="flex items-center justify-center gap-1 py-3 font-display text-lg font-bold text-[var(--sun-text)]">
+            <Zap aria-hidden="true" className="h-4 w-4" />
+            {xpEarned}
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border-2 border-[var(--leaf)] bg-[var(--surface)] text-center">
+          <div className="bg-[var(--leaf)] py-1.5 text-[11px] font-bold tracking-wide text-white uppercase">Точность</div>
+          <div className="py-3 font-display text-lg font-bold text-[var(--color-forest-text)]">{accuracyPercent}%</div>
+        </div>
+        <div className="overflow-hidden rounded-2xl border-2 border-[var(--sky)] bg-[var(--surface)] text-center">
+          <div className="bg-[var(--sky)] py-1.5 text-[11px] font-bold tracking-wide text-white uppercase">Время</div>
+          <div className="py-3 font-display text-lg font-bold text-[var(--sky-text)]">{formatDuration(durationSec)}</div>
+        </div>
+      </div>
+
+      {/* Только когда серия действительно выросла за эту сессию (streak_up
+          среди собранных moments) — не декоративная карточка "на всякий
+          случай", как и остальные условные блоки на этом экране. */}
+      {streakUpMoment && (
+        <div
+          className={cardClassName({
+            className: "mt-1 flex w-full max-w-sm items-center gap-3 p-3 text-left",
+          })}
+          style={{ background: "var(--ember-tint)", borderColor: "var(--ember)" }}
+        >
+          <Flame aria-hidden="true" className="h-9 w-9 flex-none text-[var(--ember)]" />
+          <div>
+            <p className="font-display text-base font-bold text-[var(--ember-text)]">
+              {streakUpMoment.streak} {daysWord(streakUpMoment.streak)} подряд
+            </p>
+            <p className="text-sm text-[var(--ember-text)]">
+              {streakLongest > streakUpMoment.streak
+                ? `Стрик продлён. До рекорда ${streakLongest - streakUpMoment.streak} ${daysWord(streakLongest - streakUpMoment.streak)}`
+                : "Стрик продлён. Новый личный рекорд!"}
+            </p>
+          </div>
+        </div>
       )}
+
       {/* Review mockup alignment — список слов сессии (новый элемент). Все
           переданные cards — то есть все реально оценённые в этой сессии
           карточки (review-session.tsx передаёт ровно свой массив cards),
@@ -199,19 +218,23 @@ export default function SessionComplete({
       {missionId && missionDone && (
         <Link
           href={`/missions/${missionId}`}
-          className="mt-2 rounded-full border border-[var(--border-strong)] px-5 py-3 font-medium hover:border-[var(--sky)]"
+          className="mt-2 rounded-full border border-[var(--border-strong)] px-5 py-3 font-medium text-[var(--text-secondary)] hover:border-[var(--sky)]"
         >
           Посмотреть результат миссии →
         </Link>
       )}
-      {/* Review mockup alignment — forest вместо чёрно-белого CTA, тот же
-          дрейф-от-бренда паттерн, зачищенный на каждом экране этой серии;
-          референс явно этот элемент не описывает, но конфликта тоже нет. */}
+      {/* docs/moments/mockups/Result.dc.html — "Продолжить": собранные за
+          сессию moments уходят в общую очередь (MomentProvider, корневой
+          layout) прямо здесь, до навигации — очередь переживает переход на
+          /brain (портал рендерится на уровне layout, не этой страницы) и
+          доигрывает Perfect/Goal-done/Streak-up/... поверх уже открытого
+          /brain, как и задумано порядком показа в ROADMAP.md. */}
       <Link
         href="/brain"
+        onClick={() => pushMoments(queuedMoments)}
         className="mt-4 rounded-full bg-[var(--color-forest)] px-5 py-3 font-medium text-white"
       >
-        К практике
+        Продолжить
       </Link>
     </div>
   );

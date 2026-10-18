@@ -17,13 +17,22 @@ const EXCITED_MS = 800;
 export function ReadingCompanion({
   size = 160,
   withHalo = true,
+  // docs/moments/mockups/Result.dc.html — итог занятия показывает тот же
+  // маскот с разлетающимися искрами сразу при появлении экрана, без
+  // наведения/клика (которые остаются основным способом на остальных
+  // экранах, где компонент уже используется).
+  autoExcite = false,
   className,
 }: {
   size?: number;
   withHalo?: boolean;
+  autoExcite?: boolean;
   className?: string;
 }) {
-  const [excited, setExcited] = useState(false);
+  // autoExcite — начальное состояние, не синхронизация через эффект: это
+  // разовый триггер при маунте (Result.dc.html), не подписка на внешние
+  // изменения пропа.
+  const [excited, setExcited] = useState(autoExcite);
 
   useEffect(() => {
     if (!excited) return;

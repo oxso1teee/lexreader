@@ -95,7 +95,7 @@ export default async function HomePage() {
     missionWeekStats,
     { data: activitySessions },
     { data: activityReviews },
-    { count: newWordsToday },
+    { data: activityDayToday },
     activePathState,
   ] = await Promise.all([
     getDueCount(supabase, profile.id, profile.target_language),
@@ -127,12 +127,9 @@ export default async function HomePage() {
       .eq("flashcards.owner_id", profile.id)
       .eq("flashcards.language", profile.target_language)
       .gte("reviewed_at", sevenDaysAgo),
-    supabase
-      .from("vocabulary_items")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", profile.id)
-      .eq("language", profile.target_language)
-      .gte("created_at", todayStartUtc()),
+    // docs/moments/ROADMAP.md, этап 1 — плитка цели дня теперь в XP
+    // (activity_days), не в новых словах (vocabulary_items).
+    supabase.from("activity_days").select("xp").eq("user_id", profile.id).eq("day", todayStartUtc().slice(0, 10)).maybeSingle(),
     getActivePathStateAction(),
   ]);
 
@@ -287,8 +284,8 @@ export default async function HomePage() {
     ...(activityReviews ?? []).map((r) => isoDate(r.reviewed_at)),
   ];
   const marks = weekMarks(activeDates);
-  const wordsToday = newWordsToday ?? 0;
-  const goal = profile.daily_word_goal;
+  const xpToday = activityDayToday?.xp ?? 0;
+  const xpGoal = profile.daily_xp_goal;
   const langCode = profile.target_language.slice(0, 2).toUpperCase();
   const level = profile.level ?? profile.self_reported_cefr;
   void readingMinutesToday;
@@ -315,8 +312,8 @@ export default async function HomePage() {
       xp={profile.xp}
       greeting={greeting}
       firstName={firstName}
-      wordsToday={wordsToday}
-      goal={goal}
+      xpToday={xpToday}
+      xpGoal={xpGoal}
       dueCount={dueCount}
       marks={marks}
       hero={{

@@ -24,13 +24,68 @@ export interface StreakUpMoment {
   friend?: { name: string; initial: string; sharedStreak: number } | null;
 }
 
-export type Moment = GoalDoneMoment | StreakUpMoment;
+// Этап 1 (docs/moments/ROADMAP.md) — итог занятия/чтения: без ошибок, новый
+// уровень, достижение, слово выучено.
+export interface PerfectMoment {
+  kind: "perfect";
+  id: string;
+  /** Карточек в сессии — все с первой попытки (grade 2 или 3). */
+  cardCount: number;
+  durationSec: number;
+  /** Реально начисленный бонус (addXp), не декоративное число. */
+  bonusXp: number;
+}
+
+export interface LevelUpMoment {
+  kind: "level_up";
+  id: string;
+  level: number;
+  totalXp: number;
+  xpIntoLevel: number;
+  xpForNextLevel: number;
+}
+
+// achievementId — ключ в src/lib/achievements.ts ACHIEVEMENTS; экран сам
+// смотрит там title/description/icon, а не дублирует их здесь — один
+// источник правды, та же схема, что у AchievementsShelf.
+export interface AchievementMoment {
+  kind: "achievement";
+  id: string;
+  achievementId: string;
+}
+
+export interface WordMasteredMoment {
+  kind: "word_mastered";
+  id: string;
+  front: string;
+  back: string;
+  /** Всего ревью этой карточки (review_log). */
+  timesSeen: number;
+  /** Из них с оценкой "Помню"/"Легко". */
+  timesCorrect: number;
+  /** Сколько слов этого языка у пользователя сейчас в learning_state="maintenance". */
+  totalMastered: number;
+}
+
+export type Moment =
+  | GoalDoneMoment
+  | StreakUpMoment
+  | PerfectMoment
+  | LevelUpMoment
+  | AchievementMoment
+  | WordMasteredMoment;
 export type MomentKind = Moment["kind"];
 
-/** Чем выше, тем раньше показываем. Праздник цели — до стрика (как в макете). */
+// Порядок показа после занятия (ROADMAP, этап 1): Result (не момент — сам
+// экран итога) → Perfect → Goal-done → Streak-up → Level-up/Achievement →
+// Word-mastered. Чем выше число, тем раньше показываем.
 export const MOMENT_PRIORITY: Record<MomentKind, number> = {
+  perfect: 60,
   goal_done: 50,
   streak_up: 40,
+  level_up: 30,
+  achievement: 30,
+  word_mastered: 20,
 };
 
 /** Больше подряд не показываем — остальные подождут следующего действия. */

@@ -4,7 +4,15 @@ import { useActionState, useEffect, useRef, useState, useSyncExternalStore, useT
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, BookmarkPlus, Check, Flame, Pencil, Star, Volume2, X } from "lucide-react";
-import { reviewWord, undoLastGrade, sendCardToNotebook, updateReviewBest, getCurrentStreak } from "./actions";
+import {
+  reviewWord,
+  undoLastGrade,
+  sendCardToNotebook,
+  updateReviewBest,
+  getCurrentStreak,
+  awardPerfectBonus,
+  getStreakInfo,
+} from "./actions";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
 import { reviewFsrsCard, type FsrsStateRow } from "@/lib/fsrs";
@@ -13,6 +21,7 @@ import { loadReviewSession, saveReviewSession, clearReviewSession } from "@/lib/
 import SessionComplete from "./session-complete";
 import { Button } from "@/components/ui/button";
 import { cardClassName } from "@/components/ui/card";
+import type { Moment } from "@/lib/moments/types";
 
 export interface ReviewCard {
   flashcardId: string;
@@ -181,6 +190,23 @@ export default function ReviewSession({
     grade: 0 | 1 | 2 | 3;
   } | null>(null);
   const [isUndoing, setIsUndoing] = useState(false);
+  // docs/moments/ROADMAP.md, этап 1 — Result (session-complete.tsx) считает
+  // "Опыт"/"N новых слов" по тому, что реально произошло за сессию, не по
+  // предположениям (count*1 XP и т.п.): каждый reviewWord() возвращает свой
+  // честный вклад, здесь просто накапливается. moments — очередь всплывающих
+  // экранов, собранная со всех карточек сессии (+ бонус за Perfect), которую
+  // Result отправит в MomentProvider по нажатию своей кнопки.
+  const sessionStartRef = useRef(Date.now());
+  const momentsRef = useRef<Moment[]>([]);
+  const xpEarnedRef = useRef(0);
+  const newWordsRef = useRef(0);
+  const [sessionResult, setSessionResult] = useState<{
+    moments: Moment[];
+    xpEarned: number;
+    newWordsCount: number;
+    durationSec: number;
+    streakLongest: number;
+  } | null>(null);
   // Один и тот же localStorage-чтение, что и у cards/revealed выше — цена
   // незначительна (одна строка), а по этому единственному месту решается,
   // какое из двух взаимоисключающих событий отправить при монтировании.
@@ -307,13 +333,21 @@ export default function ReviewSession({
       navigator.vibrate(15);
     }
     startTransition(async () => {
-      const { reviewLogId } = await reviewWord(card.flashcardId, value, "cards");
+      const { reviewLogId, moments, xpAwarded, isNewCard } = await reviewWord(card.flashcardId, value, "cards");
       track("review_card_graded", { grade: value });
       gradedIdsRef.current = [...gradedIdsRef.current, card.flashcardId];
       setLastGraded(
         reviewLogId ? { reviewLogId, flashcardId: card.flashcardId, front: card.front, grade: value } : null,
       );
       const newTotal = sessionTotal + 1;
+      // docs/moments/ROADMAP.md, этап 1 — честные накопители для Result,
+      // не предположения: "без ошибок" считается по РЕАЛЬНОМУ тэлли,
+      // включая только что поставленную оценку (tally state ещё не
+      // перерисован в этом замыкании).
+      const isPerfectSoFar = tally[0] + tally[1] + (value < 2 ? 1 : 0) === 0;
+      momentsRef.current = [...momentsRef.current, ...moments];
+      xpEarnedRef.current += xpAwarded;
+      if (isNewCard) newWordsRef.current += 1;
       setTally((t) => ({ ...t, [value]: t[value] + 1 }));
       setFlash(value >= 2 ? "good" : "bad");
       setTimeout(() => setFlash(null), 500);
@@ -328,6 +362,19 @@ export default function ReviewSession({
           setNewRecord(true);
           await updateReviewBest(newTotal);
         }
+        const durationSec = Math.round((Date.now() - sessionStartRef.current) / 1000);
+        if (isPerfectSoFar) {
+          const bonus = await awardPerfectBonus(newTotal, durationSec);
+          momentsRef.current = [...momentsRef.current, ...bonus.moments];
+        }
+        const streakInfo = await getStreakInfo();
+        setSessionResult({
+          moments: momentsRef.current,
+          xpEarned: xpEarnedRef.current,
+          newWordsCount: newWordsRef.current,
+          durationSec,
+          streakLongest: streakInfo.longest,
+        });
       } else {
         saveReviewSession({
           userId,
@@ -430,6 +477,13 @@ export default function ReviewSession({
           // review-mode-switcher.tsx), так что новый проп не требует правок
           // вне заявленных двух файлов.
           cards={cards.map((c) => ({ front: c.front, back: c.back }))}
+          // docs/moments/mockups/Result.dc.html — этап 1: honest sums
+          // накопленные за сессию выше, не пересчёт задним числом.
+          xpEarned={sessionResult?.xpEarned ?? 0}
+          newWordsCount={sessionResult?.newWordsCount ?? 0}
+          durationSec={sessionResult?.durationSec ?? 0}
+          streakLongest={sessionResult?.streakLongest ?? 0}
+          queuedMoments={sessionResult?.moments ?? []}
         />
       </>
     );

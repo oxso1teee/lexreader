@@ -6,8 +6,12 @@ import { touchStreak } from "@/lib/streak";
 import { KNOWN_LEVEL, syncStatusAndLevel } from "@/lib/word-level";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { findOrCreateFlashcard } from "@/lib/vocabulary/save";
-import { addXp } from "@/lib/xp-actions";
+import { addXp, todayUtcIso } from "@/lib/xp-actions";
 import { recordEvidence } from "@/lib/language-twin/evidence";
+import { collectMoments } from "@/lib/moments/collect";
+import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
+import { minutesHintForGoal } from "@/lib/daily-goal";
+import type { Moment } from "@/lib/moments/types";
 import type { ReaderPrefs } from "./reader-prefs";
 
 export async function upsertWord(input: {
@@ -179,7 +183,7 @@ export async function finishReading(input: {
   textId: string;
   minutes: number;
   wordsLookedUp: number;
-}) {
+}): Promise<{ moments: Moment[] }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -198,9 +202,32 @@ export async function finishReading(input: {
   });
   if (error) throw new Error("Не удалось сохранить сессию чтения.");
 
-  await touchStreak(supabase, user.id);
-  await addXp(supabase, user.id, 10);
+  const streakTransition = await touchStreak(supabase, user.id);
+  const xpResult = await addXp(supabase, user.id, 10);
   revalidatePath("/progress");
+
+  // docs/moments/ROADMAP.md, этап 1 — те же goal_done/streak_up/level_up, что
+  // и после сессии повторения (review/actions.ts); achievement/word_mastered
+  // здесь не проверяются — чтение само по себе не меняет ни одну из их
+  // реальных метрик (слова/карточки проверяются в upsertWord/reviewWord).
+  const week = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
+  const moments = collectMoments({
+    xp: xpResult
+      ? {
+          before: { total: xpResult.total.before, today: xpResult.today.before },
+          after: { total: xpResult.total.after, today: xpResult.today.after },
+          goal: xpResult.goal,
+          minutesHint: minutesHintForGoal(xpResult.goal),
+        }
+      : null,
+    streak: streakTransition,
+    week,
+    newAchievementIds: [],
+    wordMastered: null,
+    today: todayUtcIso(),
+  });
+
+  return { moments };
 }
 
 // M3 Slice 3 §8: profiles.reader_settings — account-synced on top of the
