@@ -10,6 +10,8 @@ import { addXp, todayUtcIso } from "@/lib/xp-actions";
 import { recordEvidence } from "@/lib/language-twin/evidence";
 import { collectMoments } from "@/lib/moments/collect";
 import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
+import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
+import { awardPerfectWeekIfEligible } from "@/lib/moments/perfect-week-award";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
 import type { ReaderPrefs } from "./reader-prefs";
@@ -206,11 +208,14 @@ export async function finishReading(input: {
   const xpResult = await addXp(supabase, user.id, 10);
   revalidatePath("/progress");
 
-  // docs/moments/ROADMAP.md, этап 1 — те же goal_done/streak_up/level_up, что
-  // и после сессии повторения (review/actions.ts); achievement/word_mastered
-  // здесь не проверяются — чтение само по себе не меняет ни одну из их
-  // реальных метрик (слова/карточки проверяются в upsertWord/reviewWord).
-  const week = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
+  // docs/moments/ROADMAP.md, этап 1/2 — те же goal_done/streak_up/level_up/
+  // freeze_used/earn_back/streak_milestone/perfect_week, что и после сессии
+  // повторения (review/actions.ts); achievement/word_mastered здесь не
+  // проверяются — чтение само по себе не меняет ни одну из их реальных
+  // метрик (слова/карточки проверяются в upsertWord/reviewWord).
+  const goalWeek = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
+  const streakWeek = streakTransition ? await fetchStreakWeekMarks(supabase, user.id) : [];
+  const perfectWeek = xpResult ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
   const moments = collectMoments({
     xp: xpResult
       ? {
@@ -221,13 +226,14 @@ export async function finishReading(input: {
         }
       : null,
     streak: streakTransition,
-    week,
+    goalWeek,
+    streakWeek,
     newAchievementIds: [],
     wordMastered: null,
     today: todayUtcIso(),
   });
 
-  return { moments };
+  return { moments: [...moments, ...perfectWeek.moments] };
 }
 
 // M3 Slice 3 §8: profiles.reader_settings — account-synced on top of the

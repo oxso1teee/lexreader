@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import TodayView from "@/components/product/today/v7/today-view";
+import TodayEveningView from "@/components/product/today/v7/today-evening";
 import MobileBottomNav from "@/components/product/app-shell/mobile-bottom-nav";
-import { TODAY_FIXTURE } from "@/lib/screen-fixtures";
+import { TODAY_FIXTURE, TODAY_EVENING_FIXTURE } from "@/lib/screen-fixtures";
 
 // Основные экраны v7 с тестовыми данными — для скриншот-сверки с макетами
 // (docs/moments/reference). Открыта локально и на preview-деплоях.
 export const metadata = { robots: { index: false, follow: false } };
 
-const SCREENS = ["Main"] as const;
+const SCREENS = ["Main", "Today-evening"] as const;
 
 export default async function DevScreensPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
   const isLiveSite = process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview";
@@ -20,6 +21,17 @@ export default async function DevScreensPage({ searchParams }: { searchParams: P
       <div className="flex min-h-dvh flex-col bg-background">
         <main className="flex flex-1 flex-col">
           <TodayView {...TODAY_FIXTURE} />
+        </main>
+        <MobileBottomNav />
+      </div>
+    );
+  }
+
+  if (s === "Today-evening") {
+    return (
+      <div className="flex min-h-dvh flex-col bg-background">
+        <main className="flex flex-1 flex-col">
+          <TodayEveningView {...TODAY_EVENING_FIXTURE} />
         </main>
         <MobileBottomNav />
       </div>

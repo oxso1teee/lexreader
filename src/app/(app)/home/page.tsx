@@ -11,7 +11,9 @@ import { getActivePathStateAction } from "../learning-paths/actions";
 import { isoWeekStart } from "@/lib/iso-week";
 import { messages } from "@/lib/i18n";
 import { weekMarks } from "@/lib/week-marks";
+import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import TodayView from "@/components/product/today/v7/today-view";
+import TodayEveningGate from "@/components/product/today/v7/today-evening-gate";
 import InstallBanner from "./install-banner";
 import TodayAnalytics from "./today-analytics";
 import type { MissionRow, MissionType } from "@/lib/missions/types";
@@ -44,6 +46,16 @@ function heroHeadline(mission: MissionRow): string {
 
 function isoDate(d: Date | string): string {
   return new Date(d).toISOString().slice(0, 10);
+}
+
+// Today-evening.dc.html — "Спасти стрик · N мин": то же число минут, что уже
+// показано в hero.meta ("~N мин"), не вторая независимая оценка.
+function extractMinutesHint(meta: string[]): number | null {
+  for (const m of meta) {
+    const match = m.match(/~?(\d+)\s*мин/);
+    if (match) return Number(match[1]);
+  }
+  return null;
 }
 
 function daysAgo(days: number): Date {
@@ -284,6 +296,10 @@ export default async function HomePage() {
     ...(activityReviews ?? []).map((r) => isoDate(r.reviewed_at)),
   ];
   const marks = weekMarks(activeDates);
+  // docs/moments/ROADMAP.md, этап 2 — Today-evening: та же неделя, что
+  // Streak-30/Freeze-used (реальная активность + freeze_used), не недельные
+  // "marks" выше (та же суть, но из другого источника и без заморозки).
+  const streakWeek = await fetchStreakWeekMarks(supabase, profile.id);
   const xpToday = activityDayToday?.xp ?? 0;
   const xpGoal = profile.daily_xp_goal;
   const langCode = profile.target_language.slice(0, 2).toUpperCase();
@@ -296,39 +312,52 @@ export default async function HomePage() {
   // макете, но которые несут реальную функциональность (путь, рекомендации,
   // «Мой английский», быстрые действия) — их не убираем.
   return (
-    <TodayView
-      analytics={
-        <TodayAnalytics
-          dueCountBucket={dueCountBucket(dueCount)}
-          hasActiveMaterial={continueReading !== null}
-          missionCount={missions.length}
-        />
-      }
-      installBanner={<InstallBanner />}
-      langCode={langCode}
-      level={level}
+    <TodayEveningGate
+      xpToday={xpToday}
       streak={profile.streak_current}
       streakLongest={profile.streak_longest}
       xp={profile.xp}
-      greeting={greeting}
-      firstName={firstName}
-      xpToday={xpToday}
-      xpGoal={xpGoal}
-      dueCount={dueCount}
-      marks={marks}
-      hero={{
-        ...heroCardData,
-        footnote: heroMatchesPath && pathLevelLabel ? `Из твоего пути: ${pathLevelLabel}` : undefined,
-      }}
-      continueReading={continueReading}
-      continueIsVideo={continueIsVideo}
-      pathCard={
-        showPathSecondaryCard && activePathState && focusSkill
-          ? { href: `/learning-paths/${activePathState.path.slug}`, label: pathLevelLabel ?? "", title: focusSkill.title }
-          : null
-      }
-      pendingRecommendationsCount={pendingRecommendationsCount ?? 0}
-      topPatterns={topPatterns}
-    />
+      langCode={langCode}
+      level={level}
+      week={streakWeek}
+      freezeAvailable={profile.streak_freeze_available}
+      reviewHref={heroCardData.href}
+      reviewMinutesHint={extractMinutesHint(heroCardData.meta)}
+    >
+      <TodayView
+        analytics={
+          <TodayAnalytics
+            dueCountBucket={dueCountBucket(dueCount)}
+            hasActiveMaterial={continueReading !== null}
+            missionCount={missions.length}
+          />
+        }
+        installBanner={<InstallBanner />}
+        langCode={langCode}
+        level={level}
+        streak={profile.streak_current}
+        streakLongest={profile.streak_longest}
+        xp={profile.xp}
+        greeting={greeting}
+        firstName={firstName}
+        xpToday={xpToday}
+        xpGoal={xpGoal}
+        dueCount={dueCount}
+        marks={marks}
+        hero={{
+          ...heroCardData,
+          footnote: heroMatchesPath && pathLevelLabel ? `Из твоего пути: ${pathLevelLabel}` : undefined,
+        }}
+        continueReading={continueReading}
+        continueIsVideo={continueIsVideo}
+        pathCard={
+          showPathSecondaryCard && activePathState && focusSkill
+            ? { href: `/learning-paths/${activePathState.path.slug}`, label: pathLevelLabel ?? "", title: focusSkill.title }
+            : null
+        }
+        pendingRecommendationsCount={pendingRecommendationsCount ?? 0}
+        topPatterns={topPatterns}
+      />
+    </TodayEveningGate>
   );
 }

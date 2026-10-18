@@ -10,6 +10,10 @@ import { PerfectScreen } from "./screens/perfect";
 import { LevelUpScreen } from "./screens/level-up";
 import { AchievementScreen } from "./screens/achievement";
 import { WordMasteredScreen } from "./screens/word-mastered";
+import { Streak30Screen } from "./screens/streak-30";
+import { FreezeUsedScreen } from "./screens/freeze-used";
+import { PerfectWeekScreen } from "./screens/perfect-week";
+import { EarnBackScreen } from "./screens/earn-back";
 
 // Очередь моментов на всё приложение. Серверное действие возвращает
 // moments[] → вызывающий клиент делает pushMoments(result.moments), или
@@ -59,6 +63,14 @@ export function renderMoment(moment: Moment, onClose: () => void) {
       return <AchievementScreen moment={moment} onClose={onClose} />;
     case "word_mastered":
       return <WordMasteredScreen moment={moment} onClose={onClose} />;
+    case "streak_milestone":
+      return <Streak30Screen moment={moment} onClose={onClose} />;
+    case "freeze_used":
+      return <FreezeUsedScreen moment={moment} onClose={onClose} />;
+    case "perfect_week":
+      return <PerfectWeekScreen moment={moment} onClose={onClose} />;
+    case "earn_back":
+      return <EarnBackScreen moment={moment} onClose={onClose} />;
   }
 }
 

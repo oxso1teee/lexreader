@@ -47,4 +47,26 @@ export const MOMENT_FIXTURES: Record<string, Moment> = {
     timesCorrect: 5,
     totalMastered: 843,
   },
+  "Streak-30": {
+    kind: "streak_milestone",
+    id: "fixture-streak-30",
+    milestone: 30,
+    nextMilestone: 50,
+  },
+  "Freeze-used": {
+    kind: "freeze_used",
+    id: "fixture-freeze-used",
+    streak: 12,
+    week: ["done", "done", "freeze", "today", "empty", "empty", "empty"],
+  },
+  "Perfect-week": {
+    kind: "perfect_week",
+    id: "fixture-perfect-week",
+    xpAwarded: 20,
+  },
+  "Earn-back": {
+    kind: "earn_back",
+    id: "fixture-earn-back",
+    streakBeforeBreak: 12,
+  },
 };

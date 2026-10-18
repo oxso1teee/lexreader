@@ -86,12 +86,31 @@ Perfect, Goal-done, Level-up, Achievement (4 текущих достижения
 `MOMENT_PRIORITY` (перенесён в корневой `src/app/layout.tsx`, чтобы `/read`
 и `/watch` тоже могли показывать moments из `finishReading()`).
 
-### Этап 2. Стрик (логика есть частично) — [ ]
-Streak-up, Streak-30 (рубежи 7/14/30/50/100), Freeze-used (уже тратится в
-`touchStreak` — надо вернуть событие), Perfect-week, Streak-calendar
-(страница: нужна история дней — таблица `activity_days`).
-Новое: Earn-back — восстановление серии за 3 дня подряд (миграция:
-`streak_repair_until`, `streak_before_break`).
+### Этап 2. Стрик (логика есть частично) — [~]
+Streak-up, Streak-30 (рубежи 7/14/30/50/100/365), Freeze-used, Perfect-week,
+Streak-calendar, Earn-back, Today-evening.
+Сделано в PR этапа 2: миграция `0053_streak_repair.sql`
+(`streak_before_break`/`streak_repair_until`/`perfect_week_awarded_week`);
+вся решающая логика серии вынесена в чистую `computeStreakUpdate()`
+(`src/lib/streak-engine.ts`, полностью покрыта тестами) — обычный рост,
+заморозка (`freeze_used` пишется в `activity_days` на реально пропущенный
+день), рубежи (7/14/30/50/100/365, награда — настоящая заморозка, не только
+декорация), Earn-back (обрыв → 3 дня подряд → старое число возвращается,
+без повторного срабатывания рубежей при восстановлении); `streak.ts`
+(`touchStreak`) — тонкая обёртка над движком; `src/lib/moments/
+perfect-week-award.ts` — честные +20 XP раз в неделю (7/7 дней без
+заморозки, сторож `perfect_week_awarded_week`); `src/lib/moments/
+streak-week.ts` — неделя по реальной активности + заморозке (не по цели
+дня, в отличие от Goal-done); `collectMoments` решает между streak_up/
+freeze_used/earn_back (взаимоисключающие) + отдельно streak_milestone;
+экраны **Streak-30**, **Freeze-used**, **Perfect-week**, **Earn-back** 1:1
+с макетом (кнопка "Поделиться" в Streak-30 и карточка-превью push в
+Today-evening убраны — нет настоящего механизма); страница **`/streak`**
+(месяц из `activity_days`, рекорд, заморозки, прогресс до рубежа; карточка
+"До сундука" из макета убрана — Chest ещё не существует, этап 5); чип
+стрика на главной ведёт туда вместо `/progress`; **Today-evening** —
+клиентский гейт `TodayEveningGate` (после 18:00 по времени устройства, 0
+XP сегодня, серия > 0) поверх обычного `TodayView`, добавлен в `/dev/screens`.
 
 ### Этап 3. Внутри занятия — [ ]
 Lesson-start, Combo, Halfway, Mistakes, Quit-confirm (Result переехал в

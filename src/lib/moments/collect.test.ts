@@ -8,11 +8,16 @@ function base(): CollectMomentsInput {
   return {
     xp: null,
     streak: null,
-    week: [...WEEK],
+    goalWeek: [...WEEK],
+    streakWeek: [...WEEK],
     newAchievementIds: [],
     wordMastered: null,
     today: "2026-10-17",
   };
+}
+
+function streak(before: number, after: number, overrides: Partial<NonNullable<CollectMomentsInput["streak"]>> = {}): NonNullable<CollectMomentsInput["streak"]> {
+  return { before, after, usedFreeze: false, repairStarted: false, milestonesCrossed: [], streakBeforeBreak: null, ...overrides };
 }
 
 test("collectMoments(): crossing the daily XP goal produces goal_done with a stable per-day id", () => {
@@ -60,13 +65,48 @@ test("collectMoments(): staying within the same level never fires level_up", () 
 });
 
 test("collectMoments(): streak increasing produces streak_up", () => {
-  const moments = collectMoments({ ...base(), streak: { before: 12, after: 13 } });
+  const moments = collectMoments({ ...base(), streak: streak(12, 13) });
   assert.deepEqual(moments, [{ kind: "streak_up", id: "streak_up:2026-10-17", streak: 13, week: [...WEEK] }]);
 });
 
 test("collectMoments(): streak unchanged (already touched today) never fires streak_up", () => {
-  const moments = collectMoments({ ...base(), streak: { before: 13, after: 13 } });
+  const moments = collectMoments({ ...base(), streak: streak(13, 13) });
   assert.equal(moments.length, 0);
+});
+
+test("collectMoments(): a freeze save produces freeze_used instead of streak_up", () => {
+  const moments = collectMoments({ ...base(), streak: streak(12, 13, { usedFreeze: true }) });
+  assert.deepEqual(moments, [{ kind: "freeze_used", id: "freeze_used:2026-10-17", streak: 13, week: [...WEEK] }]);
+});
+
+test("collectMoments(): a fresh break with Earn-back offered produces earn_back, not streak_up", () => {
+  const moments = collectMoments({ ...base(), streak: streak(12, 1, { repairStarted: true, streakBeforeBreak: 12 }) });
+  assert.deepEqual(moments, [{ kind: "earn_back", id: "earn_back:2026-10-17", streakBeforeBreak: 12 }]);
+});
+
+test("collectMoments(): a successfully completed repair is a plain streak_up with the restored number", () => {
+  // streak-engine.ts never puts milestonesCrossed on a repair completion — collectMoments just
+  // reflects whatever it's given, this documents the expected shape when it does its job.
+  const moments = collectMoments({ ...base(), streak: streak(2, 12) });
+  assert.deepEqual(moments, [{ kind: "streak_up", id: "streak_up:2026-10-17", streak: 12, week: [...WEEK] }]);
+});
+
+test("collectMoments(): a repair failing (reset to 1, no offer) produces no streak moment at all", () => {
+  const moments = collectMoments({ ...base(), streak: streak(2, 1) });
+  assert.equal(moments.length, 0);
+});
+
+test("collectMoments(): crossing a streak milestone adds a streak_milestone alongside the streak_up", () => {
+  const moments = collectMoments({ ...base(), streak: streak(6, 7, { milestonesCrossed: [7] }) });
+  assert.deepEqual(moments, [
+    { kind: "streak_up", id: "streak_up:2026-10-17", streak: 7, week: [...WEEK] },
+    { kind: "streak_milestone", id: "streak_milestone:7", milestone: 7, nextMilestone: 14 },
+  ]);
+});
+
+test("collectMoments(): the last milestone (365) reports no next milestone", () => {
+  const moments = collectMoments({ ...base(), streak: streak(364, 365, { milestonesCrossed: [365] }) });
+  assert.deepEqual(moments[1], { kind: "streak_milestone", id: "streak_milestone:365", milestone: 365, nextMilestone: null });
 });
 
 test("collectMoments(): each newly-earned achievement id becomes its own moment, in arrival order", () => {
@@ -124,8 +164,9 @@ test("collectMoments(): already-maintenance before this review never re-fires wo
 test("collectMoments(): a single action can fire several moments at once, in priority order", () => {
   const moments = collectMoments({
     xp: { before: { total: 790, today: 40 }, after: { total: 850, today: 55 }, goal: 50, minutesHint: 10 },
-    streak: { before: 12, after: 13 },
-    week: [...WEEK],
+    streak: streak(12, 13),
+    goalWeek: [...WEEK],
+    streakWeek: [...WEEK],
     newAchievementIds: ["streak_7"],
     wordMastered: null,
     today: "2026-10-17",

@@ -67,22 +67,68 @@ export interface WordMasteredMoment {
   totalMastered: number;
 }
 
+// Этап 2 (docs/moments/ROADMAP.md) — рубежи, заморозка, идеальная неделя,
+// восстановление серии.
+export interface StreakMilestoneMoment {
+  kind: "streak_milestone";
+  id: string;
+  milestone: number;
+  /** Следующий рубеж из STREAK_MILESTONES — null после 365 (последний). */
+  nextMilestone: number | null;
+}
+
+export interface FreezeUsedMoment {
+  kind: "freeze_used";
+  id: string;
+  streak: number;
+  /** Пн..Вс текущей ISO-недели — freeze-день размечен отдельно macoй
+   *  WeekdayMark "freeze". */
+  week: WeekdayMark[];
+}
+
+export interface PerfectWeekMoment {
+  kind: "perfect_week";
+  id: string;
+  /** Реально начисленный бонус (addXp), не декоративное число. */
+  xpAwarded: number;
+}
+
+// Экран показывается, когда серия ТОЛЬКО прервалась (repairStarted) и даёт
+// 3 дня на восстановление — не когда восстановление уже завершилось (успешное
+// завершение — обычный streak_up с восстановленным числом, у него нет
+// отдельного макета).
+export interface EarnBackMoment {
+  kind: "earn_back";
+  id: string;
+  streakBeforeBreak: number;
+}
+
 export type Moment =
   | GoalDoneMoment
   | StreakUpMoment
   | PerfectMoment
   | LevelUpMoment
   | AchievementMoment
-  | WordMasteredMoment;
+  | WordMasteredMoment
+  | StreakMilestoneMoment
+  | FreezeUsedMoment
+  | PerfectWeekMoment
+  | EarnBackMoment;
 export type MomentKind = Moment["kind"];
 
-// Порядок показа после занятия (ROADMAP, этап 1): Result (не момент — сам
-// экран итога) → Perfect → Goal-done → Streak-up → Level-up/Achievement →
-// Word-mastered. Чем выше число, тем раньше показываем.
+// Порядок показа после занятия (ROADMAP, этап 1/2): Result (не момент — сам
+// экран итога) → Perfect → Goal-done → Streak-milestone → Streak-up/
+// Freeze-used/Earn-back (ровно один из трёх — взаимоисключающие, см.
+// collectMoments) → Perfect-week → Level-up/Achievement → Word-mastered.
+// Чем выше число, тем раньше показываем.
 export const MOMENT_PRIORITY: Record<MomentKind, number> = {
   perfect: 60,
   goal_done: 50,
+  streak_milestone: 45,
   streak_up: 40,
+  freeze_used: 40,
+  earn_back: 40,
+  perfect_week: 35,
   level_up: 30,
   achievement: 30,
   word_mastered: 20,
