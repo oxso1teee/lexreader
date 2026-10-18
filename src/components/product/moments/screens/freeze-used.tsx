@@ -39,7 +39,9 @@ export function FreezeUsedScreen({ moment, onClose }: { moment: FreezeUsedMoment
         <Button
           className="mo-cta"
           onClick={onClose}
-          style={{ ["--btn-fill" as string]: "var(--sky-edge)", ["--btn-edge" as string]: "#075a85", ["--btn-label" as string]: "#fff" }}
+          // Белый на --sky-edge даёт только 3.40:1 (axe-core,
+          // e2e/unified-shell-a11y.spec.ts) — тёмный текст даёт 5.11:1.
+          style={{ ["--btn-fill" as string]: "var(--sky-edge)", ["--btn-edge" as string]: "#075a85", ["--btn-label" as string]: "#1a1a1a" }}
         >
           Продолжить серию сегодня
         </Button>
@@ -67,7 +69,9 @@ export function FreezeUsedScreen({ moment, onClose }: { moment: FreezeUsedMoment
             </div>
           </div>
         </div>
-        <h2 className="mo-disp mo-rise" style={{ margin: "30px 24px 0", fontSize: 26, lineHeight: 1.2, fontWeight: 900, color: "var(--sky-edge)", animationDelay: "0.5s" }}>
+        {/* --sky-edge давал 2.99:1 (на грани даже для крупного текста,
+            порог 3:1) — --sky-text даёт 4.22:1, тот же синий, с запасом. */}
+        <h2 className="mo-disp mo-rise" style={{ margin: "30px 24px 0", fontSize: 26, lineHeight: 1.2, fontWeight: 900, color: "var(--sky-text)", animationDelay: "0.5s" }}>
           Заморозка спасла стрик
         </h2>
         <p className="mo-rise" style={{ margin: "12px 30px 0", fontSize: 16, lineHeight: 1.45, animationDelay: "0.62s" }}>

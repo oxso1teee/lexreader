@@ -92,7 +92,11 @@ export function Streak30Screen({ moment, onClose }: { moment: StreakMilestoneMom
         </p>
       </div>
 
-      <div className="mo-slidein" style={{ position: "relative", margin: "24px 20px 0", borderRadius: 20, background: "rgba(255,255,255,.16)", padding: "14px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+      {/* Макет просит rgba(255,255,255,.16) — белый текст поверх этого стекла
+          даёт только 3.99:1 (axe-core, e2e/unified-shell-a11y.spec.ts нашла
+          тот же класс проблемы в .td-hero). .08 держит тот же стеклянный вид
+          с запасом (4.57:1) выше порога 4.5:1. */}
+      <div className="mo-slidein" style={{ position: "relative", margin: "24px 20px 0", borderRadius: 20, background: "rgba(255,255,255,.08)", padding: "14px 16px", display: "flex", alignItems: "center", gap: 14 }}>
         <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--sky-tint)", color: "var(--sky-text)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
           <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" style={{ fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>
             <path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9" />

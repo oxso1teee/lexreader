@@ -183,7 +183,12 @@ export default async function StreakCalendarPage({
                   className={`flex h-9 w-9 items-center justify-center rounded-full ${isToday ? "mo-stepring" : ""}`}
                   style={{
                     background: frozen ? "var(--sky)" : active ? "var(--ember)" : undefined,
-                    color: frozen || active ? "#fff" : isToday ? "var(--ember-text)" : "var(--text-secondary)",
+                    // Белый на --ember/--sky даёт только 2.2:1/2.4:1 (axe-core,
+                    // e2e/unified-shell-a11y.spec.ts нашёл тот же класс проблемы
+                    // в .td-hero выше) — тёмный текст тут же даёт 7.9:1/7.1:1,
+                    // не var(--foreground): в тёмной теме он сам становится
+                    // светлым, а заливка остаётся такой же яркой.
+                    color: frozen || active ? "#1a1a1a" : isToday ? "var(--ember-text)" : "var(--text-secondary)",
                     border: isToday && !frozen && !active ? "2px dashed var(--ember)" : undefined,
                   }}
                 >
