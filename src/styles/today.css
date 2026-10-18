@@ -87,7 +87,12 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.85;
+  /* Main.dc.html просит opacity:.85, но белый на 85% поверх --leaf даёт
+     только 3.98:1 (найдено axe-core, e2e/unified-shell-a11y.spec.ts) —
+     13px bold не дотягивает до "крупного текста" по WCAG 1.4.3, порог
+     остаётся 4.5:1. Полностью непрозрачный белый — 4.88:1, тот же цвет,
+     просто без искусственного затемнения. */
+  opacity: 1;
 }
 
 .td-hero-title {
@@ -104,7 +109,9 @@
   margin-top: 10px;
   font-size: 14px;
   font-weight: 600;
-  opacity: 0.92;
+  /* Та же причина, что у .td-hero-eyebrow выше: .92 давало 4.39:1, ниже
+     порога 4.5:1 для некрупного текста. */
+  opacity: 1;
 }
 
 /* Белая кнопка на зелёном: та же «пухлая» механика, что у .btn. */

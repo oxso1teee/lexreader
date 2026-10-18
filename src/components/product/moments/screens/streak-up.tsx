@@ -109,7 +109,10 @@ export function StreakUpScreen({
 
       {friend && (
         <div className="mo-card mo-rise" style={{ margin: "12px 20px 0", padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, animationDelay: "1.4s" }}>
-          <span style={{ width: 40, height: 40, borderRadius: 999, background: "#8b5cf6", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, flex: "none" }}>
+          {/* #8b5cf6 давал только 4.23:1 с белым (axe-core,
+              e2e/unified-shell-a11y.spec.ts) — на шаг темнее тот же
+              фиолетовый, 5.70:1. */}
+          <span style={{ width: 40, height: 40, borderRadius: 999, background: "#7c3aed", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, flex: "none" }}>
             {friend.initial}
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
