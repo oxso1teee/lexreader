@@ -65,10 +65,26 @@
 (сверка: `docs/pr-screenshots/moments-stage0/`). Показ в живых сценариях —
 этап 1, когда появятся дневной XP и история дней.
 
-### Этап 1. Итог занятия и XP (логика есть) — [ ]
+### Этап 1. Итог занятия и XP (логика есть) — [~]
 Perfect, Goal-done, Level-up, Achievement (4 текущих достижения из
 `achievements.ts`), Word-mastered (FSRS: карточка ушла в «знаю»).
 Цепляется к `brain/[deckId]/review` и `session-complete.tsx`.
+Сделано в PR этапа 1: миграция `activity_days` + `profiles.daily_xp_goal`
+(`supabase/migrations/0052_activity_days.sql`); `levelForXp`
+(`src/lib/level.ts`); чистая `collectMoments` (`src/lib/moments/collect.ts`)
++ `src/lib/moments/week.ts` (неделя по `goal_met`); `addXp` пишет
+`activity_days` и отдаёт before/after; `checkAndAwardAchievements` и
+`touchStreak` отдают before/after; `recomputeAndPersistLearningState`
+отдаёт before/after `learning_state`; `reviewWord()` и `finishReading()`
+отдают `moments: Moment[]`; **Perfect** (бонус `+10 XP` — реально
+начисляется, не декоративное число), **Level-up**, **Achievement**,
+**Word-mastered** — 1:1 с макетом (формулы уровня/подборка по уровню/
+фонетическая транскрипция из макетов убраны там, где для них нет настоящих
+данных — см. комментарии в коде); **Result** переехал сюда из этапа 3 и
+переверстан по `Result.dc.html` (`session-complete.tsx`); главный экран —
+плитка цели со слов на XP. Порядок показа после занятия реализован через
+`MOMENT_PRIORITY` (перенесён в корневой `src/app/layout.tsx`, чтобы `/read`
+и `/watch` тоже могли показывать moments из `finishReading()`).
 
 ### Этап 2. Стрик (логика есть частично) — [ ]
 Streak-up, Streak-30 (рубежи 7/14/30/50/100), Freeze-used (уже тратится в
@@ -78,8 +94,9 @@ Streak-up, Streak-30 (рубежи 7/14/30/50/100), Freeze-used (уже трат
 `streak_repair_until`, `streak_before_break`).
 
 ### Этап 3. Внутри занятия — [ ]
-Lesson-start, Combo, Halfway, Mistakes, Quit-confirm, Result. Сначала
-поверх текущего повторения карточек. Собранное занятие из макетов
+Lesson-start, Combo, Halfway, Mistakes, Quit-confirm (Result переехал в
+этап 1 — он уже понадобился там для итога сессии). Сначала поверх текущего
+повторения карточек. Собранное занятие из макетов
 (Lesson-choice / Lesson-build / Lesson-listen: выбор перевода, собрать
 фразу, на слух) — отдельный движок упражнений, этап 8.
 

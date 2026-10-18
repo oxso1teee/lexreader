@@ -24,6 +24,7 @@ import ReaderWordPanel, { type Popup } from "./reader-word-panel";
 import ReaderListening, { useListening } from "./reader-listening";
 import { useParallelTranslation } from "./use-parallel-translation";
 import { useReaderKeyboardShortcuts } from "./use-keyboard-shortcuts";
+import { useMoments } from "@/components/product/moments/moment-provider";
 
 const READING_THEME_COLORS: Record<string, { bg: string; surface: string; text: string } | null> = {
   paper: null,
@@ -130,6 +131,7 @@ export default function Reader({
   chapter: ChapterInfo | null;
 }) {
   const router = useRouter();
+  const { pushMoments } = useMoments();
   const sentences = useMemo(() => splitIntoSentences(body), [body]);
   const pages = useMemo(() => paginate(sentences), [sentences]);
 
@@ -412,7 +414,11 @@ export default function Reader({
     const elapsed = Date.now() - (startedAt.current ?? Date.now());
     const minutes = Math.max(1, Math.round(elapsed / 60_000));
     try {
-      await finishReading({ textId, minutes, wordsLookedUp });
+      const { moments } = await finishReading({ textId, minutes, wordsLookedUp });
+      // docs/moments/ROADMAP.md, этап 1 — те же goal_done/streak_up/level_up,
+      // что и после сессии повторения: очередь переживает навигацию ниже
+      // (MomentProvider — в корневом layout, а не в этом дереве).
+      pushMoments(moments);
       router.push("/library");
     } catch {
       // P0-АУДИТ 3.18: раньше редирект на /library происходил ВСЕГДА даже

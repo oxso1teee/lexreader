@@ -12,7 +12,18 @@ function isoWeekStart(d: Date): string {
   return isoDate(isoWeekStartDate(d));
 }
 
-export async function touchStreak(supabase: SupabaseServerClient, userId: string) {
+export interface StreakTransition {
+  before: number;
+  after: number;
+}
+
+// docs/moments/ROADMAP.md, этап 1: возвращает before/after streak_current
+// (а не void) — Streak-up-момент срабатывает ровно на росте серии, и только
+// вызывающий код (reviewWord/finishReading) знает, что это первое касание
+// серии за сегодня, а не повторный вызов в той же сессии (last_active_date
+// уже сегодня -> ранний return ниже -> before===after, что уже нормально
+// обрабатывается collectMoments как "без изменений").
+export async function touchStreak(supabase: SupabaseServerClient, userId: string): Promise<StreakTransition | null> {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
@@ -20,10 +31,10 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
     )
     .eq("id", userId)
     .single();
-  if (!profile) return;
+  if (!profile) return null;
 
   const today = isoDate(new Date());
-  if (profile.last_active_date === today) return;
+  if (profile.last_active_date === today) return { before: profile.streak_current, after: profile.streak_current };
 
   const thisWeekStart = isoWeekStart(new Date());
   // Заморозка "перезаряжается" в начале каждой новой ISO-недели.
@@ -48,7 +59,7 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
         streak_freeze_week: thisWeekStart,
       })
       .eq("id", userId);
-    return;
+    return { before: profile.streak_current, after: newStreak };
   }
 
   const newStreak = profile.last_active_date === yesterday ? profile.streak_current + 1 : 1;
@@ -66,4 +77,5 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
         : {}),
     })
     .eq("id", userId);
+  return { before: profile.streak_current, after: newStreak };
 }

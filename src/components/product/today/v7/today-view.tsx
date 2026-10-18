@@ -29,8 +29,9 @@ export interface TodayViewProps {
   xp: number;
   greeting: string;
   firstName: string | null;
-  wordsToday: number;
-  goal: number;
+  /** docs/moments/ROADMAP.md, этап 1 — цель дня теперь в XP, не в словах. */
+  xpToday: number;
+  xpGoal: number;
   dueCount: number;
   marks: DayMark[];
   hero: { eyebrow?: string; title: string; meta: string[]; ctaLabel: string; href: string; actionType: string; footnote?: string };
@@ -47,9 +48,9 @@ export interface TodayViewProps {
 // которых на нём нет, но которые несут реальную функциональность (путь,
 // рекомендации, «Мой английский», быстрые действия) — их не убираем.
 export default function TodayView(props: TodayViewProps) {
-  const { langCode, level, wordsToday, goal, dueCount } = props;
-  const goalLeft = Math.max(0, goal - wordsToday);
-  const goalPct = goal > 0 ? Math.min(1, wordsToday / goal) : 0;
+  const { langCode, level, xpToday, xpGoal, dueCount } = props;
+  const goalLeft = Math.max(0, xpGoal - xpToday);
+  const goalPct = xpGoal > 0 ? Math.min(1, xpToday / xpGoal) : 0;
   const ring = 2 * Math.PI * 18;
   return (
     <div className="td-root">
@@ -81,7 +82,7 @@ export default function TodayView(props: TodayViewProps) {
             {props.firstName ? `${props.greeting}, ${props.firstName}` : `${props.greeting}!`}
           </h1>
           <div className="td-muted" style={{ fontSize: 14, marginTop: 4 }}>
-            {goalLeft > 0 ? `Ещё ${goalLeft} ${wordsWord(goalLeft)} до цели дня` : "Цель дня выполнена"}
+            {goalLeft > 0 ? `Ещё ${goalLeft} XP до цели дня` : "Цель дня выполнена"}
           </div>
         </div>
       </div>
@@ -100,13 +101,13 @@ export default function TodayView(props: TodayViewProps) {
 
       <div className="td-tiles">
         <Link href="/progress" className="td-card td-tile">
-          <svg viewBox="0 0 44 44" width="48" height="48" role="img" aria-label={`Цель дня ${wordsToday} из ${goal}`} style={{ flex: "none" }}>
+          <svg viewBox="0 0 44 44" width="48" height="48" role="img" aria-label={`Цель дня ${xpToday} из ${xpGoal} XP`} style={{ flex: "none" }}>
             <circle cx="22" cy="22" r="18" fill="none" stroke="var(--sun-tint)" strokeWidth="6" />
             <circle cx="22" cy="22" r="18" fill="none" stroke="var(--sun)" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${(ring * goalPct).toFixed(1)} ${ring.toFixed(1)}`} transform="rotate(-90 22 22)" />
           </svg>
           <div style={{ minWidth: 0 }}>
-            <div className="td-tile-value">{wordsToday}/{goal}</div>
-            <div className="td-muted td-tile-label">новых слов</div>
+            <div className="td-tile-value">{xpToday}/{xpGoal}</div>
+            <div className="td-muted td-tile-label">XP сегодня</div>
           </div>
         </Link>
         <Link href="/brain/all/review" className="td-card td-tile">

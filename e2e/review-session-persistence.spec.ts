@@ -97,7 +97,7 @@ test("review 'cards' mode: grading a due card persists srs_state + review_log an
     await page.getByRole("button").filter({ has: page.getByText("Помню", { exact: true }) }).click();
 
     // --- Single-card session -> completion screen. ---
-    await expect(page.getByText("Сессия завершена")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText("Занятие завершено!")).toBeVisible({ timeout: 20_000 });
 
     // --- srs_state was really rescheduled by the SM-2 scheduler. ---
     const { data: srs } = await service.from("srs_state").select("*").eq("flashcard_id", flashcardId).single();

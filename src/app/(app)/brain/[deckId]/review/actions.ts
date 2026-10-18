@@ -10,19 +10,33 @@ import { getFsrsFlags } from "@/lib/fsrs-flags";
 import { getSrsParams, getSrsSettings } from "@/lib/srs-settings";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
-import { addXp } from "@/lib/xp-actions";
+import { addXp, todayUtcIso } from "@/lib/xp-actions";
 import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
 import { recomputeLanguageTwin } from "@/lib/language-twin/recompute";
 import type { PatternCategory, PatternStatus, Trend } from "@/lib/language-twin/types";
 import { recomputeAndPersistLearningState } from "@/lib/vocabulary/state-update";
 import type { PracticeMode } from "@/lib/vocabulary/state-engine";
 import { buildContextGapBlank } from "@/lib/vocabulary/context-gap";
+import { collectMoments, type CollectMomentsInput } from "@/lib/moments/collect";
+import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
+import { minutesHintForGoal } from "@/lib/daily-goal";
+import type { Moment } from "@/lib/moments/types";
+
+export interface ReviewWordResult {
+  reviewLogId: string | null;
+  moments: Moment[];
+  /** Реально начисленный XP (0, если addXp не сработал) — Result считает
+   *  "Опыт" по сумме этих чисел за сессию, а не предполагает 1 всегда. */
+  xpAwarded: number;
+  /** wasNew (эта карточка впервые пройдена) — Result's "N новых слов". */
+  isNewCard: boolean;
+}
 
 export async function reviewWord(
   flashcardId: string,
   grade: 0 | 1 | 2 | 3,
   mode: PracticeMode = "cards",
-): Promise<{ reviewLogId: string | null }> {
+): Promise<ReviewWordResult> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -214,16 +228,125 @@ export async function reviewWord(
     .single();
   if (logError) throw new Error("Не удалось сохранить ответ.");
 
-  await touchStreak(supabase, user.id);
-  await checkAndAwardAchievements(supabase, user.id, cardLanguage);
-  await addXp(supabase, user.id, 1);
+  const streakTransition = await touchStreak(supabase, user.id);
+  const newAchievementIds = await checkAndAwardAchievements(supabase, user.id, cardLanguage);
+  const xpResult = await addXp(supabase, user.id, 1);
   // M3 Slice 10 (brief §27): the scheduler write above already succeeded and is what matters —
   // this supplemental derived-state recompute must never turn a successful review into a thrown
   // error, so it's a fire-and-forget call into a function that swallows its own failures.
-  await recomputeAndPersistLearningState(supabase, flashcardId);
+  const learningTransition = await recomputeAndPersistLearningState(supabase, flashcardId);
   revalidatePath("/brain");
   revalidatePath("/progress");
-  return { reviewLogId: logRow?.id ?? null };
+
+  // docs/moments/ROADMAP.md, этап 1 — собираем снимки для collectMoments()
+  // только когда они реально нужны: неделя (goal_done/streak_up) стоит
+  // одного лишнего запроса на почти каждое ревью, но слова-мастер — только
+  // на самом переходе в "maintenance", не на каждой карточке.
+  const week = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
+
+  let wordMastered: CollectMomentsInput["wordMastered"] = null;
+  if (learningTransition && learningTransition.before !== "maintenance" && learningTransition.after === "maintenance") {
+    const [{ data: cardRow }, { count: timesSeen }, { count: timesCorrect }, { count: totalMastered }] = await Promise.all([
+      supabase.from("flashcards").select("front, back").eq("id", flashcardId).maybeSingle(),
+      supabase.from("review_log").select("id", { count: "exact", head: true }).eq("flashcard_id", flashcardId),
+      supabase.from("review_log").select("id", { count: "exact", head: true }).eq("flashcard_id", flashcardId).gte("grade", 2),
+      supabase
+        .from("flashcards")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", user.id)
+        .eq("language", cardLanguage)
+        .eq("learning_state", "maintenance"),
+    ]);
+    if (cardRow) {
+      wordMastered = {
+        before: learningTransition.before,
+        after: learningTransition.after,
+        flashcardId,
+        front: cardRow.front,
+        back: cardRow.back,
+        timesSeen: timesSeen ?? 0,
+        timesCorrect: timesCorrect ?? 0,
+        totalMastered: totalMastered ?? 0,
+      };
+    }
+  }
+
+  const moments = collectMoments({
+    xp: xpResult
+      ? {
+          before: { total: xpResult.total.before, today: xpResult.today.before },
+          after: { total: xpResult.total.after, today: xpResult.today.after },
+          goal: xpResult.goal,
+          minutesHint: minutesHintForGoal(xpResult.goal),
+        }
+      : null,
+    streak: streakTransition,
+    week,
+    newAchievementIds,
+    wordMastered,
+    today: todayUtcIso(),
+  });
+
+  return { reviewLogId: logRow?.id ?? null, moments, xpAwarded: xpResult ? 1 : 0, isNewCard: wasNew };
+}
+
+// docs/moments/mockups/Perfect.dc.html — "+10 XP бонус за чистое занятие".
+// Настоящее начисление (addXp), не декоративное число: только поэтому
+// Perfect-экран имеет право показывать его как факт, а не выдумку.
+const PERFECT_SESSION_BONUS_XP = 10;
+
+export async function awardPerfectBonus(cardCount: number, durationSec: number): Promise<{ moments: Moment[] }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { moments: [] };
+
+  const xpResult = await addXp(supabase, user.id, PERFECT_SESSION_BONUS_XP);
+  if (!xpResult) return { moments: [] };
+
+  const week = await fetchGoalWeekMarks(supabase, user.id);
+  // Бонус — это тоже XP: сам способен довести до цели дня или уровня, те же
+  // правила, что и у обычного addXp в reviewWord выше.
+  const extraMoments = collectMoments({
+    xp: {
+      before: { total: xpResult.total.before, today: xpResult.today.before },
+      after: { total: xpResult.total.after, today: xpResult.today.after },
+      goal: xpResult.goal,
+      minutesHint: minutesHintForGoal(xpResult.goal),
+    },
+    streak: null,
+    week,
+    newAchievementIds: [],
+    wordMastered: null,
+    today: todayUtcIso(),
+  });
+
+  const perfectMoment: Moment = {
+    kind: "perfect",
+    id: `perfect:${Date.now()}`,
+    cardCount,
+    durationSec,
+    bonusXp: PERFECT_SESSION_BONUS_XP,
+  };
+
+  return { moments: [perfectMoment, ...extraMoments] };
+}
+
+export async function getStreakInfo(): Promise<{ current: number; longest: number }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { current: 0, longest: 0 };
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("streak_current, streak_longest")
+    .eq("id", user.id)
+    .single();
+
+  return { current: data?.streak_current ?? 0, longest: data?.streak_longest ?? 0 };
 }
 
 // M3 Slice 10 (brief Phase C §14, task #277) — data side of the Context Gap practice mode: given

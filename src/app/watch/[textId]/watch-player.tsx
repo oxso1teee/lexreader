@@ -20,6 +20,7 @@ import {
   type YouTubePlayerState,
 } from "@/lib/video-reader/youtube-player-state";
 import { YouTubePlayerViewport } from "@/lib/video-reader/youtube-player-viewport";
+import { useMoments } from "@/components/product/moments/moment-provider";
 import {
   upsertWord,
   setWordLevel,
@@ -127,6 +128,7 @@ export default function WatchPlayer({
   processingStatus: "pending" | "processing" | "ready" | "failed";
 }) {
   const router = useRouter();
+  const { pushMoments } = useMoments();
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const playerTerminalRef = useRef(false);
   const playerConstructedAtRef = useRef<number | null>(null);
@@ -244,7 +246,8 @@ export default function WatchPlayer({
     const elapsed = Date.now() - (startedAt.current ?? Date.now());
     const minutes = Math.max(1, Math.round(elapsed / 60_000));
     try {
-      await finishReading({ textId, minutes, wordsLookedUp });
+      const { moments } = await finishReading({ textId, minutes, wordsLookedUp });
+      pushMoments(moments);
       router.push("/library");
     } catch {
       setFinishing(false);

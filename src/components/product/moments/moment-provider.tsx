@@ -6,6 +6,10 @@ import { currentBatch, dismiss, emptyQueue, enqueue, type MomentQueueState } fro
 import type { Moment } from "@/lib/moments/types";
 import { GoalDoneScreen } from "./screens/goal-done";
 import { StreakUpScreen } from "./screens/streak-up";
+import { PerfectScreen } from "./screens/perfect";
+import { LevelUpScreen } from "./screens/level-up";
+import { AchievementScreen } from "./screens/achievement";
+import { WordMasteredScreen } from "./screens/word-mastered";
 
 // Очередь моментов на всё приложение. Серверное действие возвращает
 // moments[] → вызывающий клиент делает pushMoments(result.moments), или
@@ -47,6 +51,14 @@ export function renderMoment(moment: Moment, onClose: () => void) {
       return <GoalDoneScreen moment={moment} onClose={onClose} />;
     case "streak_up":
       return <StreakUpScreen moment={moment} onClose={onClose} />;
+    case "perfect":
+      return <PerfectScreen moment={moment} onClose={onClose} />;
+    case "level_up":
+      return <LevelUpScreen moment={moment} onClose={onClose} />;
+    case "achievement":
+      return <AchievementScreen moment={moment} onClose={onClose} />;
+    case "word_mastered":
+      return <WordMasteredScreen moment={moment} onClose={onClose} />;
   }
 }
 
