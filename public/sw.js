@@ -1,4 +1,9 @@
 const CACHE_NAME = "lexreader-shell-v1";
+// Хешированные файлы сборки (JS, CSS, шрифты next/font) неизменяемы: имя
+// файла содержит хеш содержимого, поэтому cache-first безопасен и даёт
+// мгновенный повторный запуск приложения и работу оболочки без сети.
+const STATIC_CACHE = "lexreader-static-v1";
+const KNOWN_CACHES = [CACHE_NAME, STATIC_CACHE];
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (event) => {
@@ -7,7 +12,15 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      const names = await caches.keys();
+      await Promise.all(
+        names.filter((name) => !KNOWN_CACHES.includes(name)).map((name) => caches.delete(name)),
+      );
+      await self.clients.claim();
+    })(),
+  );
 });
 
 // Network-first для навигаций: последняя открытая страница (например,
@@ -15,7 +28,26 @@ self.addEventListener("activate", (event) => {
 // а полностью незнакомые страницы без сети показывают /offline вместо
 // белого экрана (P0-MOB-02, P0-MOB-03).
 self.addEventListener("fetch", (event) => {
-  if (event.request.mode !== "navigate") return;
+  const { request } = event;
+
+  if (request.method === "GET") {
+    const url = new URL(request.url);
+    if (url.origin === self.location.origin && url.pathname.startsWith("/_next/static/")) {
+      event.respondWith(
+        (async () => {
+          const cache = await caches.open(STATIC_CACHE);
+          const cached = await cache.match(request);
+          if (cached) return cached;
+          const response = await fetch(request);
+          if (response.ok) cache.put(request, response.clone());
+          return response;
+        })(),
+      );
+      return;
+    }
+  }
+
+  if (request.mode !== "navigate") return;
 
   event.respondWith(
     (async () => {

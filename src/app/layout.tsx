@@ -3,6 +3,7 @@ import { Geist_Mono, Unbounded, Onest } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import RegisterServiceWorker from "./register-service-worker";
+import NativeBridge from "./native-bridge";
 import { THEME_INIT_SCRIPT } from "./theme-init-script";
 import { siteUrl } from "@/lib/site-url";
 
@@ -89,6 +90,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <RegisterServiceWorker />
+        <NativeBridge />
         {children}
       </body>
     </html>

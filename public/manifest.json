@@ -6,7 +6,10 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
-  "categories": ["education", "productivity"],
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "lang": "ru",
   "background_color": "#f5f1ea",
   "theme_color": "#a67c52",
@@ -26,6 +29,45 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "Повторение слов",
+      "short_name": "Повторение",
+      "url": "/brain/all/review",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Добавить текст",
+      "short_name": "Новый текст",
+      "url": "/library/new",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Прогресс",
+      "short_name": "Прогресс",
+      "url": "/progress",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
