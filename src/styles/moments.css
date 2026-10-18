@@ -4,6 +4,17 @@
    остальным UI. prefers-reduced-motion в конце файла выключает всё разом —
    элементы сразу стоят в финальном состоянии. */
 
+/* var(--sky-text) на var(--background) в светлой теме даёт только 4.26:1
+   (axe-core, e2e/unified-shell-a11y.spec.ts) — чуть темнее тот же синий,
+   5.09:1. В тёмной теме исходный --sky-text и так даёт 11.2:1, трогать не
+   нужно — здесь просто возвращается к нему. */
+:root {
+  --sky-text-strong: #0a6f8c;
+}
+:root[data-theme="dark"] {
+  --sky-text-strong: var(--sky-text);
+}
+
 .mo-screen {
   position: fixed;
   inset: 0;

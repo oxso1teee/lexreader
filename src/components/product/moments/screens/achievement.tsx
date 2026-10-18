@@ -36,7 +36,11 @@ export function AchievementScreen({ moment, onClose }: { moment: AchievementMome
           fontWeight: 700,
           letterSpacing: ".08em",
           textTransform: "uppercase",
-          color: "var(--sky-text)",
+          // var(--sky-text) на var(--background) даёт только 4.26:1 в светлой
+          // теме (axe-core, e2e/unified-shell-a11y.spec.ts) — см.
+          // --sky-text-strong в moments.css (темнее только в светлой теме,
+          // тёмная не трогается — там и так 11.2:1).
+          color: "var(--sky-text-strong)",
           animationDelay: "0.2s",
         }}
       >
