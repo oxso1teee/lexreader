@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Двойной опыт</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#fff}a:hover{color:#fff1b8}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#2b820f;color:#fff;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-sun{--f:#ffc700;--e:#e0a500;--l:#1a1a1a}
+@keyframes slam{0%{transform:scale(3) rotate(-20deg);opacity:0}55%{transform:scale(.9) rotate(4deg);opacity:1}75%{transform:scale(1.05)}100%{transform:none}}
+.slam{animation:slam .6s .1s cubic-bezier(.3,.7,.4,1) both}
+@keyframes zap{0%,100%{opacity:1;transform:scale(1)}45%{opacity:1}50%{opacity:.3;transform:scale(1.12)}55%{opacity:1}}
+.zap{animation:zap 1.6s .8s ease-in-out infinite}
+@keyframes bolt{0%{transform:translate(0,0) scale(0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1) rotate(var(--r));opacity:0}}
+.bt{position:absolute;left:50%;top:50%;animation:bolt 1s var(--d) ease-out both}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes tick{0%{transform:translateY(-6px);opacity:.4}100%{transform:none;opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinslow{animation:spin 14s linear infinite}
+@keyframes xpup{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.xpup{display:inline-block;animation:xpup .45s 1.6s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes strike{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.strike{position:absolute;left:-4px;right:-4px;top:50%;height:3px;background:#ffc700;border-radius:3px;transform-origin:0 50%;animation:strike .3s 1.3s ease-out both}
+.link2{display:block;text-align:center;font:600 15px/1 Onest,sans-serif;color:#fff;padding:16px 0 0;text-decoration:underline}
+</style>
+</helmet>
+<div class="app">
+  <div aria-hidden="true" style="position: absolute; width: 460px; height: 460px; border-radius: 999px; background: #1c540a; opacity: .5; left: -35px; top: 70px"></div>
+
+  <div style="position: relative; height: 420px; display: flex; align-items: center; justify-content: center; padding-top: 60px">
+    <sc-for list="{{bolts}}" as="b" hint-placeholder-count="0">
+      <svg class="bt" viewBox="0 0 24 24" width="26" height="26" style="{{b.style}}" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#ffc700"></path></svg>
+    </sc-for>
+    <svg viewBox="0 0 280 280" width="280" height="280" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; margin: -110px 0 0 -140px; transform: rotate(-90deg)"><circle cx="140" cy="140" r="132" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="8"></circle><circle cx="140" cy="140" r="132" fill="none" stroke="#ffc700" stroke-width="8" stroke-linecap="round" stroke-dasharray="829" stroke-dashoffset="{{ringOff}}" style="transition: stroke-dashoffset 1s linear"></circle></svg>
+    <svg class="spinslow" viewBox="0 0 300 300" width="300" height="300" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; margin: -120px 0 0 -150px; opacity: .25"><circle cx="150" cy="150" r="148" fill="none" stroke="#fff1b8" stroke-width="3" stroke-dasharray="3 16" stroke-linecap="round"></circle></svg>
+    <div class="slam" style="position: relative; width: 230px; height: 230px; border-radius: 999px; background: #ffc700; box-shadow: inset 0 -10px 0 0 #e0a500, 0 0 0 10px rgba(255,199,0,.25); display: flex; align-items: center; justify-content: center; color: #1a1a1a">
+      <svg class="zap" viewBox="0 0 24 24" width="70" height="70" aria-hidden="true" style="position: absolute; top: 22px; right: 26px"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#fff" stroke="#7a5900" stroke-width="1.2" stroke-linejoin="round"></path></svg>
+      <div class="disp" style="font-size: 96px; font-weight: 900; line-height: 1; letter-spacing: -.04em">×2</div>
+    </div>
+  </div>
+
+  <div style="position: relative; text-align: center; padding: 0 28px">
+    <h1 class="disp rise" style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 900; animation-delay: .6s">Двойной опыт включён</h1>
+    <div class="rise" style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px; animation-delay: .7s">
+      <span style="font-size: 15px; font-weight: 600; opacity: .9">За занятие</span>
+      <span class="disp" style="position: relative; font-size: 20px; font-weight: 900; opacity: .7">10 XP<span class="strike" aria-hidden="true"></span></span>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+      <span class="disp xpup" style="font-size: 24px; font-weight: 900; color: #ffc700">20 XP</span>
+    </div>
+    <div class="rise" style="display: inline-flex; align-items: center; gap: 10px; margin-top: 20px; padding: 12px 18px; border-radius: 16px; background: rgba(0,0,0,.2); animation-delay: .85s" role="timer" aria-label="Осталось {{time}}">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="fill: none; stroke: #ffc700; stroke-width: 2.4; stroke-linecap: round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l3 2M9 2h6"></path></svg>
+      <span class="disp" style="font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; min-width: 98px; text-align: left">{{time}}</span>
+    </div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 30px; animation-delay: 1.1s">
+    <a class="btn b-sun" href="Lesson-start.dc.html">Начать занятие</a>
+    <a class="link2" href="Main.dc.html">Позже</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.s = Date.now();
+    this.iv = setInterval(() => this.forceUpdate(), 1000);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const left = Math.max(0, 900 - (this.s ? Math.floor((Date.now() - this.s) / 1000) : 0));
+    const mm = String(Math.floor(left / 60)).padStart(2, '0');
+    const ss = String(left % 60).padStart(2, '0');
+    const bolts = [];
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + 0.3;
+      bolts.push({ style: '--dx:' + Math.round(Math.cos(a) * 170) + 'px;--dy:' + Math.round(Math.sin(a) * 170) + 'px;--r:' + (i * 45) + 'deg;--d:' + (0.55 + (i % 2) * 0.08).toFixed(2) + 's;margin:-13px 0 0 -13px' });
+    }
+    return { time: mm + ':' + ss, bolts, ringOff: Math.round(829 * (1 - left / 900)) };
+  }
+}
+</script>
+</body>
+</html>

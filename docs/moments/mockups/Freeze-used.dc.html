@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Заморозка спасла стрик</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#0c7c9c}a:hover{color:#075a85}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#ddf4ff;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-sky{--f:#0b79b0;--e:#075a85;--l:#fff}
+.card{background:#fff;border:2px solid rgba(12,124,156,.25);border-radius:20px}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+@keyframes freeze{0%{transform:scale(.3) rotate(-10deg);opacity:0}60%{transform:scale(1.08) rotate(2deg);opacity:1}100%{transform:none}}
+.freeze{animation:freeze .7s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+.float{animation:float 3s .8s ease-in-out infinite}
+@keyframes shimmer{0%{transform:translateX(-80px) rotate(25deg)}100%{transform:translateX(240px) rotate(25deg)}}
+.shim{position:absolute;top:-40px;width:30px;height:260px;background:rgba(255,255,255,.7);animation:shimmer 2.6s 1s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.06);opacity:1}}
+.breathe{animation:breathe 2s ease-in-out infinite;transform-origin:50% 85%}
+@keyframes snow{0%{transform:translate(0,-30px) rotate(0)}100%{transform:translate(var(--dx),880px) rotate(360deg)}}
+.sn{position:absolute;top:0;color:#fff;animation:snow var(--t) var(--d) linear infinite}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes flake{0%{transform:scale(0) rotate(-180deg)}70%{transform:scale(1.3) rotate(10deg)}100%{transform:none}}
+.flake{animation:flake .6s 1.2s cubic-bezier(.2,.9,.3,1.2) both}
+.day{height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div class="app">
+  <sc-for list="{{snow}}" as="f" hint-placeholder-count="0">
+    <svg class="sn ico" viewBox="0 0 24 24" style="{{f.style}}" aria-hidden="true"><path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9"></path></svg>
+  </sc-for>
+
+  <div style="position: relative; text-align: center; padding-top: 130px">
+    <div class="freeze" style="display: inline-block">
+      <div class="float" style="position: relative; width: 180px; height: 180px">
+        <div style="position: absolute; inset: 0; border-radius: 36px; background: rgba(255,255,255,.6); border: 4px solid #fff; box-shadow: inset 0 -12px 0 0 rgba(28,176,246,.35), inset 0 0 0 10px rgba(255,255,255,.35); overflow: hidden">
+          <span class="shim" aria-hidden="true"></span>
+        </div>
+        <div style="position: absolute; left: 22px; top: 18px; width: 40px; height: 10px; border-radius: 99px; background: #fff; transform: rotate(-20deg)"></div>
+        <div style="position: absolute; right: 26px; bottom: 22px; width: 18px; height: 6px; border-radius: 99px; background: #fff; transform: rotate(-20deg)"></div>
+        <div class="breathe" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center">
+          <svg viewBox="0 0 24 24" width="118" height="118" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#ff9500"></path><path d="M12 12c.6 2 3 3 3 5.5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3.5.2 1 .7 1.5 1.2 1.5 0-1.5-.4-2.5.3-3.5z" fill="#ffc700"></path></svg>
+        </div>
+      </div>
+    </div>
+    <h1 class="disp rise" style="margin: 30px 24px 0; font-size: 26px; line-height: 1.2; font-weight: 900; color: #075a85; animation-delay: .5s">Заморозка спасла стрик</h1>
+    <p class="rise" style="margin: 12px 30px 0; font-size: 16px; line-height: 1.45; animation-delay: .62s">Вчера ты не занимался, но серия <b>12 дней</b> цела.</p>
+  </div>
+
+  <div class="card rise" style="position: relative; margin: 26px 20px 0; padding: 14px 16px; animation-delay: .8s">
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; text-align: center; font-size: 12px; font-weight: 600">
+      <div><div class="day" style="background: #ff9500"></div><div class="muted" style="margin-top: 4px">Пн</div></div>
+      <div><div class="day" style="background: #ff9500"></div><div class="muted" style="margin-top: 4px">Вт</div></div>
+      <div><div class="day flake" style="background: #1cb0f6; color: #fff"><svg class="ico" viewBox="0 0 24 24" style="width: 20px; height: 20px"><path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9"></path></svg></div><div style="margin-top: 4px; color: #0c7c9c; font-weight: 700">Ср</div></div>
+      <div><div class="day" style="background: #fff; border: 2px dashed #ff9500"></div><div style="margin-top: 4px; color: #c2410c; font-weight: 700">Чт</div></div>
+      <div><div class="day" style="background: #ece6db"></div><div class="muted" style="margin-top: 4px">Пт</div></div>
+      <div><div class="day" style="background: #ece6db"></div><div class="muted" style="margin-top: 4px">Сб</div></div>
+      <div><div class="day" style="background: #ece6db"></div><div class="muted" style="margin-top: 4px">Вс</div></div>
+    </div>
+    <div style="font-size: 14px; margin-top: 12px; text-align: center">Заморозок осталось: <b>0</b>. Новая придёт в понедельник</div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; animation-delay: 1.5s">
+    <a class="btn b-sky" href="Lesson-start.dc.html">Продолжить серию сегодня</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    let s = 51;
+    const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const snow = [];
+    for (let i = 0; i < 12; i++) {
+      const w = 10 + Math.round(r() * 10);
+      snow.push({ style: 'left:' + Math.round(r() * 370) + 'px;width:' + w + 'px;height:' + w + 'px;opacity:' + (0.5 + r() * 0.5).toFixed(2) + ';--dx:' + Math.round(r() * 60 - 30) + 'px;--t:' + (6 + r() * 5).toFixed(2) + 's;--d:' + (-r() * 8).toFixed(2) + 's' });
+    }
+    return { snow };
+  }
+}
+</script>
+</body>
+</html>

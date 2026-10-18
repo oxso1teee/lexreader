@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Прогресс</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.card{background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tabbar{position:absolute;left:16px;right:16px;bottom:16px;display:flex;background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px;padding:6px 4px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;font:600 11px/1 Onest,sans-serif;color:rgba(26,26,26,.68);text-decoration:none;background:none;border:0;border-radius:14px;cursor:pointer}
+.tab .ico{width:24px;height:24px}
+.tab.on{color:#1a1a1a;background:#e3f6d3}
+.tab.on .ico{color:#166534}
+.ptab{flex:1;min-height:40px;border:0;border-radius:12px;background:transparent;font:700 14px/1 Onest,sans-serif;color:rgba(26,26,26,.68);cursor:pointer}
+.ptab.on{background:#fff;color:#1a1a1a;box-shadow:inset 0 -3px 0 0 rgba(26,26,26,.12)}
+.st{padding:12px 14px}
+.st-v{font:700 22px/1 Unbounded,sans-serif;margin-top:6px}
+.st-l{font-size:13px;color:rgba(26,26,26,.68);display:flex;align-items:center;gap:6px}
+.cell{height:22px;border-radius:6px}
+</style>
+</helmet>
+<div class="app">
+
+<div style="padding: 56px 20px 0">
+  <h1 class="disp" style="margin: 0; font-size: 24px; font-weight: 700">Прогресс</h1>
+</div>
+
+<div style="display: flex; gap: 4px; margin: 14px 16px 0; padding: 4px; border-radius: 14px; background: #ece6db" role="tablist" aria-label="Период">
+  <button class="ptab on" type="button" role="tab" aria-selected="true">Неделя</button>
+  <button class="ptab" type="button" role="tab" aria-selected="false">Месяц</button>
+  <button class="ptab" type="button" role="tab" aria-selected="false">Всё время</button>
+</div>
+
+<div class="card" style="margin: 12px 16px 0; padding: 14px 16px; display: flex; align-items: center; gap: 14px; background: #ffe8c2; border-color: #ff9500">
+  <svg viewBox="0 0 24 24" width="48" height="48" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#ff9500"></path><path d="M12 12c.6 2 3 3 3 5.5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3.5.2 1 .7 1.5 1.2 1.5 0-1.5-.4-2.5.3-3.5z" fill="#ffc700"></path></svg>
+  <div style="flex: 1">
+    <div class="disp" style="font-size: 22px; font-weight: 900; color: #c2410c">12 дней</div>
+    <div style="font-size: 14px; color: #c2410c">Рекорд 21 · 1 заморозка в запасе</div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 16px 0">
+  <div class="card st"><div class="st-l"><span style="width: 10px; height: 10px; border-radius: 3px; background: #2b820f"></span>Знаю слов</div><div class="st-v" style="color: #166534">842</div></div>
+  <div class="card st"><div class="st-l"><span style="width: 10px; height: 10px; border-radius: 3px; background: #0b79b0"></span>Прочитано текстов</div><div class="st-v" style="color: #0c7c9c">37</div></div>
+  <div class="card st"><div class="st-l"><span style="width: 10px; height: 10px; border-radius: 3px; background: #ffc700"></span>XP за неделю</div><div class="st-v" style="color: #7a5900">310</div></div>
+  <div class="card st"><div class="st-l"><span style="width: 10px; height: 10px; border-radius: 3px; background: #ff9500"></span>Минут за неделю</div><div class="st-v" style="color: #c2410c">96</div></div>
+</div>
+
+<div class="card" style="margin: 10px 16px 0; padding: 14px 16px">
+  <div style="display: flex; justify-content: space-between; align-items: baseline">
+    <div style="font-weight: 700; font-size: 15px">Последние 5 недель</div>
+    <div class="muted" style="font-size: 12px">меньше → больше</div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-top: 10px" role="img" aria-label="Карта активности за 5 недель">
+    <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+      <div class="cell" style="{{c.style}}"></div>
+    </sc-for>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-top: 6px; text-align: center; font-size: 11px; font-weight: 600" class="muted">
+    <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+  </div>
+</div>
+
+<div style="display: flex; gap: 10px; margin: 10px 16px 0">
+  <div class="card" style="flex: 1; padding: 12px 14px">
+    <div class="muted" style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em">Рейтинг недели</div>
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px"><svg class="ico" viewBox="0 0 24 24" style="color: #7a5900"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg><span class="disp" style="font-size: 18px; font-weight: 700">4 место</span></div>
+  </div>
+  <div class="card" style="flex: 1; padding: 12px 14px">
+    <div class="muted" style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em">Дуэль с Аней</div>
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px"><span class="disp" style="font-size: 18px; font-weight: 700; color: #166534">3 : 2</span><span class="muted" style="font-size: 12px">ты ведёшь</span></div>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab" href="Main.dc.html"><svg class="ico" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Сегодня</a>
+  <a class="tab" href="Path.dc.html"><svg class="ico" viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg>Учиться</a>
+  <a class="tab" href="Lesson-choice.dc.html"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="14" rx="2"></rect><path d="M7 2h12a2 2 0 0 1 2 2v12"></path></svg>Практика</a>
+  <a class="tab on" href="Progress.dc.html" aria-current="page"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>Прогресс</a>
+  <button class="tab" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>Профиль</button>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const levels = [0,1,2,1,0,0,1, 2,2,3,1,0,1,2, 1,3,3,2,2,0,1, 2,1,3,3,2,1,2, 3,3,2,0,0,0,0];
+    const colors = ['#ece6db', '#cdeeb0', '#2b820f', '#1c540a'];
+    const cells = levels.map((l, i) => ({
+      style: i === 31 ? 'background: #fff; border: 2px dashed #ff9500' : 'background: ' + colors[l]
+    }));
+    return { cells };
+  }
+}
+</script>
+</body>
+</html>

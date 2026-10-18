@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Цель дня</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:54px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:#2b820f;--e:#1c540a;--l:#fff}
+.iconbtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:rgba(26,26,26,.55);border:0;background:none}
+.bar{flex:1;height:16px;border-radius:99px;background:#ece6db;overflow:hidden}
+@keyframes grow{from{width:25%}to{width:50%}}
+.fill{height:100%;border-radius:99px;background:#2b820f;box-shadow:inset 0 -4px 0 0 #1c540a;animation:grow .7s .2s cubic-bezier(.4,0,.2,1) both}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.bob{animation:bob 2.4s ease-in-out infinite}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.04)}100%{transform:none;opacity:1}}
+.bubble{animation:pop .4s cubic-bezier(.2,.9,.3,1.3) both;transform-origin:0 100%}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px 16px;border-radius:18px;border:2px solid;font:700 16px/1.2 Onest,sans-serif;cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .08s}
+.opt:active{transform:translateY(3px)}
+.mins{width:62px;height:46px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;transition:background .15s}
+.radio{width:26px;height:26px;border-radius:999px;border:2px solid rgba(26,26,26,.25);display:flex;align-items:center;justify-content:center;flex:none;transition:all .15s}
+@keyframes chk{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:none}}
+.chk{animation:chk .3s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes swap{0%{transform:translateY(6px);opacity:0}100%{transform:none;opacity:1}}
+.swap{animation:swap .3s ease-out both}
+</style>
+</helmet>
+<div class="app">
+  <div style="display: flex; align-items: center; gap: 8px; padding: 52px 16px 0 6px">
+    <a class="iconbtn" href="Splash.dc.html" aria-label="Назад"><svg class="ico" viewBox="0 0 24 24" style="width: 26px; height: 26px"><path d="M15 18l-6-6 6-6"></path></svg></a>
+    <div class="bar" role="progressbar" aria-label="Шаг 2 из 4" aria-valuemin="0" aria-valuemax="4" aria-valuenow="2"><div class="fill"></div></div>
+  </div>
+
+  <div style="display: flex; align-items: flex-end; gap: 10px; padding: 22px 20px 0">
+    <div class="bob" style="flex: none"><svg viewBox="0 0 128 150" width="84" height="98" aria-hidden="true"><path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="#2b820f"></path><path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="#e3f6d3" opacity="0.9"></path><ellipse cx="54" cy="62" rx="3.2" ry="4.4" fill="#1c540a"></ellipse><ellipse cx="66" cy="62" rx="3.2" ry="4.4" fill="#1c540a"></ellipse><path d="{{mouth}}" fill="none" stroke="#1c540a" stroke-width="2.4" stroke-linecap="round"></path><ellipse cx="90" cy="100" rx="19" ry="12" fill="#ff9500" transform="rotate(-28 90 100)"></ellipse><ellipse cx="94" cy="96" rx="8" ry="5" fill="#ffc700" transform="rotate(-28 94 96)" opacity="0.85"></ellipse></svg></div>
+    <div class="bubble" style="flex: 1; position: relative; background: #fff; border: 2px solid rgba(26,26,26,.15); border-radius: 18px 18px 18px 6px; padding: 12px 14px; margin-bottom: 34px">
+      <h1 class="disp" style="margin: 0; font-size: 17px; line-height: 1.3; font-weight: 700">Сколько минут в день готов читать?</h1>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 20px 0" role="radiogroup" aria-label="Цель дня">
+    <sc-for list="{{goals}}" as="g" hint-placeholder-count="4">
+      <button class="opt rise" type="button" role="radio" aria-checked="{{g.checked}}" onClick="{{g.pick}}" style="{{g.style}}">
+        <span class="mins" style="{{g.mstyle}}"><span class="disp" style="font-size: 19px; font-weight: 900; line-height: 1">{{g.min}}</span><span style="font-size: 11px; font-weight: 700; margin-top: 2px">мин</span></span>
+        <span style="flex: 1">{{g.label}}<span style="display: block; font-size: 13px; font-weight: 600; opacity: .72; margin-top: 3px">{{g.sub}}</span></span>
+        <span class="radio" style="{{g.rstyle}}"><sc-if value="{{g.on}}" hint-placeholder-val="{{ false }}"><svg class="chk" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12l5 5L20 7" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span>
+      </button>
+    </sc-for>
+  </div>
+
+  <div style="margin: 16px 20px 0; padding: 14px 16px; border-radius: 18px; background: #e3f6d3; display: flex; align-items: center; gap: 14px" aria-live="polite">
+    <div style="width: 48px; height: 48px; border-radius: 14px; background: #2b820f; color: #fff; display: flex; align-items: center; justify-content: center; flex: none"><svg class="ico" viewBox="0 0 24 24" style="width: 26px; height: 26px"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg></div>
+    <div class="swap" style="{{swapKey}}">
+      <div style="font-size: 13px; font-weight: 700; color: #166534">Через месяц это примерно</div>
+      <div class="disp" style="font-size: 19px; font-weight: 900; color: #123706; margin-top: 3px">{{words}} новых слов</div>
+      <div style="font-size: 13px; font-weight: 600; color: #166534; margin-top: 2px">{{books}}</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px">
+    <a class="btn b-leaf" href="Streak-commit.dc.html">Продолжить · {{minLabel}} в день</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { i: 1 };
+  }
+  renderVals() {
+    const data = [
+      [5, 'Лёгкий', 'Пара страниц за кофе', 120, 'и первые главы рассказа'],
+      [10, 'Обычный', 'Глава за два дня', 260, 'и одна короткая книга'],
+      [15, 'Серьёзный', 'Глава в день', 380, 'и полторы книги'],
+      [20, 'Интенсив', 'Для тех, кто спешит', 500, 'и две книги B1']
+    ];
+    const mouths = ['M55 73q5 2 10 0', 'M54 72q6 5 12 0', 'M53 71q7 7 14 0', 'M52 70q8 9 16 0'];
+    const i = this.state.i;
+    return {
+      mouth: mouths[i],
+      words: data[i][3],
+      books: data[i][4],
+      minLabel: data[i][0] + ' мин',
+      swapKey: 'animation-name: swap; animation-delay: 0s; --k:' + i,
+      goals: data.map((d, k) => {
+        const on = k === i;
+        return {
+          min: d[0], label: d[1], sub: d[2], on,
+          checked: on ? 'true' : 'false',
+          style: (on ? 'background: #e3f6d3; border-color: #2b820f; color: #123706; box-shadow: inset 0 -4px 0 0 #2b820f;' : 'background: #fff; border-color: rgba(26,26,26,.15); color: #1a1a1a; box-shadow: inset 0 -4px 0 0 rgba(26,26,26,.08);') + 'animation-delay:' + (0.15 + k * 0.07).toFixed(2) + 's',
+          mstyle: on ? 'background: #2b820f; color: #fff' : 'background: #f5f1ea; color: #1a1a1a',
+          rstyle: on ? 'background: #2b820f; border-color: #2b820f' : '',
+          pick: () => this.setState({ i: k })
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

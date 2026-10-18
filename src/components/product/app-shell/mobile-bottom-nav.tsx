@@ -26,7 +26,7 @@ export default function MobileBottomNav() {
   return (
     <nav
       aria-label="Основная навигация"
-      className="sticky bottom-4 z-20 mx-4 flex rounded-[20px] border border-[var(--border)] bg-[var(--surface)] md:hidden"
+      className="sticky bottom-4 z-20 mx-4 flex rounded-[20px] border-2 border-[var(--border-strong)] bg-[var(--surface)] px-1 py-1.5 md:hidden"
       style={{ marginBottom: "env(safe-area-inset-bottom)" }}
     >
       {NAV_ITEMS.map((item) => {
@@ -41,9 +41,9 @@ export default function MobileBottomNav() {
               if (!active) void haptic("light");
               track("app_nav_clicked", { destination: item.href, viewport_type: "mobile" });
             }}
-            className={`focus-ring flex flex-1 flex-col items-center gap-0.5 py-2.5 text-center text-xs font-medium transition-[color,transform] duration-100 active:scale-90 ${
+            className={`focus-ring flex flex-1 flex-col items-center gap-[3px] rounded-[14px] pt-1.5 pb-[5px] text-center text-[11px] font-semibold transition-[color,transform,background-color] duration-100 active:scale-90 ${
               active
-                ? "text-black dark:text-white"
+                ? "bg-[var(--leaf-tint)] text-foreground"
                 : "text-[var(--text-secondary)] hover:text-foreground"
             }`}
           >
@@ -58,14 +58,9 @@ export default function MobileBottomNav() {
                 --card. --color-forest-text (~8.6:1 против --card в тёмной
                 теме) с большим запасом чист. */}
             <span className={active ? "text-[var(--color-forest-text)]" : ""} aria-hidden="true">
-              <Icon className="h-5 w-5" />
+              <Icon className="h-6 w-6" strokeWidth={2} />
             </span>
             <span className="leading-none">{item.label}</span>
-            <span
-              className={`mt-0.5 h-1 w-1 rounded-full transition-opacity ${
-                active ? "bg-forest opacity-100" : "opacity-0"
-              }`}
-            />
           </Link>
         );
       })}

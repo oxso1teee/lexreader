@@ -1,0 +1,203 @@
+/* docs/moments/mockups/Main.dc.html — главный экран «Сегодня» v7.
+   Размеры, отступы и цвета перенесены из макета; цвета — через токены,
+   чтобы тёмная тема работала. Префикс td-. */
+
+.td-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  padding-bottom: 16px;
+  line-height: normal;
+}
+
+.td-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 8px;
+}
+
+.td-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.td-lang {
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  color: var(--foreground);
+}
+
+.td-lang-code {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--leaf-tint);
+  color: var(--leaf-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.td-streak { background: var(--ember-tint); color: var(--ember-text); }
+.td-xp { background: var(--sun-tint); color: var(--sun-text); }
+
+.td-greet {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px 14px;
+}
+
+.td-disp {
+  font-family: var(--font-unbounded), var(--font-onest), sans-serif;
+}
+
+.td-muted { color: var(--text-secondary); }
+
+@keyframes td-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.td-bob { animation: td-bob 2.4s ease-in-out infinite; }
+
+.td-hero {
+  margin: 0 16px;
+  border-radius: 24px;
+  background: var(--leaf);
+  color: #fff;
+  padding: 20px;
+  box-shadow: inset 0 -6px 0 0 var(--leaf-edge);
+}
+
+.td-hero-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* Main.dc.html просит opacity:.85, но белый на 85% поверх --leaf даёт
+     только 3.98:1 (найдено axe-core, e2e/unified-shell-a11y.spec.ts) —
+     13px bold не дотягивает до "крупного текста" по WCAG 1.4.3, порог
+     остаётся 4.5:1. Полностью непрозрачный белый — 4.88:1, тот же цвет,
+     просто без искусственного затемнения. */
+  opacity: 1;
+}
+
+.td-hero-title {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.td-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  /* Та же причина, что у .td-hero-eyebrow выше: .92 давало 4.39:1, ниже
+     порога 4.5:1 для некрупного текста. */
+  opacity: 1;
+}
+
+/* Белая кнопка на зелёном: та же «пухлая» механика, что у .btn. */
+.td-hero-cta {
+  --btn-fill: #fff;
+  --btn-edge: var(--leaf-tint-strong);
+  --btn-label: var(--leaf-text);
+  margin-top: 16px;
+  width: 100%;
+  min-height: 52px;
+  font-size: 16px;
+}
+
+.td-card {
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  border-radius: 20px;
+  color: var(--foreground);
+}
+
+.td-tiles {
+  display: flex;
+  gap: 12px;
+  margin: 14px 16px 0;
+}
+
+.td-tile {
+  flex: 1;
+  min-width: 0;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.td-tile-value { font-weight: 700; font-size: 18px; }
+.td-tile-label { font-size: 13px; }
+
+.td-week {
+  margin: 12px 16px 0;
+  padding: 14px 16px;
+}
+
+.td-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.td-day {
+  height: 34px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.td-continue {
+  margin: 12px 16px 0;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-decoration: none;
+}
+
+.td-bar {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--surface-muted);
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.td-more {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 16px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .td-bob { animation: none; }
+}

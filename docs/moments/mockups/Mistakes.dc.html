@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Повтор ошибок</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-sky{--f:#0b79b0;--e:#075a85;--l:#fff}
+.card{background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.bar{flex:1;height:16px;border-radius:99px;background:#ece6db;overflow:hidden}
+.fill{height:100%;border-radius:99px;background:#2b820f;box-shadow:inset 0 -4px 0 0 rgba(0,0,0,.12)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 3.2s linear infinite}
+@keyframes zoom{0%{transform:scale(0) rotate(-90deg)}70%{transform:scale(1.08) rotate(6deg)}100%{transform:none}}
+.zoom{animation:zoom .6s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes tilt{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.tilt{animation:tilt 1.8s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes slide{0%{transform:translateX(120%)}70%{transform:translateX(-4%)}100%{transform:none}}
+.slide{animation:slide .55s cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+.shake{animation:shake .45s ease-in-out both}
+@keyframes badge{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.badge{animation:badge .4s .7s ease-out both}
+.link2{display:block;text-align:center;font:600 15px/1 Onest,sans-serif;color:rgba(26,26,26,.68);padding:16px 0 0;text-decoration:underline}
+</style>
+</helmet>
+<div class="app">
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 52px 20px 0">
+  <div class="bar" role="progressbar" aria-label="Прогресс занятия" aria-valuemin="0" aria-valuemax="12" aria-valuenow="10"><div class="fill" style="width: 83%"></div></div>
+</div>
+
+<div style="text-align: center; padding: 40px 28px 0">
+  <div class="zoom" style="position: relative; width: 176px; height: 176px; margin: 0 auto">
+    <svg class="spin" viewBox="0 0 176 176" width="176" height="176" aria-hidden="true" style="position: absolute; inset: 0">
+      <path d="M88 10a78 78 0 0 1 74 54" fill="none" stroke="#1cb0f6" stroke-width="7" stroke-linecap="round"></path>
+      <path d="M150 52l13 13 6-18" fill="none" stroke="#1cb0f6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path d="M88 166a78 78 0 0 1-74-54" fill="none" stroke="#1cb0f6" stroke-width="7" stroke-linecap="round"></path>
+      <path d="M26 124l-13-13-6 18" fill="none" stroke="#1cb0f6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+    <div style="position: absolute; inset: 22px; border-radius: 999px; background: #ddf4ff; display: flex; align-items: center; justify-content: center">
+      <div class="tilt"><svg viewBox="0 0 128 150" width="88" height="104" aria-hidden="true"><path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="#2b820f"></path><path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="#e3f6d3" opacity="0.9"></path><path d="M49 56l8 2M71 56l-8 2" stroke="#1c540a" stroke-width="2.4" stroke-linecap="round"></path><ellipse cx="54" cy="62" rx="3.4" ry="4.6" fill="#1c540a"></ellipse><ellipse cx="66" cy="62" rx="3.4" ry="4.6" fill="#1c540a"></ellipse><path d="M55 73q5 3 10 0" fill="none" stroke="#1c540a" stroke-width="2.4" stroke-linecap="round"></path><ellipse cx="90" cy="100" rx="19" ry="12" fill="#ff9500" transform="rotate(-28 90 100)"></ellipse><ellipse cx="94" cy="96" rx="8" ry="5" fill="#ffc700" transform="rotate(-28 94 96)" opacity="0.85"></ellipse></svg></div>
+    </div>
+    <span class="badge disp" style="position: absolute; right: 6px; top: 6px; width: 44px; height: 44px; border-radius: 999px; background: #df2d2d; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 900; border: 4px solid #f5f1ea">2</span>
+  </div>
+  <h1 class="disp rise" style="margin: 26px 0 0; font-size: 26px; line-height: 1.2; font-weight: 900; animation-delay: .35s">Вернёмся к ошибкам</h1>
+  <p class="muted rise" style="margin: 10px 0 0; font-size: 16px; line-height: 1.45; animation-delay: .45s">Два слова, на которых ты споткнулся. Ещё одна попытка, и они станут твоими.</p>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 24px 20px 0">
+  <div class="card slide" style="padding: 14px 16px; display: flex; align-items: center; gap: 12px; animation-delay: .6s">
+    <div class="shake" style="width: 40px; height: 40px; border-radius: 12px; background: #ffdede; color: #c21b1b; display: flex; align-items: center; justify-content: center; flex: none; animation-delay: 1.15s"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg></div>
+    <div style="flex: 1"><div style="font: 600 18px/1.2 'Source Serif 4', Georgia, serif">reluctant</div><div class="muted" style="font-size: 13px; margin-top: 2px">перепутал с «рад»</div></div>
+  </div>
+  <div class="card slide" style="padding: 14px 16px; display: flex; align-items: center; gap: 12px; animation-delay: .72s">
+    <div class="shake" style="width: 40px; height: 40px; border-radius: 12px; background: #ffdede; color: #c21b1b; display: flex; align-items: center; justify-content: center; flex: none; animation-delay: 1.27s"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg></div>
+    <div style="flex: 1"><div style="font: 600 18px/1.2 'Source Serif 4', Georgia, serif">spiral</div><div class="muted" style="font-size: 13px; margin-top: 2px">ошибка в написании</div></div>
+  </div>
+</div>
+
+<div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 30px; animation-delay: 1.1s">
+  <a class="btn b-sky" href="Lesson-choice.dc.html">Исправить · 2 задания</a>
+  <a class="link2" href="Result.dc.html">Пропустить</a>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

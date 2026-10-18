@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Вызов на дуэль</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:#2b820f;--e:#1c540a;--l:#fff}
+.b-ghost{--f:#ece6db;--e:#c9c2b6;--l:#1a1a1a}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ghost{background:#fff;border:2px solid rgba(26,26,26,.12);border-radius:20px}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.scrim{position:absolute;inset:0;background:rgba(26,26,26,.6);animation:fadein .25s ease-out both}
+@keyframes pop{0%{transform:translateY(60px) scale(.85);opacity:0}65%{transform:translateY(-6px) scale(1.02);opacity:1}100%{transform:none;opacity:1}}
+.modal{position:absolute;left:16px;right:16px;top:140px;background:#fff;border-radius:28px;padding:26px 20px 20px;animation:pop .45s .1s cubic-bezier(.2,.9,.3,1.1) both;box-shadow:inset 0 -6px 0 0 rgba(26,26,26,.08)}
+@keyframes slideL{0%{transform:translateX(-90px) rotate(-15deg);opacity:0}70%{transform:translateX(10px) rotate(4deg);opacity:1}100%{transform:none;opacity:1}}
+@keyframes slideR{0%{transform:translateX(90px) rotate(15deg);opacity:0}70%{transform:translateX(-10px) rotate(-4deg);opacity:1}100%{transform:none;opacity:1}}
+.sl{animation:slideL .55s .35s cubic-bezier(.2,.9,.3,1.1) both}.sr{animation:slideR .55s .35s cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes vs{0%{transform:scale(0) rotate(-30deg)}60%{transform:scale(1.5) rotate(10deg)}100%{transform:scale(1) rotate(0)}}
+.vs{animation:vs .45s .8s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes flash{0%{opacity:0;transform:scale(.2)}30%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(1.8)}}
+.flash{position:absolute;left:50%;top:42px;width:90px;height:90px;margin-left:-45px;border-radius:999px;background:#ffc700;animation:flash .5s .8s ease-out both}
+@keyframes spk{0%{transform:translate(0,0) scale(.3);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}}
+.spk{position:absolute;left:50%;top:84px;width:8px;height:8px;border-radius:2px;background:#ff9500;animation:spk .6s .82s ease-out both}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--c)}100%{box-shadow:0 0 0 12px rgba(0,0,0,0)}}
+.av{width:84px;height:84px;border-radius:999px;display:flex;align-items:center;justify-content:center;font:900 32px/1 Unbounded,sans-serif;color:#fff;border:4px solid #fff;animation:pulse 1.6s 1.4s ease-out infinite}
+@keyframes rise{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
+</style>
+</helmet>
+<div class="app">
+  <div aria-hidden="true" style="padding: 60px 16px 0">
+    <div style="height: 40px; width: 70%; border-radius: 12px; background: #ece6db"></div>
+    <div style="height: 230px; margin-top: 20px; border-radius: 24px; background: #2b820f"></div>
+    <div style="display: flex; gap: 12px; margin-top: 14px"><div class="ghost" style="flex: 1; height: 80px"></div><div class="ghost" style="flex: 1; height: 80px"></div></div>
+    <div class="ghost" style="height: 110px; margin-top: 12px"></div>
+  </div>
+  <div class="scrim" aria-hidden="true"></div>
+
+  <div class="modal" role="dialog" aria-label="Аня вызывает тебя на дуэль">
+    <span class="flash" aria-hidden="true"></span>
+    <sc-for list="{{spk}}" as="s" hint-placeholder-count="0"><span class="spk" style="{{s.style}}" aria-hidden="true"></span></sc-for>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 4px; position: relative">
+      <div class="sl" style="text-align: center"><div class="av" style="background: #8b5cf6; --c: rgba(139,92,246,.5)">А</div><div style="font-weight: 700; font-size: 14px; margin-top: 8px">Аня</div></div>
+      <div class="vs disp" style="width: 64px; text-align: center; font-size: 24px; font-weight: 900; color: #c2410c">VS</div>
+      <div class="sr" style="text-align: center"><div class="av" style="background: #0b79b0; --c: rgba(11,121,176,.5)">С</div><div style="font-weight: 700; font-size: 14px; margin-top: 8px">Ты</div></div>
+    </div>
+    <h1 class="disp rise" style="margin: 20px 0 0; text-align: center; font-size: 22px; line-height: 1.2; font-weight: 900; animation-delay: 1s">Аня вызывает тебя на дуэль</h1>
+    <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px">
+      <div class="rise" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: #f5f1ea; font-size: 14px; animation-delay: 1.1s">
+        <svg class="ico" viewBox="0 0 24 24" style="color: #0c7c9c"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg>10 слов из «The Last Lighthouse»
+      </div>
+      <div class="rise" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: #f5f1ea; font-size: 14px; animation-delay: 1.2s">
+        <svg class="ico" viewBox="0 0 24 24" style="color: #0c7c9c"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>2 минуты · у Ани уже 8 из 10
+      </div>
+    </div>
+    <div class="rise" style="display: flex; gap: 10px; margin-top: 18px; animation-delay: 1.35s">
+      <a class="btn b-ghost" href="Main.dc.html" style="flex: 0 0 auto; width: auto; padding-left: 18px; padding-right: 18px">Позже</a>
+      <a class="btn b-leaf" href="Lesson-start.dc.html" style="flex: 1">Принять вызов</a>
+    </div>
+    <div class="muted rise" style="text-align: center; font-size: 12px; margin-top: 10px; animation-delay: 1.45s">Вызов сгорит через <b style="font-variant-numeric: tabular-nums; color: #c2410c">{{left}}</b></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() { this.t0 = Date.now(); this.iv = setInterval(() => this.forceUpdate(), 1000); }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const sec = Math.max(0, 82781 - (this.t0 ? Math.floor((Date.now() - this.t0) / 1000) : 0));
+    const two = (n) => String(n).padStart(2, '0');
+    const left = two(Math.floor(sec / 3600)) + ':' + two(Math.floor(sec % 3600 / 60)) + ':' + two(sec % 60);
+    const spk = [];
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      spk.push({ style: '--dx:' + Math.round(Math.cos(a) * 70) + 'px;--dy:' + Math.round(Math.sin(a) * 50) + 'px;margin-left:-4px;background:' + (i % 2 ? '#ffc700' : '#ff9500') });
+    }
+    return { spk, left };
+  }
+}
+</script>
+</body>
+</html>

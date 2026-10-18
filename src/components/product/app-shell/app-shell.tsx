@@ -21,12 +21,11 @@ export default function AppShell({
       <DesktopSidebar planLabel={planLabel} />
 
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-background">
-        <header
-          className="sticky top-0 z-20 flex items-center justify-center bg-[var(--background)] px-4 py-3 md:hidden"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-          <span className="text-lg font-bold tracking-tight">{messages.appShell.brand}</span>
-        </header>
+        {/* Макеты v7 (docs/moments/mockups): на телефоне нет полосы с
+            брендом — экран начинается сразу с содержимого. Остаётся только
+            отступ под вырез/статус-бар. Имя бренда для скринридеров. */}
+        <div className="h-[env(safe-area-inset-top)] md:hidden" aria-hidden="true" />
+        <span className="sr-only md:hidden">{messages.appShell.brand}</span>
 
         <main className="flex flex-1 flex-col md:mx-auto md:w-full md:max-w-[var(--container-dashboard)]">
           {children}

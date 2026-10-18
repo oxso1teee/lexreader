@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Календарь стрика</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.card{background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.iconbtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:none;border-radius:12px;color:#1a1a1a;cursor:pointer;text-decoration:none}
+@keyframes flick{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.08) rotate(3deg)}}
+.flick{animation:flick 1.1s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.cell{height:40px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;position:relative}
+.cell span{position:relative;z-index:1;width:36px;height:36px;border-radius:999px;display:flex;align-items:center;justify-content:center}
+.pop{animation:pop .35s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(255,149,0,.5)}100%{box-shadow:0 0 0 10px rgba(255,149,0,0)}}
+.today span{animation:ring 1.4s ease-out infinite}
+.st{flex:1;padding:12px;text-align:center}
+@keyframes g14{from{width:0}to{width:93%}}
+.grow14{animation:g14 .9s 1s cubic-bezier(.4,0,.2,1) both}
+</style>
+</helmet>
+<div class="app">
+  <div style="display: flex; align-items: center; padding: 48px 8px 0">
+    <a class="iconbtn" href="Main.dc.html" aria-label="Назад"><svg class="ico" viewBox="0 0 24 24" style="width: 26px; height: 26px"><path d="M15 18l-6-6 6-6"></path></svg></a>
+    <div class="disp" style="flex: 1; text-align: center; font-size: 18px; font-weight: 700; margin-right: 44px">Стрик</div>
+  </div>
+
+  <div class="rise" style="margin: 12px 16px 0; border-radius: 24px; background: #ff9500; box-shadow: inset 0 -6px 0 0 #db7a00; padding: 18px 20px; display: flex; align-items: center; gap: 14px; color: #1a1a1a">
+    <div style="flex: 1">
+      <div class="disp" style="font-size: 44px; font-weight: 900; line-height: 1">13</div>
+      <div style="font-size: 16px; font-weight: 700; margin-top: 4px">дней подряд</div>
+    </div>
+    <div class="flick"><svg viewBox="0 0 24 24" width="86" height="86" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#fff"></path><path d="M12 12c.6 2 3 3 3 5.5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3.5.2 1 .7 1.5 1.2 1.5 0-1.5-.4-2.5.3-3.5z" fill="#ffc700"></path></svg></div>
+  </div>
+
+  <div class="card rise" style="margin: 12px 16px 0; display: flex; animation-delay: .1s">
+    <div class="st"><div class="disp" style="font-size: 20px; font-weight: 900; color: #c2410c">21</div><div class="muted" style="font-size: 12px; margin-top: 3px">рекорд</div></div>
+    <div style="width: 2px; background: #ece6db"></div>
+    <div class="st"><div class="disp" style="font-size: 20px; font-weight: 900; color: #0c7c9c">0 / 1</div><div class="muted" style="font-size: 12px; margin-top: 3px">заморозок</div></div>
+    <div style="width: 2px; background: #ece6db"></div>
+    <div class="st"><div class="disp" style="font-size: 20px; font-weight: 900; color: #166534">14</div><div class="muted" style="font-size: 12px; margin-top: 3px">дней в октябре</div></div>
+  </div>
+
+  <div class="card rise" style="margin: 12px 16px 0; padding: 12px 12px 14px; animation-delay: .2s">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <button class="iconbtn" type="button" aria-label="Предыдущий месяц"><svg class="ico" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"></path></svg></button>
+      <div style="font-weight: 700; font-size: 16px">Октябрь 2026</div>
+      <button class="iconbtn" type="button" aria-label="Следующий месяц" style="color: rgba(26,26,26,.3)"><svg class="ico" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"></path></svg></button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; font-size: 12px; font-weight: 700; color: rgba(26,26,26,.55); margin: 4px 0 2px">
+      <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr))" role="img" aria-label="Календарь октября: 14 дней занятий, 1 заморозка, текущая серия 13 дней">
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="35">
+        <div class="{{d.cls}}"><span class="{{d.pcls}}" style="{{d.style}}">{{d.label}}</span></div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 14px; justify-content: center; margin-top: 10px; font-size: 12px; font-weight: 600" class="muted">
+      <span style="display: flex; align-items: center; gap: 6px"><i style="width: 12px; height: 12px; border-radius: 99px; background: #ff9500; display: block"></i>занимался</span>
+      <span style="display: flex; align-items: center; gap: 6px"><i style="width: 12px; height: 12px; border-radius: 99px; background: #1cb0f6; display: block"></i>заморозка</span>
+    </div>
+  </div>
+
+  <div class="card rise" style="margin: 12px 16px 0; padding: 14px 16px; display: flex; align-items: center; gap: 14px; animation-delay: .3s">
+    <svg viewBox="0 0 120 100" width="44" height="37" aria-hidden="true"><rect x="10" y="40" width="100" height="54" rx="10" fill="#c2410c"></rect><path d="M10 46 Q60 6 110 46 V52 H10z" fill="#ff9500"></path><rect x="50" y="44" width="20" height="24" rx="5" fill="#ffc700"></rect></svg>
+    <div style="flex: 1">
+      <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700"><span>До сундука «Две недели»</span><span style="color: #c2410c">13/14</span></div>
+      <div style="height: 12px; border-radius: 99px; background: #ece6db; margin-top: 8px; overflow: hidden"><div class="grow14" style="height: 100%; border-radius: 99px; background: #ff9500"></div></div>
+      <div class="muted" style="font-size: 12px; margin-top: 6px">Остался 1 день. Завтра откроешь</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const offset = 3;
+    const active = new Set([1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17]);
+    const freeze = 15;
+    const today = 17;
+    const days = [];
+    for (let i = 0; i < 35; i++) {
+      const d = i - offset + 1;
+      if (d < 1 || d > 31) { days.push({ cls: 'cell', pcls: '', style: '', label: '' }); continue; }
+      let style = 'color: rgba(26,26,26,.75);';
+      let pcls = '';
+      if (active.has(d)) { style = 'background: #ff9500; color: #fff;'; pcls = 'pop'; }
+      if (d === freeze) { style = 'background: #1cb0f6; color: #fff;'; pcls = 'pop'; }
+      if (d > today) style = 'color: rgba(26,26,26,.3);';
+      if (pcls) style += ' animation-delay: ' + (0.3 + d * 0.025).toFixed(3) + 's;';
+      days.push({ cls: d === today ? 'cell today' : 'cell', pcls, style, label: String(d) });
+    }
+    return { days };
+  }
+}
+</script>
+</body>
+</html>

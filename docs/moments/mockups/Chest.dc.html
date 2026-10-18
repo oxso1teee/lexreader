@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Сундук</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#fff}a:hover{color:#fff1b8}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#3a1d0a;color:#fff;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-sun{--f:#ffc700;--e:#e0a500;--l:#1a1a1a}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+@keyframes wiggle{0%,100%{transform:rotate(0)}15%{transform:rotate(-8deg)}30%{transform:rotate(8deg)}45%{transform:rotate(-5deg)}60%{transform:rotate(3deg)}}
+.wiggle{animation:wiggle 1.2s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes lid{0%{transform:none}100%{transform:translate(40px,-150px) rotate(40deg);opacity:0}}
+.lidopen{animation:lid .6s cubic-bezier(.3,.7,.4,1) both}
+@keyframes beam{0%{opacity:0;transform:scaleY(.2)}100%{opacity:1;transform:scaleY(1)}}
+.beam{animation:beam .5s .15s ease-out both;transform-origin:50% 100%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rays{animation:spin 10s linear infinite}
+@keyframes popr{0%{transform:translateY(60px) scale(.3);opacity:0}70%{transform:translateY(-8px) scale(1.08);opacity:1}100%{transform:none;opacity:1}}
+.popr{animation:popr .5s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes hint{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hint{animation:hint 1.2s ease-in-out infinite}
+.rw{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.14)}
+@keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}10%{transform:translate(-6px,2px) rotate(-6deg)}20%{transform:translate(6px,-2px) rotate(6deg)}30%{transform:translate(-8px,0) rotate(-8deg)}40%{transform:translate(8px,-3px) rotate(8deg)}50%{transform:translate(-9px,0) rotate(-9deg) scale(1.04)}60%{transform:translate(9px,-4px) rotate(9deg) scale(1.06)}70%{transform:translate(-6px,0) rotate(-5deg) scale(1.08)}80%{transform:translate(4px,-6px) rotate(3deg) scale(1.1)}90%{transform:translate(0,-8px) scale(1.12,0.92)}}
+.shake{animation:shake .75s ease-in both;transform-origin:50% 90%}
+@keyframes seam{0%,100%{opacity:.2}50%{opacity:1}}
+.seam{animation:seam .18s linear infinite}
+@keyframes flash{0%{opacity:.95}100%{opacity:0}}
+.flash{position:absolute;inset:0;background:#fff1b8;animation:flash .5s ease-out both;pointer-events:none;z-index:5}
+@keyframes coin{0%{transform:translate(0,0) scale(.3) rotateY(0);opacity:1}70%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1) rotateY(720deg);opacity:0}}
+.coin{position:absolute;left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:99px;background:#ffc700;box-shadow:inset 0 -3px 0 0 #e0a500, 0 0 0 2px #7a5900;animation:coin var(--t) var(--d) cubic-bezier(.15,.7,.3,1) both}
+@keyframes land{0%{transform:translateY(0)}40%{transform:translateY(6px) scale(1.06,.94)}100%{transform:none}}
+.land{animation:land .4s ease-out both;transform-origin:50% 100%}
+.taps{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.ri{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+</style>
+</helmet>
+<div class="app">
+  <sc-if value="{{open}}" hint-placeholder-val="{{ false }}"><div class="flash" aria-hidden="true"></div></sc-if>
+  <div style="position: relative; height: 420px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 40px">
+    <sc-if value="{{open}}" hint-placeholder-val="{{ false }}">
+      <svg class="rays" viewBox="0 0 300 300" width="420" height="420" aria-hidden="true" style="position: absolute; left: -15px; top: 20px; opacity: .35">
+        <g fill="#ffc700"><path d="M150 150 L138 0 L162 0 Z"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(30 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(60 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(90 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(120 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(150 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(180 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(210 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(240 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(270 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(300 150 150)"></path><path d="M150 150 L138 0 L162 0 Z" transform="rotate(330 150 150)"></path></g>
+      </svg>
+      <div class="beam" aria-hidden="true" style="position: absolute; left: 50%; bottom: 150px; width: 140px; height: 220px; margin-left: -70px; background: rgba(255,199,0,.32); clip-path: polygon(20% 100%, 80% 100%, 100% 0, 0 0)"></div>
+    </sc-if>
+    <sc-if value="{{open}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; left: 50%; bottom: 130px; width: 0; height: 0; z-index: 3"><sc-for list="{{coins}}" as="c" hint-placeholder-count="0"><span class="coin" style="{{c}}"></span></sc-for></div>
+    </sc-if>
+    <button type="button" onClick="{{openIt}}" aria-label="{{aria}}" style="position: relative; border: 0; background: none; padding: 0; cursor: pointer">
+      <div class="{{wcls}}">
+        <svg viewBox="0 0 200 170" width="220" height="187" aria-hidden="true" style="overflow: visible">
+          <rect x="16" y="70" width="168" height="92" rx="14" fill="#c2410c" stroke="#1a0c03" stroke-width="7"></rect>
+          <rect x="16" y="108" width="168" height="10" fill="#7c2d0a"></rect>
+          <sc-if value="{{shaking}}" hint-placeholder-val="{{ false }}"><rect class="seam" x="20" y="74" width="160" height="8" rx="4" fill="#fff1b8"></rect></sc-if>
+          <rect x="86" y="96" width="28" height="34" rx="6" fill="#ffc700" stroke="#1a0c03" stroke-width="5"></rect>
+          <g class="{{lidcls}}" style="transform-origin: 100px 76px">
+            <path d="M16 78 Q100 6 184 78 V86 H16z" fill="#ff9500" stroke="#1a0c03" stroke-width="7" stroke-linejoin="round"></path>
+            <rect x="86" y="62" width="28" height="22" rx="6" fill="#ffc700" stroke="#1a0c03" stroke-width="5"></rect>
+          </g>
+        </svg>
+      </div>
+    </button>
+  </div>
+
+  <sc-if value="{{closed}}" hint-placeholder-val="{{ true }}">
+    <div style="text-align: center; padding: 0 28px">
+      <h1 class="disp" style="margin: 0; font-size: 26px; line-height: 1.2; font-weight: 900">Сундук за задания дня</h1>
+      <p class="hint" style="margin: 16px 0 0; font-size: 16px; font-weight: 700; color: #ffc700">{{hintText}}</p>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{open}}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 0 20px">
+      <h1 class="disp rise" style="margin: 0 0 16px; text-align: center; font-size: 24px; font-weight: 900; animation-delay: .3s">Внутри:</h1>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div class="rw popr" style="animation-delay: .45s"><div class="ri" style="background: #ffc700"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#fff" stroke="#7a5900" stroke-width="1.5" stroke-linejoin="round"></path></svg></div><div class="disp" style="font-size: 18px; font-weight: 900">+{{xp}} XP</div></div>
+        <div class="rw popr" style="animation-delay: .65s"><div class="ri" style="background: #1cb0f6; color: #fff"><svg class="ico" viewBox="0 0 24 24" style="width: 24px; height: 24px"><path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9"></path></svg></div><div style="font-weight: 700; font-size: 16px">+1 заморозка стрика</div></div>
+        <div class="rw popr" style="animation-delay: .85s"><div class="ri" style="background: #2b820f; color: #fff; font: 900 15px/1 Unbounded, sans-serif">×2</div><div style="font-weight: 700; font-size: 16px">Двойной опыт на 15 минут</div></div>
+      </div>
+    </div>
+    <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; animation-delay: 1.1s">
+      <a class="btn b-sun" href="Double-XP.dc.html">Забрать всё</a>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { phase: 0, at: 0 };
+  }
+  componentWillUnmount() { clearTimeout(this.t); clearInterval(this.iv); }
+  renderVals() {
+    const ph = this.state.phase;
+    const o = ph === 2;
+    const el = o ? Date.now() - this.state.at : 0;
+    const p = Math.min(1, Math.max(0, (el - 500) / 900));
+    let sd = 5;
+    const r = () => { sd = (sd * 9301 + 49297) % 233280; return sd / 233280; };
+    const coins = [];
+    for (let i = 0; i < 18; i++) {
+      const a = -Math.PI * (0.08 + r() * 0.84);
+      const d = 120 + r() * 160;
+      coins.push('--dx:' + Math.round(Math.cos(a) * d) + 'px;--dy:' + Math.round(Math.sin(a) * d) + 'px;--d:' + (r() * 0.15).toFixed(2) + 's;--t:' + (0.9 + r() * 0.6).toFixed(2) + 's');
+    }
+    return {
+      open: o, closed: !o, shaking: ph === 1, coins,
+      xp: Math.round((1 - Math.pow(1 - p, 3)) * 30),
+      wcls: ph === 0 ? 'wiggle' : (ph === 1 ? 'shake' : 'land'),
+      lidcls: o ? 'lidopen' : '',
+      hintText: ph === 1 ? 'Открывается…' : 'Нажми на сундук',
+      aria: o ? 'Сундук открыт' : 'Открыть сундук',
+      openIt: () => {
+        if (this.state.phase !== 0) return;
+        this.setState({ phase: 1 });
+        this.t = setTimeout(() => {
+          this.setState({ phase: 2, at: Date.now() });
+          clearInterval(this.iv);
+          this.iv = setInterval(() => { this.forceUpdate(); if (Date.now() - this.state.at > 1600) clearInterval(this.iv); }, 33);
+        }, 750);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

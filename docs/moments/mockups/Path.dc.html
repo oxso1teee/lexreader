@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Учиться: карта пути</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tabbar{position:absolute;left:16px;right:16px;bottom:16px;display:flex;background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px;padding:6px 4px;z-index:5}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;font:600 11px/1 Onest,sans-serif;color:rgba(26,26,26,.68);text-decoration:none;background:none;border:0;border-radius:14px;cursor:pointer}
+.tab .ico{width:24px;height:24px}
+.tab.on{color:#1a1a1a;background:#e3f6d3}
+.tab.on .ico{color:#166534}
+.node{position:absolute;width:72px;height:68px;border-radius:999px;display:flex;align-items:center;justify-content:center;text-decoration:none;border:0;cursor:pointer;padding-bottom:6px}
+.done{background:#2b820f;box-shadow:inset 0 -6px 0 0 #1c540a;color:#fff}
+.lock{background:#ece6db;box-shadow:inset 0 -6px 0 0 #d6cfc3;color:rgba(26,26,26,.45);cursor:default}
+.node .ico{width:30px;height:30px;stroke-width:2.5}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bounce{animation:bounce 1.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bob{animation:bob 2.4s ease-in-out infinite}
+</style>
+</helmet>
+<div class="app">
+
+<div style="padding: 56px 20px 10px; display: flex; align-items: center; justify-content: space-between">
+  <div>
+    <div class="muted" style="font-size: 13px; font-weight: 600">Путь</div>
+    <div class="disp" style="font-size: 20px; font-weight: 700; margin-top: 2px">Повседневный английский</div>
+  </div>
+  <div style="padding: 6px 10px; border-radius: 10px; background: #fff; border: 2px solid rgba(26,26,26,.18); font-weight: 700; font-size: 13px">A2→B1</div>
+</div>
+
+<div style="margin: 6px 16px 0; border-radius: 18px; background: #0b79b0; box-shadow: inset 0 -5px 0 0 #075a85; color: #fff; padding: 14px 16px 18px; display: flex; align-items: center; gap: 12px; position: relative; z-index: 4">
+  <div style="flex: 1">
+    <div style="font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .9">Раздел 2 · Путешествия</div>
+    <div style="font-size: 17px; font-weight: 700; margin-top: 4px">Заказать билет, спросить дорогу</div>
+    <div style="height: 6px; border-radius: 99px; background: rgba(255,255,255,.3); margin-top: 10px; overflow: hidden"><div style="width: 40%; height: 100%; background: #fff; border-radius: 99px"></div></div>
+  </div>
+  <button type="button" aria-label="Заметки раздела" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid rgba(255,255,255,.45); background: transparent; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer">
+    <svg class="ico" viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg>
+  </button>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; top: 0; bottom: 0">
+  <a class="node done" href="Lesson-choice.dc.html" aria-label="Урок 1: Вокзал, пройден" style="left: 159px; top: 280px"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"></path></svg></a>
+  <a class="node done" href="Reader.dc.html" aria-label="Чтение: Поезд в Эдинбург, пройдено" style="left: 94px; top: 372px"><svg class="ico" viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg></a>
+
+  <div style="position: absolute; left: 116px; top: 462px; width: 96px; height: 96px; border-radius: 999px; border: 6px solid #cdeeb0"></div>
+  <a class="node done" href="Lesson-choice.dc.html" aria-label="Урок 3: Спросить дорогу, текущий" style="left: 128px; top: 474px"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" fill="currentColor"></path></svg></a>
+  <div class="bounce" style="position: absolute; left: 226px; top: 482px; background: #fff; border: 2px solid rgba(26,26,26,.18); border-radius: 14px; padding: 8px 12px 10px; box-shadow: inset 0 -3px 0 0 rgba(26,26,26,.1)">
+    <div style="font-weight: 700; font-size: 14px; color: #166534">Начать</div>
+    <div class="muted" style="font-size: 12px">Спросить дорогу</div>
+  </div>
+
+  <div class="node lock" role="img" aria-label="Урок 4, закрыт" style="left: 196px; top: 590px"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></div>
+  <div class="node lock" role="img" aria-label="Чтение раздела, закрыто" style="left: 236px; top: 684px"><svg class="ico" viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg></div>
+  <div class="node lock" role="img" aria-label="Проверка раздела, закрыта" style="left: 170px; top: 778px"><svg class="ico" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg></div>
+
+  <div class="bob" style="position: absolute; left: 34px; top: 610px">
+    <svg viewBox="0 0 128 150" width="84" height="98" aria-hidden="true"><ellipse cx="64" cy="128" rx="34" ry="9" fill="rgba(0,0,0,0.06)"></ellipse><path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="#2b820f"></path><path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="#e3f6d3" opacity="0.9"></path><ellipse cx="90" cy="100" rx="19" ry="12" fill="#ff9500" transform="rotate(-28 90 100)"></ellipse><ellipse cx="94" cy="96" rx="8" ry="5" fill="#ffc700" transform="rotate(-28 94 96)" opacity="0.85"></ellipse></svg>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab" href="Main.dc.html"><svg class="ico" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Сегодня</a>
+  <a class="tab on" href="Path.dc.html" aria-current="page"><svg class="ico" viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg>Учиться</a>
+  <a class="tab" href="Lesson-choice.dc.html"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="14" rx="2"></rect><path d="M7 2h12a2 2 0 0 1 2 2v12"></path></svg>Практика</a>
+  <a class="tab" href="Progress.dc.html"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>Прогресс</a>
+  <button class="tab" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>Профиль</button>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

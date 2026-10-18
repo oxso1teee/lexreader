@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Слово выучено</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:#2b820f;--e:#1c540a;--l:#fff}
+.card{background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px}
+.muted{color:rgba(26,26,26,.68)}
+@keyframes cardin{0%{transform:translateY(40px) rotate(-6deg) scale(.8);opacity:0}100%{transform:rotate(-2deg);opacity:1}}
+.cardin{animation:cardin .5s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes stage{0%{background:#ddf4ff;border-color:#1cb0f6}33%{background:#ddf4ff;border-color:#1cb0f6}50%{background:#fff1b8;border-color:#ffc700}75%{background:#fff1b8;border-color:#ffc700}100%{background:#e3f6d3;border-color:#2b820f}}
+.stage{animation:stage 2s .5s ease-in-out both}
+@keyframes lvl{0%{background:#ece6db;transform:scale(1)}60%{transform:scale(1.4)}100%{background:#2b820f;transform:scale(1)}}
+.lv{width:28px;height:10px;border-radius:99px;background:#ece6db;animation:lvl .35s var(--d) ease-out both}
+@keyframes stampin{0%{transform:scale(2.5) rotate(-30deg);opacity:0}60%{transform:scale(.9) rotate(-8deg);opacity:1}100%{transform:rotate(-12deg)}}
+.stampin{animation:stampin .45s 2.4s cubic-bezier(.3,.7,.4,1) both}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes burst{0%{transform:translate(0,0) rotate(0) scale(.2);opacity:1}75%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1);opacity:0}}
+.cf{position:absolute;left:0;top:0;animation:burst var(--t) var(--d) cubic-bezier(.1,.7,.3,1) both}
+.leaf{position:absolute;width:16px;height:16px;border-radius:0 70% 0 70%;background:#2b820f}
+</style>
+</helmet>
+<div class="app">
+  <div style="position: relative; padding-top: 110px; display: flex; justify-content: center">
+    <div style="position: absolute; left: 50%; top: 220px; width: 0; height: 0">
+      <sc-for list="{{cf}}" as="c" hint-placeholder-count="0"><span class="cf" style="{{c.style}}"></span></sc-for>
+    </div>
+    <div class="cardin" style="position: relative">
+      <div class="stage" style="width: 280px; padding: 26px 24px; border-radius: 26px; border: 3px solid #1cb0f6; box-shadow: inset 0 -6px 0 0 rgba(0,0,0,.08); text-align: center">
+        <div style="font: 700 38px/1.1 'Source Serif 4', Georgia, serif">reluctant</div>
+        <div class="muted" style="font-size: 15px; margin-top: 4px">/rɪˈlʌktənt/</div>
+        <div style="font-size: 20px; font-weight: 700; margin-top: 12px">неохотный</div>
+        <div style="display: flex; gap: 6px; justify-content: center; margin-top: 16px" aria-label="Уровень знания 4 из 4">
+          <span class="lv" style="--d: .9s"></span><span class="lv" style="--d: 1.3s"></span><span class="lv" style="--d: 1.8s"></span><span class="lv" style="--d: 2.3s"></span>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 14px; padding: 0 6px; font-size: 12px; font-weight: 700" aria-hidden="true">
+        <span style="color: {{c1}}">Новое</span><span style="color: {{c2}}">Учу</span><span style="color: {{c3}}">Знакомо</span><span style="color: {{c4}}">Знаю</span>
+      </div>
+      <div class="stampin disp" style="position: absolute; right: -20px; top: -18px; padding: 8px 14px; border-radius: 12px; border: 3px solid #2b820f; background: #fff; color: #166534; font-size: 16px; font-weight: 900">ЗНАЮ</div>
+    </div>
+  </div>
+
+  <div style="text-align: center; padding: 34px 28px 0">
+    <h1 class="disp rise" style="margin: 0; font-size: 26px; line-height: 1.2; font-weight: 900; animation-delay: 2.5s">Слово выучено!</h1>
+    <p class="muted rise" style="margin: 10px 0 0; font-size: 16px; animation-delay: 2.6s">Встретил 7 раз, повторил 5 раз. Больше не будет в повторении</p>
+  </div>
+
+  <div class="card rise" style="margin: 22px 20px 0; padding: 14px 16px; display: flex; align-items: center; gap: 14px; animation-delay: 2.8s">
+    <div style="position: relative; width: 48px; height: 48px; flex: none" aria-hidden="true">
+      <span class="leaf" style="left: 6px; top: 16px; transform: rotate(-30deg)"></span>
+      <span class="leaf" style="left: 22px; top: 6px; transform: rotate(20deg); background: #1c540a"></span>
+      <span class="leaf" style="left: 24px; top: 24px; transform: rotate(80deg)"></span>
+    </div>
+    <div style="flex: 1">
+      <div class="disp" style="font-size: 22px; font-weight: 900; color: #166534">{{known}}</div>
+      <div class="muted" style="font-size: 13px">слов знаешь</div>
+    </div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; animation-delay: 3s">
+    <a class="btn b-leaf" href="Reader.dc.html">Дальше читать</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.s = Date.now();
+    this.iv = setInterval(() => { this.forceUpdate(); if (Date.now() - this.s > 3600) clearInterval(this.iv); }, 60);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const t = this.s ? Date.now() - this.s : 0;
+    let s = 71;
+    const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const cols = ['#2b820f', '#cdeeb0', '#ffc700', '#1c540a'];
+    const cf = [];
+    for (let i = 0; i < 22; i++) {
+      const a = r() * Math.PI * 2;
+      const d = 130 + r() * 90;
+      cf.push({ style: 'width:14px;height:14px;background:' + cols[i % 4] + ';border-radius:0 70% 0 70%;--dx:' + Math.round(Math.cos(a) * d) + 'px;--dy:' + Math.round(Math.sin(a) * d) + 'px;--r:' + Math.round(r() * 540 - 270) + 'deg;--d:' + (2.4 + r() * 0.15).toFixed(2) + 's;--t:' + (1.3 + r() * 0.7).toFixed(2) + 's' });
+    }
+    const on = (ms, col) => t >= ms ? col : 'rgba(26,26,26,.35)';
+    return { cf, known: t > 3100 ? 843 : 842, c1: on(0, '#0c7c9c'), c2: on(1300, '#7a5900'), c3: on(1800, '#7a5900'), c4: on(2300, '#166534') };
+  }
+}
+</script>
+</body>
+</html>

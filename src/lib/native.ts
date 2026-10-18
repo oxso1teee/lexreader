@@ -20,7 +20,10 @@ export async function haptic(kind: HapticKind = "light"): Promise<void> {
       }
       return;
     }
-    if (typeof navigator.vibrate === "function") {
+    // До первого касания браузер всё равно блокирует vibrate() и пишет
+    // ошибку в консоль — не вызываем его зря.
+    const activated = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive ?? true;
+    if (activated && typeof navigator.vibrate === "function") {
       navigator.vibrate(kind === "light" ? 8 : kind === "medium" ? 15 : 25);
     }
   } catch {

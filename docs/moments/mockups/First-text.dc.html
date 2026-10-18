@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Первый текст</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.muted{color:rgba(26,26,26,.68)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:54px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:#2b820f;--e:#1c540a;--l:#fff}
+@keyframes fly{0%{transform:translate(160px,-260px) rotate(40deg) scale(.6)}60%{transform:translate(0,8px) rotate(-6deg) scale(1.02)}80%{transform:translate(0,-6px) rotate(2deg)}100%{transform:none}}
+.fly{animation:fly .9s .1s cubic-bezier(.3,.7,.4,1) both;transform-origin:50% 100%}
+@keyframes thud{0%,60%{transform:none}70%{transform:translateY(3px)}100%{transform:none}}
+.thud{animation:thud 1s .1s both}
+@keyframes peek{0%,55%{transform:translateY(60px);opacity:0}80%{transform:translateY(-6px);opacity:1}100%{transform:none;opacity:1}}
+.peek{animation:peek 1.4s ease-out both}
+@keyframes wave{0%,100%{transform:rotate(0)}50%{transform:rotate(16deg)}}
+.wave{animation:wave .5s 1.5s ease-in-out 4;transform-origin:20% 90%}
+@keyframes burst{0%{transform:translate(0,0) rotate(0) scale(.2);opacity:1}75%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1);opacity:0}}
+.cf{position:absolute;left:0;top:0;animation:burst var(--t) var(--d) cubic-bezier(.1,.7,.3,1) both}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+.page{background:#fff;border:2px solid rgba(26,26,26,.12);border-radius:20px;padding:14px 16px 16px}
+.txt{font:400 17px/1.75 'Source Serif 4',Georgia,serif}
+.w{border-radius:5px;padding:0 2px;margin:0 -2px;transition:background .3s,color .3s}
+@keyframes mark{from{background:transparent}to{background:var(--bg);box-shadow:inset 0 -2px 0 0 var(--ln)}}
+.new{animation:mark .35s var(--d) ease-out both}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:10px;font-size:13px;font-weight:700}
+.meter{height:10px;border-radius:99px;background:#ece6db;overflow:hidden;flex:1}
+</style>
+</helmet>
+<div class="app">
+  <div class="thud" style="position: relative; height: 300px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 26px">
+    <div style="position: absolute; left: 50%; top: 170px; width: 0; height: 0">
+      <sc-for list="{{cf}}" as="c" hint-placeholder-count="0"><span class="cf" style="{{c.style}}"></span></sc-for>
+    </div>
+    <div style="position: absolute; left: 36px; right: 36px; bottom: 26px; height: 16px; border-radius: 8px; background: #d6c3a5; box-shadow: inset 0 -5px 0 0 #b89f7a"></div>
+    <div style="position: absolute; left: 70px; bottom: 42px; display: flex; gap: 4px" aria-hidden="true">
+      <span style="width: 18px; height: 96px; border-radius: 4px; background: #d6cfc3"></span>
+      <span style="width: 14px; height: 80px; border-radius: 4px; background: #e3dccf; margin-top: 16px; align-self: flex-end"></span>
+    </div>
+    <div class="peek" style="position: absolute; right: 44px; bottom: 42px"><div class="wave"><svg viewBox="0 0 128 150" width="72" height="84" aria-hidden="true"><path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="#2b820f"></path><path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="#e3f6d3" opacity="0.9"></path><ellipse cx="54" cy="62" rx="3.2" ry="4.4" fill="#1c540a"></ellipse><ellipse cx="66" cy="62" rx="3.2" ry="4.4" fill="#1c540a"></ellipse><path d="M53 71q7 7 14 0" fill="none" stroke="#1c540a" stroke-width="2.4" stroke-linecap="round"></path><ellipse cx="90" cy="100" rx="19" ry="12" fill="#ff9500" transform="rotate(-28 90 100)"></ellipse></svg></div></div>
+    <div class="fly" style="position: relative; width: 132px; height: 178px; border-radius: 8px 18px 18px 8px; background: #0b79b0; box-shadow: inset 8px 0 0 0 #075a85, inset 0 -6px 0 0 rgba(0,0,0,.2); display: flex; flex-direction: column; justify-content: space-between; padding: 16px 14px 16px 22px; color: #fff; margin-bottom: 16px">
+      <svg viewBox="0 0 40 40" width="32" height="32" aria-hidden="true"><path d="M20 4 L26 36 H14 Z" fill="#fff" opacity=".9"></path><circle cx="20" cy="8" r="5" fill="#ffc700"></circle></svg>
+      <div style="font: 900 14px/1.15 Unbounded, sans-serif">THE LAST LIGHT­HOUSE</div>
+    </div>
+  </div>
+
+  <div style="text-align: center; padding: 0 28px">
+    <h1 class="disp rise" style="margin: 0; font-size: 25px; line-height: 1.2; font-weight: 900; animation-delay: .8s">Первый текст на полке!</h1>
+    <p class="muted rise" style="margin: 8px 0 0; font-size: 15px; animation-delay: .9s">Мы уже отметили, какие слова будут новыми</p>
+  </div>
+
+  <div class="page rise" style="margin: 18px 20px 0; animation-delay: 1.05s">
+    <div class="txt">
+      The <span class="w">old</span> <span class="new w" style="--bg: #fff1b8; --ln: #ffc700; --d: 1.5s">keeper</span> climbed the <span class="new w" style="--bg: #fff1b8; --ln: #ffc700; --d: 1.7s">winding</span> stairs. She was <span class="new w" style="--bg: #ddf4ff; --ln: #1cb0f6; --d: 1.9s">reluctant</span> to leave the light.
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px">
+      <span style="font-size: 13px; font-weight: 700">Знакомо</span>
+      <div class="meter"><div style="height: 100%; width: {{pctW}}; border-radius: 99px; background: #2b820f"></div></div>
+      <span class="disp" style="font-size: 15px; font-weight: 900; color: #166534; min-width: 42px; text-align: right">{{pct}}%</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px">
+      <span class="chip" style="background: #fff1b8; color: #7a5900">34 новых слова</span>
+      <span class="chip" style="background: #ddf4ff; color: #0c7c9c">1 уже учишь</span>
+      <span class="chip" style="background: #ece6db">8 глав · B1</span>
+    </div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; animation-delay: 2.4s">
+    <a class="btn b-leaf" href="Reader.dc.html">Открыть главу 1</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.t0 = Date.now();
+    this.iv = setInterval(() => { this.forceUpdate(); if (Date.now() - this.t0 > 3200) clearInterval(this.iv); }, 33);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const el = this.t0 ? Date.now() - this.t0 : 0;
+    const p = Math.min(1, Math.max(0, (el - 1300) / 1100));
+    const pct = Math.round((1 - Math.pow(1 - p, 3)) * 88);
+    let s = 23;
+    const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const cols = ['#2b820f', '#ffc700', '#1cb0f6', '#ff9500', '#cdeeb0'];
+    const cf = [];
+    for (let i = 0; i < 24; i++) {
+      const a = -Math.PI * (0.1 + r() * 0.8);
+      const d = 90 + r() * 120;
+      const w = 6 + Math.round(r() * 5);
+      cf.push({ style: 'width:' + w + 'px;height:' + (r() < .5 ? w : w * 2) + 'px;background:' + cols[i % 5] + ';border-radius:' + (r() < .3 ? '99px' : '2px') + ';--dx:' + Math.round(Math.cos(a) * d) + 'px;--dy:' + Math.round(Math.sin(a) * d) + 'px;--r:' + Math.round(r() * 720 - 360) + 'deg;--d:' + (0.65 + r() * 0.15).toFixed(2) + 's;--t:' + (1.1 + r() * 0.6).toFixed(2) + 's' });
+    }
+    return { pct, pctW: pct + '%', cf };
+  }
+}
+</script>
+</body>
+</html>

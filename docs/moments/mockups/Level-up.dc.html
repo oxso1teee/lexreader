@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Новый уровень</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#fff}a:hover{color:#fff1b8}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#1f3a2b;color:#fff;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-sun{--f:#ffc700;--e:#e0a500;--l:#1a1a1a}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+@keyframes zoom{0%{transform:scale(0) rotate(-120deg)}65%{transform:scale(1.1) rotate(8deg)}100%{transform:none}}
+.zoom{animation:zoom .8s cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes roll{0%,55%{transform:translateY(0)}75%{transform:translateY(-53%)}100%{transform:translateY(-50%)}}
+.roll{animation:roll 1.4s .9s cubic-bezier(.3,.7,.4,1) both}
+@keyframes wave{0%{transform:scale(.6);opacity:.8}100%{transform:scale(2);opacity:0}}
+.wave{position:absolute;left:50%;top:50%;width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:999px;border:5px solid #ffc700;animation:wave 1s 1.6s ease-out both}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes star{0%{transform:translate(0,0) scale(0)}30%{transform:translate(0,0) scale(1)}100%{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+.st{position:absolute;left:50%;top:50%;animation:star 1.6s var(--d) ease-out both}
+@keyframes glow{0%,100%{opacity:.25}50%{opacity:.5}}
+.glow{animation:glow 2.4s ease-in-out infinite}
+</style>
+</helmet>
+<div class="app">
+  <div class="glow" aria-hidden="true" style="position: absolute; left: 50%; top: 116px; width: 280px; height: 280px; margin-left: -140px; border-radius: 999px; background: #2b820f"></div>
+
+  <div class="rise" style="position: relative; text-align: center; padding-top: 70px; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #ffc700">Новый уровень</div>
+
+  <div style="position: relative; height: 300px; display: flex; align-items: center; justify-content: center; margin-top: 20px">
+    <span class="wave" aria-hidden="true"></span>
+    <sc-for list="{{stars}}" as="s" hint-placeholder-count="0">
+      <svg class="st" viewBox="0 0 24 24" width="18" height="18" style="{{s.style}}" aria-hidden="true"><path d="M12 0l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="#ffc700"></path></svg>
+    </sc-for>
+    <div class="zoom" style="position: relative; width: 220px; height: 220px">
+      <svg viewBox="0 0 220 220" width="220" height="220" aria-hidden="true" style="position: absolute; inset: 0">
+        <circle cx="110" cy="110" r="100" fill="#2b820f" stroke="#ffc700" stroke-width="10"></circle>
+        <circle cx="110" cy="110" r="82" fill="#1c540a"></circle>
+        <circle cx="110" cy="110" r="100" fill="none" stroke="#fff1b8" stroke-width="4" stroke-dasharray="4 12" stroke-linecap="round"></circle>
+      </svg>
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+        <div style="font-size: 13px; font-weight: 700; letter-spacing: .1em; color: #cdeeb0">УРОВЕНЬ</div>
+        <div style="height: 100px; overflow: hidden" aria-label="Уровень 8">
+          <div class="roll" aria-hidden="true">
+            <div class="disp" style="font-size: 88px; font-weight: 900; line-height: 100px; color: #cdeeb0; text-align: center">7</div>
+            <div class="disp" style="font-size: 88px; font-weight: 900; line-height: 100px; color: #ffc700; text-align: center">8</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: relative; text-align: center; padding: 0 28px">
+    <h1 class="disp rise" style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 900; animation-delay: 1.7s">Ты на 8 уровне!</h1>
+    <p class="rise" style="margin: 10px 0 0; font-size: 16px; opacity: .9; animation-delay: 1.8s">{{total}} XP за всё время</p>
+    <div class="rise" style="margin: 14px 10px 0; animation-delay: 1.9s">
+      <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; opacity: .85"><span>Ур. 8</span><span>ещё 300 XP до 9</span></div>
+      <div style="height: 14px; border-radius: 99px; background: rgba(255,255,255,.14); margin-top: 6px; overflow: hidden"><div style="height: 100%; width: {{barW}}; border-radius: 99px; background: #ffc700; box-shadow: inset 0 -4px 0 0 #e0a500"></div></div>
+    </div>
+  </div>
+
+  <div class="rise" style="position: relative; margin: 22px 20px 0; border-radius: 18px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.15); padding: 14px 16px; display: flex; align-items: center; gap: 12px; animation-delay: 2s">
+    <div style="width: 44px; height: 44px; border-radius: 12px; background: #ffc700; color: #1a1a1a; display: flex; align-items: center; justify-content: center; flex: none"><svg class="ico" viewBox="0 0 24 24" style="width: 24px; height: 24px"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg></div>
+    <div><div style="font-size: 12px; font-weight: 700; color: #ffc700; text-transform: uppercase; letter-spacing: .05em">Открыто</div><div style="font-weight: 700; font-size: 15px; margin-top: 2px">Подборка «Детективы на английском»</div></div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; animation-delay: 2.6s">
+    <a class="btn b-sun" href="Main.dc.html">Отлично</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.t0 = Date.now();
+    this.ivx = setInterval(() => { this.forceUpdate(); if (Date.now() - this.t0 > 3600) clearInterval(this.ivx); }, 33);
+  }
+  componentWillUnmount() { clearInterval(this.ivx); }
+  cu(to, delay, dur) {
+    const el = this.t0 ? Date.now() - this.t0 : 0;
+    const p = Math.min(1, Math.max(0, (el - delay) / dur));
+    return Math.round(to * (1 - Math.pow(1 - p, 3)));
+  }
+  renderVals() {
+    const stars = [];
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      stars.push({ style: '--dx:' + Math.round(Math.cos(a) * 150) + 'px;--dy:' + Math.round(Math.sin(a) * 150) + 'px;--d:' + (1.6 + (i % 3) * 0.05).toFixed(2) + 's;margin:-9px 0 0 -9px' });
+    }
+    return { stars, total: this.cu(1500, 1700, 900).toLocaleString("ru-RU"), barW: this.cu(40, 2300, 800) + "%" };
+  }
+}
+</script>
+</body>
+</html>

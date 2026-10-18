@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Задания дня</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700&amp;family=Unbounded:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4da}
+a{color:#166534}a:hover{color:#123706}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:#f5f1ea;color:#1a1a1a;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-sun{--f:#ffc700;--e:#e0a500;--l:#1a1a1a}
+.card{background:#fff;border:2px solid rgba(26,26,26,.18);border-radius:20px}
+.muted{color:rgba(26,26,26,.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fillq{from{width:var(--from)}to{width:100%}}
+.fq{height:100%;border-radius:99px;background:#ffc700;box-shadow:inset 0 -3px 0 0 #e0a500;animation:fillq .7s var(--d) cubic-bezier(.4,0,.2,1) both}
+@keyframes chk{0%{transform:scale(0) rotate(-45deg)}70%{transform:scale(1.3)}100%{transform:none}}
+.chk{animation:chk .35s var(--d) cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes wiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(4deg)}}
+.wiggle{animation:wiggle .7s 2.6s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes bounce{0%{transform:translateY(-120px)}60%{transform:translateY(0)}75%{transform:translateY(-16px)}100%{transform:none}}
+.bounce{animation:bounce .8s .1s cubic-bezier(.3,.7,.4,1) both}
+.q{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.qi{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.track{height:12px;border-radius:99px;background:#ece6db;overflow:hidden;margin-top:8px}
+</style>
+</helmet>
+<div class="app">
+  <div style="text-align: center; padding-top: 64px">
+    <div class="bounce" style="display: inline-block"><div class="wiggle">
+      <svg viewBox="0 0 120 100" width="130" height="108" aria-hidden="true">
+        <rect x="10" y="40" width="100" height="54" rx="10" fill="#c2410c" stroke="#7c2d0a" stroke-width="5"></rect>
+        <path d="M10 46 Q60 6 110 46 V52 H10z" fill="#ff9500" stroke="#7c2d0a" stroke-width="5" stroke-linejoin="round"></path>
+        <rect x="50" y="44" width="20" height="24" rx="5" fill="#ffc700" stroke="#7c2d0a" stroke-width="4"></rect>
+        <rect x="10" y="64" width="100" height="6" fill="#7c2d0a" opacity=".35"></rect>
+      </svg>
+    </div></div>
+    <h1 class="disp rise" style="margin: 14px 24px 0; font-size: 26px; line-height: 1.2; font-weight: 900; animation-delay: 2.4s">Задания дня выполнены!</h1>
+    <p class="muted rise" style="margin: 8px 30px 0; font-size: 15px; animation-delay: 2.5s">Сундук твой. Новые задания завтра в полночь</p>
+  </div>
+
+  <div class="card rise" style="margin: 22px 20px 0; animation-delay: .3s">
+    <div class="q" style="border-bottom: 2px solid #f0ebe2">
+      <div class="qi" style="background: #e3f6d3; color: #166534"><svg class="ico" viewBox="0 0 24 24" style="width: 24px; height: 24px"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg></div>
+      <div style="flex: 1"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 15px"><span>Прочитать 10 минут</span><span style="color: #7a5900; font-variant-numeric: tabular-nums">{{q1}}/10</span></div><div class="track"><div class="fq" style="--from: 70%; --d: .6s"></div></div></div>
+      <svg class="chk" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" style="--d: 1.3s"><circle cx="12" cy="12" r="11" fill="#2b820f"></circle><path d="M7 12l3.5 3.5L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+    <div class="q" style="border-bottom: 2px solid #f0ebe2">
+      <div class="qi" style="background: #ddf4ff; color: #0c7c9c"><svg class="ico" viewBox="0 0 24 24" style="width: 24px; height: 24px"><rect x="3" y="6" width="14" height="14" rx="2"></rect><path d="M7 2h12a2 2 0 0 1 2 2v12"></path></svg></div>
+      <div style="flex: 1"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 15px"><span>Повторить 15 слов</span><span style="color: #7a5900; font-variant-numeric: tabular-nums">{{q2}}/15</span></div><div class="track"><div class="fq" style="--from: 80%; --d: 1.2s"></div></div></div>
+      <svg class="chk" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" style="--d: 1.9s"><circle cx="12" cy="12" r="11" fill="#2b820f"></circle><path d="M7 12l3.5 3.5L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+    <div class="q">
+      <div class="qi" style="background: #ffe8c2; color: #c2410c"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="#ff9500"></path></svg></div>
+      <div style="flex: 1"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 15px"><span>5 верных подряд</span><span style="color: #7a5900; font-variant-numeric: tabular-nums">{{q3}}/5</span></div><div class="track"><div class="fq" style="--from: 60%; --d: 1.8s"></div></div></div>
+      <svg class="chk" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" style="--d: 2.5s"><circle cx="12" cy="12" r="11" fill="#2b820f"></circle><path d="M7 12l3.5 3.5L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; animation-delay: 2.8s">
+    <a class="btn b-sun" href="Chest.dc.html">Открыть сундук</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.t0 = Date.now();
+    this.ivx = setInterval(() => { this.forceUpdate(); if (Date.now() - this.t0 > 3000) clearInterval(this.ivx); }, 33);
+  }
+  componentWillUnmount() { clearInterval(this.ivx); }
+  cu(to, delay, dur) {
+    const el = this.t0 ? Date.now() - this.t0 : 0;
+    const p = Math.min(1, Math.max(0, (el - delay) / dur));
+    return Math.round(to * (1 - Math.pow(1 - p, 3)));
+  }
+  renderVals() {
+    return { q1: 7 + this.cu(3, 600, 700), q2: 12 + this.cu(3, 1200, 700), q3: 3 + this.cu(2, 1800, 700) };
+  }
+}
+</script>
+</body>
+</html>
