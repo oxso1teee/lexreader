@@ -33,6 +33,8 @@ export default function ReviewModeSwitcher({
   fsrsEnabled,
   maxIntervalDays,
   sessionTitle,
+  newCardsCount,
+  reviewCardsCount,
   targetLanguage,
   userId,
   sessionDeckId,
@@ -45,6 +47,8 @@ export default function ReviewModeSwitcher({
   fsrsEnabled: boolean;
   maxIntervalDays: number;
   sessionTitle: string;
+  newCardsCount: number;
+  reviewCardsCount: number;
   targetLanguage: string;
   userId: string;
   sessionDeckId: string;
@@ -131,6 +135,9 @@ export default function ReviewModeSwitcher({
           bestSessionCount={bestSessionCount}
           fsrsEnabled={fsrsEnabled}
           maxIntervalDays={maxIntervalDays}
+          sessionTitle={sessionTitle}
+          newCardsCount={newCardsCount}
+          reviewCardsCount={reviewCardsCount}
           targetLanguage={targetLanguage}
           userId={userId}
           sessionDeckId={sessionDeckId}
