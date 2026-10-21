@@ -96,4 +96,13 @@
     --btn-edge: var(--danger-edge);
     --btn-label: #fff;
   }
+
+  /* docs/moments/mockups/{Daily-quests,Chest,Double-XP}.dc.html — .b-sun:
+     тёмный текст на жёлтом (не белый, как у остальных вариантов) — то же
+     сочетание, что мокапы используют везде для этого акцента. */
+  .btn-sun {
+    --btn-fill: var(--sun);
+    --btn-edge: var(--sun-edge);
+    --btn-label: #1a1a1a;
+  }
 }
