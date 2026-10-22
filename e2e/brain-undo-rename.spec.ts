@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { login, dismissLessonStart } from "./helpers";
 
 // M3 Slice 4 §8: undoLastGrade() is a real DB mutation (restores the
 // previous srs_state/review_log snapshot, ownership+staleness-checked on
@@ -11,6 +11,7 @@ import { login } from "./helpers";
 test("Undo restores the previous grade and returns to a question screen", async ({ page }) => {
   await login(page);
   await page.goto("/brain/all/review");
+  await dismissLessonStart(page);
   await expect(page.getByRole("button", { name: "Показать ответ" })).toBeVisible({ timeout: 10_000 });
 
   // Not asserting on the session tally here: the queue's exact size depends

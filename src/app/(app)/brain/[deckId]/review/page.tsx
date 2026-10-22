@@ -208,7 +208,13 @@ export default async function DeckReviewPage({
 
   // Сначала карточки на повторение (не дать очереди повторов утонуть в новых
   // карточках), затем новые — раздел 6.2 роадмапа: два независимых лимита.
-  const cards: ReviewCard[] = [...toCards(reviewRows), ...toCards(newRows)];
+  // docs/moments/ROADMAP.md, этап 3 — Lesson-start показывает честные "N
+  // новых слов / N на повтор": считаем длины ДО конкатенации, а не угадываем
+  // по repetitions на уже слитом массиве (repetitions===0 — ненадёжный
+  // признак "новая карточка", см. P0-АУДИТ 3.11 выше в этом же файле).
+  const reviewCards = toCards(reviewRows);
+  const newCards = toCards(newRows);
+  const cards: ReviewCard[] = [...reviewCards, ...newCards];
 
   // M3 Slice 4 §6: "deck/session title" в шапке ревью. "all" — синтетический
   // deckId (кросс-деково повторение, не реальная строка в decks) — честное
@@ -244,6 +250,8 @@ export default async function DeckReviewPage({
       fsrsEnabled={flags.enabled}
       maxIntervalDays={settings.max_interval_days}
       sessionTitle={sessionTitle}
+      newCardsCount={newCards.length}
+      reviewCardsCount={reviewCards.length}
       targetLanguage={profile.target_language}
       userId={profile.id}
       sessionDeckId={deckId}

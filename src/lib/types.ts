@@ -20,6 +20,11 @@ export interface Profile {
   /** Понедельник ISO-недели, за которую уже начислен бонус Perfect-week —
    *  сторож от повторного начисления. */
   perfect_week_awarded_week: string | null;
+  /** docs/moments/ROADMAP.md, этап 5 — сторож от повторного открытия
+   *  сундука daily-quests в тот же UTC-день. */
+  daily_quest_chest_claimed_date: string | null;
+  /** Double-XP: активен, пока now() < xp_boost_until. */
+  xp_boost_until: string | null;
   review_best_session_count: number;
   completed_first_win: boolean;
   preferred_notify_hour: number | null;

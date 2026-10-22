@@ -7,7 +7,7 @@ import type { ComponentProps } from "react";
 // его же можно повесить на что-то третье, если понадобится. Без .focus-ring:
 // её :focus-visible (tokens.css, вне слоя) перебил бы скругление на 6px —
 // глобального :focus-visible outline достаточно.
-export type ButtonVariant = "leaf" | "sky" | "ember" | "ghost" | "danger";
+export type ButtonVariant = "leaf" | "sky" | "ember" | "ghost" | "danger" | "sun";
 export type ButtonSize = "md" | "sm";
 
 interface ButtonStyleProps {
