@@ -3,7 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { currentBatch, dismiss, emptyQueue, enqueue, type MomentQueueState } from "@/lib/moments/queue";
-import type { Moment } from "@/lib/moments/types";
+import type { Moment, MomentKind } from "@/lib/moments/types";
+import { useIsNativePlatform } from "@/lib/use-is-native";
+import { maybeRateAppMoment } from "./rate-app-actions";
 import { GoalDoneScreen } from "./screens/goal-done";
 import { StreakUpScreen } from "./screens/streak-up";
 import { PerfectScreen } from "./screens/perfect";
@@ -17,6 +19,10 @@ import { EarnBackScreen } from "./screens/earn-back";
 import { OvertakenScreen } from "./screens/overtaken";
 import { WeeklyRankScreen } from "./screens/weekly-rank";
 import { FriendStreakScreen } from "./screens/friend-streak";
+import { NotifyAskScreen } from "./screens/notify-ask";
+import { WelcomeBackScreen } from "./screens/welcome-back";
+import { RateAppScreen } from "./screens/rate-app";
+import { WeekRecapScreen } from "./screens/week-recap";
 
 // Очередь моментов на всё приложение. Серверное действие возвращает
 // moments[] → вызывающий клиент делает pushMoments(result.moments), или
@@ -80,13 +86,36 @@ export function renderMoment(moment: Moment, onClose: () => void) {
       return <WeeklyRankScreen moment={moment} onClose={onClose} />;
     case "friend_streak":
       return <FriendStreakScreen moment={moment} onClose={onClose} />;
+    case "notify_ask":
+      return <NotifyAskScreen moment={moment} onClose={onClose} />;
+    case "welcome_back":
+      return <WelcomeBackScreen moment={moment} onClose={onClose} />;
+    case "rate_app":
+      return <RateAppScreen moment={moment} onClose={onClose} />;
+    case "week_recap":
+      return <WeekRecapScreen moment={moment} onClose={onClose} />;
   }
 }
+
+// docs/moments/ROADMAP.md, этап 7 — Rate-app триггерится "после
+// положительного момента", не после любого (earn_back/freeze_used не
+// праздник, их не считаем).
+const POSITIVE_MOMENT_KINDS: ReadonlySet<MomentKind> = new Set([
+  "goal_done",
+  "streak_up",
+  "perfect",
+  "level_up",
+  "achievement",
+  "word_mastered",
+  "streak_milestone",
+  "perfect_week",
+]);
 
 export function MomentProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<MomentQueueState>(() => emptyQueue());
   // true только на клиенте после гидрации — портал в document.body.
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const isNative = useIsNativePlatform();
 
   const pushMoments = useCallback((moments: readonly Moment[]) => {
     // Показанные раньше (в т.ч. в прошлых сессиях) отсекаем при первом же push.
@@ -97,12 +126,21 @@ export function MomentProvider({ children }: { children: ReactNode }) {
 
   const close = useCallback(() => {
     if (!current) return;
+    const wasPositive = POSITIVE_MOMENT_KINDS.has(current.kind);
     setQueue((q) => {
       const next = dismiss(q, current.id);
       writeSeen(next.seen);
       return next;
     });
-  }, [current]);
+    // docs/moments/ROADMAP.md, этап 7 — только нативная сборка, не чаще
+    // раза в 120 дней (сторож внутри maybeRateAppMoment), только вслед за
+    // позитивным моментом — ровно требование задачи.
+    if (isNative && wasPositive) {
+      void maybeRateAppMoment().then((moment) => {
+        if (moment) pushMoments([moment]);
+      });
+    }
+  }, [current, isNative, pushMoments]);
 
   const api = useMemo(() => ({ pushMoments }), [pushMoments]);
 

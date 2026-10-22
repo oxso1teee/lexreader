@@ -25,6 +25,7 @@ import ExtensionTokensSection from "./extension-tokens-section";
 import type { ExtensionTokenSummary } from "./extension-actions";
 import LeaderboardOptInSection from "./leaderboard-opt-in-section";
 import { useIsNativePlatform } from "@/lib/use-is-native";
+import { isPushSupported, requestPushPermissionAndSubscribe } from "@/lib/push-client";
 
 // Экран 11/11 редизайна: реальный пред-существующий баг, найден при живом
 // тестировании после правки цветов (не связан с ней) — `typeof window !==
@@ -38,21 +39,10 @@ function subscribePushSupport(): () => void {
   return () => {};
 }
 function getPushSupportedSnapshot(): boolean {
-  return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+  return isPushSupported();
 }
 function getPushSupportedServerSnapshot(): boolean {
   return false;
-}
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = atob(base64);
-  const output = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; i++) {
-    output[i] = rawData.charCodeAt(i);
-  }
-  return output;
 }
 
 export default function SettingsClient({
@@ -104,23 +94,8 @@ export default function SettingsClient({
     setPushBusy(true);
     setPushError(null);
     try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        throw new Error("Разрешение на уведомления не выдано.");
-      }
-
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      await navigator.serviceWorker.ready;
-
-      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidKey) throw new Error("Push не настроен на сервере.");
-
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      });
-
-      await savePushSubscription(subscription.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } });
+      const subscription = await requestPushPermissionAndSubscribe();
+      await savePushSubscription(subscription);
       setPushEnabled(true);
     } catch (e) {
       setPushError(e instanceof Error ? e.message : "Не удалось включить уведомления.");
