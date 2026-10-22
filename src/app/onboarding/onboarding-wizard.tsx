@@ -11,6 +11,7 @@ import { joinLanguageWaitlist, type WaitlistState } from "./waitlist-actions";
 import RateLimitNotice from "@/components/rate-limit-notice";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/posthog-client";
+import { SplashScreen } from "@/components/product/onboarding/splash-screen";
 
 const STEP_COUNT = 6;
 
@@ -164,6 +165,10 @@ export default function OnboardingWizard() {
     track("onboarding_started", {});
   }, []);
 
+  if (step === 0) {
+    return <SplashScreen onStart={() => setStep(1)} />;
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-10">
       <div className="mb-8 flex gap-1.5">
@@ -176,21 +181,6 @@ export default function OnboardingWizard() {
           />
         ))}
       </div>
-
-      {step === 0 && (
-        <div className="flex flex-1 flex-col justify-center gap-4">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Учи язык, читая то, что интересно
-          </h1>
-          <p className="text-[var(--text-secondary)]">
-            Никаких упражнений и геймификации. Читай реальные тексты, сохраняй
-            незнакомые слова одним тапом и повторяй их по расписанию.
-          </p>
-          <Link href="/login" className="text-sm text-[var(--text-secondary)] underline">
-            Уже есть аккаунт? Войти
-          </Link>
-        </div>
-      )}
 
       {step === 1 && (
         <div className="flex flex-1 flex-col gap-4">
