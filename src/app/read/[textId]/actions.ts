@@ -13,6 +13,7 @@ import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
 import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import { awardPerfectWeekIfEligible } from "@/lib/moments/perfect-week-award";
 import { checkOvertaken } from "@/lib/moments/overtaken";
+import { maybeFirstWinMoments } from "@/lib/moments/first-win";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
 import type { ReaderPrefs } from "./reader-prefs";
@@ -237,7 +238,8 @@ export async function finishReading(input: {
 
   // docs/moments/ROADMAP.md, этап 6 — Friend-streak, см. комментарий в
   // review/actions.ts::reviewWord().
-  return { moments: [...moments, ...perfectWeek.moments, ...(streakTransition?.friendStreaks ?? []), ...overtaken] };
+  const firstWin = await maybeFirstWinMoments(supabase, user.id);
+  return { moments: [...moments, ...perfectWeek.moments, ...(streakTransition?.friendStreaks ?? []), ...overtaken, ...firstWin] };
 }
 
 // M3 Slice 3 §8: profiles.reader_settings — account-synced on top of the

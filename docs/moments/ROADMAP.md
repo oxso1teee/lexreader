@@ -158,12 +158,45 @@ role доступ к чужим `push_subscriptions`, тот же паттерн
 подготовленными тестовыми аккаунтами в этой сессии) — визуальная 1:1-сверка
 и `scripts/moments-snap.ts` остаются на следующий проход.
 
-### Этап 7. Первый запуск и система — [ ]
+### Этап 7. Первый запуск и система — [~]
 Splash (нативный сплэш + веб-экран), Placement-result (поверх
 `onboarding/result`), Goal-pick, Streak-commit, First-text (переделка
 `onboarding-wizard.tsx`), Notify-ask (push есть: `push.ts`,
 `notify_hour`), Welcome-back (≥3 дня без входа), Offline (`/offline`),
 Rate-app, Week-recap (истории, по понедельникам).
+Сделано в PR этапа 7: миграция `0056_onboarding_system.sql` —
+`profiles.streak_goal_days`/`last_rate_prompt_at`, `texts.is_starter` +
+один оригинальный стартовый текст (RLS и `/read/[textId]` уже умели
+читать системные тексты — правок не потребовалось). Новый порядок
+онбординга: **Splash** (шаг 0 `onboarding-wizard.tsx`) → мастер
+аккаунта/тест уровня (без изменений) → **Placement-result** (редизайн
+`/onboarding/result`, CEFR-штамп/шкала/конфетти) → **Goal-pick**
+(`/onboarding/goal`, минуты → `daily_xp_goal`/`daily_word_goal`) →
+**Streak-commit** (`/onboarding/streak` → `streak_goal_days`, подсвечивает
+"твоя цель" на `/streak` раньше фиксированных вех) → **First-text**
+(`/onboarding/first-text`, `text-familiarity.ts` — честный % знакомых слов)
+→ реальная читалка. Терминальное действие онбординга больше не
+Learning Path — `confirmPathAction` удалён (был мёртвым кодом только в
+result-view), `/learning-paths` самодостаточна и достижима из `/library`;
+`deriveOnboardingStep`/`resolveOnboardingUrl` получили шаг `first_text`
+(на основе `streak_goal_days`), чтобы гейт `(app)`-layout не застревал на
+`/onboarding/result`. **Notify-ask** — `Moment`, триггер
+`completed_first_win` false→true внутри `reviewWord()`/`finishReading()`
+(`maybeFirstWinMoments`, т.к. completed_first_win раньше ставился только
+из Learning Path); `push-client.ts` — общий push-flow (Settings + этот
+экран). **Welcome-back**/**Week-recap** — клиентские гейты в
+`layout.tsx` (приём `WeeklyRankGate`), реальные числа (`getDueCount`,
+`text_progress`, агрегация прошлой ISO-недели). **Rate-app** — только
+нативная сборка, триггер в `MomentProvider` после позитивного момента,
+сторож 120 дней, `@capacitor-community/in-app-review` для 4–5 звёзд,
+существующая `FeedbackForm` для 1–3. **Offline** — "доступно офлайн"
+через реальный Cache Storage API (`public/sw.js` уже кеширует навигации),
+не выдумка. Упрощения: Streak-commit не создаёт новой награды (только
+подсветка существующих вех); Week-recap без кнопки "Поделиться" (нет
+механизма, как и Streak-30 в этапе 2); Rate-app только в нативе, веб не
+показывает вообще. Скриншот-сверка с `docs/moments/reference/*.png` не
+делалась (нет живого окружения в этой сессии) — как и в этапе 6,
+технический долг на следующий проход.
 
 ### Этап 8. Девять основных экранов — [ ]
 Main (Сегодня), Today-evening (стрик под угрозой), Path (карта пути
@@ -197,25 +230,25 @@ Main (Сегодня), Today-evening (стрик под угрозой), Path (�
 | Lesson-choice | ✅ галерея | 1:1; в живом сценарии уже работает (multiple-choice-mode.tsx) |
 | Lesson-build | ❌ | режима «собери фразу» нет |
 | Lesson-listen | ❌ | режима «на слух» нет |
-| Placement-result | 🟡 | `/onboarding/result` — другой вид |
-| Goal-pick | 🟡 | шаг `onboarding-wizard.tsx`, цель в словах |
-| Streak-commit | ❌ | |
-| First-text | ❌ | |
-| Splash | 🟡 | нативный сплэш Capacitor, веб-заставки нет |
-| Offline | 🟡 | `/offline` — другой вид |
+| Placement-result | ✅ | `/onboarding/result` переверстан 1:1; не в галерее — нужен реальный аккаунт |
+| Goal-pick | ✅ | `/onboarding/goal`, цель в минутах → XP (daily_xp_goal) |
+| Streak-commit | ✅ | `/onboarding/streak` → streak_goal_days |
+| First-text | ✅ | `/onboarding/first-text`, настоящий стартовый текст + text-familiarity.ts |
+| Splash | ✅ галерея | веб-экран (`onboarding-wizard.tsx` шаг 0, /dev/screens); нативный сплэш не трогали |
+| Offline | ✅ галерея | `/offline` переделан, "доступно офлайн" — реальный Cache Storage API |
 | Weekly-rank | 🟡 | `/leaderboard` — страница, не момент итогов |
 | Duel-invite | 🟡 | `/duel` — страница, не всплывающее окно |
 | Duel-won | 🟡 | `duel-room.tsx` — без экрана победы |
 | Twin-insight | 🟡 | `/language-twin` — страница, не момент |
 | Achievement | 🟡 | `progress/achievements-shelf.tsx` — полка, без экрана получения |
-| Notify-ask | 🟡 | время напоминания в настройках, без экрана-просьбы |
+| Notify-ask | ✅ галерея | Moment, /dev/moments; "Включить" — настоящий push-flow |
 | Lesson-start, Combo, Halfway, Mistakes, Quit-confirm | ✅ галерея | этап 3; живой сценарий — review-session.tsx |
 | Unit-done, Level-up, Word-mastered, Chapter-done, Review-due | ❌ | этапы 1 и 4 |
 | Streak-30, Perfect-week, Freeze-used, Earn-back, Streak-calendar, Friend-streak | ❌ | этап 2 (Friend-streak — этап 6) |
 | Daily-quests, Chest, Double-XP | ❌ | этап 5, новая механика |
-| Overtaken, Welcome-back, Rate-app, Week-recap | ❌ | этапы 6–7 |
+| Overtaken, Welcome-back, Rate-app, Week-recap | ✅ галерея | этапы 6–7, все через MomentProvider |
 
-Итого: ✅ 3 · 🟡 18 · ❌ 26.
+Итого: ✅ 14 · 🟡 13 · ❌ 20.
 
 ## Журнал
 

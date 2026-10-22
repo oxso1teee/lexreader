@@ -6,6 +6,7 @@ import MobileBottomNav from "@/components/product/app-shell/mobile-bottom-nav";
 import { TODAY_FIXTURE, TODAY_EVENING_FIXTURE } from "@/lib/screen-fixtures";
 import { Stage3GalleryScreen } from "./stage3-gallery";
 import { Stage6GalleryScreen } from "./stage6-gallery";
+import { Stage7GalleryScreen } from "./stage7-gallery";
 
 // Основные экраны v7 с тестовыми данными — для скриншот-сверки с макетами
 // (docs/moments/reference). Открыта локально и на preview-деплоях.
@@ -21,6 +22,8 @@ const SCREENS = [
   "Lesson-choice",
   "Duel-invite",
   "Duel-won",
+  "Splash",
+  "Offline",
 ] as const;
 
 export default async function DevScreensPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
@@ -56,6 +59,10 @@ export default async function DevScreensPage({ searchParams }: { searchParams: P
 
   if (s === "Duel-invite" || s === "Duel-won") {
     return <Stage6GalleryScreen s={s} />;
+  }
+
+  if (s === "Splash" || s === "Offline") {
+    return <Stage7GalleryScreen s={s} />;
   }
 
   return (

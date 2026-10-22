@@ -572,15 +572,88 @@
 }
 .mo-questcheck { animation: mo-questcheck 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
 
+/* docs/moments/ROADMAP.md, этап 7 — экраны онбординга (Splash,
+   Placement-result, Goal-pick, Streak-commit, First-text) не проходят
+   через MomentScreen (это обычные маршруты, не очередь moments), поэтому
+   нужны свои keyframes с префиксом onb- и свой reduced-motion scope
+   (.onb-screen, см. блок ниже). Переиспользуют mo-rise/mo-breathe/mo-cf/
+   mo-flick/mo-em/mo-glow где подходит 1:1 — здесь только то, чего нет. */
+@keyframes onb-drop {
+  0% { transform: translateY(-420px) scaleY(1.15); }
+  55% { transform: translateY(0) scaleY(1); }
+  65% { transform: translateY(0) scale(1.18, 0.78); }
+  78% { transform: translateY(-34px) scale(0.95, 1.06); }
+  90% { transform: translateY(0) scale(1.05, 0.95); }
+  100% { transform: none; }
+}
+.onb-drop { animation: onb-drop 1.1s 0.15s cubic-bezier(0.4, 0, 0.2, 1) both; transform-origin: 50% 100%; }
+
+@keyframes onb-rip {
+  0% { transform: scale(0.3); opacity: 0.6; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+.onb-rip {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 150px;
+  height: 36px;
+  margin-left: -75px;
+  border-radius: 50%;
+  border: 3px solid var(--leaf-tint-strong);
+  animation: onb-rip 1.6s 0.75s ease-out both;
+}
+
+@keyframes onb-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+.onb-blink { animation: onb-blink 3.4s 1.6s infinite; transform-box: fill-box; transform-origin: center; }
+
+@keyframes onb-orbit {
+  0% { transform: translate(var(--x0), var(--y0)) scale(0.4); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translate(var(--x1), var(--y1)) scale(1); opacity: 1; }
+}
+@keyframes onb-hover {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -7px; }
+}
+.onb-orbit-word {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  white-space: nowrap;
+  animation: onb-orbit 0.8s var(--d) cubic-bezier(0.2, 0.9, 0.3, 1.1) both, onb-hover 3s var(--d2) ease-in-out infinite;
+}
+
+@keyframes onb-letter {
+  0% { transform: translateY(40px) scale(0.6); opacity: 0; }
+  60% { transform: translateY(-8px) scale(1.08); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+.onb-letter { display: inline-block; animation: onb-letter 0.5s var(--d) cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+
+@keyframes onb-load {
+  from { width: 0; }
+  to { width: 100%; }
+}
+.onb-load { height: 100%; border-radius: 99px; background: #fff; animation: onb-load 1.6s 0.4s cubic-bezier(0.6, 0, 0.3, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   .mo-screen *,
   .mo-screen *::before,
-  .mo-screen *::after {
+  .mo-screen *::after,
+  .onb-screen *,
+  .onb-screen *::before,
+  .onb-screen *::after {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
   .mo-cf,
-  .mo-em { display: none; }
+  .mo-em,
+  .onb-rip,
+  .onb-orbit-word { display: none; }
 }

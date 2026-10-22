@@ -9,7 +9,14 @@
 // `placement_attempts` (most recent row only, by started_at desc), and
 // `learning_path_enrollments` (status = 'active'), then passes the
 // results in here.
-export type OnboardingStep = "no_account" | "placement_intro" | "placement_question" | "result" | "first_action" | "complete";
+// docs/moments/ROADMAP.md, этап 7 — "result" теперь покрывает Placement-
+// result -> Goal-pick -> Streak-commit (ни один из них не пишет
+// отдельного "я на этом шаге" флага, только streak_goal_days в конце
+// тройки — то же намеренное отсутствие хранимого under-шага, что раньше
+// покрывало весь путь от result до клика "выбрать путь"). "first_text" —
+// отдельный шаг, потому что streak_goal_days — настоящая, проверяемая
+// отметка прогресса.
+export type OnboardingStep = "no_account" | "placement_intro" | "placement_question" | "result" | "first_text" | "first_action" | "complete";
 
 export interface LatestPlacementAttemptInput {
   status: "in_progress" | "completed" | "skipped";
@@ -23,6 +30,10 @@ export interface OnboardingStateInput {
   latestAttempt: LatestPlacementAttemptInput | null;
   hasActiveEnrollment: boolean;
   completedFirstWin: boolean;
+  /** docs/moments/ROADMAP.md, этап 7 — profiles.streak_goal_days !== null
+   *  (Streak-commit уже пройден). Нет enrollment-пути — new-онбординг
+   *  заканчивается First-text, а не выбором Learning Path. */
+  streakGoalSet: boolean;
 }
 
 export interface OnboardingStateResult {
@@ -55,7 +66,11 @@ export function deriveOnboardingStep(input: OnboardingStateInput): OnboardingSta
     return { step: "placement_question", resumeQuestionIndex: input.latestAttempt.answeredCount };
   }
 
-  // completed or skipped, no active enrollment yet -> show the result/
-  // recommendation screen so the user can pick a path.
-  return { step: "result" };
+  // completed or skipped, no active enrollment yet: streak_goal_days is
+  // the one real checkpoint inside Placement-result -> Goal-pick ->
+  // Streak-commit -> First-text — not set yet means "somewhere in the
+  // first three, safe to restart from Placement-result"; set means
+  // "only First-text left".
+  if (!input.streakGoalSet) return { step: "result" };
+  return { step: "first_text" };
 }
