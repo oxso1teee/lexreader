@@ -77,6 +77,9 @@ test("describeDuelError(): maps every SQL error code this migration can raise to
     "round_not_timed_out_yet",
     "invalid_options",
     "correct_answer_not_in_options",
+    // docs/moments/ROADMAP.md, этап 6 — claim_duel_result()
+    // (0055_duels_rewards_and_friend_streaks.sql)
+    "duel_not_finished",
   ];
   for (const code of codes) {
     const message = describeDuelError(code);

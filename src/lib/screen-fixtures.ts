@@ -1,5 +1,6 @@
 import type { TodayViewProps } from "@/components/product/today/v7/today-view";
 import type { WeekdayMark } from "@/lib/moments/types";
+import type { DuelState, DuelClaimResult } from "@/lib/duel";
 
 // Тестовые данные основных экранов для галереи /dev/screens — те же цифры,
 // что на макетах v7 (docs/moments/reference/*.png), чтобы сверять раскладку.
@@ -152,3 +153,49 @@ export const LESSON_CHOICE_FIXTURE = [
     fsrsState: EMPTY_FSRS_STATE,
   },
 ];
+
+// docs/moments/ROADMAP.md, этап 6 — Duel-invite/Duel-won не ходят через
+// очередь moments (показываются inline в /duel/[id]), поэтому для
+// скриншот-сверки их фикстуры живут здесь же, как у Stage 3.
+export const DUEL_INVITE_FIXTURE: DuelState = {
+  id: "fixture-duel",
+  status: "waiting",
+  language: "en",
+  roundCount: 10,
+  currentRoundIndex: 0,
+  creatorInitials: "АН",
+  opponentInitials: null,
+  creatorScore: 0,
+  opponentScore: 0,
+  isCreator: false,
+  isParticipant: false,
+  winnerIsMe: false,
+  isDraw: false,
+  inviteExpiresAt: new Date(Date.now() + 23 * 3600_000 + 15 * 60_000).toISOString(),
+};
+
+export const DUEL_WON_FIXTURE: { state: DuelState; result: DuelClaimResult } = {
+  state: {
+    id: "fixture-duel-won",
+    status: "finished",
+    language: "en",
+    roundCount: 10,
+    currentRoundIndex: 10,
+    creatorInitials: "СП",
+    opponentInitials: "АН",
+    creatorScore: 10,
+    opponentScore: 7,
+    isCreator: true,
+    isParticipant: true,
+    winnerIsMe: true,
+    isDraw: false,
+    inviteExpiresAt: null,
+  },
+  result: {
+    xpToAward: 25,
+    winStreak: 3,
+    speedMarginSec: 18,
+    scoreMe: 10,
+    scoreOpponent: 7,
+  },
+};

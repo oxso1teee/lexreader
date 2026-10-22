@@ -3,7 +3,15 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cachedTranslate } from "@/lib/translate-request";
-import { pickNextDuelWord, pickDistractorWords, buildDuelRoundContent, describeDuelError, DEFAULT_DUEL_ROUND_COUNT } from "@/lib/duel";
+import {
+  pickNextDuelWord,
+  pickDistractorWords,
+  buildDuelRoundContent,
+  describeDuelError,
+  DEFAULT_DUEL_ROUND_COUNT,
+  type DuelClaimResult,
+} from "@/lib/duel";
+import { addXp } from "@/lib/xp-actions";
 
 // docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
 // "Живые дуэли по словарю 1 на 1". Только два действия идут через Server
@@ -75,4 +83,43 @@ export async function dealNextDuelRoundAction(duelId: string): Promise<DealRound
   });
   if (error) return { ok: false, error: describeDuelError(error.message) };
   return { ok: true };
+}
+
+export interface ClaimDuelResultResponse {
+  ok: boolean;
+  error?: string;
+  result?: DuelClaimResult;
+}
+
+// docs/moments/ROADMAP.md, этап 6 — Duel-won. claim_duel_result()
+// (0055_duels_rewards_and_friend_streaks.sql) считает win-streak/
+// speed-margin и защищает от повторного начисления, но само начисление XP
+// живёт в TS (addXp — activity_days/Double-XP boost, не переносим это в
+// SQL). Идемпотентна: второй вызов после уже выданного XP вернёт
+// xpToAward: 0 из RPC, addXp просто не вызывается повторно.
+export async function claimDuelResultAction(duelId: string): Promise<ClaimDuelResultResponse> {
+  const supabase = await createClient();
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) return { ok: false, error: describeDuelError("not_a_participant") };
+
+  const { data, error } = await supabase.rpc("claim_duel_result", { p_duel_id: duelId });
+  if (error || !data) return { ok: false, error: describeDuelError(error?.message) };
+
+  const raw = data as { xpToAward: number; winStreak: number; speedMarginSec: number; scoreMe: number; scoreOpponent: number };
+  let xpAwarded = 0;
+  if (raw.xpToAward > 0) {
+    const xpResult = await addXp(supabase, user.user.id, raw.xpToAward);
+    xpAwarded = xpResult?.awarded ?? 0;
+  }
+
+  return {
+    ok: true,
+    result: {
+      xpToAward: xpAwarded,
+      winStreak: raw.winStreak,
+      speedMarginSec: raw.speedMarginSec,
+      scoreMe: raw.scoreMe,
+      scoreOpponent: raw.scoreOpponent,
+    },
+  };
 }

@@ -69,4 +69,36 @@ export const MOMENT_FIXTURES: Record<string, Moment> = {
     id: "fixture-earn-back",
     streakBeforeBreak: 12,
   },
+  Overtaken: {
+    kind: "overtaken",
+    id: "fixture-overtaken",
+    friendName: "Макс",
+    friendInitial: "М",
+    theirRank: 4,
+    xpGapToReclaim: 20,
+  },
+  "Weekly-rank": {
+    kind: "weekly_rank",
+    id: "fixture-weekly-rank",
+    weekLabel: "13–19 окт",
+    myRank: 4,
+    myScore: 310,
+    xpGapToNextTier: 40,
+    podium: [
+      { rank: 2, name: "Макс", initial: "М", score: 420 },
+      { rank: 1, name: "Аня", initial: "А", score: 510 },
+      { rank: 3, name: "Лена", initial: "Л", score: 350 },
+    ],
+    rowBelow: { rank: 5, name: "Дима", initial: "Д", score: 280 },
+  },
+  "Friend-streak": {
+    kind: "friend_streak",
+    id: "fixture-friend-streak",
+    sharedStreak: 10,
+    friendName: "Аня",
+    partners: [
+      { id: "fixture-friend-anya", name: "Аня", initial: "А", personalStreak: 10 },
+      { id: "fixture-friend-max", name: "Макс", initial: "М", personalStreak: 4 },
+    ],
+  },
 };

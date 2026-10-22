@@ -103,6 +103,56 @@ export interface EarnBackMoment {
   streakBeforeBreak: number;
 }
 
+// Этап 6 (docs/moments/ROADMAP.md) — друзья и соревнование. Overtaken/
+// Weekly-rank/Friend-streak идут через обычную очередь (ниже); Duel-won
+// показывается inline в /duel/[id] (duel-room.tsx), не через очередь — у
+// него нет отдельной ветки в Moment/MOMENT_PRIORITY, своя узкая форма пропсов
+// экспортируется отдельно из src/lib/duel.ts (DuelClaimResult).
+export interface OvertakenMoment {
+  kind: "overtaken";
+  id: string;
+  friendName: string;
+  friendInitial: string;
+  theirRank: number;
+  xpGapToReclaim: number;
+}
+
+export interface WeeklyRankPodiumEntry {
+  rank: 1 | 2 | 3;
+  name: string;
+  initial: string;
+  score: number;
+}
+
+export interface WeeklyRankMoment {
+  kind: "weekly_rank";
+  id: string;
+  /** "13–19 окт". */
+  weekLabel: string;
+  myRank: number;
+  myScore: number;
+  /** null — уже в топ-3, либо соседа снизу нет. */
+  xpGapToNextTier: number | null;
+  podium: WeeklyRankPodiumEntry[];
+  rowBelow: { rank: number; name: string; initial: string; score: number } | null;
+}
+
+export interface FriendStreakPartnerView {
+  /** profiles.id партнёра — нужен remindFriendAction (кнопка "Позвать"). */
+  id: string;
+  name: string;
+  initial: string;
+  personalStreak: number;
+}
+
+export interface FriendStreakMoment {
+  kind: "friend_streak";
+  id: string;
+  sharedStreak: number;
+  friendName: string;
+  partners: FriendStreakPartnerView[];
+}
+
 export type Moment =
   | GoalDoneMoment
   | StreakUpMoment
@@ -113,7 +163,10 @@ export type Moment =
   | StreakMilestoneMoment
   | FreezeUsedMoment
   | PerfectWeekMoment
-  | EarnBackMoment;
+  | EarnBackMoment
+  | OvertakenMoment
+  | WeeklyRankMoment
+  | FriendStreakMoment;
 export type MomentKind = Moment["kind"];
 
 // Порядок показа после занятия (ROADMAP, этап 1/2): Result (не момент — сам
@@ -132,6 +185,11 @@ export const MOMENT_PRIORITY: Record<MomentKind, number> = {
   level_up: 30,
   achievement: 30,
   word_mastered: 20,
+  // Этап 6 — социальные уведомления: не блокируют итог занятия (не входят
+  // в основную цепочку после сессии), но заметнее, чем просто "информация".
+  overtaken: 38,
+  friend_streak: 38,
+  weekly_rank: 25,
 };
 
 /** Больше подряд не показываем — остальные подождут следующего действия. */
