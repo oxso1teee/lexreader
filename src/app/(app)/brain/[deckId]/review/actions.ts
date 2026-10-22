@@ -23,6 +23,10 @@ import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import { awardPerfectWeekIfEligible } from "@/lib/moments/perfect-week-award";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
+// docs/moments/mockups/Perfect.dc.html — "+10 XP бонус за чистое занятие".
+// Настоящее начисление (addXp), не декоративное число. В constants.ts, не
+// здесь: "use server"-файлы могут экспортировать только async-функции.
+import { PERFECT_SESSION_BONUS_XP } from "./constants";
 
 export interface ReviewWordResult {
   reviewLogId: string | null;
@@ -295,11 +299,6 @@ export async function reviewWord(
   return { reviewLogId: logRow?.id ?? null, moments: [...moments, ...perfectWeek.moments], xpAwarded: xpResult ? 1 : 0, isNewCard: wasNew };
 }
 
-// docs/moments/mockups/Perfect.dc.html — "+10 XP бонус за чистое занятие".
-// Настоящее начисление (addXp), не декоративное число: только поэтому
-// Perfect-экран имеет право показывать его как факт, а не выдумку.
-const PERFECT_SESSION_BONUS_XP = 10;
-
 export async function awardPerfectBonus(cardCount: number, durationSec: number): Promise<{ moments: Moment[] }> {
   const supabase = await createClient();
   const {
@@ -337,6 +336,43 @@ export async function awardPerfectBonus(cardCount: number, durationSec: number):
   };
 
   return { moments: [perfectMoment, ...extraMoments] };
+}
+
+// docs/moments/mockups/Combo.dc.html — "+5 XP" на каждые 5 верных подряд.
+// Настоящее начисление (addXp), как и у Perfect-бонуса выше — Combo не
+// заведён в src/lib/moments/types.ts как отдельный Moment: баннер
+// показывается сразу в review-session.tsx (не через очередь MomentProvider),
+// но XP всё равно может довести до цели дня/уровня — те же extraMoments,
+// что и у awardPerfectBonus, уходят в общую очередь сессии.
+const COMBO_BONUS_XP = 5;
+
+export async function awardComboBonus(): Promise<{ xpAwarded: number; moments: Moment[] }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { xpAwarded: 0, moments: [] };
+
+  const xpResult = await addXp(supabase, user.id, COMBO_BONUS_XP);
+  if (!xpResult) return { xpAwarded: 0, moments: [] };
+
+  const goalWeek = await fetchGoalWeekMarks(supabase, user.id);
+  const moments = collectMoments({
+    xp: {
+      before: { total: xpResult.total.before, today: xpResult.today.before },
+      after: { total: xpResult.total.after, today: xpResult.today.after },
+      goal: xpResult.goal,
+      minutesHint: minutesHintForGoal(xpResult.goal),
+    },
+    streak: null,
+    goalWeek,
+    streakWeek: [],
+    newAchievementIds: [],
+    wordMastered: null,
+    today: todayUtcIso(),
+  });
+
+  return { xpAwarded: COMBO_BONUS_XP, moments };
 }
 
 export async function getStreakInfo(): Promise<{ current: number; longest: number }> {

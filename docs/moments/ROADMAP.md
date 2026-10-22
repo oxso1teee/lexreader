@@ -112,12 +112,11 @@ Today-evening убраны — нет настоящего механизма); 
 клиентский гейт `TodayEveningGate` (после 18:00 по времени устройства, 0
 XP сегодня, серия > 0) поверх обычного `TodayView`, добавлен в `/dev/screens`.
 
-### Этап 3. Внутри занятия — [ ]
+### Этап 3. Внутри занятия — [x]
 Lesson-start, Combo, Halfway, Mistakes, Quit-confirm (Result переехал в
 этап 1 — он уже понадобился там для итога сессии). Сначала поверх текущего
-повторения карточек. Собранное занятие из макетов
-(Lesson-choice / Lesson-build / Lesson-listen: выбор перевода, собрать
-фразу, на слух) — отдельный движок упражнений, этап 8.
+повторения карточек. Lesson-choice переверстан 1:1 (multiple-choice-mode.tsx);
+Lesson-build/Lesson-listen — отдельный движок упражнений, этап 8.
 
 ### Этап 4. Чтение и слова — [ ]
 Chapter-done (чтение `read/[textId]`), Review-due (FSRS: сколько карточек
@@ -169,7 +168,7 @@ Main (Сегодня), Today-evening (стрик под угрозой), Path (�
 | Reader | 🟡 | `/read/[textId]` — без тоста «слово сохранено» из макета |
 | Progress | 🟡 | `/progress` — старая раскладка |
 | Result | 🟡 | `review/session-complete.tsx` — другой вид |
-| Lesson-choice | 🟡 | `review/multiple-choice-mode.tsx` — другой вид |
+| Lesson-choice | ✅ галерея | 1:1; в живом сценарии уже работает (multiple-choice-mode.tsx) |
 | Lesson-build | ❌ | режима «собери фразу» нет |
 | Lesson-listen | ❌ | режима «на слух» нет |
 | Placement-result | 🟡 | `/onboarding/result` — другой вид |
@@ -184,7 +183,7 @@ Main (Сегодня), Today-evening (стрик под угрозой), Path (�
 | Twin-insight | 🟡 | `/language-twin` — страница, не момент |
 | Achievement | 🟡 | `progress/achievements-shelf.tsx` — полка, без экрана получения |
 | Notify-ask | 🟡 | время напоминания в настройках, без экрана-просьбы |
-| Lesson-start, Combo, Halfway, Mistakes, Quit-confirm, Perfect | ❌ | этап 3 |
+| Lesson-start, Combo, Halfway, Mistakes, Quit-confirm | ✅ галерея | этап 3; живой сценарий — review-session.tsx |
 | Unit-done, Level-up, Word-mastered, Chapter-done, Review-due | ❌ | этапы 1 и 4 |
 | Streak-30, Perfect-week, Freeze-used, Earn-back, Streak-calendar, Friend-streak | ❌ | этап 2 (Friend-streak — этап 6) |
 | Daily-quests, Chest, Double-XP | ❌ | этап 5, новая механика |
