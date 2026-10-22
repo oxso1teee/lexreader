@@ -242,11 +242,11 @@ export default function MultipleChoiceMode({
             // подключён только в /read/[textId] (--font-reading), а не
             // глобально — здесь курсив на обычном sans-стеке, не несуществующая
             // переменная шрифта.
-            <p className="italic" style={{ margin: 0, fontSize: 18, lineHeight: 1.5 }}>
+            <p className="italic" data-testid="choice-question" style={{ margin: 0, fontSize: 18, lineHeight: 1.5 }}>
               {card.contextSentence}
             </p>
           ) : (
-            <p style={{ margin: 0, fontSize: 19, fontWeight: 600 }}>{questionOf(card, studyDirection)}</p>
+            <p data-testid="choice-question" style={{ margin: 0, fontSize: 19, fontWeight: 600 }}>{questionOf(card, studyDirection)}</p>
           )}
           {card.sourceTextTitle && (
             <div className="mo-muted" style={{ fontSize: 12, marginTop: 6 }}>
@@ -274,6 +274,7 @@ export default function MultipleChoiceMode({
               type="button"
               disabled={showState}
               onClick={() => choose(opt)}
+              data-testid={`choice-option-${i}`}
               animate={showState && isOptCorrect && !reduceMotion ? { scale: [1, 1.035, 1] } : { scale: 1 }}
               transition={{ duration: 0.28, ease: "easeOut" }}
               style={{ ...style, borderWidth: 2, borderStyle: "solid", borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontSize: 17, fontWeight: 600 }}
@@ -295,8 +296,24 @@ export default function MultipleChoiceMode({
                 {i + 1}
               </span>
               <span style={{ flex: 1 }}>{opt}</span>
-              {showState && isOptCorrect && <Check aria-hidden="true" className="h-4 w-4 shrink-0" />}
-              {isSelectedWrong && <X aria-hidden="true" className="h-4 w-4 shrink-0" />}
+              {/* M3 Slice 4.1 (пред. фаза): цвет рамки/фона — не единственный
+                  сигнал верно/неверно, нужны ещё иконка И текстовая подпись
+                  (e2e/practice-modes-feedback.spec.ts) — баннер снизу даёт тот
+                  же сигнал на уровне экрана, но ЭТА конкретная кнопка должна
+                  сама сообщать свой результат, не полагаясь на то, что
+                  пользователь посмотрит ниже. */}
+              {showState && isOptCorrect && (
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 700, flex: "none" }}>
+                  <Check aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  Верно
+                </span>
+              )}
+              {isSelectedWrong && (
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 700, flex: "none" }}>
+                  <X aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  Неверно
+                </span>
+              )}
             </motion.button>
           );
         })}
