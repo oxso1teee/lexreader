@@ -101,4 +101,37 @@ export const MOMENT_FIXTURES: Record<string, Moment> = {
       { id: "fixture-friend-max", name: "Макс", initial: "М", personalStreak: 4 },
     ],
   },
+  "Notify-ask": {
+    kind: "notify_ask",
+    id: "fixture-notify-ask",
+  },
+  "Welcome-back": {
+    kind: "welcome_back",
+    id: "fixture-welcome-back",
+    name: "Сергей",
+    daysAway: 5,
+    dueReviewCount: 8,
+    continueChapter: { textId: "fixture-text", collectionTitle: "The Last Lighthouse", chapterPosition: 3 },
+  },
+  "Rate-app": {
+    kind: "rate_app",
+    id: "fixture-rate-app",
+  },
+  "Week-recap": {
+    kind: "week_recap",
+    id: "fixture-week-recap",
+    weekLabel: "13–19 окт",
+    newWordsCount: 214,
+    alreadyKnownCount: 38,
+    wordOfWeek: {
+      headword: "reluctant",
+      translation: "неохотный",
+      contextSentence: "She was reluctant to leave the lighthouse.",
+      timesSeen: 7,
+      timesCorrect: 6,
+    },
+    minutesRead: 96,
+    chaptersRead: 2,
+    activeDays: 7,
+  },
 };
