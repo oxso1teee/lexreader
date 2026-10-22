@@ -14,6 +14,9 @@ import { Streak30Screen } from "./screens/streak-30";
 import { FreezeUsedScreen } from "./screens/freeze-used";
 import { PerfectWeekScreen } from "./screens/perfect-week";
 import { EarnBackScreen } from "./screens/earn-back";
+import { OvertakenScreen } from "./screens/overtaken";
+import { WeeklyRankScreen } from "./screens/weekly-rank";
+import { FriendStreakScreen } from "./screens/friend-streak";
 
 // Очередь моментов на всё приложение. Серверное действие возвращает
 // moments[] → вызывающий клиент делает pushMoments(result.moments), или
@@ -71,6 +74,12 @@ export function renderMoment(moment: Moment, onClose: () => void) {
       return <PerfectWeekScreen moment={moment} onClose={onClose} />;
     case "earn_back":
       return <EarnBackScreen moment={moment} onClose={onClose} />;
+    case "overtaken":
+      return <OvertakenScreen moment={moment} onClose={onClose} />;
+    case "weekly_rank":
+      return <WeeklyRankScreen moment={moment} onClose={onClose} />;
+    case "friend_streak":
+      return <FriendStreakScreen moment={moment} onClose={onClose} />;
   }
 }
 

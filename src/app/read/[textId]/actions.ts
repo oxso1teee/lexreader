@@ -12,6 +12,7 @@ import { collectMoments } from "@/lib/moments/collect";
 import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
 import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import { awardPerfectWeekIfEligible } from "@/lib/moments/perfect-week-award";
+import { checkOvertaken } from "@/lib/moments/overtaken";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
 import type { ReaderPrefs } from "./reader-prefs";
@@ -216,6 +217,7 @@ export async function finishReading(input: {
   const goalWeek = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
   const streakWeek = streakTransition ? await fetchStreakWeekMarks(supabase, user.id) : [];
   const perfectWeek = xpResult ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
+  const overtaken = xpResult ? await checkOvertaken(supabase, user.id) : [];
   const moments = collectMoments({
     xp: xpResult
       ? {
@@ -233,7 +235,9 @@ export async function finishReading(input: {
     today: todayUtcIso(),
   });
 
-  return { moments: [...moments, ...perfectWeek.moments] };
+  // docs/moments/ROADMAP.md, этап 6 — Friend-streak, см. комментарий в
+  // review/actions.ts::reviewWord().
+  return { moments: [...moments, ...perfectWeek.moments, ...(streakTransition?.friendStreaks ?? []), ...overtaken] };
 }
 
 // M3 Slice 3 §8: profiles.reader_settings — account-synced on top of the

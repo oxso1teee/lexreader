@@ -127,10 +127,36 @@ Daily-quests (3 задания дня — отдельно от недельны
 `daily_quests`), Chest (награда за 3 задания: XP, заморозка, ×2),
 Double-XP (миграция `xp_boost_until`, множитель в `addXp`).
 
-### Этап 6. Друзья и соревнование — [ ]
+### Этап 6. Друзья и соревнование — [~]
 Duel-invite, Duel-won (дуэли есть: `duel.ts`), Overtaken, Weekly-rank
 (недельный рейтинг есть: `leaderboard.ts`), Friend-streak (новая
 механика: общая серия двух друзей, миграция `friend_streaks`).
+Сделано в PR этапа 6: миграция `0055_duels_rewards_and_friend_streaks.sql` —
+`claim_duel_result()` (реальные XP за победу/серия побед подряд/разница в
+секундах из `duel_answers.latency_ms`, защита от повторного начисления),
+`invite_expires_at` у дуэли; таблица `friend_streaks` (пара = сам концепт
+"друзей" в проекте, приглашение по одноразовой ссылке — `/friends/invite`,
+`/friends/[token]`, честный MVP без списка друзей) + `touch_friend_streaks()`
+(общая серия, "пропустит один — сгорит у обоих") вызывается из
+`touchStreak()`; `weekly_rank_snapshots` + параметризованный
+`get_weekly_leaderboard_for_week()` — для детекта обгона и итогов
+закончившейся недели. **Duel-invite**/**Duel-won** показываются inline в
+`/duel/[id]` (не через очередь moments — состояние существующего экрана, не
+"что-то случилось"), текст адаптирован к реальной модели дуэлей (нет
+привязки к книге и прогресса соперника до старта — это не существующая
+колонка, а физически другие данные). **Overtaken**/**Weekly-rank**/
+**Friend-streak** — обычные moments через `MomentProvider`; Overtaken триггерится
+после `addXp` в `reviewWord()`/`finishReading()`, Weekly-rank — клиентским
+гейтом по понедельникам (`WeeklyRankGate` в корневом `layout.tsx`, тот же
+приём, что `TodayEveningGate`). Кнопка Friend-streak — "Позвать" (буквально
+как в макете, не "Напомнить"), шлёт push через `remindFriendAction` (service-
+role доступ к чужим `push_subscriptions`, тот же паттерн, что
+`push-reminders`). Галерея: Overtaken/Weekly-rank/Friend-streak в
+`/dev/moments` (автоматически через `fixtures.ts`), Duel-invite/Duel-won в
+`/dev/screens` (`stage6-gallery.tsx`, по образцу этапа 3). Экраны не сверены
+со скриншотами `docs/moments/reference/*.png` (нет живого окружения с
+подготовленными тестовыми аккаунтами в этой сессии) — визуальная 1:1-сверка
+и `scripts/moments-snap.ts` остаются на следующий проход.
 
 ### Этап 7. Первый запуск и система — [ ]
 Splash (нативный сплэш + веб-экран), Placement-result (поверх

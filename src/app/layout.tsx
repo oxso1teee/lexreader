@@ -7,6 +7,7 @@ import NativeBridge from "./native-bridge";
 import { THEME_INIT_SCRIPT } from "./theme-init-script";
 import { siteUrl } from "@/lib/site-url";
 import { MomentProvider } from "@/components/product/moments/moment-provider";
+import WeeklyRankGate from "@/components/product/moments/weekly-rank-gate";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -97,7 +98,10 @@ export default function RootLayout({
             тоже возвращает moments[] (сессия чтения) — провайдер поднят на
             уровень выше (app)/layout.tsx раньше его держал, чтобы оба дерева
             маршрутов делили одну очередь, а не плодили вторую копию. */}
-        <MomentProvider>{children}</MomentProvider>
+        <MomentProvider>
+          <WeeklyRankGate />
+          {children}
+        </MomentProvider>
       </body>
     </html>
   );

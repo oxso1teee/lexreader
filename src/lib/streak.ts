@@ -1,6 +1,8 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { isoWeekStart as isoWeekStartDate } from "./iso-week.ts";
 import { computeStreakUpdate, type StreakProfileSnapshot } from "./streak-engine.ts";
+import type { FriendStreakRow } from "./friend-streaks.ts";
+import type { FriendStreakMoment } from "./moments/types.ts";
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -23,9 +25,11 @@ export interface StreakTransition {
   milestonesCrossed: number[];
   /** Earn-back: число до обрыва — заполнено только когда repairStarted. */
   streakBeforeBreak: number | null;
+  /** Этап 6 — пары, чья общая серия только что увеличилась сегодня. */
+  friendStreaks: FriendStreakMoment[];
 }
 
-const NO_CHANGE: Omit<StreakTransition, "before" | "after"> = {
+const NO_CHANGE: Omit<StreakTransition, "before" | "after" | "friendStreaks"> = {
   usedFreeze: false,
   repairStarted: false,
   repairCompleted: false,
@@ -33,6 +37,46 @@ const NO_CHANGE: Omit<StreakTransition, "before" | "after"> = {
   milestonesCrossed: [],
   streakBeforeBreak: null,
 };
+
+// docs/moments/ROADMAP.md, этап 6 — Friend-streak. touch_friend_streaks()
+// (0055_duels_rewards_and_friend_streaks.sql) возвращает только строки,
+// чья ОБЩАЯ серия увеличилась СЕГОДНЯ (идемпотентно — второй вызов в тот же
+// день отдаёт пустой массив). Для каждой такой строки строим момент с
+// partners = ВСЕ принятые пары этого пользователя (не только та, что
+// сработала) — так карточка в макете показывает всех друзей разом, даже
+// если сработала только пара с одним из них.
+async function buildFriendStreakMoments(supabase: SupabaseServerClient, userId: string, today: string): Promise<FriendStreakMoment[]> {
+  const { data: touched } = await supabase.rpc("touch_friend_streaks", { p_day: today });
+  const touchedRows = (touched ?? []) as FriendStreakRow[];
+  if (touchedRows.length === 0) return [];
+
+  const { data: allRows } = await supabase
+    .from("friend_streaks")
+    .select("id, user_a, user_a_initials, user_a_personal_streak, user_b, user_b_initials, user_b_personal_streak, streak, last_both_active_day, invite_token, accepted_at, created_at")
+    .not("accepted_at", "is", null)
+    .or(`user_a.eq.${userId},user_b.eq.${userId}`);
+  const partnerRows = (allRows ?? []) as FriendStreakRow[];
+
+  return touchedRows.map((row) => {
+    const iAmA = row.user_a === userId;
+    const primaryPartnerInitial = iAmA ? row.user_b_initials : row.user_a_initials;
+    return {
+      kind: "friend_streak",
+      id: `friend_streak:${row.id}:${today}`,
+      sharedStreak: row.streak,
+      friendName: primaryPartnerInitial ?? "Друг",
+      partners: partnerRows.map((p) => {
+        const pIAmA = p.user_a === userId;
+        return {
+          id: pIAmA ? (p.user_b ?? "") : p.user_a,
+          name: pIAmA ? (p.user_b_initials ?? "Друг") : p.user_a_initials,
+          initial: pIAmA ? (p.user_b_initials ?? "?") : p.user_a_initials,
+          personalStreak: pIAmA ? p.user_b_personal_streak : p.user_a_personal_streak,
+        };
+      }),
+    };
+  });
+}
 
 // docs/moments/ROADMAP.md, этап 1/2: решение "что произошло" теперь в чистой
 // computeStreakUpdate() (src/lib/streak-engine.ts, полностью покрыта
@@ -67,7 +111,10 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
   };
 
   const update = computeStreakUpdate(snapshot, today, yesterday, twoDaysAgo, thisWeekStart);
-  if (!update) return { before: profile.streak_current, after: profile.streak_current, ...NO_CHANGE };
+  if (!update) {
+    const friendStreaks = await buildFriendStreakMoments(supabase, userId, today);
+    return { before: profile.streak_current, after: profile.streak_current, ...NO_CHANGE, friendStreaks };
+  }
 
   await Promise.all([
     supabase
@@ -91,6 +138,8 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
       : Promise.resolve(null),
   ]);
 
+  const friendStreaks = await buildFriendStreakMoments(supabase, userId, today);
+
   return {
     before: update.before,
     after: update.after,
@@ -100,5 +149,6 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
     repairFailed: update.repairFailed,
     milestonesCrossed: update.milestonesCrossed,
     streakBeforeBreak: update.repairStarted ? update.streakBeforeBreak : null,
+    friendStreaks,
   };
 }
