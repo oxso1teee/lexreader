@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 // Эталон: docs/moments/mockups/Offline.dc.html. "Доступно офлайн" — не
 // выдумка: public/sw.js кеширует (network-first) любую посещённую
@@ -25,16 +25,12 @@ function labelForPath(pathname: string): string {
 }
 
 export default function OfflinePage() {
-  const [pages, setPages] = useState<CachedPage[] | null>(null);
+  const [pages, setPages] = useState<CachedPage[]>([]);
   const [checking, setChecking] = useState(false);
   const [tried, setTried] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("caches" in window)) {
-      setPages([]);
-      return;
-    }
+    if (typeof window === "undefined" || !("caches" in window)) return;
     caches
       .open(SHELL_CACHE_NAME)
       .then((cache) => cache.keys())
@@ -50,7 +46,6 @@ export default function OfflinePage() {
         setPages(list);
       })
       .catch(() => setPages([]));
-    return () => clearTimeout(timeoutRef.current);
   }, []);
 
   function retry() {
@@ -82,7 +77,7 @@ export default function OfflinePage() {
         Не беда: скачанные тексты читаются и без сети. Прогресс отправим, когда связь вернётся
       </p>
 
-      {pages && pages.length > 0 && (
+      {pages.length > 0 && (
         <div className="mt-5 rounded-[20px] border-2 border-[var(--border)] bg-[var(--surface)] text-left">
           <div className="px-3.5 pt-3 text-xs font-bold uppercase tracking-wide text-[var(--text-secondary)]">Доступно офлайн</div>
           {pages.map((p, i) => (

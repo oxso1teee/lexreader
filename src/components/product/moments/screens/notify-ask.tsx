@@ -17,7 +17,7 @@ function formatHour(h: number): string {
   return `${whole}:${minutes}`;
 }
 
-export function NotifyAskScreen({ moment, onClose }: { moment: NotifyAskMoment; onClose: () => void }) {
+export function NotifyAskScreen({ onClose }: { moment: NotifyAskMoment; onClose: () => void }) {
   const [t, setT] = useState(1);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);

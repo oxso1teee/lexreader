@@ -18,7 +18,7 @@ const SAYS = [
   "Ура! Ты лучший читатель",
 ];
 
-export function RateAppScreen({ moment, onClose }: { moment: RateAppMoment; onClose: () => void }) {
+export function RateAppScreen({ onClose }: { moment: RateAppMoment; onClose: () => void }) {
   const [n, setN] = useState(0);
   const [requested, setRequested] = useState(false);
 
