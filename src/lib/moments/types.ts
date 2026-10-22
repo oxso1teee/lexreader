@@ -153,6 +153,48 @@ export interface FriendStreakMoment {
   partners: FriendStreakPartnerView[];
 }
 
+// Этап 7 (docs/moments/ROADMAP.md) — первый запуск и система.
+export interface NotifyAskMoment {
+  kind: "notify_ask";
+  id: string;
+}
+
+export interface WelcomeBackMoment {
+  kind: "welcome_back";
+  id: string;
+  name: string;
+  daysAway: number;
+  /** getDueCount — реально просроченные карточки, не декоративное число. */
+  dueReviewCount: number;
+  continueChapter: { textId: string; collectionTitle: string; chapterPosition: number } | null;
+}
+
+export interface RateAppMoment {
+  kind: "rate_app";
+  id: string;
+}
+
+export interface WeekRecapWordOfWeek {
+  headword: string;
+  translation: string;
+  contextSentence: string | null;
+  timesSeen: number;
+  timesCorrect: number;
+}
+
+export interface WeekRecapMoment {
+  kind: "week_recap";
+  id: string;
+  /** "13–19 окт". */
+  weekLabel: string;
+  newWordsCount: number;
+  alreadyKnownCount: number;
+  wordOfWeek: WeekRecapWordOfWeek | null;
+  minutesRead: number;
+  chaptersRead: number;
+  activeDays: number;
+}
+
 export type Moment =
   | GoalDoneMoment
   | StreakUpMoment
@@ -166,7 +208,11 @@ export type Moment =
   | EarnBackMoment
   | OvertakenMoment
   | WeeklyRankMoment
-  | FriendStreakMoment;
+  | FriendStreakMoment
+  | NotifyAskMoment
+  | WelcomeBackMoment
+  | RateAppMoment
+  | WeekRecapMoment;
 export type MomentKind = Moment["kind"];
 
 // Порядок показа после занятия (ROADMAP, этап 1/2): Result (не момент — сам
@@ -190,6 +236,15 @@ export const MOMENT_PRIORITY: Record<MomentKind, number> = {
   overtaken: 38,
   friend_streak: 38,
   weekly_rank: 25,
+  // Этап 7 — не блокируют итог занятия: notify_ask идёт почти в конце
+  // батча (после первого занятия, рядом с word_mastered), rate_app —
+  // самым последним (показывается следом за уже показанным позитивным
+  // моментом, см. moment-provider.tsx). Welcome-back/Week-recap приходят
+  // отдельным push от гейта, приоритет среди них не играет роли.
+  notify_ask: 15,
+  week_recap: 25,
+  welcome_back: 15,
+  rate_app: 5,
 };
 
 /** Больше подряд не показываем — остальные подождут следующего действия. */

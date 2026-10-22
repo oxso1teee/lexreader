@@ -22,6 +22,7 @@ import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
 import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import { awardPerfectWeekIfEligible } from "@/lib/moments/perfect-week-award";
 import { checkOvertaken } from "@/lib/moments/overtaken";
+import { maybeFirstWinMoments } from "@/lib/moments/first-win";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
 // docs/moments/mockups/Perfect.dc.html — "+10 XP бонус за чистое занятие".
@@ -302,7 +303,7 @@ export async function reviewWord(
     reviewLogId: logRow?.id ?? null,
     // docs/moments/ROADMAP.md, этап 6 — Friend-streak уже полностью собран
     // в touchStreak() (нужен RPC-вызов, не влезает в чистую collectMoments).
-    moments: [...moments, ...perfectWeek.moments, ...(streakTransition?.friendStreaks ?? []), ...overtaken],
+    moments: [...moments, ...perfectWeek.moments, ...(streakTransition?.friendStreaks ?? []), ...overtaken, ...(await maybeFirstWinMoments(supabase, user.id))],
     xpAwarded: xpResult?.awarded ?? 0,
     isNewCard: wasNew,
   };
