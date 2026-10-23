@@ -806,3 +806,20 @@
 @keyframes di-spk { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
 .di-spk { position: absolute; left: 50%; top: 60px; width: 8px; height: 8px; border-radius: 99px; animation: di-spk 0.7s 0.8s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .di-av { animation: none; } .di-spk, .di-flash { display: none; } }
+
+/* Duel-won (docs/moments/mockups/Duel-won.dc.html) */
+@keyframes dw-inL { 0% { transform: translateX(-200px); } 70% { transform: translateX(10px); } 100% { transform: none; } }
+@keyframes dw-inR { 0% { transform: translateX(200px); } 70% { transform: translateX(-10px); } 100% { transform: none; } }
+.dw-inL { animation: dw-inL 0.5s 0.1s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+.dw-inR { animation: dw-inR 0.5s 0.1s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+@keyframes dw-clash { 0% { transform: scale(0) rotate(-30deg); opacity: 0; } 60% { transform: scale(1.4) rotate(8deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.dw-clash { animation: dw-clash 0.4s 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+@keyframes dw-crown { 0% { transform: translateY(-140px) rotate(-30deg); opacity: 0; } 60% { transform: translateY(6px) rotate(6deg); opacity: 1; } 80% { transform: translateY(-4px); } 100% { transform: none; opacity: 1; } }
+.dw-crown { animation: dw-crown 0.6s 2.1s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+@keyframes dw-win { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+.dw-winner { animation: dw-win 0.5s 2.1s ease-in-out 2; }
+@keyframes dw-sad { to { filter: grayscale(0.6); opacity: 0.75; transform: scale(0.92); } }
+.dw-loser { animation: dw-sad 0.4s 2.1s ease-out both; }
+.dw-av { width: 86px; height: 86px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font: 900 30px/1 var(--font-unbounded), sans-serif; border: 4px solid #fff; color: #fff; }
+.dw-col { width: 100%; border-radius: 14px 14px 6px 6px; display: flex; align-items: flex-start; justify-content: center; padding-top: 10px; font: 900 26px/1 var(--font-unbounded), sans-serif; }
+.dw-chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 14px; font-weight: 700; font-size: 15px; }
