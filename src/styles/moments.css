@@ -640,6 +640,23 @@
 }
 .onb-load { height: 100%; border-radius: 99px; background: #fff; animation: onb-load 1.6s 0.4s cubic-bezier(0.6, 0, 0.3, 1) both; }
 
+/* Нижняя шторка поверх приложения (макеты Review-due, Rate-app, Quit-confirm). */
+.mo-screen-sheet { background: transparent; align-items: flex-end; }
+@keyframes mo-fadein { from { opacity: 0; } to { opacity: 1; } }
+.mo-scrim { position: absolute; inset: 0; background: rgba(26, 26, 26, 0.55); animation: mo-fadein 0.25s ease-out both; }
+@keyframes mo-sheet-up { 0% { transform: translateY(100%); } 75% { transform: translateY(-2%); } 100% { transform: none; } }
+.mo-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  background: var(--surface);
+  border-radius: 30px 30px 0 0;
+  padding: 12px 22px calc(30px + env(safe-area-inset-bottom));
+  animation: mo-sheet-up 0.4s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.mo-grip { width: 44px; height: 5px; border-radius: 99px; background: var(--border-strong); margin: 0 auto 14px; }
+.mo-link2 { display: block; width: 100%; text-align: center; font: 600 15px/1 var(--font-onest), sans-serif; color: var(--text-secondary); padding: 16px 0 0; text-decoration: underline; background: none; border: 0; cursor: pointer; }
+
 @media (prefers-reduced-motion: reduce) {
   .mo-screen *,
   .mo-screen *::before,
@@ -657,3 +674,56 @@
   .onb-rip,
   .onb-orbit-word { display: none; }
 }
+
+/* Review-due (docs/moments/mockups/Review-due.dc.html) */
+@keyframes rd-draw { from { stroke-dashoffset: 420; } to { stroke-dashoffset: 0; } }
+.rd-curve { stroke-dasharray: 420; animation: rd-draw 1.2s 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; }
+@keyframes rd-boost { from { stroke-dashoffset: 300; } to { stroke-dashoffset: 0; } }
+.rd-boost { stroke-dasharray: 300; animation: rd-boost 0.9s 1.8s cubic-bezier(0.4, 0, 0.2, 1) both; }
+@keyframes rd-ping { 0% { r: 6; opacity: 1; } 100% { r: 18; opacity: 0; } }
+.rd-ping { animation: rd-ping 1.4s 1.7s ease-out infinite; }
+@keyframes rd-rise { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rd-fade { 0%, 100% { opacity: 1; filter: blur(0); } 50% { opacity: 0.35; filter: blur(1.2px); } }
+.rd-w {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--sky-tint);
+  color: #075a85;
+  font: 600 15px/1 var(--font-reading), Georgia, serif;
+  animation: rd-rise 0.35s var(--d) both, rd-fade 2.6s calc(var(--d) + 0.4s) ease-in-out infinite;
+}
+:root[data-theme="dark"] .rd-w { color: var(--sky-text); }
+@media (prefers-reduced-motion: reduce) { .rd-w, .rd-ping { animation: none; } }
+
+/* Chapter-done (docs/moments/mockups/Chapter-done.dc.html) */
+@keyframes cd-drop { 0% { transform: translateY(-200px) rotate(-12deg); } 60% { transform: translateY(8px) rotate(3deg); } 80% { transform: translateY(-4px); } 100% { transform: none; } }
+.cd-drop { animation: cd-drop 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+@keyframes cd-open { 0%, 30% { transform: perspective(700px) rotateY(0); } 100% { transform: perspective(700px) rotateY(-155deg); } }
+.cd-cover { transform-origin: 0 50%; animation: cd-open 1.3s 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; backface-visibility: hidden; }
+@keyframes cd-glowb { 0% { opacity: 0; transform: scale(0.6); } 100% { opacity: 0.6; transform: scale(1); } }
+.cd-glowb { animation: cd-glowb 0.7s 1.3s ease-out both; }
+@keyframes cd-flyw { 0% { transform: translate(0, -140px) scale(0.3) rotate(-20deg); opacity: 0; } 70% { transform: translate(0, 6px) scale(1.06); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.cd-fw { display: inline-block; animation: cd-flyw 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.cd-wchip { display: inline-flex; align-items: center; padding: 8px 12px 10px; border-radius: 12px; background: var(--sky-tint); color: var(--sky-text); font: 700 15px/1 var(--font-reading), Georgia, serif; box-shadow: inset 0 -3px 0 0 #a8ddf7; }
+@keyframes cd-tw { 0%, 100% { transform: scale(0.3); opacity: 0.2; } 50% { transform: scale(1); opacity: 1; } }
+.cd-tw { position: absolute; animation: cd-tw 1.6s ease-in-out infinite; }
+
+/* Twin-insight (docs/moments/mockups/Twin-insight.dc.html) */
+@keyframes ti-merge { 0% { transform: translateX(var(--x)) scale(0.8); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
+.ti-twin { animation: ti-merge 0.7s 0.1s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+@keyframes ti-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(28, 176, 246, 0.35); } 50% { box-shadow: 0 0 0 12px rgba(28, 176, 246, 0); } }
+.ti-halo { animation: ti-merge 0.7s 0.1s cubic-bezier(0.2, 0.9, 0.3, 1.1) both, ti-glow 2s 0.8s ease-out infinite; }
+@keyframes ti-up { 0% { transform: translateY(8px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.ti-delta { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; font-weight: 700; padding: 3px 7px; border-radius: 8px; animation: ti-up 0.3s var(--d) ease-out both; }
+
+/* Unit-done (docs/moments/mockups/Unit-done.dc.html) */
+@keyframes ud-up { 0% { transform: translateY(80px) scale(0.6); opacity: 0; } 60% { transform: translateY(-10px) scale(1.06); opacity: 1; } 100% { transform: none; } }
+.ud-up { animation: ud-up 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes ud-shine { 0% { transform: translateX(-90px) rotate(20deg); } 100% { transform: translateX(150px) rotate(20deg); } }
+.ud-shine { position: absolute; top: -30px; left: 0; width: 26px; height: 200px; background: rgba(255, 255, 255, 0.6); animation: ud-shine 2.4s 1s ease-in-out infinite; }
+@keyframes ud-unlock { 0%, 40% { transform: rotate(0); } 55% { transform: rotate(-14deg); } 70% { transform: rotate(10deg); } 100% { transform: rotate(0); } }
+.ud-unlock { animation: ud-unlock 1s 1.6s ease-in-out both; }
+@keyframes ud-shackle { 0%, 60% { transform: translateY(0); } 100% { transform: translateY(-6px) rotate(-25deg); } }
+.ud-shackle { transform-origin: 16px 11px; animation: ud-shackle 0.5s 2.2s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .ud-shine { display: none; } }
