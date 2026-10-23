@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { Source_Serif_4 } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
@@ -18,10 +17,6 @@ import Reader from "./reader";
 // поддереве больше не используется ни для чего (font-serif в reader.tsx
 // заменён на font-reading) — локальная загрузка здесь была нужна только
 // ради него, поэтому просто заменена, а не оставлена рядом неиспользуемой.
-const sourceSerif = Source_Serif_4({
-  variable: "--font-reading",
-  subsets: ["latin", "cyrillic"],
-});
 
 export default async function ReadPage({
   params,
@@ -154,7 +149,7 @@ export default async function ReadPage({
     : null;
 
   return (
-    <div className={sourceSerif.variable}>
+    <div>
       <Reader
         textId={text.id}
         title={text.title}

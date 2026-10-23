@@ -79,6 +79,8 @@ test("Choice mode: correct/incorrect differ by more than color (icon, label, ari
     expect(correctIndex, "expected the correct answer to be one of the options").toBeGreaterThanOrEqual(0);
 
     await options.nth(wrongIndex).click();
+    // v7 (Lesson-choice): выбор, затем «Проверить».
+    await page.getByRole("button", { name: "Проверить" }).click();
 
     // Non-color cues on the two specific buttons: visible icon + text label...
     // (Phase 2 swapped the ✗/✓ text glyphs for lucide <X>/<Check> SVGs —

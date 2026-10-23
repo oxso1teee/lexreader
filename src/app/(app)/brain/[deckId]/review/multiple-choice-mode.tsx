@@ -30,10 +30,23 @@ function getSpeechServerSnapshot(): boolean {
   return false;
 }
 
-function shuffle<T>(arr: T[]): T[] {
+// Детерминированная перетасовка по id карточки: сервер и браузер получают
+// один и тот же порядок вариантов — раньше Math.random() давал рассинхрон
+// гидрации (React перерисовывал весь экран).
+function seededRandom(seed: string): () => number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
+  return () => {
+    h = Math.imul(h ^ (h >>> 15), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+}
+
+function shuffle<T>(arr: T[], rand: () => number): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rand() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -57,12 +70,28 @@ function buildOptions(cards: ReviewCard[], studyDirection: "front_back" | "back_
     const distractorPool = cards.filter(
       (c) => c.flashcardId !== card.flashcardId && answerOf(c, studyDirection) !== answer,
     );
-    const distractors = shuffle(distractorPool)
+    const rand = seededRandom(card.flashcardId);
+    const distractors = shuffle(distractorPool, rand)
       .slice(0, 3)
       .map((c) => answerOf(c, studyDirection));
-    map.set(card.flashcardId, shuffle([answer, ...distractors]));
+    map.set(card.flashcardId, shuffle([answer, ...distractors], rand));
   }
   return map;
+}
+
+// Подсветка изучаемого слова в предложении-контексте (Lesson-choice.dc.html).
+function highlightWord(sentence: string, word: string) {
+  const i = sentence.toLowerCase().indexOf(word.toLowerCase());
+  if (!word || i < 0) return sentence;
+  return (
+    <>
+      {sentence.slice(0, i)}
+      <span style={{ background: "var(--sun-tint)", borderBottom: "3px solid var(--sun)", padding: "0 3px", borderRadius: 4, fontWeight: 600 }}>
+        {sentence.slice(i, i + word.length)}
+      </span>
+      {sentence.slice(i + word.length)}
+    </>
+  );
 }
 
 export default function MultipleChoiceMode({
@@ -88,6 +117,8 @@ export default function MultipleChoiceMode({
   const [queueIndex, setQueueIndex] = useState(0);
   const requeuedIds = useState(() => new Set<string>())[0];
   const correctIds = useState(() => new Set<string>())[0];
+  // Макет v7 (Lesson-choice): сначала выбор варианта, потом «Проверить».
+  const [pending, setPending] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [combo, setCombo] = useState(0);
@@ -164,6 +195,7 @@ export default function MultipleChoiceMode({
 
   function next() {
     setSelected(null);
+    setPending(null);
     setXpAwarded(0);
     setQueueIndex((i) => i + 1);
   }
@@ -186,7 +218,7 @@ export default function MultipleChoiceMode({
           <X aria-hidden="true" className="h-6 w-6" />
         </button>
         <div
-          className="h-4 flex-1 overflow-hidden rounded-full bg-[var(--border)]"
+          className="h-4 flex-1 overflow-hidden rounded-full bg-[var(--surface-muted)]"
           role="progressbar"
           aria-label="Прогресс занятия"
           aria-valuemin={0}
@@ -194,15 +226,15 @@ export default function MultipleChoiceMode({
           aria-valuenow={progressDone}
         >
           <div
-            className="h-full rounded-full bg-[var(--color-forest)] transition-[width] duration-300"
-            style={{ width: `${(progressDone / progressTotal) * 100}%` }}
+            className="mc-fill h-full rounded-full bg-[var(--leaf)] transition-[width] duration-300"
+            style={{ width: `${(progressDone / progressTotal) * 100}%`, boxShadow: "inset 0 -4px 0 0 rgba(0,0,0,.12)" }}
           />
         </div>
-        {combo > 0 && (
+        {(
           <span
             aria-label="Серия верных ответов"
             className="flex shrink-0 items-center gap-1 pr-1.5 text-[15px] font-bold"
-            style={{ color: "#c2410c" }}
+            style={{ color: "#c2410c", opacity: combo > 0 ? 1 : 0.45 }}
           >
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
               <path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="var(--ember)" />
@@ -216,7 +248,7 @@ export default function MultipleChoiceMode({
         {card.repetitions === 0 ? "Новое слово" : "Повторение"} · задание {queueIndex + 1} из {queue.length}
       </div>
       <h1 className="mo-disp" style={{ margin: "8px 0 0", fontSize: 22, lineHeight: 1.25, fontWeight: 700 }}>
-        {studyDirection === "back_front" ? "Что значит выделенное слово?" : "Выбери перевод"}
+        {card.contextSentence && studyDirection === "front_back" ? "Что значит выделенное слово?" : studyDirection === "back_front" ? "Как это по-английски?" : "Выбери перевод"}
       </h1>
 
       <div className="mo-card" style={{ marginTop: 18, padding: 16, display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -230,7 +262,7 @@ export default function MultipleChoiceMode({
             }}
             aria-label="Произнести"
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white"
-            style={{ background: "var(--sky)", boxShadow: "inset 0 -4px 0 0 var(--sky-edge)" }}
+            style={{ background: "#0b79b0", boxShadow: "inset 0 -4px 0 0 #075a85" }}
           >
             <Volume2 aria-hidden="true" className="h-5 w-5" />
           </button>
@@ -242,11 +274,11 @@ export default function MultipleChoiceMode({
             // подключён только в /read/[textId] (--font-reading), а не
             // глобально — здесь курсив на обычном sans-стеке, не несуществующая
             // переменная шрифта.
-            <p className="italic" data-testid="choice-question" style={{ margin: 0, fontSize: 18, lineHeight: 1.5 }}>
-              {card.contextSentence}
+            <p data-testid="choice-question" style={{ margin: 0, font: "400 19px/1.5 var(--font-reading), Georgia, serif" }}>
+              {highlightWord(card.contextSentence, card.front)}
             </p>
           ) : (
-            <p data-testid="choice-question" style={{ margin: 0, fontSize: 19, fontWeight: 600 }}>{questionOf(card, studyDirection)}</p>
+            <p data-testid="choice-question" style={{ margin: 0, font: "600 21px/1.4 var(--font-reading), Georgia, serif" }}>{questionOf(card, studyDirection)}</p>
           )}
           {card.sourceTextTitle && (
             <div className="mo-muted" style={{ fontSize: 12, marginTop: 6 }}>
@@ -261,23 +293,31 @@ export default function MultipleChoiceMode({
           const isOptCorrect = opt === correctAnswer;
           const showState = selected !== null;
           const isSelectedWrong = showState && opt === selected && !isOptCorrect;
+          // Те же пять состояний, что в Lesson-choice.dc.html: idle/sel/ok/bad/dim.
           const style = !showState
-            ? { borderColor: "var(--border-strong)", background: "var(--surface)" }
+            ? opt === pending
+              ? { borderColor: "var(--sky)", background: "var(--sky-tint)", color: "var(--sky-text)", boxShadow: "inset 0 -4px 0 0 var(--sky)" }
+              : { borderColor: "var(--border-strong)", background: "var(--surface)", boxShadow: "inset 0 -4px 0 0 rgba(26,26,26,.12)" }
             : isOptCorrect
-              ? { borderColor: "var(--color-forest)", background: "var(--color-forest-tint)", color: "var(--color-forest-text)" }
+              ? { borderColor: "var(--leaf)", background: "var(--leaf-tint)", color: "var(--leaf-text)", boxShadow: "inset 0 -4px 0 0 var(--leaf)" }
               : isSelectedWrong
-                ? { borderColor: "var(--color-danger-text)", background: "var(--danger-tint)", color: "var(--color-danger-text)" }
-                : { borderColor: "var(--border)", background: "var(--surface)", opacity: 0.5 };
+                ? { borderColor: "var(--danger)", background: "var(--danger-tint)", color: "var(--danger-text)", boxShadow: "inset 0 -4px 0 0 var(--danger)" }
+                : { borderColor: "var(--border)", background: "var(--surface)", color: "var(--text-secondary)", boxShadow: "inset 0 -4px 0 0 rgba(26,26,26,.06)" };
           return (
             <motion.button
               key={opt}
               type="button"
               disabled={showState}
-              onClick={() => choose(opt)}
+              aria-pressed={!showState ? opt === pending : undefined}
+              onClick={() => {
+                if (selected) return;
+                setPending(opt);
+                void haptic("light");
+              }}
               data-testid={`choice-option-${i}`}
               animate={showState && isOptCorrect && !reduceMotion ? { scale: [1, 1.035, 1] } : { scale: 1 }}
               transition={{ duration: 0.28, ease: "easeOut" }}
-              style={{ ...style, borderWidth: 2, borderStyle: "solid", borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontSize: 17, fontWeight: 600 }}
+              style={{ ...style, borderWidth: 2, borderStyle: "solid", borderRadius: 16, padding: "14px 16px 18px", display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontSize: 17, fontWeight: 600 }}
             >
               <span
                 style={{
@@ -318,6 +358,23 @@ export default function MultipleChoiceMode({
           );
         })}
       </div>
+
+      {selected === null && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(34px+env(safe-area-inset-bottom))] pt-[18px]"
+          style={{ background: "var(--background)", borderTop: "2px solid var(--border)" }}
+        >
+          <Button
+            variant="leaf"
+            className="mo-cta"
+            disabled={pending === null}
+            style={pending === null ? { ["--btn-fill" as string]: "var(--surface-muted)", ["--btn-edge" as string]: "#d6cfc3", ["--btn-label" as string]: "var(--text-secondary)", opacity: 1 } : undefined}
+            onClick={() => pending && choose(pending)}
+          >
+            Проверить
+          </Button>
+        </div>
+      )}
 
       {selected !== null && (
         <p role="status" aria-live="polite" className="sr-only">
