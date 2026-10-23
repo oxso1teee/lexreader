@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -17,6 +18,15 @@ import Reader from "./reader";
 // поддереве больше не используется ни для чего (font-serif в reader.tsx
 // заменён на font-reading) — локальная загрузка здесь была нужна только
 // ради него, поэтому просто заменена, а не оставлена рядом неиспользуемой.
+
+// Название текста во вкладке — и источник для /offline: он читает <title>
+// из закешированного HTML, чтобы показать настоящие названия, а не пути.
+export async function generateMetadata({ params }: { params: Promise<{ textId: string }> }): Promise<Metadata> {
+  const { textId } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.from("texts").select("title").eq("id", textId).maybeSingle<{ title: string | null }>();
+  return data?.title ? { title: `${data.title} · LexReader` } : {};
+}
 
 export default async function ReadPage({
   params,
