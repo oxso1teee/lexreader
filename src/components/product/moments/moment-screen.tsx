@@ -16,6 +16,9 @@ export interface MomentScreenProps {
   footerDelay?: number;
   haptic?: HapticKind | null;
   onClose: () => void;
+  /** "sheet" — нижняя шторка поверх затемнённого приложения (Review-due,
+   *  Rate-app, Quit-confirm в макетах v7); "full" — весь экран. */
+  variant?: "full" | "sheet";
   children: ReactNode;
 }
 
@@ -27,6 +30,7 @@ export function MomentScreen({
   footerDelay = 1.8,
   haptic: hapticKind = "success",
   onClose,
+  variant = "full",
   children,
 }: MomentScreenProps) {
   const titleId = useId();
@@ -72,6 +76,33 @@ export function MomentScreen({
     ...(background ? { "--mo-bg": background } : {}),
     ...(foreground ? { "--mo-fg": foreground } : {}),
   } as CSSProperties;
+
+  if (variant === "sheet") {
+    return (
+      <div
+        ref={rootRef}
+        className="mo-screen mo-screen-sheet"
+        style={style}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        data-testid="moment-screen"
+      >
+        <div className="mo-scrim" aria-hidden="true" onClick={onClose} />
+        <div className="mo-sheet">
+          <div className="mo-grip" aria-hidden="true" />
+          <span id={titleId} className="sr-only">
+            {title}
+          </span>
+          {children}
+          <div className="mo-rise" style={{ animationDelay: `${footerDelay}s` }}>
+            {footer}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

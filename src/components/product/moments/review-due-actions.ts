@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getDueCount } from "@/lib/brain-stats";
+import { estimateReviewMinutes, getDueCount } from "@/lib/brain-stats";
 import { todayUtcIso } from "@/lib/xp-actions";
 import type { ReviewDueMoment } from "@/lib/moments/types";
 
@@ -30,5 +30,27 @@ export async function fetchReviewDueMomentAction(): Promise<ReviewDueMoment | nu
   // id содержит сегодняшнюю дату — дедуп через localStorage "seen" в
   // moment-provider.tsx естественно не повторяет его в тот же день, как у
   // Weekly-rank/Welcome-back.
-  return { kind: "review_due", id: `review-due-${user.user.id}-${todayUtcIso()}`, dueCount };
+  // Первые 5 просроченных слов — чипы на экране (макет Review-due).
+  const { data: dueRows } = await supabase
+    .from("srs_state")
+    .select("due_at, flashcards!inner(front, owner_id, language)")
+    .eq("flashcards.owner_id", user.user.id)
+    .eq("flashcards.language", profile.target_language)
+    .lte("due_at", new Date().toISOString())
+    .order("due_at", { ascending: true })
+    .limit(5);
+  const words = (dueRows ?? [])
+    .map((r) => {
+      const f = (r as { flashcards: { front: string } | { front: string }[] }).flashcards;
+      return (Array.isArray(f) ? f[0]?.front : f?.front) ?? "";
+    })
+    .filter(Boolean);
+
+  return {
+    kind: "review_due",
+    id: `review-due-${user.user.id}-${todayUtcIso()}`,
+    dueCount,
+    words,
+    minutes: estimateReviewMinutes(dueCount),
+  };
 }

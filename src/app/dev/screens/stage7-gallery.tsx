@@ -1,3 +1,5 @@
+"use client";
+
 import { SplashScreen } from "@/components/product/onboarding/splash-screen";
 import OfflinePage from "../../offline/page";
 

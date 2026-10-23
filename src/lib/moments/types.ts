@@ -207,6 +207,12 @@ export interface ChapterDoneMoment {
   wordsRead: number;
   /** Новых слов, сохранённых в карточки за эту конкретную сессию чтения. */
   newWordsCount: number;
+  /** Первые до 4 из этих слов — чипы «Слова главы в твоих карточках». */
+  newWords?: string[];
+  /** comprehensionPercent(): доля слов без подсказки перевода. */
+  comprehension?: number;
+  /** Последний абзац текста — «страница» в открывающейся книжке. */
+  excerpt?: string;
   /** Следующий текст той же коллекции по collection_order — null, если это
    *  последний (коллекция прочитана полностью). */
   nextTextId: string | null;
@@ -217,6 +223,10 @@ export interface ReviewDueMoment {
   id: string;
   /** getDueCount — реально просроченные карточки, не декоративное число. */
   dueCount: number;
+  /** Первые просроченные слова (front карточек), до 5 — чипы на экране. */
+  words?: string[];
+  /** estimateReviewMinutes(dueCount). */
+  minutes?: number;
 }
 
 export interface TwinInsightSkillDelta {
