@@ -34,11 +34,11 @@ export function Stage9GalleryScreen({ s }: { s: string }) {
     return (
       <SessionComplete
         count={12}
-        cards={LESSON_CHOICE_FIXTURE.map((c) => ({ front: c.front, back: c.back }))}
         xpEarned={42}
         newWordsCount={4}
         durationSec={192}
-        streakLongest={14}
+        streakLongest={21}
+        queuedMoments={[{ kind: "streak_up", id: "fixture-streak-up", streak: 13, week: [] }]}
       />
     );
   if (s === "Combo")
