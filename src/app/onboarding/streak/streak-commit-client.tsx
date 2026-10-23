@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { STREAK_COMMIT_TIERS, saveStreakGoalAction } from "./actions";
+import { saveStreakGoalAction } from "./actions";
+import { STREAK_COMMIT_TIERS } from "./tiers";
 
 // Эталон: docs/moments/mockups/Streak-commit.dc.html. Огонь/угли —
 // переиспользованные mo-flick/mo-em/mo-glow из moments.css (те же классы,
