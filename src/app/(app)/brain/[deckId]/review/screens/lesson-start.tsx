@@ -71,9 +71,11 @@ export function LessonStartScreen({
       onClose={() => router.push("/brain")}
       footer={
         ready ? (
-          <Button variant="leaf" className="mo-cta" onClick={onReady}>
-            Поехали
-          </Button>
+          <div className="ls-go">
+            <Button variant="leaf" className="mo-cta" onClick={onReady}>
+              Поехали
+            </Button>
+          </div>
         ) : (
           <div
             className="mo-cta"
@@ -94,15 +96,33 @@ export function LessonStartScreen({
         >
           <X aria-hidden="true" style={{ width: 26, height: 26 }} />
         </button>
+        <span style={{ padding: "6px 12px", borderRadius: 99, background: "var(--sky-tint)", color: "var(--sky-text)", fontSize: 13, fontWeight: 700, maxWidth: "70%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {newCardsCount > 0 ? "Новые слова и повтор" : "Повторение"}
+        </span>
       </div>
 
       <div style={{ textAlign: "center", paddingTop: 24 }}>
-        <svg viewBox="0 0 128 150" width="96" height="112" aria-hidden="true" style={{ display: "block", margin: "0 auto" }}>
-          <ellipse cx="64" cy="128" rx="34" ry="9" fill="rgba(0,0,0,0.06)" />
-          <path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="var(--leaf)" />
-          <path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="var(--leaf-tint)" opacity="0.9" />
-        </svg>
-        <h1 className="mo-disp" style={{ margin: "14px 24px 0", fontSize: 21, lineHeight: 1.2, fontWeight: 900 }}>
+        {/* Эталон: docs/moments/mockups/Lesson-start.dc.html — маскот «читает»,
+            рядом раскрытая книжка с листающейся страницей. */}
+        <div style={{ position: "relative", display: "inline-flex", alignItems: "flex-end", gap: 4 }} aria-hidden="true">
+          <div className="ls-bob">
+            <svg viewBox="0 0 128 150" width="110" height="129">
+              <ellipse cx="64" cy="128" rx="34" ry="9" fill="rgba(0,0,0,0.06)" />
+              <path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="var(--leaf)" />
+              <path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="var(--leaf-tint)" opacity="0.9" />
+              <ellipse cx="56" cy="64" rx="3" ry="2" fill="var(--leaf-edge)" />
+              <ellipse cx="68" cy="64" rx="3" ry="2" fill="var(--leaf-edge)" />
+              <ellipse cx="90" cy="100" rx="19" ry="12" fill="var(--ember)" transform="rotate(-28 90 100)" />
+              <ellipse cx="94" cy="96" rx="8" ry="5" fill="var(--sun)" transform="rotate(-28 94 96)" opacity="0.85" />
+            </svg>
+          </div>
+          <div style={{ position: "relative", width: 104, height: 68, marginBottom: 14, perspective: 400 }}>
+            <div style={{ position: "absolute", left: 0, top: 0, width: 52, height: 68, background: "var(--surface)", border: "2px solid var(--border-strong)", borderRadius: "8px 2px 2px 8px" }} />
+            <div style={{ position: "absolute", left: 52, top: 0, width: 52, height: 68, background: "var(--surface)", border: "2px solid var(--border-strong)", borderRadius: "2px 8px 8px 2px" }} />
+            <div className="ls-page" style={{ position: "absolute", left: 52, top: 0, width: 52, height: 68, background: "var(--sky-tint)", border: "2px solid var(--sky)", borderRadius: "2px 8px 8px 2px" }} />
+          </div>
+        </div>
+        <h1 className="mo-disp" style={{ margin: "14px 24px 0", fontSize: 23, lineHeight: 1.2, fontWeight: 900 }}>
           {sessionTitle}
         </h1>
         <p className="mo-muted" style={{ margin: "6px 0 0", fontSize: 15 }}>
@@ -192,7 +212,7 @@ export function LessonStartScreen({
           />
         </svg>
         <div style={{ fontSize: 14, lineHeight: 1.45, color: "var(--sun-text)" }}>
-          <b>Совет.</b> Нажми на колонку со звуком 🔊, чтобы услышать произношение слова.
+          <b>Совет.</b> Нажми на значок динамика рядом со словом, чтобы услышать произношение.
         </div>
       </div>
     </MomentScreen>
