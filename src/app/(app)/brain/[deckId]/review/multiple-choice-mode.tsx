@@ -248,7 +248,7 @@ export default function MultipleChoiceMode({
         {card.repetitions === 0 ? "Новое слово" : "Повторение"} · задание {queueIndex + 1} из {queue.length}
       </div>
       <h1 className="mo-disp" style={{ margin: "8px 0 0", fontSize: 22, lineHeight: 1.25, fontWeight: 700 }}>
-        {card.contextSentence && studyDirection === "front_back" ? "Что значит выделенное слово?" : studyDirection === "back_front" ? "Как это по-английски?" : "Выбери перевод"}
+        {card.contextSentence && studyDirection === "front_back" ? "Что значит выделенное слово?" : studyDirection === "back_front" ? "Выбери слово" : "Выбери перевод"}
       </h1>
 
       <div className="mo-card" style={{ marginTop: 18, padding: 16, display: "flex", gap: 12, alignItems: "flex-start" }}>
