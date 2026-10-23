@@ -70,7 +70,7 @@ export async function awardPerfectWeekIfEligible(supabase: SupabaseServerClient,
     });
 
     return {
-      moments: [{ kind: "perfect_week", id: `perfect_week:${mondayIso}`, xpAwarded: PERFECT_WEEK_BONUS_XP }, ...extraMoments],
+      moments: [{ kind: "perfect_week", id: `perfect_week:${mondayIso}`, xpAwarded: xpResult.awarded }, ...extraMoments],
     };
   } catch {
     return { moments: [] };

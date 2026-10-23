@@ -4,13 +4,13 @@ import { Check, PartyPopper } from "lucide-react";
 import { getPath, getAllSkills } from "@/lib/learning-paths/curriculum/index.ts";
 import { stageStatus } from "@/lib/learning-paths/progress-engine.ts";
 import { findCurrentFocusSkill } from "@/lib/learning-paths/progress-engine.ts";
-import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { PathSlug } from "@/lib/learning-paths/types";
 import LearningPathsSubHeader from "../sub-header";
 import LearningPathsViewTracker from "../analytics";
 import { getPathDetailsAction, getActivePathStateAction } from "../actions";
 import { StartPathButton, PausePathButton } from "../path-actions";
+import PathMap, { PathHeader } from "../path-map";
 
 // Path overview mockup alignment — replaces the old icon+label
 // STAGE_STATUS_META lookup (✓/◐/○ + "Завершён"/"Сейчас"/"Впереди") with the
@@ -37,8 +37,13 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <LearningPathsViewTracker event="learning_path_opened" props={{ path_slug: pathSlug }} />
-      <LearningPathsSubHeader title={path.title} description={path.goal} />
+      {activeState ? (
+        <PathHeader title={path.title} levelFrom={path.levelFrom} levelTo={path.levelTo} />
+      ) : (
+        <LearningPathsSubHeader title={path.title} description={path.goal} />
+      )}
 
+      {!activeState && (
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">
           {path.levelFrom} → {path.levelTo}
@@ -50,6 +55,7 @@ export default async function LearningPathDetailsPage({ params }: { params: Prom
           v{path.version}
         </span>
       </div>
+      )}
 
       {activeState ? (
         <ActivePathHome pathSlug={pathSlug} state={activeState} />
@@ -158,47 +164,22 @@ function ActivePathHome({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Path overview mockup alignment — "Прогресс по содержанию" card
-          replaced by this gradient hero (same var(--color-forest) ->
-          var(--color-forest-light) gradient PR #85 already used on the
-          duel avatar). Confident/improving line moved down here, inside
-          the same card, per the task. */}
-      <div
-        className="rounded-[20px] p-4 text-white"
-        style={{ background: "linear-gradient(150deg, var(--color-forest), var(--color-forest-light))" }}
-      >
-        <p className="text-[10.5px] font-bold uppercase tracking-wide text-white/85">Мой путь</p>
-        <p className="mt-1 font-display text-lg font-bold">{state.path.title}</p>
-        <div className="mt-3 h-[7px] w-full overflow-hidden rounded-full bg-white/25">
-          <span className="block h-full rounded-full bg-white transition-[width]" style={{ width: `${state.contentProgressPercent}%` }} />
-        </div>
-        <p className="mt-1 text-right text-[11px] text-white/85">{state.contentProgressPercent}% пройдено</p>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/80">
-          <span>Уверенно: {state.skillsConfident}</span>
-          <span>Улучшается: {state.skillsImproving}</span>
-        </div>
-      </div>
-
-      {/* "Следующий шаг" + PausePathButton stay outside the hero, same
-          wrapper/styling as before this task. */}
-      <Card className="flex flex-col gap-3">
-        {focusSkill && stage ? (
-          <div className="flex flex-col gap-2 rounded-2xl border border-[var(--border-strong)] p-3">
-            <span className="text-xs text-[var(--text-secondary)]">Следующий шаг</span>
-            <p className="text-sm font-medium">{focusSkill.title}</p>
-            <ButtonLink href={`/learning-paths/${pathSlug}/${stage.key}/${focusSkill.key}`} variant="leaf" size="sm" className="self-start">
-              Продолжить
-            </ButtonLink>
-          </div>
-        ) : (
+      {/* docs/moments/ROADMAP.md, этап 8 — извилистая тропа вместо
+          единственной карточки "Следующий шаг" (Path.dc.html). PathMap сама
+          находит текущий этап/навык и рисует реальные done/current/locked
+          узлы; "Продолжить" на текущем узле — обычная ссылка внутри неё. */}
+      {focusSkill && stage ? (
+        <PathMap state={state} pathSlug={pathSlug} />
+      ) : (
+        <Card>
           <p className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-success-text)]">
             <PartyPopper aria-hidden="true" className="h-4 w-4" />
             Путь завершён
           </p>
-        )}
+        </Card>
+      )}
 
-        <PausePathButton pathSlug={pathSlug} />
-      </Card>
+      <PausePathButton pathSlug={pathSlug} />
     </div>
   );
 }

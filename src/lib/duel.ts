@@ -90,6 +90,8 @@ const DUEL_ERROR_MESSAGES: Record<string, string> = {
   round_not_timed_out_yet: "Раунд ещё не истёк.",
   invalid_options: "Некорректные варианты ответа.",
   correct_answer_not_in_options: "Правильный ответ не входит в варианты.",
+  // docs/moments/ROADMAP.md, этап 6 — claim_duel_result() (0055_duels_rewards_and_friend_streaks.sql)
+  duel_not_finished: "Эта дуэль ещё не закончена.",
 };
 
 export function describeDuelError(rawMessage: string | null | undefined): string {
@@ -130,5 +132,18 @@ export interface DuelState {
   isParticipant: boolean;
   winnerIsMe: boolean;
   isDraw: boolean;
+  /** Пока status = "waiting" — когда сгорит приглашение (Duel-invite). */
+  inviteExpiresAt: string | null;
   round?: DuelRoundView;
+}
+
+// docs/moments/mockups/Duel-won.dc.html — XP за победу/серия побед подряд/
+// разница в секундах реально считаются в claim_duel_result()
+// (0055_duels_rewards_and_friend_streaks.sql); этот тип зеркалирует её jsonb.
+export interface DuelClaimResult {
+  xpToAward: number;
+  winStreak: number;
+  speedMarginSec: number;
+  scoreMe: number;
+  scoreOpponent: number;
 }

@@ -13,6 +13,9 @@ import { MomentScreen } from "../moment-screen";
 // читалки (reviewWord(), см. docs/moments/ROADMAP.md этап 1), макетный текст
 // предполагал бы читалку, которой тут может и не быть.
 const LABELS = ["Новое", "Учу", "Знакомо", "Знаю"];
+// Стадии загораются по мере заполнения полосок (как в макете).
+const LABEL_COLORS = ["var(--sky-text)", "var(--sun-text)", "var(--sun-text)", "var(--leaf-text)"];
+const LABEL_DELAYS = ["0s", "1.3s", "1.8s", "2.3s"];
 const LEAF_COLORS = ["var(--leaf)", "var(--leaf-edge)", "var(--leaf)"];
 
 function timesWord(n: number): string {
@@ -48,7 +51,7 @@ export function WordMasteredScreen({ moment, onClose }: { moment: WordMasteredMo
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: 38, fontWeight: 700, fontStyle: "italic", lineHeight: 1.1 }}>{moment.front}</div>
+            <div style={{ font: "700 38px/1.1 var(--font-reading), Georgia, serif" }}>{moment.front}</div>
             <div style={{ fontSize: 20, fontWeight: 700, marginTop: 12 }}>{moment.back}</div>
             <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 16 }} aria-label="Уровень знания 4 из 4">
               <span className="mo-lvfill" style={{ width: 28, height: 10, borderRadius: 99, ["--d" as string]: "0.9s" } as CSSProperties} />
@@ -58,8 +61,8 @@ export function WordMasteredScreen({ moment, onClose }: { moment: WordMasteredMo
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14, padding: "0 6px", fontSize: 12, fontWeight: 700 }} aria-hidden="true">
-            {LABELS.map((label) => (
-              <span key={label} style={{ color: "var(--leaf-text)" }}>
+            {LABELS.map((label, i) => (
+              <span key={label} className="mo-rise" style={{ color: LABEL_COLORS[i], animationDelay: LABEL_DELAYS[i] }}>
                 {label}
               </span>
             ))}

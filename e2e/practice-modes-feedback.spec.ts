@@ -56,19 +56,22 @@ test("Choice mode: correct/incorrect differ by more than color (icon, label, ari
 
   try {
     await page.goto(`/brain/${deckId}/review?mode=choice`);
-    const question = await page.locator("p.text-2xl.font-semibold").innerText();
+    const question = await page.getByTestId("choice-question").innerText();
     const correctAnswer = backByFront.get(question);
     expect(correctAnswer, `unexpected question text: ${question}`).toBeTruthy();
 
-    const options = page.locator("div.flex.flex-col.gap-2 > button");
+    const options = page.locator('[data-testid^="choice-option-"]');
     await expect(options.first()).toBeVisible({ timeout: 10_000 });
 
-    // Pick any option whose visible text isn't the correct answer.
+    // Pick any option whose visible text isn't the correct answer. Each
+    // button has 2+ spans (number badge, then the option text, then an
+    // optional verdict label after choosing) — the option text is always
+    // the second one.
     const count = await options.count();
     let wrongIndex = -1;
     let correctIndex = -1;
     for (let i = 0; i < count; i++) {
-      const text = await options.nth(i).locator("span").first().innerText();
+      const text = await options.nth(i).locator("span").nth(1).innerText();
       if (text === correctAnswer) correctIndex = i;
       else if (wrongIndex === -1) wrongIndex = i;
     }
@@ -76,6 +79,8 @@ test("Choice mode: correct/incorrect differ by more than color (icon, label, ari
     expect(correctIndex, "expected the correct answer to be one of the options").toBeGreaterThanOrEqual(0);
 
     await options.nth(wrongIndex).click();
+    // v7 (Lesson-choice): выбор, затем «Проверить».
+    await page.getByRole("button", { name: "Проверить" }).click();
 
     // Non-color cues on the two specific buttons: visible icon + text label...
     // (Phase 2 swapped the ✗/✓ text glyphs for lucide <X>/<Check> SVGs —

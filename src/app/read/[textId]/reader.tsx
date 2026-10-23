@@ -140,6 +140,17 @@ export default function Reader({
     Math.min(Math.max(initialPageIndex, 0), pages.length - 1),
   );
   const [popup, setPopup] = useState<Popup | null>(null);
+  // docs/moments/mockups/Reader.dc.html, этап 4 — тост "слово в карточках
+  // · +N XP". wasNew/xpAwarded — реальные значения из saveVocabularyItem()
+  // (src/lib/vocabulary.ts), не выдуманное число: xp начисляется только на
+  // самом первом сохранении слова, повторный тап по уже изученному слову
+  // тост не показывает.
+  const [savedToast, setSavedToast] = useState<{ word: string; xp: number } | null>(null);
+  useEffect(() => {
+    if (!savedToast) return;
+    const timer = setTimeout(() => setSavedToast(null), 2200);
+    return () => clearTimeout(timer);
+  }, [savedToast]);
   const [wordsLookedUp, setWordsLookedUp] = useState(0);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
@@ -261,6 +272,7 @@ export default function Reader({
       }
 
       if (result.seenCount === 1) track("word_saved");
+      if (result.wasNew && result.xpAwarded) setSavedToast({ word: text, xp: result.xpAwarded });
 
       setLevels((s) => ({
         ...s,
@@ -324,6 +336,7 @@ export default function Reader({
       return;
     }
     if (result.seenCount === 1) track("word_saved");
+    if (result.wasNew && result.xpAwarded) setSavedToast({ word: popup.text, xp: result.xpAwarded });
     setLevels((s) => ({
       ...s,
       [popup.text.toLowerCase()]: {
@@ -562,6 +575,17 @@ export default function Reader({
       className="relative flex min-h-dvh flex-1 flex-col bg-[var(--background)]"
       style={themeColors ? { backgroundColor: themeColors.bg, color: themeColors.text } : undefined}
     >
+      {savedToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none fixed left-1/2 top-16 z-30 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-[#1a1a1a] px-4 py-3 text-sm font-semibold text-white shadow-lg"
+          style={{ animation: "mo-rise 0.25s ease-out" }}
+        >
+          <Check aria-hidden="true" className="h-4 w-4 text-[#4ade80]" />
+          {savedToast.word} в карточках · +{savedToast.xp} XP
+        </div>
+      )}
       {/* Phase 8: без стекла — непрозрачный --surface + 2px --border-strong,
           как у Card. Тема чтения (сепия/тёмная) по-прежнему перекрашивает фон. */}
       <header

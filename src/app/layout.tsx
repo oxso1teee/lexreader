@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Unbounded, Onest } from "next/font/google";
+import { Geist_Mono, Unbounded, Onest, Source_Serif_4 } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import RegisterServiceWorker from "./register-service-worker";
@@ -7,6 +7,11 @@ import NativeBridge from "./native-bridge";
 import { THEME_INIT_SCRIPT } from "./theme-init-script";
 import { siteUrl } from "@/lib/site-url";
 import { MomentProvider } from "@/components/product/moments/moment-provider";
+import WeeklyRankGate from "@/components/product/moments/weekly-rank-gate";
+import WelcomeBackGate from "@/components/product/moments/welcome-back-gate";
+import WeekRecapGate from "@/components/product/moments/week-recap-gate";
+import ReviewDueGate from "@/components/product/moments/review-due-gate";
+import TwinInsightGate from "@/components/product/moments/twin-insight-gate";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -20,6 +25,13 @@ const geistMono = Geist_Mono({
 const unbounded = Unbounded({
   variable: "--font-unbounded",
   weight: ["700", "900"],
+  subsets: ["latin", "cyrillic"],
+});
+
+// Шрифт чтения (Source Serif 4) — глобально: макеты v7 используют его не
+// только в читалке, но и в занятии, карточках слов, моментах (docs/moments).
+const sourceSerif = Source_Serif_4({
+  variable: "--font-reading",
   subsets: ["latin", "cyrillic"],
 });
 
@@ -82,7 +94,7 @@ export default function RootLayout({
       // React ругался бы на расхождение серверного/клиентского HTML на
       // каждой загрузке (сервер не знает выбор темы устройства).
       suppressHydrationWarning
-      className={`${unbounded.variable} ${onest.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${unbounded.variable} ${onest.variable} ${sourceSerif.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <Script id="theme-init" strategy="beforeInteractive">
@@ -97,7 +109,14 @@ export default function RootLayout({
             тоже возвращает moments[] (сессия чтения) — провайдер поднят на
             уровень выше (app)/layout.tsx раньше его держал, чтобы оба дерева
             маршрутов делили одну очередь, а не плодили вторую копию. */}
-        <MomentProvider>{children}</MomentProvider>
+        <MomentProvider>
+          <WeeklyRankGate />
+          <WelcomeBackGate />
+          <WeekRecapGate />
+          <ReviewDueGate />
+          <TwinInsightGate />
+          {children}
+        </MomentProvider>
       </body>
     </html>
   );

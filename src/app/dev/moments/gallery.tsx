@@ -4,11 +4,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MOMENT_FIXTURES } from "@/lib/moments/fixtures";
 import { renderMoment } from "@/components/product/moments/moment-provider";
+import TodayView from "@/components/product/today/v7/today-view";
+import { TODAY_FIXTURE } from "@/lib/screen-fixtures";
 
 export default function MomentsGallery({ names, open }: { names: string[]; open: string | null }) {
   const router = useRouter();
   if (open) {
-    return renderMoment(MOMENT_FIXTURES[open], () => router.push("/dev/moments"));
+    // Под моментом — главный экран, как в живом приложении: шторки
+    // (Review-due, Rate-app) затемняют его, полноэкранные — закрывают.
+    return (
+      <>
+        <TodayView {...TODAY_FIXTURE} />
+        {renderMoment(MOMENT_FIXTURES[open], () => router.push("/dev/moments"))}
+      </>
+    );
   }
   return (
     <main className="mx-auto flex max-w-md flex-col gap-3 p-6">
