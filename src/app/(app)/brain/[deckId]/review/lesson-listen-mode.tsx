@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { X, Check, Volume2 } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { reviewWord } from "./actions";
 import type { ReviewCard } from "./review-session";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,7 @@ export default function LessonListenMode({
   const [isPending, startTransition] = useTransition();
   const [xpAwarded, setXpAwarded] = useState(0);
   const [tally, setTally] = useState({ correct: 0, incorrect: 0 });
+  const [combo, setCombo] = useState(0);
   const speechAvailable = useSyncExternalStore(subscribeNoop, getSpeechSnapshot, getSpeechServerSnapshot);
 
   const done = index >= cards.length;
@@ -92,6 +93,7 @@ export default function LessonListenMode({
     const correct = checkListenAnswer(value, card.front);
     setChecked(true);
     setTally((t) => (correct ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 }));
+    setCombo((c) => (correct ? c + 1 : 0));
     void haptic(correct ? "success" : "warning");
     playReviewSound(correct ? "correct" : "incorrect");
     startTransition(async () => {
@@ -103,6 +105,14 @@ export default function LessonListenMode({
         setXpAwarded(0);
       }
     });
+  }
+
+  // "Не могу слушать" (макет): карточка пропускается без оценки — не
+  // засчитываем ни верно, ни неверно, интервал повторения не трогаем.
+  function skip() {
+    window.speechSynthesis?.cancel();
+    setValue("");
+    setIndex((i) => i + 1);
   }
 
   function next() {
@@ -124,7 +134,7 @@ export default function LessonListenMode({
           <X aria-hidden="true" className="h-6 w-6" />
         </button>
         <div
-          className="h-4 flex-1 overflow-hidden rounded-full bg-[var(--border)]"
+          className="h-4 flex-1 overflow-hidden rounded-full bg-[var(--surface-muted)]"
           role="progressbar"
           aria-label="Прогресс занятия"
           aria-valuemin={0}
@@ -132,10 +142,20 @@ export default function LessonListenMode({
           aria-valuenow={index}
         >
           <div
-            className="h-full rounded-full bg-[var(--color-forest)] transition-[width] duration-300"
-            style={{ width: `${(index / cards.length) * 100}%` }}
+            className="mc-fill h-full rounded-full bg-[var(--leaf)] transition-[width] duration-300"
+            style={{ width: `${(index / cards.length) * 100}%`, boxShadow: "inset 0 -4px 0 0 rgba(0,0,0,.12)" }}
           />
         </div>
+        <span
+          aria-label="Серия верных ответов"
+          className="flex shrink-0 items-center gap-1 pr-1.5 text-[15px] font-bold"
+          style={{ color: combo > 0 ? "#c2410c" : "rgba(26,26,26,.5)" }}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill={combo > 0 ? "var(--ember)" : "#d6cfc3"} />
+          </svg>
+          {combo}
+        </span>
       </div>
 
       <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--sky-text)" }}>
@@ -145,30 +165,32 @@ export default function LessonListenMode({
         Напиши, что услышишь
       </h1>
 
-      <div className="mt-8 flex items-center justify-center gap-3.5">
+      <div className="flex items-center justify-center gap-3.5" style={{ marginTop: 34 }}>
         <button
           type="button"
           onClick={() => speak(1)}
           aria-label="Прослушать"
           disabled={checked}
-          className="flex h-[110px] w-[110px] items-center justify-center rounded-[28px] text-white disabled:opacity-60"
-          style={{ background: "var(--sky)", boxShadow: "inset 0 -6px 0 0 var(--sky-edge)" }}
+          className="flex items-center justify-center disabled:opacity-60"
+          style={{ width: 132, height: 132, borderRadius: 32, background: "#0b79b0", boxShadow: "inset 0 -8px 0 0 #075a85", gap: 6, paddingBottom: 8 }}
         >
-          <Volume2 aria-hidden="true" className="h-10 w-10" />
+          {[26, 44, 58, 40, 24].map((h, i) => (
+            <span key={i} className="ll-wv" style={{ height: h, animationDelay: `${i * 0.15}s` }} aria-hidden="true" />
+          ))}
         </button>
         <button
           type="button"
           onClick={() => speak(0.5)}
           aria-label="Прослушать медленно"
           disabled={checked}
-          className="flex h-[64px] w-[64px] items-center justify-center rounded-2xl border-2 border-[var(--border-strong)] bg-[var(--surface)] text-sm font-bold text-[var(--sky-text)] disabled:opacity-60"
-          style={{ boxShadow: "inset 0 -4px 0 0 var(--border)" }}
+          className="flex items-center justify-center border-2 border-[var(--border-strong)] bg-[var(--surface)] text-[17px] font-bold text-[var(--sky-text)] disabled:opacity-60"
+          style={{ width: 76, height: 76, borderRadius: 22, boxShadow: "inset 0 -4px 0 0 rgba(26,26,26,.12)" }}
         >
           0.5×
         </button>
       </div>
 
-      <label htmlFor="listen-answer" className="mt-7 block text-[13px] font-semibold text-[var(--text-secondary)]">
+      <label htmlFor="listen-answer" className="block text-[13px] font-semibold text-[var(--text-secondary)]" style={{ marginTop: 34 }}>
         Твой ответ
       </label>
       <textarea
@@ -177,33 +199,61 @@ export default function LessonListenMode({
         onChange={(e) => setValue(e.target.value)}
         disabled={checked}
         autoFocus
-        rows={3}
+        rows={4}
         placeholder="Напиши, что услышал"
-        className={`mt-2 min-h-[100px] w-full resize-none rounded-2xl border-2 px-4 py-3 text-lg outline-none disabled:opacity-70 ${
+        className={`mt-2 min-h-[150px] w-full resize-none rounded-[20px] border-2 bg-[var(--surface)] p-4 text-xl leading-snug outline-none disabled:opacity-70 ${
           checked
             ? isCorrect
               ? "border-[var(--color-forest)] bg-[var(--color-forest-tint)]"
               : "border-[var(--color-danger-text)] bg-[var(--danger-tint)]"
-            : "border-[var(--color-forest)] focus:border-[var(--color-forest)]"
+            : "border-[var(--border-strong)] focus:border-[var(--leaf)] focus:shadow-[0_0_0_4px_var(--leaf-tint)]"
         }`}
       />
-      <p className="mt-2 text-[13px] text-[var(--text-secondary)]">Регистр и знаки препинания не важны</p>
-
-      {checked && (
-        <p role="status" aria-live="polite" className={`mt-3 flex items-center gap-1.5 font-medium ${isCorrect ? "text-[var(--color-forest-text)]" : "text-[var(--color-danger-text)]"}`}>
-          {isCorrect ? <Check aria-hidden="true" className="h-4 w-4" /> : <X aria-hidden="true" className="h-4 w-4" />}
-          {isCorrect ? `Верно! +${xpAwarded} XP` : `Правильный ответ: ${card.front}`}
-        </p>
-      )}
+      <p className="mt-2.5 text-[13px] text-[var(--text-secondary)]" style={{ paddingBottom: 120 }}>Регистр и знаки препинания не важны</p>
 
       {!checked ? (
-        <Button variant="leaf" onClick={check} disabled={value.trim() === ""} className="mt-5">
-          Проверить
-        </Button>
+        <div
+          className="fixed inset-x-0 bottom-0 z-20 mx-auto flex w-full max-w-md gap-3 px-5 pb-[calc(34px+env(safe-area-inset-bottom))] pt-[18px]"
+          style={{ background: "var(--background)", borderTop: "2px solid var(--border)" }}
+        >
+          <Button variant="ghost" onClick={skip} style={{ flex: "0 0 auto", paddingLeft: 18, paddingRight: 18, minHeight: 52 }}>
+            Не могу слушать
+          </Button>
+          <Button
+            variant="leaf"
+            onClick={check}
+            disabled={value.trim() === ""}
+            style={{ flex: 1, minHeight: 52, ...(value.trim() === "" ? { ["--btn-fill" as string]: "var(--surface-muted)", ["--btn-edge" as string]: "#d6cfc3", ["--btn-label" as string]: "var(--text-secondary)", opacity: 1 } : {}) }}
+          >
+            Проверить
+          </Button>
+        </div>
       ) : (
-        <Button variant={isCorrect ? "leaf" : "danger"} disabled={isPending} onClick={next} className="mt-5">
-          {isCorrect ? "Продолжить" : "Понятно"}
-        </Button>
+        <div
+          className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-4"
+          style={{ background: isCorrect ? "var(--color-forest-tint)" : "var(--danger-tint)", animation: "mo-rise 0.22s ease-out" }}
+          role="status"
+          aria-live="polite"
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 999, background: "var(--surface)", color: isCorrect ? "var(--color-forest)" : "var(--color-danger)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+              {isCorrect ? <Check aria-hidden="true" className="h-6 w-6" strokeWidth={3} /> : <X aria-hidden="true" className="h-6 w-6" strokeWidth={3} />}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div className="mo-disp" style={{ fontSize: 20, fontWeight: 700, color: isCorrect ? "var(--color-forest-text)" : "var(--color-danger-text)" }}>
+                {isCorrect ? "Отлично!" : "Правильный ответ:"}
+              </div>
+              {isCorrect ? (
+                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-forest-text)" }}>+{xpAwarded} XP</div>
+              ) : (
+                <div style={{ fontSize: 16, fontWeight: 600, color: "var(--color-danger-text)", marginTop: 4 }}>{card.front}</div>
+              )}
+            </div>
+          </div>
+          <Button variant={isCorrect ? "leaf" : "danger"} disabled={isPending} onClick={next} className="mo-cta">
+            {isCorrect ? "Продолжить" : "Понятно"}
+          </Button>
+        </div>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { seededRandom, seededShuffle } from "@/lib/seeded-shuffle";
 import { useState, useSyncExternalStore, useTransition } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { X, Check, Volume2 } from "lucide-react";
@@ -33,24 +34,7 @@ function getSpeechServerSnapshot(): boolean {
 // Детерминированная перетасовка по id карточки: сервер и браузер получают
 // один и тот же порядок вариантов — раньше Math.random() давал рассинхрон
 // гидрации (React перерисовывал весь экран).
-function seededRandom(seed: string): () => number {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
-  return () => {
-    h = Math.imul(h ^ (h >>> 15), 2246822507);
-    h = Math.imul(h ^ (h >>> 13), 3266489909);
-    return ((h ^= h >>> 16) >>> 0) / 4294967296;
-  };
-}
-
-function shuffle<T>(arr: T[], rand: () => number): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+const shuffle = seededShuffle;
 
 // P0-АУДИТ 3.12 (испр.): answerOf() определяет, какая сторона карточки
 // сейчас считается "ответом" — с учётом направления изучения, а не всегда

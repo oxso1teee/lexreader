@@ -7,6 +7,23 @@ import { TODAY_FIXTURE, TODAY_EVENING_FIXTURE } from "@/lib/screen-fixtures";
 import { Stage3GalleryScreen } from "./stage3-gallery";
 import { Stage6GalleryScreen } from "./stage6-gallery";
 import { Stage7GalleryScreen } from "./stage7-gallery";
+import { Stage9GalleryScreen } from "./stage9-gallery";
+
+// Список здесь, а не в stage9-gallery.tsx: константа из "use client"-модуля
+// на сервере — клиентская ссылка, а не массив.
+const STAGE9_SCREENS = [
+  "Lesson-build",
+  "Lesson-listen",
+  "Result",
+  "Combo",
+  "Daily-quests",
+  "Chest",
+  "Double-XP",
+  "Placement-result",
+  "Goal-pick",
+  "Streak-commit",
+  "First-text",
+] as const;
 
 // Основные экраны v7 с тестовыми данными — для скриншот-сверки с макетами
 // (docs/moments/reference). Открыта локально и на preview-деплоях.
@@ -24,6 +41,7 @@ const SCREENS = [
   "Duel-won",
   "Splash",
   "Offline",
+  ...STAGE9_SCREENS,
 ] as const;
 
 export default async function DevScreensPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
@@ -59,6 +77,10 @@ export default async function DevScreensPage({ searchParams }: { searchParams: P
 
   if (s === "Duel-invite" || s === "Duel-won") {
     return <Stage6GalleryScreen s={s} />;
+  }
+
+  if (s && (STAGE9_SCREENS as readonly string[]).includes(s)) {
+    return <Stage9GalleryScreen s={s} />;
   }
 
   if (s === "Splash" || s === "Offline") {

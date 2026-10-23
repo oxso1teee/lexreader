@@ -1,5 +1,6 @@
 "use client";
 
+import { seededRandom, seededShuffle } from "@/lib/seeded-shuffle";
 import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X, Check, Volume2 } from "lucide-react";
@@ -29,15 +30,6 @@ function getSpeechServerSnapshot(): boolean {
   return false;
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 function promptOf(card: ReviewCard): string {
   return card.contextSentence ?? card.front;
 }
@@ -49,7 +41,8 @@ function buildExercises(cards: ReviewCard[]): Map<string, BuildPhraseExercise> {
   const map = new Map<string, BuildPhraseExercise>();
   for (const card of cards) {
     const distractors = cards.filter((c) => c.flashcardId !== card.flashcardId).map((c) => answerOf(c));
-    map.set(card.flashcardId, buildPhraseExercise(promptOf(card), answerOf(card), distractors, shuffle));
+    const rand = seededRandom(card.flashcardId);
+    map.set(card.flashcardId, buildPhraseExercise(promptOf(card), answerOf(card), distractors, (arr) => seededShuffle(arr, rand)));
   }
   return map;
 }
@@ -75,6 +68,8 @@ export default function LessonBuildMode({
   const [isPending, startTransition] = useTransition();
   const [xpAwarded, setXpAwarded] = useState(0);
   const [tally, setTally] = useState({ correct: 0, incorrect: 0 });
+  // Серия верных подряд — счётчик-огонёк в шапке, как в Lesson-choice.
+  const [combo, setCombo] = useState(0);
   const speechAvailable = useSyncExternalStore(subscribeNoop, getSpeechSnapshot, getSpeechServerSnapshot);
 
   const done = index >= cards.length;
@@ -131,6 +126,7 @@ export default function LessonBuildMode({
     const correct = checkPhraseAnswer(picked.map((i) => ex.tiles[i]), ex.solution);
     setChecked(true);
     setTally((t) => (correct ? { ...t, correct: t.correct + 1 } : { ...t, incorrect: t.incorrect + 1 }));
+    setCombo((c) => (correct ? c + 1 : 0));
     void haptic(correct ? "success" : "warning");
     playReviewSound(correct ? "correct" : "incorrect");
     startTransition(async () => {
@@ -163,7 +159,7 @@ export default function LessonBuildMode({
           <X aria-hidden="true" className="h-6 w-6" />
         </button>
         <div
-          className="h-4 flex-1 overflow-hidden rounded-full bg-[var(--border)]"
+          className="h-4 flex-1 overflow-hidden rounded-full bg-[var(--surface-muted)]"
           role="progressbar"
           aria-label="Прогресс занятия"
           aria-valuemin={0}
@@ -171,10 +167,20 @@ export default function LessonBuildMode({
           aria-valuenow={index}
         >
           <div
-            className="h-full rounded-full bg-[var(--color-forest)] transition-[width] duration-300"
-            style={{ width: `${(index / cards.length) * 100}%` }}
+            className="mc-fill h-full rounded-full bg-[var(--leaf)] transition-[width] duration-300"
+            style={{ width: `${(index / cards.length) * 100}%`, boxShadow: "inset 0 -4px 0 0 rgba(0,0,0,.12)" }}
           />
         </div>
+        <span
+          aria-label="Серия верных ответов"
+          className="flex shrink-0 items-center gap-1 pr-1.5 text-[15px] font-bold"
+          style={{ color: combo > 0 ? "#c2410c" : "rgba(26,26,26,.5)" }}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill={combo > 0 ? "var(--ember)" : "#d6cfc3"} />
+          </svg>
+          {combo}
+        </span>
       </div>
 
       <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--sky-text)" }}>
@@ -184,26 +190,37 @@ export default function LessonBuildMode({
         Собери перевод
       </h1>
 
-      <div className="mo-card" style={{ marginTop: 18, padding: 16, display: "flex", gap: 10, alignItems: "center" }}>
-        {speechAvailable && (
-          <button
-            type="button"
-            onClick={speak}
-            aria-label="Прослушать"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white"
-            style={{ background: "var(--sky)", boxShadow: "inset 0 -4px 0 0 var(--sky-edge)" }}
-          >
-            <Volume2 aria-hidden="true" className="h-5 w-5" />
-          </button>
-        )}
-        <p data-testid="build-prompt" style={{ margin: 0, fontSize: 18, lineHeight: 1.4 }}>
-          {ex.promptText}
-        </p>
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginTop: 18 }}>
+        <div style={{ width: 64, flex: "none" }} aria-hidden="true">
+          <svg viewBox="0 0 128 150" width="64" height="75">
+            <ellipse cx="64" cy="128" rx="34" ry="9" fill="rgba(0,0,0,0.06)" />
+            <path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="var(--leaf)" />
+            <path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="var(--leaf-tint)" opacity="0.9" />
+            <ellipse cx="90" cy="100" rx="19" ry="12" fill="var(--ember)" transform="rotate(-28 90 100)" />
+            <ellipse cx="94" cy="96" rx="8" ry="5" fill="var(--sun)" transform="rotate(-28 94 96)" opacity="0.85" />
+          </svg>
+        </div>
+        <div className="mo-card" style={{ flex: 1, padding: "14px 16px", borderRadius: "18px 18px 18px 6px", display: "flex", gap: 10, alignItems: "center" }}>
+          {speechAvailable && (
+            <button
+              type="button"
+              onClick={speak}
+              aria-label="Прослушать"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+              style={{ background: "var(--sky-tint)", color: "var(--sky-text)" }}
+            >
+              <Volume2 aria-hidden="true" className="h-5 w-5" />
+            </button>
+          )}
+          <p data-testid="build-prompt" style={{ margin: 0, font: "400 18px/1.4 var(--font-reading), Georgia, serif" }}>
+            {ex.promptText}
+          </p>
+        </div>
       </div>
 
       {/* Собранная пользователем последовательность. */}
       <div
-        className="flex min-h-[64px] flex-wrap gap-2 border-y-2 border-[var(--border)] py-3"
+        className="flex min-h-[120px] flex-wrap content-start gap-2 border-y-2 border-[var(--border)] py-3"
         style={{ marginTop: 22 }}
         role="group"
         aria-label="Собранный ответ"
@@ -215,7 +232,7 @@ export default function LessonBuildMode({
             disabled={checked}
             onClick={i === picked.length - 1 ? removeLast : undefined}
             data-testid={`build-picked-${i}`}
-            className="min-h-11 rounded-2xl border-2 border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2 text-[17px] font-semibold shadow-[inset_0_-4px_0_0_var(--border)]"
+            className="lb-tile"
           >
             {ex.tiles[tileIndex]}
           </button>
@@ -223,7 +240,7 @@ export default function LessonBuildMode({
       </div>
 
       {/* Доступные тайлы. */}
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
+      <div className="flex flex-wrap justify-center gap-2" style={{ marginTop: 26, paddingBottom: 120 }}>
         {ex.tiles.map((tile, i) => {
           const used = picked.includes(i);
           return (
@@ -233,11 +250,7 @@ export default function LessonBuildMode({
               disabled={used || checked}
               onClick={() => tapTile(i)}
               data-testid={`build-tile-${i}`}
-              className={`min-h-11 rounded-2xl border-2 px-3.5 py-2 text-[17px] font-semibold transition-opacity ${
-                used
-                  ? "border-[var(--surface-muted)] bg-[var(--surface-muted)] text-transparent"
-                  : "border-[var(--border-strong)] bg-[var(--surface)] shadow-[inset_0_-4px_0_0_var(--border)]"
-              }`}
+              className={used ? "lb-tile lb-used" : "lb-tile"}
             >
               {tile}
             </button>
@@ -246,13 +259,24 @@ export default function LessonBuildMode({
       </div>
 
       {!checked ? (
-        <Button variant="leaf" onClick={check} disabled={picked.length === 0} className="mt-6">
-          Проверить
-        </Button>
+        <div
+          className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(34px+env(safe-area-inset-bottom))] pt-[18px]"
+          style={{ background: "var(--background)", borderTop: "2px solid var(--border)" }}
+        >
+          <Button
+            variant="leaf"
+            className="mo-cta"
+            onClick={check}
+            disabled={picked.length === 0}
+            style={picked.length === 0 ? { ["--btn-fill" as string]: "var(--surface-muted)", ["--btn-edge" as string]: "#d6cfc3", ["--btn-label" as string]: "var(--text-secondary)", opacity: 1 } : undefined}
+          >
+            Проверить
+          </Button>
+        </div>
       ) : (
         <div
           className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-4"
-          style={{ background: isCorrect ? "var(--color-forest-tint)" : "var(--danger-tint)" }}
+          style={{ background: isCorrect ? "var(--color-forest-tint)" : "var(--danger-tint)", animation: "mo-rise 0.22s ease-out" }}
           role="status"
         >
           <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
@@ -278,7 +302,7 @@ export default function LessonBuildMode({
               {isCorrect ? (
                 <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-forest-text)" }}>+{xpAwarded} XP</div>
               ) : (
-                <div style={{ fontSize: 15, color: "var(--color-danger-text)", marginTop: 2 }}>{ex.solution.join(" ")}</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: "var(--color-danger-text)", marginTop: 4 }}>{ex.solution.join(" ")}</div>
               )}
             </div>
           </div>

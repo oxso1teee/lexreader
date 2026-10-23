@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { GOAL_TIERS, saveGoalAction } from "./actions";
+import { saveGoalAction } from "./actions";
+import { GOAL_TIERS } from "./tiers";
 
 // Эталон: docs/moments/mockups/Goal-pick.dc.html. Прогноз "слов за месяц" —
 // оценка (~25 слов в книгах на минуту чтения в месяц, калибровано по
