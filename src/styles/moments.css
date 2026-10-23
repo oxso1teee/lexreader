@@ -727,3 +727,44 @@
 @keyframes ud-shackle { 0%, 60% { transform: translateY(0); } 100% { transform: translateY(-6px) rotate(-25deg); } }
 .ud-shackle { transform-origin: 16px 11px; animation: ud-shackle 0.5s 2.2s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .ud-shine { display: none; } }
+
+/* Halfway (docs/moments/mockups/Halfway.dc.html) */
+@keyframes hw-fill { from { width: calc(var(--to) - 8%); } to { width: var(--to); } }
+.hw-fill { height: 100%; border-radius: 99px; background: var(--ember); box-shadow: inset 0 -4px 0 0 rgba(0, 0, 0, 0.12); animation: hw-fill 0.7s 0.2s ease-out both; }
+@keyframes hw-flag { 0% { transform: translate(-50%, -100%) scale(0); } 70% { transform: translate(-50%, -100%) scale(1.3); } 100% { transform: translate(-50%, -100%) scale(1); } }
+.hw-flag { position: absolute; top: -2px; animation: hw-flag 0.45s 0.8s ease-out both; transform-origin: 50% 100%; }
+@keyframes hw-wavef { 0%, 100% { transform: skewY(0); } 50% { transform: skewY(-8deg); } }
+.hw-flagw { animation: hw-wavef 0.5s 1.25s ease-in-out 4; transform-origin: 0 50%; }
+@keyframes hw-jump { 0%, 100% { transform: translateY(0) scaleY(1); } 10% { transform: translateY(0) scaleY(0.88) scaleX(1.08); } 40% { transform: translateY(-46px) scaleY(1.06); } 60% { transform: translateY(-46px); } 88% { transform: translateY(0) scaleY(0.92) scaleX(1.05); } }
+.hw-jump { animation: hw-jump 1.3s cubic-bezier(0.3, 0.7, 0.4, 1) infinite; transform-origin: 50% 100%; }
+@keyframes hw-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.14; } 40%, 60% { transform: scaleX(0.6); opacity: 0.06; } }
+.hw-shd { animation: hw-shadow 1.3s cubic-bezier(0.3, 0.7, 0.4, 1) infinite; opacity: 0.14; }
+@keyframes hw-pop { 0% { transform: scale(0.4); opacity: 0; } 70% { transform: scale(1.06); } 100% { transform: none; opacity: 1; } }
+.hw-bubble { animation: hw-pop 0.4s 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; transform-origin: 50% 100%; }
+@keyframes hw-tw { 0%, 100% { transform: scale(0) rotate(0); opacity: 0; } 50% { transform: scale(1) rotate(90deg); opacity: 1; } }
+.hw-tw { position: absolute; animation: hw-tw 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hw-jump, .hw-shd, .hw-tw { animation: none; } }
+
+/* Quit-confirm (docs/moments/mockups/Quit-confirm.dc.html) */
+@keyframes qc-droop { 0%, 100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(4deg) translateY(4px); } }
+.qc-droop { animation: qc-droop 2.2s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes qc-tear { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(18px); opacity: 0; } }
+.qc-tear { animation: qc-tear 1.6s 0.6s ease-in infinite; }
+@keyframes qc-ring { from { stroke-dashoffset: 176; } }
+.qc-ring { animation: qc-ring 0.8s 0.45s cubic-bezier(0.4, 0, 0.2, 1) both; }
+@keyframes qc-strike { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.qc-lose { animation: qc-strike 0.3s var(--d) ease-out both; }
+@keyframes qc-pulse { 0% { box-shadow: 0 0 0 0 rgba(43, 130, 15, 0.45); } 100% { box-shadow: 0 0 0 14px rgba(43, 130, 15, 0); } }
+.qc-stay { border-radius: 16px; animation: qc-pulse 1.5s 1s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .qc-droop, .qc-tear, .qc-stay { animation: none; } }
+
+/* Mistakes (docs/moments/mockups/Mistakes.dc.html) */
+@keyframes mi-zoom { 0% { transform: scale(0.4); opacity: 0; } 70% { transform: scale(1.06); opacity: 1; } 100% { transform: none; } }
+.mi-zoom { animation: mi-zoom 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes mi-spin { to { transform: rotate(360deg); } }
+.mi-spin { animation: mi-spin 6s linear infinite; }
+@keyframes mi-tilt { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+.mi-tilt { animation: mi-tilt 2.2s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes mi-badge { 0% { transform: scale(0); } 70% { transform: scale(1.3); } 100% { transform: none; } }
+.mi-badge { animation: mi-badge 0.4s 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+@media (prefers-reduced-motion: reduce) { .mi-spin, .mi-tilt { animation: none; } }

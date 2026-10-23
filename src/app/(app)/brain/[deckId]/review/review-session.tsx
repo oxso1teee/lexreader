@@ -615,7 +615,14 @@ export default function ReviewSession({
   // docs/moments/mockups/Mistakes.dc.html — после последней карточки
   // исходного прохода, если были ошибки и их ещё не пропустили.
   if (overlay === "mistakes") {
-    return <MistakesScreen words={mistakeWordsSnapshot} onRetry={retryMistakes} onSkip={skipMistakes} />;
+    return (
+      <MistakesScreen
+        words={mistakeWordsSnapshot}
+        progress={cards.length > 0 ? cards.length / (cards.length + mistakeWordsSnapshot.length) : 0.85}
+        onRetry={retryMistakes}
+        onSkip={skipMistakes}
+      />
+    );
   }
 
   if (done) {
@@ -1009,7 +1016,12 @@ export default function ReviewSession({
           combo={halfwaySnapshot.combo}
           xpSoFar={halfwaySnapshot.xpSoFar}
           cardsRemaining={cards.length - (index + 1)}
+          progress={cards.length > 0 ? (index + 1) / cards.length : 0.5}
           onContinue={() => setOverlay(null)}
+          onQuit={() => {
+            setOverlay(null);
+            setShowQuitConfirm(true);
+          }}
         />
       )}
 

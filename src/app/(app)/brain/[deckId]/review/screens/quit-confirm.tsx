@@ -78,6 +78,23 @@ export function QuitConfirmSheet({
         style={{ background: "var(--surface)" }}
       >
         <div style={{ width: 44, height: 5, borderRadius: 99, background: "var(--border-strong)", margin: "0 auto 16px" }} />
+        {/* Эталон: docs/moments/mockups/Quit-confirm.dc.html — грустный маскот со слезой. */}
+        <div style={{ display: "flex", justifyContent: "center", position: "relative", marginBottom: 14 }} aria-hidden="true">
+          <div className="qc-droop">
+            <svg viewBox="0 0 128 150" width="96" height="112">
+              <path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="var(--leaf)" />
+              <path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="var(--leaf-tint)" opacity="0.9" />
+              <path d="M49 58l8 3M71 58l-8 3" stroke="var(--leaf-edge)" strokeWidth="2.4" strokeLinecap="round" />
+              <ellipse cx="54" cy="65" rx="3" ry="4" fill="var(--leaf-edge)" />
+              <ellipse cx="66" cy="65" rx="3" ry="4" fill="var(--leaf-edge)" />
+              <path d="M54 77q6-5 12 0" fill="none" stroke="var(--leaf-edge)" strokeWidth="2.4" strokeLinecap="round" />
+              <ellipse cx="90" cy="100" rx="19" ry="12" fill="var(--ember)" transform="rotate(-28 90 100)" />
+            </svg>
+          </div>
+          <svg className="qc-tear" viewBox="0 0 10 14" width="10" height="14" style={{ position: "absolute", left: "50%", top: 40, marginLeft: -18 }}>
+            <path d="M5 0C6 4 9 6 9 9a4 4 0 0 1-8 0c0-3 3-5 4-9z" fill="var(--sky)" />
+          </svg>
+        </div>
         <h1 className="mo-disp" style={{ margin: 0, textAlign: "center", fontSize: 22, lineHeight: 1.2, fontWeight: 900 }}>
           Точно выйти?
         </h1>
@@ -86,22 +103,23 @@ export function QuitConfirmSheet({
         </p>
 
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 16, padding: "12px 16px", borderRadius: 18, background: "var(--background)" }}>
-          <div style={{ position: "relative", width: 56, height: 56, flex: "none" }}>
-            <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true" style={{ transform: "rotate(-90deg)" }}>
-              <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border)" strokeWidth="7" />
+          <div style={{ position: "relative", width: 64, height: 64, flex: "none" }}>
+            <svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true" style={{ transform: "rotate(-90deg)" }}>
+              <circle cx="32" cy="32" r="28" fill="none" stroke="var(--surface-muted)" strokeWidth="7" />
               <circle
                 cx="32"
                 cy="32"
                 r="28"
                 fill="none"
-                stroke="var(--sun)"
+                stroke="var(--ember)"
                 strokeWidth="7"
+                className="qc-ring"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={circumference * (1 - progress)}
               />
             </svg>
-            <div className="mo-disp" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900 }}>
+            <div className="mo-disp" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 900 }}>
               {cardsDone}/{cardsTotal}
             </div>
           </div>
@@ -112,12 +130,12 @@ export function QuitConfirmSheet({
                   Если выйдешь, пропадёт
                 </div>
                 {combo > 0 && (
-                  <div style={{ fontSize: 15, fontWeight: 600, marginTop: 6, color: "var(--text-secondary)", textDecoration: "line-through" }}>
+                  <div className="qc-lose" style={{ fontSize: 15, fontWeight: 600, marginTop: 6, color: "var(--text-secondary)", textDecoration: "line-through", textDecorationThickness: 2, ["--d" as string]: ".7s" }}>
                     Серия {combo} верных
                   </div>
                 )}
                 {perfectBonusAtRisk && (
-                  <div style={{ fontSize: 15, fontWeight: 600, marginTop: 4, color: "var(--text-secondary)", textDecoration: "line-through" }}>
+                  <div className="qc-lose" style={{ fontSize: 15, fontWeight: 600, marginTop: 4, color: "var(--text-secondary)", textDecoration: "line-through", textDecorationThickness: 2, ["--d" as string]: ".85s" }}>
                     Бонус +{perfectBonusXp} XP за чистое занятие
                   </div>
                 )}
@@ -128,7 +146,7 @@ export function QuitConfirmSheet({
           </div>
         </div>
 
-        <div style={{ marginTop: 20 }}>
+        <div className="qc-stay" style={{ marginTop: 20 }}>
           <Button variant="leaf" className="mo-cta" onClick={onStay}>
             Остаться и закончить
           </Button>

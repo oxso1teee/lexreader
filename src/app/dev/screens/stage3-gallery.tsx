@@ -23,7 +23,7 @@ const noop = () => {};
 
 export function Stage3GalleryScreen({ s }: { s: string }) {
   if (s === "Lesson-start") return <LessonStartScreen {...LESSON_START_FIXTURE} onReady={noop} />;
-  if (s === "Halfway") return <HalfwayScreen {...HALFWAY_FIXTURE} onContinue={noop} />;
+  if (s === "Halfway") return <HalfwayScreen {...HALFWAY_FIXTURE} onContinue={noop} onQuit={noop} />;
   if (s === "Mistakes") return <MistakesScreen words={MISTAKES_FIXTURE.words} onRetry={noop} onSkip={noop} />;
   if (s === "Quit-confirm") return <QuitConfirmSheet {...QUIT_CONFIRM_FIXTURE} onStay={noop} onLeave={noop} />;
   if (s === "Lesson-choice") return <MultipleChoiceMode cards={LESSON_CHOICE_FIXTURE} studyDirection="front_back" />;
