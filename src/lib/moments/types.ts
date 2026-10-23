@@ -195,6 +195,58 @@ export interface WeekRecapMoment {
   activeDays: number;
 }
 
+// Этап 4 (docs/moments/ROADMAP.md) — чтение и слова.
+export interface ChapterDoneMoment {
+  kind: "chapter_done";
+  id: string;
+  textTitle: string;
+  collectionTitle: string;
+  /** Позиция текста внутри коллекции (texts.collection_order), как уже
+   *  считает welcome-back-actions.ts для continueChapter. */
+  chapterPosition: number;
+  wordsRead: number;
+  /** Новых слов, сохранённых в карточки за эту конкретную сессию чтения. */
+  newWordsCount: number;
+  /** Следующий текст той же коллекции по collection_order — null, если это
+   *  последний (коллекция прочитана полностью). */
+  nextTextId: string | null;
+}
+
+export interface ReviewDueMoment {
+  kind: "review_due";
+  id: string;
+  /** getDueCount — реально просроченные карточки, не декоративное число. */
+  dueCount: number;
+}
+
+export interface TwinInsightSkillDelta {
+  category: string;
+  label: string;
+  trend: "up" | "down" | "flat";
+  status: "weak" | "developing" | "strong";
+}
+
+export interface TwinInsightMoment {
+  kind: "twin_insight";
+  id: string;
+  weekLabel: string;
+  skills: TwinInsightSkillDelta[];
+  /** Самый слабый паттерн недели (pickTopPattern) — честная рекомендация
+   *  фокуса, не выдуманная. null, если данных ещё нет. */
+  focusLabel: string | null;
+}
+
+export interface UnitDoneMoment {
+  kind: "unit_done";
+  id: string;
+  pathTitle: string;
+  stageTitle: string;
+  stageIndex: number;
+  stagesTotal: number;
+  skillsInStage: number;
+  nextStageTitle: string | null;
+}
+
 export type Moment =
   | GoalDoneMoment
   | StreakUpMoment
@@ -212,7 +264,11 @@ export type Moment =
   | NotifyAskMoment
   | WelcomeBackMoment
   | RateAppMoment
-  | WeekRecapMoment;
+  | WeekRecapMoment
+  | ChapterDoneMoment
+  | ReviewDueMoment
+  | TwinInsightMoment
+  | UnitDoneMoment;
 export type MomentKind = Moment["kind"];
 
 // Порядок показа после занятия (ROADMAP, этап 1/2): Result (не момент — сам
@@ -245,6 +301,14 @@ export const MOMENT_PRIORITY: Record<MomentKind, number> = {
   week_recap: 25,
   welcome_back: 15,
   rate_app: 5,
+  // Этап 4 — чтение/слова: chapter_done идёт сразу после сессионного итога
+  // чтения (та же "роль", что perfect/goal_done у review-сессии); unit_done
+  // заметнее, чем обычная похвала — закрытие целого раздела пути;
+  // review_due/twin_insight — информационные гейты, не блокируют итог.
+  chapter_done: 55,
+  unit_done: 32,
+  review_due: 18,
+  twin_insight: 22,
 };
 
 /** Больше подряд не показываем — остальные подождут следующего действия. */

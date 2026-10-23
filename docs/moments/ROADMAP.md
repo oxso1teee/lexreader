@@ -118,9 +118,32 @@ Lesson-start, Combo, Halfway, Mistakes, Quit-confirm (Result переехал в
 повторения карточек. Lesson-choice переверстан 1:1 (multiple-choice-mode.tsx);
 Lesson-build/Lesson-listen — отдельный движок упражнений, этап 8.
 
-### Этап 4. Чтение и слова — [ ]
+### Этап 4. Чтение и слова — [x]
 Chapter-done (чтение `read/[textId]`), Review-due (FSRS: сколько карточек
 падает ниже порога), Twin-insight («Мой английский», данные уже есть).
+Сделано (вместе с этапом 8, по отдельному запросу «доделать все этапы»):
+миграция `0057_chapter_done_guard.sql` (`text_progress.chapter_done_shown_at`
+— сторож повторного показа); **Chapter-done** — "глава" = один текст внутри
+коллекции (`texts.collection_order`, тот же честный приём, что уже
+использует `continueChapter` в Welcome-back), триггер в `finishReading()`
+(`src/lib/moments/chapter-done.ts`), реальные `wordsRead`/`newWordsCount`
+за сессию, "понимание %" из макета убрано — нет честной метрики; **Unit-done**
+— триггер в `completeLessonAction()` (`learning-paths/actions.ts`,
+`maybeCompletePathAndAdvance`), срабатывает на транзишене стейджа в
+"completed", реальные `stageIndex`/`skillsInStage`/`nextStageTitle` из
+curriculum; "новых слов"/"текста" из макета убраны — по этапу пути их
+честно не считать; **Review-due** — гейт `ReviewDueGate` (корневой
+`layout.tsx`), `getDueCount() >= 10`; **Twin-insight** — гейт
+`TwinInsightGate` по понедельникам, переиспользует ровно те же данные, что
+`language-twin/summary.ts` (`language_error_patterns`, `pickTopPattern`),
+проценты шкал — ступень confidence (low/medium/high → 30/60/90%), не
+придуманное число. Reader (тост "слово в карточках · +N XP") — не из этого
+этапа по тексту ROADMAP, но тоже сделан: `saveVocabularyItem()` уже
+начисляла +2 XP на новое слово молча, `UpsertWordResult.wasNew/xpAwarded`
+(докоммичено из прежнего `wip`-коммита этого же этапа) просто вывело это
+наружу, `reader.tsx` показывает тост 2.2с. Галерея: все 4 момента в
+`/dev/moments` (`fixtures.ts`). Скриншот-сверка не делалась — как и в
+этапах 6–7.
 
 ### Этап 5. Задания дня и награды (новая механика) — [x]
 Daily-quests (3 задания дня — отдельно от недельных миссий; миграция
@@ -265,7 +288,7 @@ moments), не только по журналу.
 | Main | ✅ | `/home` переверстан 1:1 по макету на реальных данных |
 | Today-evening | ✅ галерея | `TodayEveningGate` (today/v7), этап 2, /dev/screens |
 | Path | ✅ | извилистая тропа `learning-paths/path-map.tsx`, этап 8 |
-| Reader | 🟡 | `/read/[textId]` — без тоста «слово сохранено» из макета; не входил ни в один этап, остаётся долгом |
+| Reader | ✅ | `/read/[textId]` — тост "слово в карточках · +N XP" (reader.tsx), реальные wasNew/xpAwarded |
 | Progress | ✅ | переверстан по Progress.dc.html, этап 8 |
 | Result | ✅ | `review/session-complete.tsx` переверстан по Result.dc.html, этап 1 |
 | Lesson-choice | ✅ галерея | 1:1; в живом сценарии уже работает (multiple-choice-mode.tsx) |
@@ -280,27 +303,28 @@ moments), не только по журналу.
 | Weekly-rank | ✅ галерея | момент (`kind: "weekly_rank"`, `WeeklyRankGate` в layout.tsx), этап 6; `/leaderboard` — отдельная, реальная страница лиги, не момент |
 | Duel-invite | ✅ | `DuelInviteScreen` инлайн на `/duel/[id]` (duel-room.tsx), этап 6 — осознанно не через очередь moments (состояние существующего экрана) |
 | Duel-won | ✅ | `DuelWonScreen` инлайн на `/duel/[id]` (duel-room.tsx), этап 6 |
-| Twin-insight | ❌ | этап 4 не начат |
+| Twin-insight | ✅ галерея | момент (`kind: "twin_insight"`), `TwinInsightGate` по понедельникам, этап 4 |
 | Achievement | ✅ галерея | момент (`kind: "achievement"`), этап 1; `progress/achievements-shelf.tsx` — отдельная полка всех ачивок, не момент получения |
 | Perfect | ✅ галерея | бонус +10 XP, честно начисляется (awardPerfectBonus), этап 1 |
 | Notify-ask | ✅ галерея | Moment, /dev/moments; "Включить" — настоящий push-flow |
 | Lesson-start, Combo, Halfway, Mistakes, Quit-confirm | ✅ галерея | этап 3; живой сценарий — review-session.tsx |
 | Level-up, Word-mastered | ✅ галерея | этап 1 |
-| Unit-done, Chapter-done, Review-due | ❌ | этап 4 не начат |
+| Unit-done | ✅ галерея | момент (`kind: "unit_done"`), триггер в `completeLessonAction()`, этап 4 |
+| Chapter-done | ✅ галерея | момент (`kind: "chapter_done"`), триггер в `finishReading()`, миграция 0057, этап 4 |
+| Review-due | ✅ галерея | момент (`kind: "review_due"`), `ReviewDueGate`, `getDueCount() >= 10`, этап 4 |
 | Streak-30, Perfect-week, Freeze-used, Earn-back, Streak-calendar | ✅ галерея/страница | этап 2; Streak-calendar — `/streak` |
 | Friend-streak | ✅ галерея | момент (`kind: "friend_streak"`), этап 6 |
 | Daily-quests, Chest, Double-XP | ✅ | этап 5 ([x] смержено); Chest/Double-XP — страницы `/quests/chest`, `/quests/double-xp` |
 | Overtaken, Welcome-back, Rate-app, Week-recap | ✅ галерея | этапы 6–7, все через MomentProvider |
 
-Итого: ✅ 42 · 🟡 1 · ❌ 4.
+Итого: ✅ 47 · 🟡 0 · ❌ 0.
 
 Этап 8 закрыл заявленные 4 экрана (Path, Progress, Lesson-build,
 Lesson-listen) и попутно исправил 20+ устаревших строк, где код уже был
-готов с предыдущих этапов, а таблица — нет. **Не все 47 строк ✅**: Reader
-(тост), и весь этап 4 (Twin-insight/Chapter-done/Review-due) + Unit-done
-честно остаются без реализации — ни один из них не входил в список экранов,
-который этап 8 должен был закрыть, и ни один предыдущий этап их не делал.
-Следующий проход — этап 4 целиком + тост в Reader.
+готов с предыдущих этапов, а таблица — нет. По отдельному запросу
+("доделать все этапы") следом доделан и весь этап 4 (Chapter-done,
+Review-due, Twin-insight, Unit-done) + тост в Reader — все 47 экранов
+теперь реально в коде, не только в таблице.
 
 ## Журнал
 
@@ -328,3 +352,14 @@ Lesson-listen) и попутно исправил 20+ устаревших ст�
   (Twin-insight/Chapter-done/Review-due) + Unit-done остаются нерешёнными —
   не входили в заявленный для этапа 8 список и не делались раньше; 42 ✅,
   1 🟡, 4 ❌. typecheck/lint/test/build зелёные.
+- 2026-10-23: по отдельному запросу доделан весь этап 4 + тост в Reader —
+  те самые 5 оставшихся строк. Миграция 0057 (text_progress.
+  chapter_done_shown_at); 4 новых вида moments (chapter_done/review_due/
+  twin_insight/unit_done) + их screens/gates/actions; triggers встроены в
+  finishReading() (Chapter-done), completeLessonAction() (Unit-done,
+  переиспользует уже существующий maybeCompletePathAndAdvance), новые
+  ReviewDueGate/TwinInsightGate в корневом layout.tsx; Reader-тост — вывод
+  уже существующего, ранее отбрасываемого UpsertWordResult.wasNew/
+  xpAwarded. Итого 47 ✅ · 0 🟡 · 0 ❌. typecheck/lint/530 тестов/build
+  зелёные (build — один раз упал на флаки Turbopack-резолва Google Fonts,
+  не связано с изменениями, повтор прошёл чисто).

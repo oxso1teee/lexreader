@@ -7,6 +7,7 @@ import { completeLessonAction } from "../../../actions";
 import { track } from "@/lib/posthog-client";
 import { Button } from "@/components/ui/button";
 import type { PathSlug } from "@/lib/learning-paths/types";
+import { useMoments } from "@/components/product/moments/moment-provider";
 
 // Content completion only (plan doc's "never collapse content completion
 // and skill confidence into one click") — this button never touches
@@ -22,6 +23,7 @@ export default function CompleteLessonButton({
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const { pushMoments } = useMoments();
 
   if (alreadyCompleted) {
     return (
@@ -33,8 +35,9 @@ export default function CompleteLessonButton({
 
   function handleClick() {
     startTransition(async () => {
-      await completeLessonAction(pathSlug, skillKey);
+      const result = await completeLessonAction(pathSlug, skillKey);
       track("lesson_completed", { path_slug: pathSlug, skill_key: skillKey });
+      if (result?.unitDoneMoment) pushMoments([result.unitDoneMoment]);
       router.refresh();
     });
   }

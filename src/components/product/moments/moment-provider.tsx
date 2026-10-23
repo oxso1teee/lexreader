@@ -23,6 +23,10 @@ import { NotifyAskScreen } from "./screens/notify-ask";
 import { WelcomeBackScreen } from "./screens/welcome-back";
 import { RateAppScreen } from "./screens/rate-app";
 import { WeekRecapScreen } from "./screens/week-recap";
+import { ReviewDueScreen } from "./screens/review-due";
+import { ChapterDoneScreen } from "./screens/chapter-done";
+import { UnitDoneScreen } from "./screens/unit-done";
+import { TwinInsightScreen } from "./screens/twin-insight";
 
 // Очередь моментов на всё приложение. Серверное действие возвращает
 // moments[] → вызывающий клиент делает pushMoments(result.moments), или
@@ -94,6 +98,14 @@ export function renderMoment(moment: Moment, onClose: () => void) {
       return <RateAppScreen moment={moment} onClose={onClose} />;
     case "week_recap":
       return <WeekRecapScreen moment={moment} onClose={onClose} />;
+    case "review_due":
+      return <ReviewDueScreen moment={moment} onClose={onClose} />;
+    case "chapter_done":
+      return <ChapterDoneScreen moment={moment} onClose={onClose} />;
+    case "unit_done":
+      return <UnitDoneScreen moment={moment} onClose={onClose} />;
+    case "twin_insight":
+      return <TwinInsightScreen moment={moment} onClose={onClose} />;
   }
 }
 

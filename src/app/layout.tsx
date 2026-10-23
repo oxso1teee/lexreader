@@ -10,6 +10,8 @@ import { MomentProvider } from "@/components/product/moments/moment-provider";
 import WeeklyRankGate from "@/components/product/moments/weekly-rank-gate";
 import WelcomeBackGate from "@/components/product/moments/welcome-back-gate";
 import WeekRecapGate from "@/components/product/moments/week-recap-gate";
+import ReviewDueGate from "@/components/product/moments/review-due-gate";
+import TwinInsightGate from "@/components/product/moments/twin-insight-gate";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -104,6 +106,8 @@ export default function RootLayout({
           <WeeklyRankGate />
           <WelcomeBackGate />
           <WeekRecapGate />
+          <ReviewDueGate />
+          <TwinInsightGate />
           {children}
         </MomentProvider>
       </body>
