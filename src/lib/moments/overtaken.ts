@@ -63,6 +63,12 @@ export async function checkOvertaken(supabase: SupabaseServerClient, userId: str
         friendInitial: overtakerPartner.initial,
         theirRank: overtakerRow.rank,
         xpGapToReclaim: Math.max(0, overtakerRow.score - myRow.score + 1),
+        theirScore: overtakerRow.score,
+        myScore: myRow.score,
+        above: (() => {
+          const r = rows.find((x) => x.rank === overtakerRow.rank - 1);
+          return r ? { initial: r.initials, score: r.score } : null;
+        })(),
       });
     }
   }
