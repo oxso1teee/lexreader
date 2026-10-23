@@ -916,3 +916,28 @@
 @keyframes ll-wave { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
 .ll-wv { display: block; width: 5px; border-radius: 3px; background: #fff; animation: ll-wave 1s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .ll-wv { animation: none; } }
+
+/* Result (docs/moments/mockups/Result.dc.html) */
+.rs-stat { flex: 1; border-radius: 18px; border: 2px solid var(--c); overflow: hidden; background: var(--surface); text-align: center; }
+.rs-stat-h { background: var(--c); color: var(--t); font: 700 12px/1 var(--font-onest), sans-serif; letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 4px; }
+.rs-stat-v { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 14px 4px 16px; font: 700 22px/1 var(--font-unbounded), sans-serif; color: var(--v); }
+@keyframes rs-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.rs-bob { animation: rs-bob 2.4s ease-in-out 0.5s infinite; }
+@keyframes rs-spark { 0% { transform: translate(0, 0) scale(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; } }
+.rs-sp { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; border-radius: 3px; animation: rs-spark 1.6s ease-out infinite; }
+@keyframes rs-flick { 0%, 100% { transform: scale(1) rotate(-3deg); } 50% { transform: scale(1.1) rotate(3deg); } }
+.rs-flick { animation: rs-flick 1.1s ease-in-out infinite; transform-origin: 50% 90%; }
+@media (prefers-reduced-motion: reduce) { .rs-bob, .rs-sp, .rs-flick { animation: none; } .rs-sp { display: none; } }
+
+/* Combo (docs/moments/mockups/Combo.dc.html) */
+@keyframes cb-drop { 0% { transform: translateY(-160%) scale(0.85) rotate(-4deg); } 55% { transform: translateY(10%) scale(1.05) rotate(1.5deg); } 75% { transform: translateY(-3%) scale(0.99); } 100% { transform: none; } }
+.cb-drop { animation: cb-drop 0.7s 0.1s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes cb-sweep { 0% { transform: translateX(-120px) skewX(-20deg); } 100% { transform: translateX(420px) skewX(-20deg); } }
+.cb-sweep { position: absolute; top: 0; bottom: 0; width: 60px; background: rgba(255, 255, 255, 0.35); animation: cb-sweep 1.1s 0.8s ease-in-out both; }
+@keyframes cb-flick { 0%, 100% { transform: scale(1) rotate(-4deg); } 50% { transform: scale(1.15) rotate(4deg); } }
+.cb-flick { animation: cb-flick 0.8s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes cb-peek { 0% { transform: translateX(130px) rotate(25deg); } 70% { transform: translateX(-6px) rotate(-14deg); } 100% { transform: translateX(0) rotate(-10deg); } }
+.cb-peek { animation: cb-peek 0.6s 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes cb-wob { 0%, 100% { rotate: 0deg; } 50% { rotate: -6deg; } }
+.cb-wob { animation: cb-wob 1.6s 1.3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .cb-drop, .cb-sweep, .cb-flick, .cb-peek, .cb-wob { animation: none; } .cb-sweep { display: none; } }

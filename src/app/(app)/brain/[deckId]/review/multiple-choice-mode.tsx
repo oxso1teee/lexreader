@@ -210,8 +210,9 @@ export default function MultipleChoiceMode({
           aria-valuenow={progressDone}
         >
           <div
-            className="mc-fill h-full rounded-full bg-[var(--leaf)] transition-[width] duration-300"
-            style={{ width: `${(progressDone / progressTotal) * 100}%`, boxShadow: "inset 0 -4px 0 0 rgba(0,0,0,.12)" }}
+            className="mc-fill h-full rounded-full transition-[width,background-color] duration-300"
+            // Серия от COMBO_THRESHOLD верных — полоска "загорается" (Combo.dc.html).
+            style={{ width: `${(progressDone / progressTotal) * 100}%`, background: combo >= COMBO_THRESHOLD ? "var(--ember)" : "var(--leaf)", boxShadow: "inset 0 -4px 0 0 rgba(0,0,0,.12)" }}
           />
         </div>
         {(

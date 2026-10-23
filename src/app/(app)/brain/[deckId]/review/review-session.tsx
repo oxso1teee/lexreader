@@ -656,13 +656,6 @@ export default function ReviewSession({
           missionId={missionId}
           missionCorrectCount={tally[2] + tally[3]}
           missionIncorrectCount={tally[0] + tally[1]}
-          // Review mockup alignment — реальные слова этой сессии (front —
-          // всегда язык изучения, back — родной, см. комментарий у speak()
-          // выше), не новый запрос: cards уже в состоянии этого компонента.
-          // SessionComplete — прямой ребёнок этого файла (не через
-          // review-mode-switcher.tsx), так что новый проп не требует правок
-          // вне заявленных двух файлов.
-          cards={originalCardsRef.current.map((c) => ({ front: c.front, back: c.back }))}
           // docs/moments/mockups/Result.dc.html — этап 1: honest sums
           // накопленные за сессию выше, не пересчёт задним числом.
           xpEarned={sessionResult?.xpEarned ?? 0}
