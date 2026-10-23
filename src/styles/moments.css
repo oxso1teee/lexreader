@@ -848,3 +848,17 @@
 @keyframes na-drop { 0% { transform: translateY(-60px) scale(0.92); opacity: 0; } 65% { transform: translateY(6px) scale(1.01); opacity: 1; } 100% { transform: none; opacity: 1; } }
 .na-notif { animation: na-drop 0.6s 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 @media (prefers-reduced-motion: reduce) { .na-bell, .na-arc, .na-bob { animation: none; } .na-arc { opacity: 0; } }
+
+/* Welcome-back (docs/moments/mockups/Welcome-back.dc.html) */
+@keyframes wb-enter { 0% { transform: translateY(240px); } 60% { transform: translateY(-20px); } 80% { transform: translateY(6px); } 100% { transform: none; } }
+.wb-enter { animation: wb-enter 0.8s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+@keyframes wb-wave { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(18deg); } }
+.wb-wave { animation: wb-wave 0.6s 0.8s ease-in-out 6; transform-origin: 50% 95%; }
+@keyframes wb-jump { 0%, 100% { transform: translateY(0) scaleY(1); } 12% { transform: translateY(0) scaleY(0.9) scaleX(1.06); } 40%, 58% { transform: translateY(-22px); } 85% { transform: translateY(0) scaleY(0.95); } }
+.wb-jump { animation: wb-jump 1.4s 1.2s cubic-bezier(0.3, 0.7, 0.4, 1) infinite; transform-origin: 50% 100%; }
+@keyframes wb-float { 0% { transform: translate(0, 40px) rotate(0); opacity: 0; } 15% { opacity: 0.8; } 100% { transform: translate(var(--dx), -760px) rotate(var(--r)); opacity: 0; } }
+.wb-lf { position: absolute; bottom: -20px; width: 16px; height: 16px; border-radius: 0 70% 0 70%; animation: wb-float var(--t) var(--d) linear infinite; }
+@keyframes wb-slide { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+.wb-slide { animation: wb-slide 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+.wb-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.14); font-size: 15px; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .wb-lf { display: none; } .wb-jump, .wb-wave { animation: none; } }
