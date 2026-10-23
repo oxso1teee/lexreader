@@ -828,3 +828,12 @@
 @keyframes wr-me { 0% { transform: translateY(30px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 @keyframes wr-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(43, 130, 15, 0.35); } 50% { box-shadow: 0 0 0 8px rgba(43, 130, 15, 0); } }
 .wr-me { animation: wr-me 0.5s 1.6s cubic-bezier(0.2, 0.9, 0.3, 1.1) both, wr-glow 2s 2.2s ease-in-out infinite; }
+
+/* Friend-streak (docs/moments/mockups/Friend-streak.dc.html) */
+.fs-av { width: 96px; height: 96px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font: 900 32px/1 var(--font-unbounded), sans-serif; color: #fff; border: 5px solid #fff; }
+@keyframes fs-inL { 0% { transform: translateX(-140px) rotate(-20deg); } 70% { transform: translateX(12px) rotate(6deg); } 100% { transform: none; } }
+@keyframes fs-inR { 0% { transform: translateX(140px) rotate(20deg); } 70% { transform: translateX(-12px) rotate(-6deg); } 100% { transform: none; } }
+.fs-inL { animation: fs-inL 0.65s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+.fs-inR { animation: fs-inR 0.65s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+@keyframes fs-ignite { 0%, 50% { transform: scale(0); } 80% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.fs-ignite { animation: fs-ignite 1s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; transform-origin: 50% 85%; }
