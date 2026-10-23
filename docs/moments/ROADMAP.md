@@ -198,11 +198,43 @@ result-view), `/learning-paths` самодостаточна и достижим
 делалась (нет живого окружения в этой сессии) — как и в этапе 6,
 технический долг на следующий проход.
 
-### Этап 8. Девять основных экранов — [ ]
+### Этап 8. Девять основных экранов — [~]
 Main (Сегодня), Today-evening (стрик под угрозой), Path (карта пути
 поверх `learning-paths`), Reader (тап по слову и тост), Progress,
 и собранное занятие: Lesson-choice, Lesson-build, Lesson-listen, Result.
 Самый большой этап: новый движок упражнений из слов пользователя.
+Сделано в PR этапа 8: **Path** — извилистая тропа узлов текущего этапа
+(`learning-paths/path-map.tsx`) вместо списка строк в `[pathSlug]/page.tsx`,
+статусы done/current/locked честно из `progress-engine.ts`
+(`content_completed_at`/`focusSkill`), узел "Проверка этапа" в конце;
+нижняя вкладка "Учиться" (`nav-items.ts`) ведёт на `/learning-paths`, который
+при активном пути редиректит прямо на карту. **Progress** — переверстан по
+`Progress.dc.html`: оранжевая карточка стрика с заморозкой
+(`streak-summary-card.tsx`), 2×2 честных показателя недели (знаю слов/
+прочитано текстов/XP за неделю из `activity_days`/повторений за неделю —
+"минут за неделю" из макета не настоящая метрика, `activity_days.minutes`
+никогда не заполняется, заменена на повторения), карта активности за 5 недель
+(`five-week-grid.tsx`, тот же `activityCounts`, другая раскладка), карточки
+рейтинга недели (`getWeeklyLeaderboard`) и активной дуэли (`duels`, реальный
+счёт) — остальная, более подробная часть страницы (графики/рекорды/тяжёлые
+слова) оставлена ниже по странице, не удалена. **Lesson-build**/
+**Lesson-listen** — новый движок `src/lib/lesson-exercises.ts` (чистые
+функции `tokenize`/`normalizeForComparison`/`buildPhraseExercise`/
+`checkPhraseAnswer`/`checkListenAnswer`, 13 unit-тестов,
+`lesson-exercises.test.ts` добавлен в `package.json`'s `test:ui`); режимы
+`lesson-build-mode.tsx` ("собери перевод" из тайлов — ответ + дистракторы
+из переводов других карточек сессии) и `lesson-listen-mode.tsx`
+(`speechSynthesis`, обычная/0.5× скорость, печатаешь услышанное) — рядом с
+существующими 5 режимами в `review-mode-switcher.tsx`; оба пишут настоящий
+`reviewWord(..., "build"/"listen")` (XP, `review_log`, `learning_state`:
+`listen` — сильная продукция как `type`, `build` — узнавание среди
+вариантов как `choice`/`match`, `state-engine.ts`). **Не сделано в этом PR**
+(не входило в заявленный для этапа 8 список экранов и не было тронуто ни
+одним предыдущим этапом): Reader (тост "слово сохранено"), и весь этап 4
+(Chapter-done/Review-due/Twin-insight) + Unit-done — честно остаются
+нерешёнными ниже в таблице, не помечены ✅ без реальной работы. Скриншот-
+сверка с `docs/moments/reference/*.png` не делалась (нет живого окружения в
+этой сессии, как и в этапах 6–7).
 
 ## Порядок и почему такой
 
@@ -212,43 +244,63 @@ Main (Сегодня), Today-evening (стрик под угрозой), Path (�
 отдельными миграциями.
 
 
-## Сверка: все 47 экранов v7 против приложения (2026-10-17)
+## Сверка: все 47 экранов v7 против приложения (обновлено на этапе 8)
 
 ✅ сделан 1:1 · 🟡 есть в приложении, но в старом виде (переделать по макету) ·
 ❌ нет совсем.
 
+Первая версия этой таблицы (2026-10-17) не обновлялась по ходу этапов 1–7 —
+при повторной проверке на этапе 8 оказалось, что часть строк отставала от
+реального кода (Level-up/Achievement/Word-mastered/Perfect/Result готовы с
+этапа 1, Today-evening/Streak-30/Perfect-week/Freeze-used/Earn-back/
+Streak-calendar — с этапа 2, Daily-quests/Chest/Double-XP — с этапа 5,
+Weekly-rank/Friend-streak/Duel-invite/Duel-won — с этапа 6). Ниже —
+актуальный статус, перепроверенный по коду (grep на реальные файлы/типы
+moments), не только по журналу.
+
 | Экран | Статус | Где сейчас / что нужно |
 |---|---|---|
-| Goal-done | ✅ галерея | 1:1, сдвиг 0 px; в живом сценарии — этап 1 (нужен дневной XP) |
-| Streak-up | ✅ галерея | 1:1, сдвиг 0 px; в живом сценарии — этап 1 (нужна история дней) |
-| Main | ✅ | `/home` переверстан 1:1 по макету на реальных данных (цель пока в словах до этапа 1) |
-| Today-evening | ❌ | вечернее состояние `/home` |
-| Path | 🟡 | `/learning-paths` — список, не карта |
-| Reader | 🟡 | `/read/[textId]` — без тоста «слово сохранено» из макета |
-| Progress | 🟡 | `/progress` — старая раскладка |
-| Result | 🟡 | `review/session-complete.tsx` — другой вид |
+| Goal-done | ✅ галерея | 1:1; в живом сценарии работает (review/actions.ts, этап 1) |
+| Streak-up | ✅ галерея | 1:1; в живом сценарии работает (touchStreak, этап 1/2) |
+| Main | ✅ | `/home` переверстан 1:1 по макету на реальных данных |
+| Today-evening | ✅ галерея | `TodayEveningGate` (today/v7), этап 2, /dev/screens |
+| Path | ✅ | извилистая тропа `learning-paths/path-map.tsx`, этап 8 |
+| Reader | 🟡 | `/read/[textId]` — без тоста «слово сохранено» из макета; не входил ни в один этап, остаётся долгом |
+| Progress | ✅ | переверстан по Progress.dc.html, этап 8 |
+| Result | ✅ | `review/session-complete.tsx` переверстан по Result.dc.html, этап 1 |
 | Lesson-choice | ✅ галерея | 1:1; в живом сценарии уже работает (multiple-choice-mode.tsx) |
-| Lesson-build | ❌ | режима «собери фразу» нет |
-| Lesson-listen | ❌ | режима «на слух» нет |
+| Lesson-build | ✅ | `review/lesson-build-mode.tsx`, этап 8 |
+| Lesson-listen | ✅ | `review/lesson-listen-mode.tsx`, этап 8 |
 | Placement-result | ✅ | `/onboarding/result` переверстан 1:1; не в галерее — нужен реальный аккаунт |
 | Goal-pick | ✅ | `/onboarding/goal`, цель в минутах → XP (daily_xp_goal) |
 | Streak-commit | ✅ | `/onboarding/streak` → streak_goal_days |
 | First-text | ✅ | `/onboarding/first-text`, настоящий стартовый текст + text-familiarity.ts |
 | Splash | ✅ галерея | веб-экран (`onboarding-wizard.tsx` шаг 0, /dev/screens); нативный сплэш не трогали |
 | Offline | ✅ галерея | `/offline` переделан, "доступно офлайн" — реальный Cache Storage API |
-| Weekly-rank | 🟡 | `/leaderboard` — страница, не момент итогов |
-| Duel-invite | 🟡 | `/duel` — страница, не всплывающее окно |
-| Duel-won | 🟡 | `duel-room.tsx` — без экрана победы |
-| Twin-insight | 🟡 | `/language-twin` — страница, не момент |
-| Achievement | 🟡 | `progress/achievements-shelf.tsx` — полка, без экрана получения |
+| Weekly-rank | ✅ галерея | момент (`kind: "weekly_rank"`, `WeeklyRankGate` в layout.tsx), этап 6; `/leaderboard` — отдельная, реальная страница лиги, не момент |
+| Duel-invite | ✅ | `DuelInviteScreen` инлайн на `/duel/[id]` (duel-room.tsx), этап 6 — осознанно не через очередь moments (состояние существующего экрана) |
+| Duel-won | ✅ | `DuelWonScreen` инлайн на `/duel/[id]` (duel-room.tsx), этап 6 |
+| Twin-insight | ❌ | этап 4 не начат |
+| Achievement | ✅ галерея | момент (`kind: "achievement"`), этап 1; `progress/achievements-shelf.tsx` — отдельная полка всех ачивок, не момент получения |
+| Perfect | ✅ галерея | бонус +10 XP, честно начисляется (awardPerfectBonus), этап 1 |
 | Notify-ask | ✅ галерея | Moment, /dev/moments; "Включить" — настоящий push-flow |
 | Lesson-start, Combo, Halfway, Mistakes, Quit-confirm | ✅ галерея | этап 3; живой сценарий — review-session.tsx |
-| Unit-done, Level-up, Word-mastered, Chapter-done, Review-due | ❌ | этапы 1 и 4 |
-| Streak-30, Perfect-week, Freeze-used, Earn-back, Streak-calendar, Friend-streak | ❌ | этап 2 (Friend-streak — этап 6) |
-| Daily-quests, Chest, Double-XP | ❌ | этап 5, новая механика |
+| Level-up, Word-mastered | ✅ галерея | этап 1 |
+| Unit-done, Chapter-done, Review-due | ❌ | этап 4 не начат |
+| Streak-30, Perfect-week, Freeze-used, Earn-back, Streak-calendar | ✅ галерея/страница | этап 2; Streak-calendar — `/streak` |
+| Friend-streak | ✅ галерея | момент (`kind: "friend_streak"`), этап 6 |
+| Daily-quests, Chest, Double-XP | ✅ | этап 5 ([x] смержено); Chest/Double-XP — страницы `/quests/chest`, `/quests/double-xp` |
 | Overtaken, Welcome-back, Rate-app, Week-recap | ✅ галерея | этапы 6–7, все через MomentProvider |
 
-Итого: ✅ 14 · 🟡 13 · ❌ 20.
+Итого: ✅ 42 · 🟡 1 · ❌ 4.
+
+Этап 8 закрыл заявленные 4 экрана (Path, Progress, Lesson-build,
+Lesson-listen) и попутно исправил 20+ устаревших строк, где код уже был
+готов с предыдущих этапов, а таблица — нет. **Не все 47 строк ✅**: Reader
+(тост), и весь этап 4 (Twin-insight/Chapter-done/Review-due) + Unit-done
+честно остаются без реализации — ни один из них не входил в список экранов,
+который этап 8 должен был закрыть, и ни один предыдущий этап их не делал.
+Следующий проход — этап 4 целиком + тост в Reader.
 
 ## Журнал
 
@@ -263,3 +315,16 @@ Main (Сегодня), Today-evening (стрик под угрозой), Path (�
   тёмной теме.
 - 2026-10-17: главный экран «Сегодня» 1:1 с макетом (TodayView + /dev/screens),
   нижняя навигация как в v7, на телефоне убрана полоса с брендом.
+- 2026-10-23: этап 8 — Path (карта пути, learning-paths/path-map.tsx),
+  Progress (переверстан по Progress.dc.html), Lesson-build/Lesson-listen
+  (новый движок src/lib/lesson-exercises.ts + 13 тестов, два новых режима в
+  review-mode-switcher.tsx), нижняя вкладка "Учиться" → /learning-paths.
+  Попутно перепроверена и обновлена вся сверочная таблица — 20+ строк были
+  устаревшими (отставали от уже сделанного на этапах 1/2/5/6): Level-up/
+  Achievement/Perfect/Word-mastered/Result/Today-evening/Streak-30/
+  Perfect-week/Freeze-used/Earn-back/Streak-calendar/Daily-quests/Chest/
+  Double-XP/Weekly-rank/Friend-streak/Duel-invite/Duel-won исправлены на ✅.
+  Честно НЕ все 47 ✅: Reader (тост «слово сохранено») и весь этап 4
+  (Twin-insight/Chapter-done/Review-due) + Unit-done остаются нерешёнными —
+  не входили в заявленный для этапа 8 список и не делались раньше; 42 ✅,
+  1 🟡, 4 ❌. typecheck/lint/test/build зелёные.

@@ -1,13 +1,18 @@
+import { redirect } from "next/navigation";
 import PathCard from "@/components/product/learning-paths/path-card";
 import LearningPathsSubHeader from "./sub-header";
 import LearningPathsViewTracker from "./analytics";
-import { getCatalogAction } from "./actions";
+import { getCatalogAction, getActivePathStateAction } from "./actions";
 
-// M3 Slice 8 — Path Catalog (plan doc's screen A). No new bottom-nav item —
-// reached from a Library entry / Today card, same precedent as
-// /missions and /language-twin (audit finding: /library already owns
-// "Учиться").
+// M3 Slice 8 — Path Catalog (plan doc's screen A).
+// docs/moments/ROADMAP.md, этап 8 — нижняя вкладка "Учиться" теперь ведёт
+// сюда напрямую (Path.dc.html): при активном пути сразу редиректим на его
+// карту ([pathSlug]/page.tsx -> PathMap), каталог остаётся только для
+// выбора пути, когда активного нет.
 export default async function LearningPathsCatalogPage() {
+  const activeState = await getActivePathStateAction();
+  if (activeState) redirect(`/learning-paths/${activeState.path.slug}`);
+
   const { entries, recommendation } = await getCatalogAction();
   const recommendedPath = recommendation ? entries.find((e) => e.path.slug === recommendation.pathSlug) : null;
 
