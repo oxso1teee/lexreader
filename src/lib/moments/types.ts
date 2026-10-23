@@ -115,6 +115,11 @@ export interface OvertakenMoment {
   friendInitial: string;
   theirRank: number;
   xpGapToReclaim: number;
+  /** Очки за неделю (get_weekly_leaderboard) — для строк рейтинга. */
+  theirScore?: number;
+  myScore?: number;
+  /** Строка над другом (ранг theirRank-1), если она есть. */
+  above?: { initial: string; score: number } | null;
 }
 
 export interface WeeklyRankPodiumEntry {

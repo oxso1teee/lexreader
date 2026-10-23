@@ -876,3 +876,18 @@
 .wk-big { animation: wk-big 0.6s 0.1s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 @keyframes wk-card { 0% { transform: rotate(-14deg) translateY(60px); opacity: 0; } 70% { transform: rotate(1deg); } 100% { transform: rotate(-2deg); opacity: 1; } }
 .wk-card { animation: wk-card 0.6s 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+
+/* Overtaken (docs/moments/mockups/Overtaken.dc.html) */
+@keyframes ov-dash { 0% { transform: translateX(-260px); } 60% { transform: translateX(16px); } 80% { transform: translateX(-4px); } 100% { transform: none; } }
+.ov-dash { animation: ov-dash 0.7s 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+@keyframes ov-lines { 0%, 100% { opacity: 0; transform: translateX(0); } 50% { opacity: 1; transform: translateX(-16px); } }
+.ov-sp { animation: ov-lines 0.5s 0.2s ease-out 2 both; }
+@keyframes ov-up { 0%, 30% { transform: translateY(0); } 100% { transform: translateY(-68px); } }
+@keyframes ov-down { 0%, 30% { transform: translateY(0); } 100% { transform: translateY(68px); } }
+.ov-mup { animation: ov-up 0.7s 1s cubic-bezier(0.4, 0, 0.2, 1) both; z-index: 2; }
+.ov-mdown { animation: ov-down 0.7s 1s cubic-bezier(0.4, 0, 0.2, 1) both; }
+@keyframes ov-arrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.ov-arr { animation: ov-arrow 1s 1.8s ease-in-out infinite; flex: none; }
+.ov-row { position: absolute; left: 0; right: 0; height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-radius: 16px; font-size: 15px; background: var(--surface); border: 2px solid var(--border); }
+.ov-sm { width: 36px; height: 36px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font: 700 14px/1 var(--font-onest), sans-serif; color: #fff; flex: none; }
+@media (prefers-reduced-motion: reduce) { .ov-dash, .ov-sp, .ov-mup, .ov-mdown, .ov-arr { animation: none; } .ov-mup { transform: translateY(-68px); } .ov-mdown { transform: translateY(68px); } }

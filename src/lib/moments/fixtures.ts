@@ -75,7 +75,10 @@ export const MOMENT_FIXTURES: Record<string, Moment> = {
     friendName: "Макс",
     friendInitial: "М",
     theirRank: 4,
-    xpGapToReclaim: 20,
+    xpGapToReclaim: 21,
+    theirScore: 330,
+    myScore: 310,
+    above: { initial: "Л", score: 350 },
   },
   "Weekly-rank": {
     kind: "weekly_rank",

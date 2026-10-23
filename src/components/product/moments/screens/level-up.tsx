@@ -31,7 +31,7 @@ export function LevelUpScreen({ moment, onClose }: { moment: LevelUpMoment; onCl
   return (
     <MomentScreen
       title={`Новый уровень: ${moment.level}`}
-      background="var(--leaf-deep)"
+      background="#1f3a2b"
       foreground="#fff"
       onClose={onClose}
       footerDelay={2.6}
