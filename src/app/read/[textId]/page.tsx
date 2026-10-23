@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import localFont from "next/font/local";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
@@ -8,27 +7,7 @@ import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
 import { hasSavedReaderPrefs, parseReaderPrefs } from "./reader-prefs";
 import Reader from "./reader";
 
-// Reader mockup alignment — тело читаемого текста больше не на
-// Playfair Display (дисплейный шрифт для заголовков, ошибочный выбор для
-// длинного чтения — см. комментарий у --font-reading в tokens.css), а на
-// Source Serif 4, реально предназначенном для длинного текста. Тот же
-// scoped-паттерн, что был здесь и раньше для Playfair (next/font, не в
-// корневом layout.tsx — authenticated-страницы, где Reader не рендерится, не
-// должны тянуть лишний шрифт). Playfair Display в этом поддереве больше не
-// используется ни для чего (font-serif в reader.tsx заменён на font-reading) —
-// локальная загрузка здесь была нужна только ради него, поэтому просто
-// заменена, а не оставлена рядом неиспользуемой.
-// Self-host вместо next/font/google (см. комментарий в src/app/layout.tsx и
-// src/app/fonts/README.md). Файл — подмножество Source Serif 4, переименованное
-// в «Reading Serif 4»: у Source Serif 4 Reserved Font Name «Source» (OFL 1.1).
-// fallback — Times New Roman, как у next/font/google для serif-шрифтов.
-const readingSerif = localFont({
-  src: "../../fonts/ReadingSerif4-Variable.woff2",
-  weight: "200 900",
-  variable: "--font-reading",
-  display: "swap",
-  adjustFontFallback: "Times New Roman",
-});
+// Шрифт чтения (--font-reading, Source Serif 4) подключается глобально в src/app/layout.tsx.
 
 export default async function ReadPage({
   params,
@@ -161,7 +140,7 @@ export default async function ReadPage({
     : null;
 
   return (
-    <div className={readingSerif.variable}>
+    <div>
       <Reader
         textId={text.id}
         title={text.title}
