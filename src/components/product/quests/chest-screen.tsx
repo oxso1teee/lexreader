@@ -71,7 +71,7 @@ export function ChestScreen() {
     <div className="mo-screen" style={{ background: "#3a1d0a", color: "#fff" }} role="dialog" aria-modal="true" aria-label="Сундук за задания дня">
       <div className="mo-column">
         {phase === "open" && <div className="mo-chestflash" aria-hidden="true" />}
-        <div style={{ position: "relative", height: 340, display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 30 }}>
+        <div style={{ position: "relative", height: 400, display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 30 }}>
           {phase === "open" && !reduceMotion && (
             <div style={{ position: "absolute", left: "50%", bottom: 110, width: 0, height: 0, zIndex: 3 }}>
               {coins.map((c, i) => (

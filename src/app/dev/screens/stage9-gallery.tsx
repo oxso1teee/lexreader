@@ -17,6 +17,7 @@ import ResultView from "@/app/onboarding/result/result-view";
 import GoalPickClient from "@/app/onboarding/goal/goal-pick-client";
 import StreakCommitClient from "@/app/onboarding/streak/streak-commit-client";
 import FirstTextView from "@/app/onboarding/first-text/first-text-view";
+import { excerptWithNewWords } from "@/lib/vocabulary/text-familiarity";
 
 const BUILD_CARDS = LESSON_CHOICE_FIXTURE.map((c) => ({
   ...c,
@@ -57,8 +58,8 @@ export function Stage9GalleryScreen({ s }: { s: string }) {
             { questType: "review_words", target: 15 },
             { questType: "combo_streak", target: 5 },
           ]}
-          progress={{ read_minutes: 10, review_words: 9, combo_streak: 2 }}
-          allComplete={false}
+          progress={{ read_minutes: 10, review_words: 15, combo_streak: 5 }}
+          allComplete
           chestClaimedToday={false}
         />
       </main>
@@ -92,6 +93,7 @@ export function Stage9GalleryScreen({ s }: { s: string }) {
         levelTag="A2–B1"
         wordCount={640}
         familiarity={{ uniqueWordCount: 280, knownWordCount: 241, newWordCount: 39, percentFamiliar: 86 }}
+        excerpt={excerptWithNewWords("The old keeper climbed the winding stairs. She was reluctant to leave the light. The sea was loud that night.", ["climbed", "stairs", "leave", "light"])}
       />
     );
   return null;

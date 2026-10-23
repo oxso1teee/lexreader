@@ -36,8 +36,8 @@ export default function StreakCommitClient() {
             <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </Link>
-        <div className="h-4 flex-1 overflow-hidden rounded-full bg-[var(--border)]" role="progressbar" aria-label="Шаг 2 из 3" aria-valuemin={0} aria-valuemax={3} aria-valuenow={2}>
-          <div className="h-full rounded-full" style={{ width: "66%", background: "var(--ember)", boxShadow: "inset 0 -4px 0 0 var(--ember-edge)" }} />
+        <div className="h-4 flex-1 overflow-hidden rounded-full bg-[var(--surface-muted)]" role="progressbar" aria-label="Шаг 2 из 3" aria-valuemin={0} aria-valuemax={3} aria-valuenow={2}>
+          <div className="h-full rounded-full" style={{ width: "66%", background: "var(--leaf)", boxShadow: "inset 0 -4px 0 0 var(--leaf-edge)" }} />
         </div>
       </div>
 
@@ -68,7 +68,7 @@ export default function StreakCommitClient() {
             </svg>
           </div>
         </div>
-        <h1 className="mo-rise mt-1 text-[22px] font-black leading-tight">Сколько дней подряд берёшь на себя?</h1>
+        <h1 className="mo-disp mo-rise mt-1.5 text-[23px] font-black leading-tight">Сколько дней подряд берёшь на себя?</h1>
         <p className="mo-rise mt-2 text-sm text-[var(--text-secondary)]" style={{ animationDelay: "0.1s" }}>
           Кто ставит цель, занимается в 3 раза чаще
         </p>
@@ -87,20 +87,20 @@ export default function StreakCommitClient() {
               className="mo-rise relative flex flex-col items-start gap-1 rounded-2xl border-2 px-3.5 py-3.5 text-left"
               style={{
                 animationDelay: `${(0.1 + k * 0.06).toFixed(2)}s`,
-                borderColor: on ? "var(--sun)" : "var(--border)",
-                background: on ? "var(--sun-tint)" : "var(--surface)",
-                color: on ? "var(--ember-text)" : "var(--text-primary)",
-                boxShadow: `inset 0 -5px 0 0 ${on ? "var(--sun)" : "var(--border)"}`,
+                borderColor: on ? "var(--ember)" : "var(--border-strong)",
+                background: on ? "var(--ember-tint)" : "var(--surface)",
+                color: on ? "var(--ember-text)" : "var(--foreground)",
+                boxShadow: `inset 0 -5px 0 0 ${on ? "var(--ember)" : "rgba(26,26,26,.08)"}`,
               }}
             >
               {on && (
-                <span className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full" style={{ background: "var(--ember)" }}>
+                <span className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full" style={{ background: "var(--ember-text)" }}>
                   <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden="true">
                     <path d="M5 12l5 5L20 7" fill="none" stroke="#fff" strokeWidth={3.6} strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
               )}
-              <span className="text-[32px] font-black leading-none">{t.days}</span>
+              <span className="mo-disp text-[32px] font-black leading-none">{t.days}</span>
               <span className="text-sm font-bold">дней · {t.word}</span>
             </button>
           );
@@ -112,11 +112,23 @@ export default function StreakCommitClient() {
           <span>Твоя серия</span>
           <span style={{ color: "var(--ember-text)" }}>{tier.days} дней</span>
         </div>
-        <div className="mt-2.5 flex items-center gap-2 text-sm font-semibold text-[var(--text-secondary)]">
-          <svg viewBox="0 0 120 100" width={24} height={20} aria-hidden="true">
-            <rect x="10" y="40" width="100" height="54" rx="10" fill="var(--ember)" />
-            <path d="M10 46 Q60 6 110 46 V52 H10z" fill="var(--sun)" />
-            <rect x="50" y="44" width="20" height="24" rx="5" fill="var(--sun-tint)" />
+        {/* Точки — дни выбранной цели; каждый 7-й темнее (неделя). */}
+        <div className="mt-2.5 grid gap-1" style={{ gridTemplateColumns: "repeat(25, minmax(0, 1fr))" }} aria-hidden="true">
+          {Array.from({ length: 50 }, (_, k) => (
+            <span
+              key={k}
+              className="aspect-square rounded-full"
+              style={{
+                background: k < tier.days ? (k % 7 === 6 ? "var(--ember-text)" : "var(--ember)") : "var(--surface-muted)",
+                transition: "background .25s",
+                transitionDelay: `${(k * 0.012).toFixed(3)}s`,
+              }}
+            />
+          ))}
+        </div>
+        <div className="mt-3 flex items-center gap-2 text-[13px] font-semibold text-[var(--text-secondary)]">
+          <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="var(--sky-text)" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+            <path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9" />
           </svg>
           {tier.reward}
         </div>
@@ -134,7 +146,7 @@ export default function StreakCommitClient() {
           disabled={pending}
           onClick={submit}
           className="focus-ring flex min-h-[54px] w-full items-center justify-center rounded-2xl px-5 font-bold text-white disabled:opacity-60"
-          style={{ background: "var(--ember)", boxShadow: "inset 0 -4px 0 0 var(--ember-edge)" }}
+          style={{ background: "var(--ember-text)", boxShadow: "inset 0 -4px 0 0 #9a330a" }}
         >
           {pending ? "…" : `Беру обязательство: ${tier.days} дней`}
         </button>
