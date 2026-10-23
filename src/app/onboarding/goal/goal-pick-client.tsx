@@ -57,7 +57,7 @@ export default function GoalPickClient({ initialXpGoal }: { initialXpGoal: numbe
           </svg>
         </div>
         <div className="mo-pop relative mb-8 flex-1 rounded-2xl rounded-bl-md border-2 border-[var(--border)] bg-[var(--surface)] px-3.5 py-3">
-          <h1 className="text-lg font-bold leading-snug">Сколько минут в день готов читать?</h1>
+          <h1 className="mo-disp text-[17px] font-bold leading-snug">Сколько минут в день готов читать?</h1>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function GoalPickClient({ initialXpGoal }: { initialXpGoal: numbe
                 className="flex h-[46px] w-[62px] flex-none flex-col items-center justify-center rounded-xl"
                 style={{ background: on ? "var(--leaf)" : "var(--surface-muted)", color: on ? "#fff" : "var(--text-primary)" }}
               >
-                <span className="text-lg font-black leading-none">{t.minutes}</span>
+                <span className="mo-disp text-lg font-black leading-none">{t.minutes}</span>
                 <span className="mt-0.5 text-[11px] font-bold">мин</span>
               </span>
               <span className="flex-1">
@@ -117,7 +117,7 @@ export default function GoalPickClient({ initialXpGoal }: { initialXpGoal: numbe
           <div className="text-sm font-bold" style={{ color: "var(--leaf-text)" }}>
             Через месяц это примерно
           </div>
-          <div className="mt-0.5 text-lg font-black" style={{ color: "var(--leaf-deep)" }}>
+          <div className="mo-disp mt-0.5 text-lg font-black" style={{ color: "var(--leaf-deep)" }}>
             {wordsPerMonth} новых слов
           </div>
         </div>

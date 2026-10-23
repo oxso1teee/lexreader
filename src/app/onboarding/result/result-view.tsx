@@ -89,12 +89,12 @@ export default function ResultView({
       <p className="mo-rise mt-2 text-xs font-bold uppercase tracking-wide text-[var(--text-secondary)]">
         {isSkipped ? "Диагностика пропущена" : "Мини-тест пройден"}
       </p>
-      <h1 className="mo-rise mt-1.5 text-2xl font-black leading-tight" style={{ animationDelay: "0.1s" }}>
+      <h1 className="mo-disp mo-rise mt-1.5 text-2xl font-black leading-tight" style={{ animationDelay: "0.1s" }}>
         Твой уровень
       </h1>
 
       <div
-        className="mo-pop mx-auto mt-2.5 inline-block rounded-2xl px-5 py-2 text-4xl font-black text-white"
+        className="mo-disp mo-pop mx-auto mt-2.5 inline-block rounded-2xl px-5 py-2 text-4xl font-black text-white"
         style={{ background: "var(--leaf)", boxShadow: "inset 0 -6px 0 0 var(--leaf-edge)" }}
       >
         {isSkipped ? (selfReportedCefr && selfReportedCefr !== "unsure" ? selfReportedCefr : "?") : result?.range}
@@ -107,7 +107,7 @@ export default function ResultView({
             return (
               <span
                 key={level}
-                className="flex h-11 flex-1 items-center justify-center rounded-xl font-black"
+                className="mo-disp flex h-11 flex-1 items-center justify-center rounded-xl text-sm font-black"
                 style={
                   isLit
                     ? { background: "var(--leaf)", color: "#fff", boxShadow: "inset 0 -4px 0 0 var(--leaf-edge)" }
