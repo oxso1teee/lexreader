@@ -6,11 +6,18 @@ import { Confetti } from "../confetti";
 import { MomentScreen } from "../moment-screen";
 import { useCountUp } from "../use-count-up";
 
-// Эталон: docs/moments/mockups/Duel-won.dc.html, reference/Duel-won.png.
-// Макет показывает только победу — добро добавлены варианты "Поражение"/
-// "Ничья" (та же дуэль может завершиться любым из трёх исходов). XP/серия
-// побед подряд/разница в секундах — реальные числа из claim_duel_result()
-// (0055), не декоративные.
+// Эталон: docs/moments/mockups/Duel-won.dc.html, reference/Duel-won.png:
+// синий экран, аватары въезжают с боков, столбики счёта растут, корона
+// падает на победителя, «Победа!», чипы XP и серии побед. Все цифры —
+// из claim_duel_result() (XP, серия побед, разница в секундах).
+function winsWord(n: number) {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return "победа подряд";
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "победы подряд";
+  return "побед подряд";
+}
+
 export function DuelWonScreen({
   state,
   result,
@@ -22,126 +29,96 @@ export function DuelWonScreen({
   onRematch: () => void;
   onClose: () => void;
 }) {
-  const myScore = useCountUp(result.scoreMe, { delay: 400, duration: 900 });
-  const oppScore = useCountUp(result.scoreOpponent, { delay: 400, duration: 900 });
+  const me = useCountUp(result.scoreMe, { delay: 800, duration: 1200 });
+  const opp = useCountUp(result.scoreOpponent, { delay: 800, duration: 1200 });
   const xp = useCountUp(result.xpToAward, { delay: 2450, duration: 700 });
-
-  const title = state.isDraw ? "Ничья!" : state.winnerIsMe ? "Победа!" : "Поражение";
-  const speedLabel =
-    result.speedMarginSec === 0
-      ? null
-      : result.speedMarginSec > 0
-        ? `и на ${result.speedMarginSec} секунд быстрее`
-        : `но на ${Math.abs(result.speedMarginSec)} секунд медленнее`;
+  const iWon = state.winnerIsMe && !state.isDraw;
+  const oppInitials = state.isCreator ? state.opponentInitials ?? "?" : state.creatorInitials;
+  const myInitials = (state.isCreator ? state.creatorInitials : state.opponentInitials) ?? "Ты";
+  const title = state.isDraw ? "Ничья!" : iWon ? "Победа!" : "Почти!";
+  const speed =
+    result.speedMarginSec > 0
+      ? ` и на ${result.speedMarginSec} с быстрее`
+      : result.speedMarginSec < 0
+        ? `, но на ${Math.abs(result.speedMarginSec)} с медленнее`
+        : "";
 
   return (
     <MomentScreen
       title={title}
-      background="var(--sky)"
+      background="#0b79b0"
       foreground="#fff"
+      haptic={iWon ? "success" : "light"}
       onClose={onClose}
-      footerDelay={1.6}
+      footerDelay={2.7}
       footer={
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 12 }}>
           <Button
-            type="button"
             onClick={onRematch}
             className="mo-cta"
-            style={{ ["--btn-fill" as string]: "transparent", ["--btn-edge" as string]: "rgba(255,255,255,.5)", ["--btn-label" as string]: "#fff", flex: "none", width: 110 }}
+            style={{ ["--btn-fill" as string]: "rgba(255,255,255,.14)", ["--btn-edge" as string]: "rgba(0,0,0,.18)", ["--btn-label" as string]: "#fff", flex: "0 0 auto", width: "auto", paddingLeft: 18, paddingRight: 18 }}
           >
             Реванш
           </Button>
           <Button
-            type="button"
             onClick={onClose}
             className="mo-cta"
-            style={{ ["--btn-fill" as string]: "#fff", ["--btn-edge" as string]: "var(--sky-text)", ["--btn-label" as string]: "var(--sky-text)", flex: 1 }}
+            style={{ ["--btn-fill" as string]: "#fff", ["--btn-edge" as string]: "#bfe6fb", ["--btn-label" as string]: "#075a85", flex: 1 }}
           >
-            Забрать награду
+            {result.xpToAward > 0 ? "Забрать награду" : "Продолжить"}
           </Button>
         </div>
       }
     >
-      <Confetti seed={23} count={30} delay={0.1} reach={[150, 110]} fall={0} style={{ left: "50%", top: 60 }} />
-
-      <p className="mo-muted" style={{ textAlign: "center", paddingTop: 36, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
+      <div aria-hidden="true" style={{ position: "absolute", width: 480, height: 480, borderRadius: 999, background: "#075a85", opacity: 0.5, left: -45, top: 30 }} />
+      <div className="mo-rise" style={{ position: "relative", textAlign: "center", paddingTop: 64, fontSize: 13, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "#bfe6fb" }}>
         Дуэль · {state.roundCount} заданий
-      </p>
-
-      <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 28, marginTop: 20 }}>
-        <ScoreColumn initials="Ты" score={myScore} isWinner={state.winnerIsMe} isLoser={!state.isDraw && !state.winnerIsMe} />
-        <span
-          className="mo-zoom"
-          style={{
-            position: "absolute",
-            top: -4,
-            left: "50%",
-            marginLeft: -27,
-            width: 54,
-            height: 54,
-            borderRadius: 999,
-            background: "#fff",
-            color: "var(--sky-text)",
-            fontWeight: 900,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          VS
-        </span>
-        <ScoreColumn initials={state.isCreator ? (state.opponentInitials ?? "…") : state.creatorInitials} score={oppScore} isWinner={!state.isDraw && !state.winnerIsMe} isLoser={state.winnerIsMe} />
       </div>
 
-      <div style={{ textAlign: "center", marginTop: 20 }}>
-        <h2 className="mo-disp mo-rise" style={{ fontSize: 28, fontWeight: 900 }}>
+      <div style={{ position: "relative", display: "flex", alignItems: "flex-end", gap: 22, padding: "26px 40px 0", height: 400 }}>
+        {iWon && <Confetti seed={41} count={30} delay={2.1} reach={[120, 120]} fall={0} colors={["var(--sun)", "#fff", "var(--leaf)", "var(--ember)", "#bfe6fb"]} style={{ left: "35%", top: 120 }} />}
+        <div className="dw-inL" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%", justifyContent: "flex-end" }}>
+          {iWon && (
+            <svg className="dw-crown" viewBox="0 0 128 60" width="56" height="26" aria-hidden="true" style={{ marginBottom: 4 }}>
+              <path d="M10 56 L18 12 L42 36 L64 4 L86 36 L110 12 L118 56 Z" fill="#ffc700" stroke="#7a5900" strokeWidth="6" strokeLinejoin="round" />
+            </svg>
+          )}
+          <div className={iWon ? "dw-av dw-winner" : "dw-av dw-loser"} style={{ background: "var(--leaf)" }}>{myInitials.slice(0, 2)}</div>
+          <div style={{ fontWeight: 700, fontSize: 16, margin: "8px 0 10px" }}>Ты</div>
+          <div className="dw-col" style={{ height: 40 + me * 13, background: "#ffc700", color: "#4d3800", boxShadow: "inset 0 -6px 0 0 #e0a500" }}>
+            {me}
+          </div>
+        </div>
+        <div className="mo-disp dw-clash" style={{ position: "absolute", left: "50%", top: 150, width: 54, height: 54, marginLeft: -27, borderRadius: 999, background: "#fff", color: "#075a85", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 900 }} aria-hidden="true">
+          VS
+        </div>
+        <div className="dw-inR" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%", justifyContent: "flex-end" }}>
+          {!iWon && !state.isDraw && (
+            <svg className="dw-crown" viewBox="0 0 128 60" width="56" height="26" aria-hidden="true" style={{ marginBottom: 4 }}>
+              <path d="M10 56 L18 12 L42 36 L64 4 L86 36 L110 12 L118 56 Z" fill="#ffc700" stroke="#7a5900" strokeWidth="6" strokeLinejoin="round" />
+            </svg>
+          )}
+          <div className={iWon ? "dw-av dw-loser" : "dw-av dw-winner"} style={{ background: "#8b5cf6" }}>{oppInitials}</div>
+          <div style={{ fontWeight: 700, fontSize: 16, margin: "8px 0 10px" }}>Соперник</div>
+          <div className="dw-col" style={{ height: 40 + opp * 13, background: "rgba(255,255,255,.22)", color: "#fff" }}>
+            {opp}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ position: "relative", textAlign: "center", padding: "22px 24px 0" }}>
+        <h2 className="mo-disp mo-rise" style={{ margin: 0, fontSize: 28, lineHeight: 1.15, fontWeight: 900, animationDelay: "2.2s" }}>
           {title}
         </h2>
-        <p className="mo-muted" style={{ margin: "6px 24px 0", fontSize: 15 }}>
+        <p className="mo-rise" style={{ margin: "8px 0 0", fontSize: 16, opacity: 0.92, animationDelay: "2.3s" }}>
           {result.scoreMe} из {state.roundCount}
-          {speedLabel ? ` ${speedLabel}` : ""}
+          {speed}
         </p>
-
-        <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 16 }}>
-          {result.xpToAward > 0 && (
-            <span style={{ borderRadius: 999, background: "var(--sun)", color: "var(--sun-text)", fontWeight: 900, padding: "6px 14px", fontSize: 14 }}>+{xp} XP</span>
-          )}
-          {result.winStreak > 1 && (
-            <span style={{ borderRadius: 999, background: "rgba(255,255,255,.2)", color: "#fff", fontWeight: 700, padding: "6px 14px", fontSize: 14 }}>
-              {result.winStreak} {result.winStreak < 5 ? "победы" : "побед"} подряд
-            </span>
-          )}
+        <div className="mo-rise" style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, animationDelay: "2.45s" }}>
+          {result.xpToAward > 0 && <span className="dw-chip" style={{ background: "#ffc700", color: "#4d3800" }}>+{xp} XP</span>}
+          {result.winStreak > 1 && <span className="dw-chip" style={{ background: "rgba(255,255,255,.16)" }}>{result.winStreak} {winsWord(result.winStreak)}</span>}
         </div>
       </div>
     </MomentScreen>
-  );
-}
-
-function ScoreColumn({ initials, score, isWinner, isLoser }: { initials: string; score: number; isWinner: boolean; isLoser: boolean }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, opacity: isLoser ? 0.6 : 1 }}>
-      {isWinner && (
-        <svg className="mo-crown" viewBox="0 0 128 60" width="48" height="22" aria-hidden="true">
-          <path d="M10 56 L18 12 L42 36 L64 4 L86 36 L110 12 L118 56 Z" fill="var(--sun)" stroke="var(--sun-text)" strokeWidth="4" strokeLinejoin="round" />
-        </svg>
-      )}
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 999,
-          background: isWinner ? "var(--color-forest)" : "rgba(255,255,255,.25)",
-          color: "#fff",
-          fontWeight: 900,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transform: isWinner ? "scale(1.08)" : undefined,
-        }}
-      >
-        {initials}
-      </div>
-      <span style={{ fontWeight: 900, fontSize: 26, fontVariantNumeric: "tabular-nums" }}>{score}</span>
-    </div>
   );
 }
