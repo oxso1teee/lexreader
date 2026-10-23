@@ -18,7 +18,7 @@ export interface MomentScreenProps {
   onClose: () => void;
   /** "sheet" — нижняя шторка поверх затемнённого приложения (Review-due,
    *  Rate-app, Quit-confirm в макетах v7); "full" — весь экран. */
-  variant?: "full" | "sheet";
+  variant?: "full" | "sheet" | "modal";
   children: ReactNode;
 }
 
@@ -77,11 +77,12 @@ export function MomentScreen({
     ...(foreground ? { "--mo-fg": foreground } : {}),
   } as CSSProperties;
 
-  if (variant === "sheet") {
+  if (variant === "sheet" || variant === "modal") {
+    const modal = variant === "modal";
     return (
       <div
         ref={rootRef}
-        className="mo-screen mo-screen-sheet"
+        className={modal ? "mo-screen mo-screen-modal" : "mo-screen mo-screen-sheet"}
         style={style}
         role="dialog"
         aria-modal="true"
@@ -90,8 +91,8 @@ export function MomentScreen({
         data-testid="moment-screen"
       >
         <div className="mo-scrim" aria-hidden="true" onClick={onClose} />
-        <div className="mo-sheet">
-          <div className="mo-grip" aria-hidden="true" />
+        <div className={modal ? "mo-modal" : "mo-sheet"}>
+          {!modal && <div className="mo-grip" aria-hidden="true" />}
           <span id={titleId} className="sr-only">
             {title}
           </span>

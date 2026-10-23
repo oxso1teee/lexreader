@@ -777,3 +777,32 @@
 @keyframes ls-pulse { 0% { box-shadow: 0 0 0 0 rgba(43, 130, 15, 0.45); } 100% { box-shadow: 0 0 0 16px rgba(43, 130, 15, 0); } }
 .ls-go { border-radius: 16px; animation: mo-rise 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) both, ls-pulse 1.4s 0.4s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) { .ls-bob, .ls-page, .ls-go { animation: none; } }
+
+/* Центрированное окно поверх приложения (макет Duel-invite). */
+.mo-screen-modal { background: transparent; align-items: center; padding: 0 20px; }
+@keyframes mo-modal-in { 0% { transform: scale(0.85) translateY(30px); opacity: 0; } 70% { transform: scale(1.02); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.mo-modal {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  background: var(--surface);
+  border-radius: 28px;
+  padding: 24px 20px 20px;
+  overflow: hidden;
+  animation: mo-modal-in 0.45s 0.1s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+/* Duel-invite (docs/moments/mockups/Duel-invite.dc.html) */
+@keyframes di-flash { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+.di-flash { position: absolute; inset: 0; background: var(--sun-tint); animation: di-flash 0.6s 0.45s ease-out both; pointer-events: none; }
+@keyframes di-sl { 0% { transform: translateX(-160px); } 70% { transform: translateX(8px); } 100% { transform: none; } }
+@keyframes di-sr { 0% { transform: translateX(160px); } 70% { transform: translateX(-8px); } 100% { transform: none; } }
+.di-sl { animation: di-sl 0.5s 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+.di-sr { animation: di-sr 0.5s 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+@keyframes di-vs { 0% { transform: scale(0) rotate(-30deg); } 60% { transform: scale(1.5) rotate(8deg); } 100% { transform: none; } }
+.di-vs { animation: di-vs 0.4s 0.75s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+@keyframes di-ring { 0% { box-shadow: 0 0 0 0 var(--c); } 100% { box-shadow: 0 0 0 12px transparent; } }
+.di-av { width: 72px; height: 72px; border-radius: 999px; color: #fff; display: flex; align-items: center; justify-content: center; font: 900 26px/1 var(--font-unbounded), sans-serif; border: 4px solid #fff; animation: di-ring 1.4s 1.2s ease-out infinite; }
+@keyframes di-spk { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
+.di-spk { position: absolute; left: 50%; top: 60px; width: 8px; height: 8px; border-radius: 99px; animation: di-spk 0.7s 0.8s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .di-av { animation: none; } .di-spk, .di-flash { display: none; } }
