@@ -11,21 +11,17 @@ import Link from "next/link";
 import { cardClassName } from "@/components/ui/card";
 import { Share2 } from "lucide-react";
 import ActivityHeatmap from "./activity-heatmap";
-import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
-import StreakSummaryCard from "./streak-summary-card";
-import FiveWeekGrid from "./five-week-grid";
-import WeekActivityRow from "./week-activity-row";
 import LineChart from "./line-chart";
 import { getWeeklyLeaderboard } from "@/lib/leaderboard";
 import HardestWords from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
 import PersonalRecords from "./personal-records";
-import PageHeader from "@/components/product/page-header";
 import InsightBanner from "@/components/product/progress/insight-banner";
 import ActivityWeekCard from "@/components/product/progress/activity-week-card";
 import SkillSection from "@/components/product/progress/skill-section";
 import ProgressViewTracker from "./progress-view-tracker";
+import ProgressOverview from "./progress-overview";
 
 // M3 Slice 4: moved to src/lib/brain-stats.ts (computeHardestWords) so
 // Practice Home can reuse the same ranking instead of a second
@@ -86,7 +82,7 @@ export default async function ProgressPage({
   searchParams: Promise<{ period?: string }>;
 }) {
   const { period: periodParam } = await searchParams;
-  const period = periodParam ?? "30";
+  const period = periodParam ?? "7";
   const chartDays = period === "all" ? 30 : Number(period);
 
   const profile = await requireProfile();
@@ -335,17 +331,6 @@ export default async function ProgressPage({
     activityCounts[key] = (activityCounts[key] ?? 0) + 1;
   }
 
-  // Progress mockup alignment — 7 дней текущей недели (Пн→Вс) для
-  // WeekActivityRow, из уже посчитанного activityCounts выше — без нового
-  // запроса. Будущие дни недели просто не встречаются как ключ в
-  // activityCounts, честно остаются false.
-  const weekStart = isoWeekStart(new Date());
-  const activeDaysThisWeek = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStart);
-    d.setUTCDate(d.getUTCDate() + i);
-    return (activityCounts[isoDate(d)] ?? 0) > 0;
-  });
-
   const daysSinceLastReading = lastReadingRow ? daysSince(lastReadingRow.started_at) : null;
 
   const insight = decideProgressInsight({
@@ -375,37 +360,23 @@ export default async function ProgressPage({
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <ProgressViewTracker />
-      <PageHeader title="Прогресс" description={`Язык: ${profile.target_language}`} />
+      <ProgressOverview
+        period={period}
+        streakCurrent={profile.streak_current}
+        streakLongest={profile.streak_longest}
+        freezeAvailable={profile.streak_freeze_available}
+        knownWords={knownWords ?? 0}
+        finishedTexts={finishedTexts ?? 0}
+        weeklyXp={weeklyXp}
+        reviewsThisWeek={reviewsThisWeek}
+        activityCounts={activityCounts}
+        myRank={myRank}
+        duel={duelView ? { myScore: duelView.myScore, opponentScore: duelView.opponentScore, opponentInitials: duelView.opponentInitials } : null}
+      />
 
+      <h2 className="mo-disp mt-4 text-lg font-bold">Подробнее</h2>
       <InsightBanner insight={insight} />
-
       {languageTwinState.kind !== "hidden" && <LanguageTwinSummaryCard state={languageTwinState} variant="progress" />}
-
-      {/* docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C,
-          Тир 3 — недельная лига. Лёгкая ссылка-карточка, не отдельный
-          RPC-запрос на этой и без того тяжёлой Promise.all-странице — вся
-          реальная агрегация/приватность живёт на самой /leaderboard. */}
-      <Link href="/leaderboard" className={cardClassName({ interactive: true, className: "focus-ring flex items-center justify-between gap-3" })}>
-        <div>
-          <p className="text-body-sm font-semibold">Недельная лига</p>
-          <p className="text-caption text-[var(--text-secondary)]">Сравни активность за неделю с другими участниками</p>
-        </div>
-        <span aria-hidden="true" className="text-[var(--text-secondary)]">→</span>
-      </Link>
-
-      {/* docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C,
-          Тир 3 — живые дуэли. Та же лёгкая ссылка-карточка, без своего
-          RPC-запроса здесь — вся игровая логика на /duel. */}
-      <Link href="/duel" className={cardClassName({ interactive: true, className: "focus-ring flex items-center justify-between gap-3" })}>
-        <div>
-          <p className="text-body-sm font-semibold">Дуэль по словарю</p>
-          <p className="text-caption text-[var(--text-secondary)]">Пригласи друга на дуэль 1 на 1 в реальном времени</p>
-        </div>
-        <span aria-hidden="true" className="text-[var(--text-secondary)]">→</span>
-      </Link>
-
-      {/* M3 Slice 8 §11: compact only — active Path, content progress,
-          current stage, skills improved/confident. No giant LMS dashboard. */}
       {activePathState && (
         <Link
           href={`/learning-paths/${activePathState.path.slug}`}
@@ -422,59 +393,6 @@ export default async function ProgressPage({
           </div>
         </Link>
       )}
-
-      {/* docs/moments/mockups/Progress.dc.html, этап 8 — верхний блок:
-          стрик+заморозки, 2x2 честных показателя недели, карта активности
-          за 5 недель, рейтинг недели + активная дуэль. */}
-      <StreakSummaryCard
-        days={profile.streak_current}
-        bestStreak={profile.streak_longest}
-        freezeAvailable={profile.streak_freeze_available}
-      />
-      <WeekActivityRow activeDays={activeDaysThisWeek} />
-
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard value={knownWords ?? 0} label="Знаю слов" size="primary" />
-        <StatCard value={finishedTexts ?? 0} label="Прочитано текстов" />
-        <StatCard value={weeklyXp} label="XP за неделю" />
-        {/* "Минут за неделю" из макета не честно (activity_days.minutes
-            никогда не заполняется, см. комментарий в daily-quests.ts) —
-            заменено на реально посчитанное число повторений за неделю. */}
-        <StatCard value={reviewsThisWeek} label="Повторений за неделю" />
-      </div>
-
-      <div className={cardClassName({ className: "flex flex-col gap-2" })}>
-        <div className="flex items-baseline justify-between">
-          <p className="text-sm font-semibold">Последние 5 недель</p>
-          <p className="text-xs text-[var(--text-secondary)]">меньше → больше</p>
-        </div>
-        <FiveWeekGrid counts={activityCounts} />
-      </div>
-
-      <div className="flex gap-3">
-        <Link
-          href="/leaderboard"
-          className={cardClassName({ interactive: true, className: "focus-ring flex-1 flex-col gap-1.5" })}
-        >
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Рейтинг недели</p>
-          <p className="font-display text-lg font-bold">{myRank ? `${myRank} место` : "—"}</p>
-        </Link>
-        {duelView && (
-          <Link
-            href="/duel"
-            className={cardClassName({ interactive: true, className: "focus-ring flex-1 flex-col gap-1.5" })}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
-              Дуэль с {duelView.opponentInitials}
-            </p>
-            <p className="font-display text-lg font-bold">
-              <span className={duelView.myScore >= duelView.opponentScore ? "text-[var(--color-forest-text)]" : ""}>
-                {duelView.myScore} : {duelView.opponentScore}
-              </span>
-            </p>
-          </Link>
-        )}
-      </div>
 
       <div>
         <h2 className="text-h3 mb-2">Показатели</h2>
@@ -513,8 +431,6 @@ export default async function ProgressPage({
           </div>
         </div>
       )}
-
-      <PeriodTabs current={period} />
 
       <div>
         <h2 className="mb-2 font-semibold">Словарный запас</h2>

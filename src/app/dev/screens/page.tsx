@@ -10,6 +10,7 @@ import { Stage7GalleryScreen } from "./stage7-gallery";
 import { Stage9GalleryScreen } from "./stage9-gallery";
 import { StreakCalendarView } from "@/app/(app)/streak/streak-calendar-view";
 import PathMap, { PathHeader } from "@/app/(app)/learning-paths/path-map";
+import ProgressOverview from "@/app/(app)/progress/progress-overview";
 import { getPath } from "@/lib/learning-paths/curriculum/index.ts";
 import type { ActivePathState } from "@/app/(app)/learning-paths/actions";
 
@@ -97,7 +98,20 @@ const SCREENS = [
   ...STAGE9_SCREENS,
   "Streak-calendar",
   "Path",
+  "Progress",
 ] as const;
+
+// 5 недель активности с разной интенсивностью, сегодня — пусто.
+function progressCounts(): Record<string, number> {
+  const out: Record<string, number> = {};
+  const pattern = [0, 2, 5, 1, 0, 0, 3, 6, 4, 9, 1, 0, 2, 8, 1, 7, 8, 4, 3, 0, 1, 6, 3, 9, 7, 2, 1, 4, 9, 8, 4];
+  const today = new Date();
+  pattern.forEach((n, i) => {
+    const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (pattern.length - i)));
+    out[d.toISOString().slice(0, 10)] = n;
+  });
+  return out;
+}
 
 export default async function DevScreensPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
   const isLiveSite = process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview";
@@ -132,6 +146,29 @@ export default async function DevScreensPage({ searchParams }: { searchParams: P
 
   if (s === "Duel-invite" || s === "Duel-won") {
     return <Stage6GalleryScreen s={s} />;
+  }
+
+  if (s === "Progress") {
+    return (
+      <div className="flex min-h-dvh flex-col bg-background">
+        <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4 pb-28">
+          <ProgressOverview
+            period="7"
+            streakCurrent={12}
+            streakLongest={21}
+            freezeAvailable
+            knownWords={842}
+            finishedTexts={37}
+            weeklyXp={310}
+            reviewsThisWeek={96}
+            activityCounts={progressCounts()}
+            myRank={4}
+            duel={{ myScore: 3, opponentScore: 2, opponentInitials: "А" }}
+          />
+        </main>
+        <MobileBottomNav />
+      </div>
+    );
   }
 
   if (s === "Path") {
