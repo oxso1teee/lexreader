@@ -1,0 +1,49 @@
+<!--meta {"title":"План недели","planned":true}-->
+<style>
+.day{display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:60px;position:relative}
+.list>.day+.day::before{content:"";position:absolute;left:14px;right:14px;top:0;border-top:var(--stroke-soft)}
+.day .d{width:40px;flex:none;text-align:center}
+.day .d b{display:block;font:700 18px/1 var(--font-display)}
+.day .d span{font:600 11px/1.2 var(--font-body);color:var(--text-3);text-transform:uppercase}
+.day.today{background:var(--green-100)}
+.day.future .t{color:var(--text-2)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Curriculum.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">План недели<small>9–15 ноября</small></div>
+  <a class="iconbtn" href="Goal-edit.dc.html" aria-label="Изменить цель"><i class="ic ic-sliders s24"></i></a>
+</header>
+<main class="body">
+  <section class="card t-green">
+    <div class="rowx">
+      <span class="sw s-green lg"><i class="ic ic-target s24"></i></span>
+      <div class="f1"><div class="eyebrow">Цель</div><div class="h3" style="margin-top:2px">B2 за 6 месяцев</div><div class="xs muted">15 мин в день · план по твоему уровню и темпу</div></div>
+    </div>
+    <div class="grid3" style="margin-top:12px">
+      <div class="stat"><b class="num sm c-green">3/7</b><span>дней сделано</span></div>
+      <div class="stat"><b class="num sm">48</b><span>минут из 105</span></div>
+      <div class="stat"><b class="num sm c-gold">142</b><span>XP недели</span></div>
+    </div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Эта неделя</p><span class="xs faint">чт — сегодня</span></div>
+  <div class="list">
+    <div class="day"><div class="d"><b>9</b><span>пн</span></div><span class="sw green sm"><i class="ic ic-book s18"></i></span><div class="f1"><div class="t b sm">Чтение · The Last Lighthouse</div><div class="xs faint">глава 2 · 16 мин</div></div><i class="ic ic-check-circle c-green"></i></div>
+    <div class="day"><div class="d"><b>10</b><span>вт</span></div><span class="sw green sm"><i class="ic ic-puzzle s18"></i></span><div class="f1"><div class="t b sm">Грамматика · Present Perfect</div><div class="xs faint">правило + 8 заданий · 14 мин</div></div><i class="ic ic-check-circle c-green"></i></div>
+    <div class="day"><div class="d"><b>11</b><span>ср</span></div><span class="sw green sm"><i class="ic ic-cards s18"></i></span><div class="f1"><div class="t b sm">Повторение слов</div><div class="xs faint">47 карточек · 18 мин</div></div><i class="ic ic-check-circle c-green"></i></div>
+    <div class="day today">
+      <div class="d"><b class="c-green">12</b><span class="c-green">чт</span></div>
+      <div class="f1"><div class="b sm">Аудирование</div><div class="xs muted">Life in London · диктант · 15 мин</div></div>
+      <a class="btn b-leaf sm fit" href="Listening-exercise.dc.html">Начать</a>
+    </div>
+    <div class="day future"><div class="d"><b>13</b><span>пт</span></div><span class="sw sm"><i class="ic ic-pencil s18"></i></span><div class="f1"><div class="t b sm">Письмо · мои выходные</div><div class="xs faint">Past Simple · 12 мин</div></div></div>
+    <div class="day future"><div class="d"><b>14</b><span>сб</span></div><span class="sw sm"><i class="ic ic-book s18"></i></span><div class="f1"><div class="t b sm">Чтение · глава 4</div><div class="xs faint">The Last Lighthouse · 15 мин</div></div></div>
+    <div class="day future"><div class="d"><b>15</b><span>вс</span></div><span class="sw sm"><i class="ic ic-trophy s18"></i></span><div class="f1"><div class="t b sm">Проверка недели</div><div class="xs faint">10 вопросов · 10 мин</div></div></div>
+  </div>
+  <p class="xs faint center" style="margin:0">Сейчас реальны только ежедневные миссии — недельный план в разработке</p>
+</main>
+<footer class="dock line">
+  <a class="btn b-leaf" href="Listening-exercise.dc.html">Начать сегодняшнее · 15 мин</a>
+</footer>
+</div>

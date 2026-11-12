@@ -1,0 +1,44 @@
+<!--meta {"title":"Импорт видео с YouTube"}-->
+<style>
+.prev .cover.video{width:100%;height:auto;aspect-ratio:16/9;border-radius:0;font-size:18px;padding:14px}
+.prev .cover.video::after{width:52px;height:52px;margin:-26px;background-size:28px}
+.dur{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.72);color:#fff;font:700 12px/1 var(--font-body);padding:4px 6px;border-radius:6px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Import-hub.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Видео с YouTube<small>учись по любому ролику</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div>
+    <label class="label">Ссылка на видео</label>
+    <div class="field ok"><i class="ic ic-link c-green"></i><span class="f1 mono" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">youtube.com/watch?v=lf2Ldn8Q3w</span><i class="ic ic-check-circle c-green"></i></div>
+    <p class="hint ok">Видео найдено</p>
+  </div>
+
+  <section class="card p0 prev">
+    <div style="position:relative"><span class="cover c-ink video">Life in London</span><span class="dur">8:24</span></div>
+    <div style="padding:14px 16px">
+      <div class="h3">Life in London — a day with locals</div>
+      <div class="rowx s8 sm muted" style="margin-top:6px"><span class="avatar sm a1" aria-hidden="true">E</span>Easy English · 1,2 млн просмотров</div>
+      <div class="rowx s6 wrap" style="margin-top:10px"><span class="cefr">B1</span><span class="badge blue">~11 новых слов для тебя</span><span class="badge">британский акцент</span></div>
+    </div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Субтитры</p></div>
+  <div class="list">
+    <div class="row"><span class="sw green"><i class="ic ic-subtitles"></i></span><div class="f1"><div class="t">Есть английские субтитры</div><div class="s">Авторские · импорт займёт ~30 секунд</div></div><span class="radio on" aria-hidden="true"></span></div>
+    <div class="row"><span class="sw"><i class="ic ic-wave"></i></span><div class="f1"><div class="t">Распознать речь заново</div><div class="s">Точнее по таймингу, но дольше — ~4 мин</div></div><span class="radio" aria-hidden="true"></span></div>
+  </div>
+
+  <div class="card sunk">
+    <p class="eyebrow">Если ссылка не та</p>
+    <div class="field err" style="margin-top:8px;min-height:44px"><i class="ic ic-alert c-red"></i><span class="f1 mono" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">youtube.com/shorts/x9…</span></div>
+    <p class="hint err"><i class="ic ic-alert s14"></i> Shorts и приватные видео пока не поддерживаются</p>
+  </div>
+</main>
+<footer class="dock line">
+  <a class="btn b-leaf" href="Import-processing.dc.html"><i class="ic ic-download"></i>Импортировать видео</a>
+</footer>
+</div>

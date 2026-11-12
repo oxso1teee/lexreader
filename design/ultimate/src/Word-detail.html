@@ -1,0 +1,76 @@
+<!--meta {"title":"Слово — reluctant"}-->
+<style>
+.stage{display:flex;align-items:center;gap:0;margin-top:10px}
+.stage>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
+.stage>div::before{content:"";position:absolute;top:7px;left:50%;right:-50%;height:3px;background:var(--progress-track)}
+.stage>div:last-child::before{display:none}
+.stage>div.done::before{background:var(--blue-400)}
+.stage i.d{width:17px;height:17px;border-radius:50%;background:var(--surface-card);border:3px solid var(--progress-track);position:relative;z-index:1}
+.stage>div.done i.d{background:var(--blue-400);border-color:var(--blue-400)}
+.stage>div.now i.d{background:var(--surface-card);border-color:var(--blue-400);box-shadow:0 0 0 4px var(--blue-100)}
+.stage small{font:600 11.5px/1 var(--font-body);color:var(--text-3)}
+.stage>div.now small{color:var(--blue-text);font-weight:700}
+.hist{display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;font:500 13px/1.3 var(--font-body);align-items:center}
+.hist .faint{white-space:nowrap}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Words-learned.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Слово<small>из колоды «Из чтения»</small></div>
+  <a class="iconbtn" href="Word-detail.dc.html" aria-label="Ещё"><i class="ic ic-more s24"></i></a>
+</header>
+<main class="body">
+  <section class="card lg" style="padding-top:18px">
+    <div class="rowx top between">
+      <div class="f1">
+        <div class="en" style="font-size:34px;line-height:1.1">reluctant</div>
+        <div class="rowx s8" style="margin-top:6px"><span class="faint">/rɪˈlʌktənt/</span><span class="cefr">прил.</span><span class="cefr">B2</span></div>
+      </div>
+      <div class="rowx s6">
+        <button class="iconbtn box" aria-label="Прослушать"><i class="ic ic-volume"></i></button>
+        <button class="iconbtn box c-red" aria-label="В избранном" aria-pressed="true"><i class="ic ic-heart-f"></i></button>
+      </div>
+    </div>
+    <div class="h2" style="margin-top:12px">неохотный, нежелающий</div>
+    <p class="sm muted" style="margin:4px 0 0">to be reluctant to do something — не хотеть что-то делать</p>
+    <div class="stage" role="img" aria-label="Статус: Знакомо (3 из 4)">
+      <div class="done"><i class="d"></i><small>Новое</small></div>
+      <div class="done"><i class="d"></i><small>Учу</small></div>
+      <div class="now"><i class="d"></i><small>Знакомо</small></div>
+      <div><i class="d"></i><small>Знаю</small></div>
+    </div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Встречалось в контексте</p><span class="xs faint">7 раз</span></div>
+  <div class="list">
+    <a class="row" href="Reader.dc.html" style="align-items:flex-start">
+      <span class="cover c-sky" style="width:40px;height:52px" aria-hidden="true"></span>
+      <div class="f1"><p class="read" style="font-size:15px;margin:0">She was <span class="hl">reluctant</span> to leave the lighthouse, even as the gale grew.</p><div class="s">The Last Lighthouse · глава 3</div></div>
+    </a>
+    <a class="row" href="Watch.dc.html" style="align-items:flex-start">
+      <span class="cover c-ember video" style="width:40px;height:52px" aria-hidden="true"></span>
+      <div class="f1"><p class="read" style="font-size:15px;margin:0">Many locals are <span class="hl">reluctant</span> to use the Tube at rush hour.</p><div class="s">Life in London · 04:12</div></div>
+    </a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Память</p><a href="Brain-stats.dc.html">Как это считается</a></div>
+  <section class="card">
+    <div class="grid3">
+      <div><div class="num c-blue">4 дня</div><div class="xs faint" style="margin-top:2px">следующий повтор</div></div>
+      <div><div class="num c-blue">23 дн.</div><div class="xs faint" style="margin-top:2px">стабильность</div></div>
+      <div><div class="num c-green">86%</div><div class="xs faint" style="margin-top:2px">вспоминаемость</div></div>
+    </div>
+    <hr class="divider" style="margin:12px 0 10px">
+    <div class="hist">
+      <span class="faint">сегодня</span><span><span class="badge blue">Хорошо</span></span><span class="faint">интервал 4 дня</span>
+      <span class="faint">4 дня назад</span><span><span class="badge orange">Трудно</span></span><span class="faint">1 день</span>
+      <span class="faint">11 дней назад</span><span><span class="badge green">Легко</span></span><span class="faint">7 дней</span>
+    </div>
+  </section>
+  <div class="card sm sunk rowx"><span class="sw blue sm"><i class="ic ic-alert s18"></i></span><div class="f1 sm"><b>Путаешь с</b> <span class="en">relevant</span> — «уместный». Звучат похоже, по смыслу не связаны.</div></div>
+</main>
+<footer class="dock row line">
+  <a class="btn b-sky" href="Flashcard-review.dc.html">Повторить сейчас</a>
+  <a class="btn b-ghost" href="Card-edit.dc.html" style="flex:0 0 auto;width:auto;padding-left:22px;padding-right:22px">Изменить</a>
+</footer>
+</div>

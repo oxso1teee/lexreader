@@ -1,0 +1,58 @@
+<!--meta {"title":"Сегодня — первый день"}-->
+<style>
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px;text-align:center;font:600 12px/1 var(--font-body)}
+.week .d{height:34px;border-radius:12px;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center;margin-bottom:5px}
+.week .d.today{background:var(--surface-card);border:2px dashed var(--orange-600)}
+.lang{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-text);font:700 11px/1 var(--font-body)}
+.stepi{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;position:relative}
+.stepi+.stepi::before{content:"";position:absolute;left:14px;right:14px;top:0;border-top:var(--stroke-soft)}
+.stepi .n{width:28px;height:28px;border-radius:50%;border:2px solid rgba(var(--ink-rgb),.22);display:flex;align-items:center;justify-content:center;font:700 13px/1 var(--font-body);color:var(--text-2);flex:none}
+.stepi.cur .n{border-color:var(--green-400);color:var(--green-text);background:var(--green-100)}
+</style>
+<div class="app">
+<header class="top rowx between" style="padding-bottom:4px">
+  <span class="pill lvl"><span class="lang">EN</span>B1</span>
+  <div class="rowx s8">
+    <span class="pill" aria-label="Стрик 0 дней" style="color:var(--text-2)"><i class="ic ic-flame s18"></i>0</span>
+    <span class="pill xp" aria-label="0 XP"><i class="ic ic-bolt-f s18"></i>0</span>
+  </div>
+</header>
+<main class="body">
+  <div class="rowx" style="padding:4px 4px 0">
+    <i class="lex wink s56 bob" aria-hidden="true"></i>
+    <div><div class="h2">Привет, Сергей!</div><div class="sm muted" style="margin-top:4px">Первый день — начнём с короткого текста</div></div>
+  </div>
+  <section class="hero">
+    <p class="eyebrow">Твой первый текст · B1</p>
+    <div class="h2" style="margin-top:8px;font-size:22px">The Last Lighthouse</div>
+    <div class="sm" style="margin-top:6px">Глава 1 · ~4 мин · нажимай на незнакомые слова — перевод появится сразу</div>
+    <a class="btn b-white" href="First-text.dc.html" style="margin-top:14px">Начать читать</a>
+  </section>
+  <div class="card p0">
+    <div class="rowx between" style="padding:12px 14px 4px"><span class="b">Первые шаги</span><span class="xs b faint">0 из 3</span></div>
+    <div style="padding:4px 14px 6px"><div class="steps" aria-label="0 из 3 шагов"><i></i><i></i><i></i></div></div>
+    <a class="stepi cur" href="First-text.dc.html"><span class="n">1</span><div class="f1"><div class="b sm">Прочитай одну страницу</div><div class="xs faint">+10 XP</div></div><i class="ic ic-chev faint s18"></i></a>
+    <div class="stepi"><span class="n">2</span><div class="f1"><div class="b sm">Сохрани 5 слов</div><div class="xs faint">0 из 5 · +10 XP</div></div><i class="ic ic-lock faint s18"></i></div>
+    <div class="stepi"><span class="n">3</span><div class="f1"><div class="b sm">Пройди первое повторение</div><div class="xs faint">откроется завтра · +15 XP</div></div><i class="ic ic-lock faint s18"></i></div>
+  </div>
+  <div class="card">
+    <div class="rowx between"><span class="b">Неделя</span><span class="xs b c-orange">Начни стрик сегодня</span></div>
+    <div class="week">
+      <div><div class="d"></div><span class="faint">Пн</span></div>
+      <div><div class="d"></div><span class="faint">Вт</span></div>
+      <div><div class="d"></div><span class="faint">Ср</span></div>
+      <div><div class="d today"></div><span class="c-orange">Чт</span></div>
+      <div><div class="d"></div><span class="faint">Пт</span></div>
+      <div><div class="d"></div><span class="faint">Сб</span></div>
+      <div><div class="d"></div><span class="faint">Вс</span></div>
+    </div>
+  </div>
+</main>
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab on" href="Main.dc.html" aria-current="page"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="tab" href="Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a class="tab" href="Brain-home.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a class="tab" href="Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a class="tab" href="Profile.dc.html"><i class="ic ic-user"></i>Профиль</a>
+</nav>
+</div>

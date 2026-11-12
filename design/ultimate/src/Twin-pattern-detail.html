@@ -1,0 +1,53 @@
+<!--meta {"title":"Паттерн ошибки"}-->
+<style>
+.app .rowx.top{padding:0}
+.cols{display:flex;align-items:flex-end;gap:10px;height:96px;padding:0 4px}
+.cols>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.cols b{width:100%;border-radius:8px 8px 4px 4px;background:var(--paper-300);display:block}
+.cols b.hot{background:var(--red-400)}
+.cols span{font:600 11px/1 var(--font-body);color:var(--text-3)}
+.ex{display:flex;flex-direction:column;gap:4px}
+.ex+.ex{border-top:var(--stroke-soft);padding-top:10px;margin-top:10px}
+.ex .read{font-size:15.5px;line-height:1.45}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Twin-patterns.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Паттерн ошибки<small>Грамматика · времена</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="card t-red">
+    <div class="rowx top">
+      <span class="sw s-ember lg"><i class="ic ic-puzzle s24"></i></span>
+      <div class="f1"><div class="h2">Present Perfect vs Past Simple</div>
+        <div class="rowx s6 wrap" style="margin-top:8px"><span class="badge red">7 раз за 2 недели</span><span class="badge gold">Фокус недели</span></div></div>
+    </div>
+    <p class="sm" style="margin:12px 0 0">Ты ставишь <b class="en">have + V3</b> рядом с точным временем в прошлом — <span class="en">yesterday, last week, in 2019</span>. С такими словами нужен Past Simple.</p>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Твои примеры</p><a href="Twin-evidence.dc.html">Все 7</a></div>
+  <section class="card">
+    <div class="ex"><div class="read"><span class="strike">I have finished</span> → <span class="c-green">I finished</span> chapter 3 yesterday.</div><div class="xs faint">Проверка текста · вчера</div></div>
+    <div class="ex"><div class="read"><span class="strike">We have met</span> → <span class="c-green">We met</span> in Lisbon last spring.</div><div class="xs faint">Диагностика · 8 ноября</div></div>
+    <div class="ex"><div class="read"><span class="strike">She has left</span> → <span class="c-green">She left</span> the shore an hour ago.</div><div class="xs faint">Занятие «Unit 4» · 5 ноября</div></div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Динамика за 6 недель</p><span class="xs faint">ошибок в неделю</span></div>
+  <section class="card">
+    <div class="cols" role="img" aria-label="Ошибки по неделям: 2, 1, 3, 2, 4, 3">
+      <div><b style="height:40%"></b><span>2 окт</span></div>
+      <div><b style="height:20%"></b><span>9</span></div>
+      <div><b style="height:60%"></b><span>16</span></div>
+      <div><b style="height:40%"></b><span>23</span></div>
+      <div><b class="hot" style="height:80%"></b><span>30</span></div>
+      <div><b class="hot" style="height:60%"></b><span>6 ноя</span></div>
+    </div>
+  </section>
+  <p class="rowx s6 xs faint" style="margin:0 4px"><i class="ic ic-shield s16"></i>Найдено по правилам в твоих ответах, без ИИ</p>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Mission-detail.dc.html">Потренировать · 6 мин</a>
+  <a class="link2" href="Grammar-lesson.dc.html" style="padding:4px 0">Правило</a>
+</footer>
+</div>

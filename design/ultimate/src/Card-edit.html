@@ -1,0 +1,48 @@
+<!--meta {"title":"Карточка — редактирование"}-->
+<style>
+.toggle{height:44px;padding:8px 0;background-clip:content-box}.toggle::after{top:11px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Deck-detail.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="ttl">Карточка<small>колода «Путешествия»</small></div>
+  <a class="iconbtn" href="Card-edit.dc.html" aria-label="Прослушать"><i class="ic ic-volume s24"></i></a>
+</header>
+<main class="body">
+  <div>
+    <label class="label" for="w">Слово</label>
+    <div class="field" id="w" role="textbox"><span class="en f1" style="font-size:18px">round trip</span><span class="cefr">сущ.</span></div>
+  </div>
+  <div>
+    <label class="label" for="tr">Перевод</label>
+    <div class="field focus" id="tr" role="textbox"><span class="f1">поездка туда и обратно<span class="caret"></span></span></div>
+    <p class="hint rowx s6"><i class="ic ic-globe s14"></i>MyMemory предлагает: «билет в оба конца»</p>
+  </div>
+  <div>
+    <label class="label" for="ex">Пример</label>
+    <div class="field area" id="ex" role="textbox" style="min-height:92px"><span class="read" style="font-size:15px">Is this ticket one-way or a round trip?</span></div>
+  </div>
+  <div>
+    <label class="label" for="dk">Колода</label>
+    <a class="field" id="dk" href="Deck-detail.dc.html"><span class="sw s-gold sm"><i class="ic ic-compass s18"></i></span><span class="f1">Путешествия</span><i class="ic ic-chev-down s18 faint"></i></a>
+  </div>
+  <div>
+    <span class="label">Фото-ассоциация</span>
+    <button class="card dash rowx" style="width:100%;text-align:left;cursor:pointer;min-height:64px">
+      <span class="sw blue"><i class="ic ic-camera"></i></span>
+      <div class="f1"><div class="b sm">Добавить фото</div><div class="xs faint">камера или галерея · картинка покажется на лицевой стороне</div></div>
+      <i class="ic ic-plus c-blue"></i>
+    </button>
+  </div>
+  <div class="list">
+    <div class="row"><span class="sw gold"><i class="ic ic-heart"></i></span><div class="f1"><div class="t">Избранное</div><div class="s">показывать в подборке «Любимые»</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Избранное"></button></div>
+    <div class="row"><span class="sw blue"><i class="ic ic-history"></i></span><div class="f1"><div class="t">Память</div><div class="s">сила 2 из 4 · следующий повтор завтра</div></div><a class="btn b-ghost sm fit" href="Card-edit.dc.html">Сбросить</a></div>
+  </div>
+  <div class="list">
+    <a class="row danger" href="Deck-detail.dc.html"><span class="sw red"><i class="ic ic-trash"></i></span><div class="f1"><div class="t">Удалить карточку</div><div class="s">слово останется в словаре</div></div></a>
+  </div>
+</main>
+<footer class="dock line">
+  <a class="btn b-sky" href="Deck-detail.dc.html">Сохранить</a>
+</footer>
+</div>

@@ -1,0 +1,51 @@
+<!--meta {"title":"ИИ — результат проверки письма","planned":true}-->
+<style>
+.atop{align-items:flex-start}
+.awr-ring{position:relative;width:96px;height:96px;flex:none}
+.awr-ring svg{width:96px;height:96px;transform:rotate(-90deg)}
+.awr-ring b{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 24px/1 var(--font-display)}
+.awr-ring b small{font:600 11px/1.2 var(--font-body);color:var(--text-3);margin-top:3px}
+.awr-sc{display:grid;grid-template-columns:86px 1fr 34px;align-items:center;gap:8px;font:600 13px/1.2 var(--font-body)}
+.awr-n{font:700 11px/1 var(--font-body);background:var(--fill-ink);color:var(--gold-400);border-radius:6px;padding:2px 5px;vertical-align:2px;margin-right:2px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="AI-writing-check.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Разбор письма<small>«Письмо другу» · 54 слова</small></div>
+  <a class="iconbtn" href="Share-card.dc.html" aria-label="Поделиться"><i class="ic ic-share2"></i></a>
+</header>
+<main class="body">
+  <section class="card lg rowx" style="gap:16px">
+    <div class="awr-ring" role="img" aria-label="Уровень текста B1, 68 из 100">
+      <svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke-width="9" style="stroke:var(--progress-track)"/><circle cx="48" cy="48" r="40" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="171 252" style="stroke:var(--green-400)"/></svg>
+      <b>B1<small>68 / 100</small></b>
+    </div>
+    <div class="f1 stack s8">
+      <div class="awr-sc"><span>Грамматика</span><div class="bar"><i style="width:62%;background:var(--gold-500)"></i></div><span class="right">62</span></div>
+      <div class="awr-sc"><span>Лексика</span><div class="bar"><i style="width:78%"></i></div><span class="right">78</span></div>
+      <div class="awr-sc"><span>Связность</span><div class="bar"><i style="width:70%;background:var(--blue-400)"></i></div><span class="right">70</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <p class="eyebrow" style="margin-bottom:6px">Твой текст · 3 места</p>
+    <p class="read" style="font-size:15.5px;line-height:1.65;margin:0">Hi Anya! I am reading <i>The Last Lighthouse</i> now. It is about an old keeper who lives alone on <span class="hl-g">the shore</span>. He is reluctant to leave, because the lighthouse is his refuge. <span class="awr-n">1</span><span class="hl-r">Yesterday I have read</span> chapter three. The <span class="awr-n">2</span><span class="hl-r">storm</span> was so <span class="awr-n">3</span><span class="hl">much strong</span> that I couldn’t stop reading.</p>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Правки</p><span class="xs faint">3</span></div>
+  <div class="list">
+    <div class="row atop" style="align-items:flex-start"><span class="awr-n" style="margin-top:3px">1</span><div class="f1"><span class="badge red">Грамматика</span><div class="sm" style="margin-top:6px"><span class="strike">have read</span> → <b class="c-green">read</b></div><div class="s">С «yesterday» нужен Past Simple.</div></div><a class="iconbtn" href="AI-explain.dc.html" aria-label="Подробный разбор правки 1"><i class="ic ic-chev faint"></i></a></div>
+    <div class="row" style="align-items:flex-start"><span class="awr-n" style="margin-top:3px">2</span><div class="f1"><span class="badge blue">Лексика</span><div class="sm" style="margin-top:6px"><span class="strike">storm</span> → <b class="c-green">gale</b></div><div class="s">Точнее для сильного ветра у моря — слово из главы.</div></div></div>
+    <div class="row" style="align-items:flex-start"><span class="awr-n" style="margin-top:3px">3</span><div class="f1"><span class="badge gold">Стиль</span><div class="sm" style="margin-top:6px"><span class="strike">so much strong</span> → <b class="c-green">so strong</b></div><div class="s">«much» не ставится перед прилагательным.</div></div></div>
+  </div>
+
+  <div class="card t-green rowx atop">
+    <span class="sw s-green sm"><i class="ic ic-thumb s18"></i></span>
+    <div class="f1"><div class="b">Что получилось хорошо</div><div class="sm muted" style="margin-top:2px">Оба слова из колоды — <span class="en">reluctant</span> и <span class="en">refuge</span> — употреблены верно. Хорошая связка «because».</div></div>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="AI-writing-check.dc.html">Исправить и переслать</a>
+  <a class="btn b-ghost" href="Deck-detail.dc.html"><i class="ic ic-cards s18"></i>Сохранить слова в карточки</a>
+</footer>
+</div>

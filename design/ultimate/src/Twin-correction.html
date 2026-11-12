@@ -1,0 +1,50 @@
+<!--meta {"title":"Проверка текста"}-->
+<style>
+.fx{display:flex;gap:12px;align-items:flex-start}
+.fx .no{width:26px;height:26px;border-radius:50%;background:var(--red-100);color:var(--red-text);font:700 13px/26px var(--font-body);text-align:center;flex:none}
+.chg{font:600 16px/1.4 var(--font-read)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Twin-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Проверка текста<small>по правилам, без ИИ</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div>
+    <span class="label">Твой текст · 31 слово</span>
+    <div class="field area read" style="font:400 16.5px/1.6 var(--font-read);display:block">Yesterday I <span class="hl-r">have finished</span> chapter 3 of The Last Lighthouse. The keeper was reluctant to leave his refuge, because the waves <span class="hl-r">was</span> too high and the gale did not stop all night.</div>
+  </div>
+
+  <div class="rowx s8" style="margin-top:4px">
+    <span class="sw red sm"><i class="ic ic-alert s18"></i></span>
+    <div class="f1"><div class="h3">Найдено 2 несоответствия</div><div class="xs faint">проверено 14 правил грамматики</div></div>
+  </div>
+
+  <section class="card">
+    <div class="fx">
+      <span class="no">1</span>
+      <div class="f1 stack s4">
+        <div class="chg"><span class="strike">have finished</span> <i class="ic ic-arrow-right s16 faint"></i> <span class="c-green">finished</span></div>
+        <div class="sm muted">С «yesterday» — точное время в прошлом, нужен Past Simple.</div>
+      </div>
+      <a class="linkc" href="Grammar-lesson.dc.html">Правило</a>
+    </div>
+  </section>
+  <section class="card">
+    <div class="fx">
+      <span class="no">2</span>
+      <div class="f1 stack s4">
+        <div class="chg">the waves <span class="strike">was</span> <i class="ic ic-arrow-right s16 faint"></i> <span class="c-green">were</span></div>
+        <div class="sm muted">Подлежащее во множественном числе — глагол were.</div>
+      </div>
+      <a class="linkc" href="Grammar-lesson.dc.html">Правило</a>
+    </div>
+  </section>
+  <div class="banner info"><i class="ic ic-info"></i><div>Правила ловят типовые ошибки. Стиль и смысл не оцениваются, текст не уходит наружу.</div></div>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Twin-correction.dc.html">Исправить и проверить снова</a>
+  <a class="btn b-ghost sm" href="Twin-correction.dc.html">Новый текст</a>
+</footer>
+</div>

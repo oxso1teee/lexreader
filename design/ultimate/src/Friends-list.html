@@ -1,0 +1,62 @@
+<!--meta {"title":"Друзья","planned":true}-->
+<style>
+.astack{display:flex}.astack .avatar{box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 3px var(--surface-card)}.astack .avatar+.avatar{margin-left:-10px}
+.av{position:relative;flex:none}.av .dot{position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;border-radius:50%;background:var(--green-400);box-shadow:0 0 0 3px var(--surface-card)}
+.duo{display:flex;align-items:center}.duo .flame{width:40px;height:40px;border-radius:50%;margin:0 -8px;z-index:1;background:var(--fill-ember);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--gold-150)}
+.duo .avatar{box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 3px var(--gold-150)}
+.frow{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;position:relative}
+.list>.frow+.frow::before{content:"";position:absolute;left:14px;right:14px;top:0;border-top:var(--stroke-soft)}
+.frow>a:first-child{display:flex;align-items:center;gap:12px;flex:1;min-width:0;min-height:48px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Profile.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Друзья<small>4 друга · 2 занимаются сегодня</small></div>
+  <a class="iconbtn box" href="Add-friends.dc.html" aria-label="Найти друзей"><i class="ic ic-user-plus"></i></a>
+</header>
+<main class="body">
+  <a class="card lg t-orange press" href="Friend-streak.dc.html">
+    <div class="rowx between">
+      <div class="duo"><span class="avatar me lg" style="box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 3px var(--gold-150)">С</span><span class="flame"><i class="ic ic-flame-f s24"></i></span><span class="avatar a1 lg">А</span></div>
+      <div class="right"><div class="num xl c-orange" style="line-height:1">9</div><div class="xs b c-orange">дней вместе</div></div>
+    </div>
+    <div class="h3" style="margin-top:14px">Общий стрик с Аней</div>
+    <div class="sm muted">Вы оба уже позанимались сегодня. Завтра — 10 дней.</div>
+    <div class="steps" style="margin-top:12px" aria-label="7 из 7 дней недели"><i class="on" style="background:var(--orange-600)"></i><i class="on" style="background:var(--orange-600)"></i><i class="on" style="background:var(--orange-600)"></i><i class="on" style="background:var(--orange-600)"></i><i class="on" style="background:var(--orange-600)"></i><i class="on" style="background:var(--orange-600)"></i><i class="on" style="background:var(--orange-600)"></i></div>
+  </a>
+
+  <div class="grid3">
+    <div class="stat"><b class="num c-green">2</b><span>занимаются сегодня</span></div>
+    <div class="stat"><b class="num c-blue">4</b><span>дуэли за неделю</span></div>
+    <div class="stat"><b class="num c-gold">3–1</b><span>счёт в дуэлях</span></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Все друзья · 4</p><a href="Activity-feed.dc.html">Лента</a></div>
+  <div class="list">
+    <div class="frow">
+      <a href="Friend-profile.dc.html"><span class="av"><span class="avatar a1">А</span><span class="dot"></span></span><div class="f1"><div class="b">Аня</div><div class="xs c-green sb">Занимается сейчас · Treasure Island</div></div></a>
+      <a class="btn b-sky sm fit" href="Duel-create.dc.html" aria-label="Дуэль с Аней"><i class="ic ic-swords s18"></i>Дуэль</a>
+    </div>
+    <div class="frow">
+      <a href="Friend-profile.dc.html"><span class="av"><span class="avatar a5">М</span><span class="dot"></span></span><div class="f1"><div class="b">Макс</div><div class="xs faint">Стрик 31 день · 330 XP за неделю</div></div></a>
+      <a class="btn b-ghost sm fit" href="Duel-create.dc.html" aria-label="Дуэль с Максом"><i class="ic ic-swords s18"></i>Дуэль</a>
+    </div>
+    <div class="frow">
+      <a href="Friend-profile.dc.html"><span class="avatar a2">Л</span><div class="f1"><div class="b">Лена</div><div class="xs faint">Стрик 5 дней · была 3 ч назад</div></div></a>
+      <a class="btn b-ghost sm fit" href="Duel-create.dc.html" aria-label="Дуэль с Леной"><i class="ic ic-swords s18"></i>Дуэль</a>
+    </div>
+    <div class="frow">
+      <a href="Friend-profile.dc.html"><span class="avatar a4">Д</span><div class="f1"><div class="b">Дима</div><div class="xs c-orange sb">Не заходил 6 дней</div></div></a>
+      <a class="btn b-ghost sm fit" href="Duel-create.dc.html" aria-label="Подбодрить Диму"><i class="ic ic-bell s18"></i>Позвать</a>
+    </div>
+  </div>
+
+  <div class="card sm sunk rowx">
+    <span class="sw blue sm"><i class="ic ic-users s18"></i></span>
+    <div class="f1 xs muted">Друзья видят твой стрик и уровень. Слова и тексты остаются только у тебя.</div>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Friend-invite-share.dc.html"><i class="ic ic-user-plus"></i>Пригласить друга</a>
+</footer>
+</div>

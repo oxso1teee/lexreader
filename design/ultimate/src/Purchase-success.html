@@ -1,0 +1,40 @@
+<!--meta {"title":"Plus оформлен"}-->
+<style>
+.ps-art{position:relative;height:210px;display:flex;align-items:flex-end;justify-content:center}
+.ps-art::before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.4);bottom:-10px;left:50%;margin-left:-110px}
+.ps-art .lex{position:relative}
+.ps-crown{position:absolute;top:6px;left:50%;margin-left:-26px;color:inherit}
+.spark{position:absolute;color:inherit;opacity:.75}
+.receipt{background:rgba(255,255,255,.62);border-radius:var(--r-lg);padding:12px 16px}
+.receipt .rowx{min-height:30px}
+.unl{display:flex;gap:10px;align-items:center;font:600 15px/1.3 var(--font-body)}
+</style>
+<div class="app on-sun">
+<main class="body" style="padding-top:44px">
+  <div class="ps-art" aria-hidden="true">
+    <i class="ic ic-crown-f s48 ps-crown pop"></i>
+    <i class="ic ic-sparkle s24 spark" style="left:70px;top:46px"></i>
+    <i class="ic ic-star-f s18 spark" style="right:76px;top:70px"></i>
+    <i class="ic ic-sparkle s18 spark" style="right:110px;top:20px"></i>
+    <i class="lex joy s160 bob"></i>
+  </div>
+  <div class="center stack s4">
+    <h1 class="h1">Добро пожаловать<br>в Plus!</h1>
+    <p class="muted" style="margin:0;font-size:15px">Лимиты сняты — читай и сохраняй слова сколько хочешь</p>
+  </div>
+  <div class="stack s8" style="padding:2px 4px">
+    <div class="unl"><span class="sw s-ink sm round"><i class="ic ic-check s16"></i></span>Вся библиотека и импорт без лимитов</div>
+    <div class="unl"><span class="sw s-ink sm round"><i class="ic ic-check s16"></i></span>Безлимит карточек в «Мозге»</div>
+    <div class="unl"><span class="sw s-ink sm round"><i class="ic ic-check s16"></i></span>Полная статистика прогресса</div>
+  </div>
+  <div class="receipt" aria-label="Чек">
+    <div class="rowx between"><span class="sm muted">LexReader Plus · год</span><span class="b">3 588 ₽</span></div>
+    <div class="rowx between"><span class="sm muted">Списано 12 ноября</span><span class="sm">Visa •• 4242</span></div>
+    <div class="rowx between"><span class="sm muted">Следующее списание</span><span class="sm b">12 ноября 2027</span></div>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-ink" href="Import-hub.dc.html"><i class="ic ic-plus s18"></i>Добавить ещё тексты</a>
+  <a class="link2" href="Main.dc.html" style="padding:6px 0;color:inherit!important">На главную</a>
+</footer>
+</div>

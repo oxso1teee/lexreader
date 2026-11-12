@@ -1,0 +1,74 @@
+<!--meta {"title":"Читалка · desktop","w":1280,"h":800}-->
+<style>
+.app.desk{flex-direction:column}
+.rbar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:var(--stroke-soft);background:var(--surface-card);flex:none}
+.rbar .bar{width:220px}
+.rgrid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px}
+.page{overflow-y:auto;scrollbar-width:none;padding:36px 40px 24px}
+.page::-webkit-scrollbar{display:none}
+.col{max-width:640px;margin:0 auto}
+.col .read{font-size:20px;line-height:1.7;margin:0 0 18px}
+.drop::first-letter{float:left;font:700 72px/.8 var(--font-display);color:var(--green-500);margin:8px 10px 0 0}
+.w{border-radius:5px;padding:0 3px}
+.w.sel{outline:2px solid var(--green-400);background:var(--green-100);font-weight:600}
+.panel{border-left:var(--stroke-soft);background:var(--surface-card);overflow-y:auto;scrollbar-width:none;padding:20px;display:flex;flex-direction:column;gap:14px}
+.panel::-webkit-scrollbar{display:none}
+.know{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.know>span{min-height:40px;display:grid;place-items:center;border-radius:12px;border:2px solid rgba(var(--ink-rgb),.16);font:700 13px/1 var(--font-body);color:var(--text-2)}
+.know>span.on{border-color:var(--blue-400);background:var(--blue-100);color:var(--blue-text)}
+.kbd{font:700 11px/1 var(--font-mono);padding:4px 6px;border-radius:6px;border:var(--stroke-soft);background:var(--surface-sunken);color:var(--text-2)}
+.cw .row{min-height:48px;padding:8px 12px}
+</style>
+<div class="app desk">
+<header class="rbar">
+  <a class="iconbtn" href="D-Library.dc.html" aria-label="Назад в библиотеку"><i class="ic ic-back s24"></i></a>
+  <span class="cover c-sky" style="width:32px;height:42px;border-radius:8px" aria-hidden="true"></span>
+  <div><div class="b">The Last Lighthouse</div><div class="xs faint">Глава 3 из 5 · «The Storm» · осталось 6 мин</div></div>
+  <div class="rowx s8" style="margin-left:auto"><div class="bar" role="progressbar" aria-label="Прочитано 64%"><i style="width:64%"></i></div><span class="sm b">64%</span></div>
+  <button class="iconbtn box" aria-label="Закладка"><i class="ic ic-bookmark"></i></button>
+  <button class="iconbtn box" aria-label="Озвучить главу"><i class="ic ic-headphones"></i></button>
+  <a class="iconbtn box" href="Reader-settings.dc.html" aria-label="Настройки текста"><span class="en" style="font-size:17px">Aa</span></a>
+</header>
+<div class="rgrid">
+  <main class="page">
+    <article class="col">
+      <p class="eyebrow" style="margin-bottom:6px">Chapter 3</p>
+      <h1 class="h1" style="font-size:30px;margin-bottom:22px">The Storm</h1>
+      <p class="read drop">The storm had passed by morning, but the sea was still <span class="w hl">restless</span>. Mara climbed the <span class="w hl-b">spiral</span> stairs one last time and stood by the great lamp. Its glass was cold, and the brass handles had turned green with salt.</p>
+      <p class="read">She was <span class="w sel">reluctant</span> to leave the lighthouse. For eleven years it had been her home, her work and her <span class="w hl-b">refuge</span>. Below, the boat was already <span class="w hl">waiting</span>, rocking gently against the <span class="w hl-g">shore</span>.</p>
+      <p class="read">Every night she had lit the <span class="w hl-b">beacon</span>, and every night the ships had passed safely through the rocks. Now a machine would do it instead. “It never gets tired,” the man from the harbour had said, as if that were the only thing that mattered.</p>
+      <p class="read">Mara touched the lamp once more. Outside, the last of the <span class="w hl">gale</span> pulled at the gulls, and the water flashed silver under the clouds.</p>
+      <div class="rowx between" style="margin-top:8px;padding-top:16px;border-top:var(--stroke-soft)">
+        <span class="xs faint rowx s8"><span class="kbd">←</span><span class="kbd">→</span> страницы · <span class="kbd">клик</span> перевод слова · <span class="kbd">S</span> сохранить</span>
+        <a class="btn b-leaf sm fit" href="Chapter-done.dc.html" style="min-width:200px">Закончить главу</a>
+      </div>
+    </article>
+  </main>
+  <aside class="panel" aria-label="Слово">
+    <div class="rowx top between">
+      <div><div class="disp" style="font:700 30px/1.1 var(--font-display)">reluctant</div><div class="rowx s8" style="margin-top:6px"><span class="faint">/rɪˈlʌktənt/</span><span class="cefr">прил.</span><span class="cefr">B2</span></div></div>
+      <button class="iconbtn" aria-label="Прослушать" style="background:var(--fill-sky);color:#fff;border-radius:14px;box-shadow:inset 0 -4px 0 var(--fill-sky-edge)"><i class="ic ic-volume"></i></button>
+    </div>
+    <div class="h3" style="font-size:18px">неохотный, нежелающий</div>
+    <div class="card sunk sm"><p class="read" style="font-size:15px;margin:0">She was <b>reluctant</b> to leave the lighthouse.</p><div class="xs faint" style="margin-top:4px">Ей не хотелось уходить с маяка.</div></div>
+    <div>
+      <p class="eyebrow" style="margin-bottom:8px">Насколько знаешь</p>
+      <div class="know"><span class="on">Новое</span><span>1</span><span>2</span><span>3</span><span>Знаю</span></div>
+    </div>
+    <div class="rowx s8">
+      <button class="btn b-ghost sm" style="flex:1">Знаю</button>
+      <a class="btn b-leaf sm" href="Card-edit.dc.html" style="flex:2"><i class="ic ic-plus s18"></i>В карточки</a>
+    </div>
+    <hr class="divider">
+    <div class="sect" style="margin:0"><p class="eyebrow">Слова этой главы · 7</p><a href="Words-learned.dc.html">Все слова</a></div>
+    <div class="list cw">
+      <a class="row" href="Word-detail.dc.html"><span class="en f1">restless</span><span class="xs faint">беспокойный</span><span class="badge gold">новое</span></a>
+      <a class="row" href="Word-detail.dc.html"><span class="en f1">spiral</span><span class="xs faint">винтовой</span><span class="badge blue">учу</span></a>
+      <a class="row" href="Word-detail.dc.html"><span class="en f1">refuge</span><span class="xs faint">убежище</span><span class="badge blue">учу</span></a>
+      <a class="row" href="Word-detail.dc.html"><span class="en f1">beacon</span><span class="xs faint">маяк, огонь</span><span class="badge blue">учу</span></a>
+      <a class="row" href="Word-detail.dc.html"><span class="en f1">gale</span><span class="xs faint">шторм</span><span class="badge gold">новое</span></a>
+      <a class="row" href="Word-detail.dc.html"><span class="en f1">shore</span><span class="xs faint">берег</span><span class="badge green">знаю</span></a>
+    </div>
+  </aside>
+</div>
+</div>

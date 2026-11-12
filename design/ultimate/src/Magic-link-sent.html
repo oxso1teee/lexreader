@@ -1,0 +1,42 @@
+<!--meta {"title":"Ссылка отправлена"}-->
+<style>
+.mail-ill{position:relative;width:220px;height:150px;margin:0 auto}
+.mail-ill .env{position:absolute;left:30px;top:14px;width:150px;height:116px;border-radius:28px;background:var(--fill-sky);box-shadow:inset 0 -6px 0 0 var(--fill-sky-edge);display:flex;align-items:center;justify-content:center;color:#fff;transform:rotate(-6deg)}
+.mail-ill .lex{position:absolute;right:0;bottom:0}
+.mail-ill .dot{position:absolute;left:150px;top:4px;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 15px/1 var(--font-display);box-shadow:0 0 0 4px var(--surface-app)}
+.addr{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r-full);background:var(--surface-card);border:var(--stroke);font:700 15px/1.2 var(--font-body)}
+.tstep{display:flex;gap:12px;align-items:flex-start}
+.tstep .n{width:26px;height:26px;border-radius:50%;background:var(--blue-100);color:var(--blue-text);font:700 13px/26px var(--font-body);text-align:center;flex:none}
+.wait{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;font:600 14px/1.2 var(--font-body);color:var(--text-3)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Login.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Вход по ссылке</div>
+  <span class="gap"></span>
+</header>
+<main class="body" style="gap:12px">
+  <div class="mail-ill" aria-hidden="true">
+    <div class="env"><i class="ic ic-mail s48"></i></div>
+    <span class="dot fill-sun">1</span>
+    <i class="lex happy s88 bob" style="bottom:-6px"></i>
+  </div>
+  <div class="center stack s4">
+    <h1 class="h1">Проверь почту</h1>
+    <p class="lead">Мы отправили ссылку для входа на</p>
+    <div><span class="addr"><i class="ic ic-at s18 c-blue"></i>s•••••••@gmail.com</span></div>
+  </div>
+  <div class="banner info"><i class="ic ic-clock"></i><div><b>Ссылка действует 15 минут</b>Открой её на этом телефоне — вход произойдёт сам.</div></div>
+  <section class="card stack s8">
+    <div class="tstep"><span class="n">1</span><div class="sm">Найди письмо от <b>LexReader</b> с темой «Твоя ссылка для входа»</div></div>
+    <div class="tstep"><span class="n">2</span><div class="sm">Нажми зелёную кнопку <b>«Войти в LexReader»</b></div></div>
+    <div class="tstep"><span class="n">3</span><div class="sm">Нет письма? Загляни в «Спам»</div></div>
+  </section>
+  <div class="grow"></div>
+</main>
+<footer class="dock">
+  <button class="btn b-ghost"><i class="ic ic-external"></i>Открыть почту</button>
+  <div class="wait" aria-disabled="true"><i class="ic ic-refresh s16"></i>Отправить ещё раз через <b class="mono" style="font-size:14px">0:42</b></div>
+  <a class="link2" href="Login.dc.html" style="padding-top:2px">Ввести другой email</a>
+</footer>
+</div>

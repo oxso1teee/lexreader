@@ -1,0 +1,47 @@
+<!--meta {"title":"Мои коллекции"}-->
+<style>
+.card.col{display:flex;flex-direction:column;gap:10px;padding:12px}
+.mos{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:56px 56px;gap:4px;border-radius:12px;overflow:hidden;background:var(--surface-sunken)}
+.mos .cover{width:100%;height:100%;border-radius:0;font-size:11px;padding:6px}
+.mos .cover:first-child{grid-row:1/3}
+.mos .more{display:flex;align-items:center;justify-content:center;font:700 13px/1 var(--font-body);color:var(--text-2)}
+.card.col.dash{justify-content:center;align-items:center;text-align:center;min-height:188px;gap:8px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Library.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Коллекции<small>4 коллекции · 17 материалов</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="grid2">
+    <a class="card p0 col press" href="Collection-detail.dc.html">
+      <div class="mos"><span class="cover c-ember">A Week in Kyoto</span><span class="cover c-teal">Lost in Lisbon</span><span class="cover c-green">Travel English</span></div>
+      <div><div class="b sm">Для отпуска</div><div class="xs faint">6 материалов · 48%</div></div>
+    </a>
+    <a class="card p0 col press" href="Collection-detail.dc.html">
+      <div class="mos"><span class="cover c-sky">Treasure Island</span><span class="cover c-sand">Robinson Crusoe</span><span class="more">+3</span></div>
+      <div><div class="b sm">Классика на B1</div><div class="xs faint">5 материалов · 12%</div></div>
+    </a>
+    <a class="card p0 col press" href="Collection-detail.dc.html">
+      <div class="mos"><span class="cover c-gold">Tech News Weekly</span><span class="cover c-ink video" aria-hidden="true"></span><span class="more">+2</span></div>
+      <div><div class="b sm">Про технологии</div><div class="xs faint">4 материала · 75%</div></div>
+    </a>
+    <a class="card p0 col press" href="Collection-detail.dc.html">
+      <div class="mos"><span class="cover c-ink video" aria-hidden="true"></span><span class="cover c-sky video" aria-hidden="true"></span></div>
+      <div><div class="b sm">Видео на вечер</div><div class="xs faint">2 видео · не начато</div></div>
+    </a>
+    <a class="card dash col" href="Collection-detail.dc.html">
+      <span class="sw green round lg"><i class="ic ic-plus s24"></i></span>
+      <div class="b sm">Новая коллекция</div>
+      <div class="xs faint">собери материалы по теме</div>
+    </a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Зачем коллекции</p></div>
+  <div class="card sunk rowx" style="align-items:flex-start">
+    <i class="lex think s56" aria-hidden="true"></i>
+    <div class="f1 sm muted">Группируй тексты и видео под цель — поездку, экзамен, работу. Слова из коллекции попадают в одну колоду «Мозга».</div>
+  </div>
+</main>
+</div>

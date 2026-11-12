@@ -1,0 +1,107 @@
+<!--meta {"title":"Профиль и настройки · desktop","w":1280,"h":800}-->
+<style>
+.dhead{display:flex;align-items:center;gap:16px;padding:28px 32px 4px;flex:none}
+.dhead h1{font:700 28px/1.15 var(--font-display);margin:0;letter-spacing:-.01em}
+.sgrid{flex:1;min-height:0;display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:16px 32px 0}
+.snav{display:flex;flex-direction:column;gap:2px}
+.snav a{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:12px;font:600 14.5px/1 var(--font-body);color:var(--text-2)}
+.snav a.on{background:var(--surface-card);color:var(--text-1);box-shadow:inset 3px 0 0 var(--green-400);border:var(--stroke-soft)}
+.snav a.on .ic{color:var(--green-text)}
+.scont{overflow-y:auto;scrollbar-width:none;padding-bottom:28px;display:flex;flex-direction:column;gap:16px}
+.scont::-webkit-scrollbar{display:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.goal{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.goal>span{border:2px solid rgba(var(--ink-rgb),.16);border-radius:14px;padding:10px 8px;text-align:center;min-height:60px}
+.goal>span.on{border-color:var(--green-400);background:var(--green-100)}
+.goal b{display:block;font:700 16px/1.1 var(--font-display)}
+.goal small{font:500 12px/1.2 var(--font-body);color:var(--text-3)}
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px}
+.th{border:2px solid rgba(var(--ink-rgb),.16);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:10px;cursor:pointer}
+.th.on{border-color:var(--green-400);box-shadow:0 0 0 3px var(--green-100)}
+.pv{height:96px;border-radius:10px;overflow:hidden;display:flex;border:1px solid rgba(var(--ink-rgb),.12)}
+.pv .half{flex:1;padding:10px;display:flex;flex-direction:column;gap:6px}
+.pv .l{background:rgb(250,247,240)}.pv .d{background:rgb(24,24,28)}
+.pv i{display:block;border-radius:4px;height:8px}
+.pv .l i{background:rgb(226,220,206)}.pv .d i{background:rgb(58,58,66)}
+.pv i.g{background:rgb(43,130,15);height:18px;border-radius:6px;margin-top:auto}
+.prof{display:flex;align-items:center;gap:18px;padding:18px 20px}
+.sidecard{box-shadow:none}
+</style>
+<div class="app desk">
+<aside class="side" aria-label="Основная навигация">
+  <div class="logo"><i class="lex happy s40"></i>LexReader</div>
+  <a href="D-Today.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a href="D-Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a href="D-Practice.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a href="D-Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a class="on" aria-current="page" href="D-Settings.dc.html"><i class="ic ic-user"></i>Профиль</a>
+  <div class="card sm mta sidecard">
+    <div class="rowx s8"><span class="sw s-ember sm"><i class="ic ic-flame-f s18"></i></span><div class="f1"><div class="b sm">12 дней подряд</div><div class="xs faint">рекорд 21 · 1 заморозка</div></div></div>
+    <div class="rowx between" style="margin-top:10px"><span class="xs muted">Сегодня 30 / 50 XP</span><span class="xs b c-gold">1 240 XP</span></div>
+    <div class="bar sm gold" style="margin-top:6px"><i style="width:60%"></i></div>
+  </div>
+</aside>
+<div class="main">
+  <header class="dhead">
+    <h1 class="f1">Профиль и настройки</h1>
+    <a class="btn b-ghost sm fit" href="Help-support.dc.html"><i class="ic ic-help s18"></i>Помощь</a>
+  </header>
+  <div class="sgrid">
+    <nav class="snav" aria-label="Разделы настроек">
+      <a href="Profile-edit.dc.html"><i class="ic ic-user s18"></i>Профиль</a>
+      <a class="on" href="D-Settings.dc.html" aria-current="page"><i class="ic ic-target s18"></i>Обучение</a>
+      <a href="Notification-settings.dc.html"><i class="ic ic-bell s18"></i>Уведомления</a>
+      <a href="D-Settings.dc.html"><i class="ic ic-moon s18"></i>Оформление</a>
+      <a href="Subscription.dc.html"><i class="ic ic-crown s18"></i>Подписка</a>
+      <a href="Data-privacy.dc.html"><i class="ic ic-shield s18"></i>Данные</a>
+      <a href="Extension-connect.dc.html"><i class="ic ic-laptop s18"></i>Расширение</a>
+      <a href="Help-support.dc.html"><i class="ic ic-help s18"></i>Помощь</a>
+      <hr class="divider" style="margin:8px 0">
+      <a href="Login.dc.html"><i class="ic ic-logout s18"></i>Выйти</a>
+      <div class="card sm t-green mta" style="margin-bottom:24px"><div class="rowx s8"><i class="ic ic-check-circle s18 c-green"></i><span class="b sm">Синхронизировано</span></div><div class="xs muted" style="margin-top:4px">Телефон, этот компьютер и расширение · 2 мин назад</div></div>
+    </nav>
+    <div class="scont">
+      <section class="card prof">
+        <span class="avatar lg me">С</span>
+        <div class="f1"><div class="h2">Сергей</div><div class="sm muted">Уровень B1 · учится с августа 2026</div>
+          <div class="rowx s8" style="margin-top:8px"><span class="badge orange"><i class="ic ic-flame-f s14"></i>12 дней</span><span class="badge gold"><i class="ic ic-bolt-f s14"></i>1 240 XP · ур. 7</span><span class="badge blue">842 слова</span><span class="badge">Free</span></div></div>
+        <a class="btn b-ghost sm fit" href="Profile-edit.dc.html"><i class="ic ic-pencil s18"></i>Редактировать</a>
+        <a class="btn b-sun sm fit" href="Pricing-plans.dc.html"><i class="ic ic-crown s18"></i>Plus от 299 ₽</a>
+      </section>
+      <div class="two">
+        <section class="card">
+          <div class="rowx between"><div class="h3">Цель дня</div><span class="xs faint">сейчас 30 / 50 XP</span></div>
+          <div class="goal" role="radiogroup" aria-label="Цель дня">
+            <span role="radio" aria-checked="false"><b>10</b><small>легко</small></span>
+            <span role="radio" aria-checked="false"><b>20</b><small>спокойно</small></span>
+            <span class="on" role="radio" aria-checked="true"><b>50</b><small>серьёзно</small></span>
+            <span role="radio" aria-checked="false"><b>100</b><small>интенсив</small></span>
+          </div>
+          <div class="xs faint" style="margin-top:10px">≈ 15 минут в день · стрик засчитывается от 10 XP</div>
+        </section>
+        <section class="card">
+          <div class="rowx between"><div class="h3">Напоминания</div><button class="toggle on" aria-label="Напоминания включены"></button></div>
+          <div class="rowx" style="margin-top:12px;gap:10px">
+            <div class="field f1" style="min-height:48px"><i class="ic ic-clock s18 faint"></i>21:00<i class="ic ic-chev-down s18 faint mla"></i></div>
+            <div class="field f1" style="min-height:48px"><i class="ic ic-calendar s18 faint"></i>Ежедневно<i class="ic ic-chev-down s18 faint mla"></i></div>
+          </div>
+          <div class="rowx between" style="margin-top:10px"><span class="sm">Спасти стрик в 23:00</span><button class="toggle on" aria-label="Напоминание о стрике включено"></button></div>
+        </section>
+      </div>
+      <section class="card">
+        <div class="rowx between"><div class="h3">Тема оформления</div><span class="xs faint">меняется сразу, без перезапуска</span></div>
+        <div class="themes" role="radiogroup" aria-label="Тема оформления">
+          <div class="th" role="radio" aria-checked="false"><div class="pv"><div class="half l"><i style="width:60%"></i><i></i><i style="width:80%"></i><i class="g"></i></div></div><div class="rowx s8"><span class="radio"></span><span class="b sm">Светлая</span></div></div>
+          <div class="th" role="radio" aria-checked="false"><div class="pv"><div class="half d"><i style="width:60%"></i><i></i><i style="width:80%"></i><i class="g"></i></div></div><div class="rowx s8"><span class="radio"></span><span class="b sm">Тёмная</span></div></div>
+          <div class="th on" role="radio" aria-checked="true"><div class="pv"><div class="half l"><i style="width:60%"></i><i></i><i class="g"></i></div><div class="half d"><i style="width:80%"></i><i></i><i class="g"></i></div></div><div class="rowx s8"><span class="radio on"></span><span class="b sm">Системная</span><span class="xs faint mla">как в ОС</span></div></div>
+        </div>
+      </section>
+      <div class="list">
+        <div class="row"><span class="sw"><i class="ic ic-globe"></i></span><div class="f1"><div class="t">Язык интерфейса</div><div class="s">Учебный контент всегда на английском</div></div><span class="v">Русский</span><i class="ic ic-chev-down faint"></i></div>
+        <div class="row"><span class="sw green"><i class="ic ic-volume"></i></span><div class="f1"><div class="t">Звук и анимации</div><div class="s">Звуки ответов, конфетти, маскот</div></div><button class="toggle on" aria-label="Звук и анимации включены"></button></div>
+        <div class="row"><span class="sw blue"><i class="ic ic-type"></i></span><div class="f1"><div class="t">Шрифт для чтения</div><div class="s">Literata · 20 px · межстрочный 1,7</div></div><a class="v linkc" href="Reader-settings.dc.html">Изменить</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

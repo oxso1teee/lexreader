@@ -1,0 +1,62 @@
+<!--meta {"title":"Читалка — вид текста"}-->
+<style>
+.rd{padding:18px 22px 0;flex:1;min-height:0;overflow:hidden}
+.rd p{margin:0 0 14px;font:400 19px/1.75 var(--font-read)}
+.drop{float:left;font:700 54px/.9 var(--font-display);color:var(--green-text);margin:6px 8px 0 0}
+.w-new{background:var(--blue-100);border-radius:4px;padding:0 2px}
+.w-lrn{background:var(--gold-100);border-radius:4px;padding:0 2px}
+.prog{height:4px;margin:0 20px;border-radius:99px;background:var(--progress-track);overflow:hidden;flex:none}.prog i{display:block;height:100%;width:64%;background:var(--green-400)}
+.sl{display:flex;align-items:center;gap:12px}
+.sl .tr{flex:1;height:6px;border-radius:3px;background:var(--progress-track);position:relative}
+.sl .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--green-400)}
+.sl .tr b{position:absolute;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--surface-card);border:3px solid var(--green-400);box-shadow:var(--shadow-1)}
+.sl .ab{width:44px;height:44px;border-radius:12px;border:0;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center;font-family:var(--font-read);font-weight:700;cursor:pointer;flex:none}
+.th{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.th button{min-height:64px;border-radius:14px;border:2px solid rgba(var(--ink-rgb),.16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font:700 12.5px/1.2 var(--font-body)}
+.th button span{font:600 18px/1 var(--font-read)}
+.th .l{background:var(--paper-0);color:var(--ink-900)}
+.th .sp{background:var(--gold-100);color:var(--gold-text)}
+.th .dk{background:var(--fill-ink);color:#fff}
+.th .on{border-color:var(--green-400);box-shadow:0 0 0 3px var(--green-100)}
+.sheet .row{padding-left:0;padding-right:0;min-height:52px}
+.swr{width:100%;border:0;background:none;text-align:left;cursor:pointer}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Library.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">The Last Lighthouse<small>Глава 3 · осталось 6 мин</small></div>
+  <span class="iconbtn" aria-hidden="true" style="font:700 17px/1 var(--font-read)">Aa</span>
+</header>
+<div class="prog" aria-hidden="true"><i></i></div>
+<div class="rd" aria-hidden="true">
+  <p><span class="drop">T</span>he storm had passed by morning, but the sea was still <span class="w-lrn">restless</span>. Mara climbed the <span class="w-new">spiral</span> stairs one last time and stood by the great lamp.</p>
+</div>
+<div class="scrim" aria-hidden="true"></div>
+<section class="sheet" role="dialog" aria-label="Вид текста">
+  <div class="rowx between"><h2 class="h3" style="font-size:18px">Вид текста</h2><a class="iconbtn" href="Reader.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a></div>
+  <div>
+    <p class="label">Размер шрифта · 19</p>
+    <div class="sl"><button class="ab" aria-label="Меньше" style="font-size:14px">A−</button><div class="tr" role="slider" aria-label="Размер шрифта" aria-valuenow="19" aria-valuemin="14" aria-valuemax="26"><i style="width:42%"></i><b style="left:42%"></b></div><button class="ab" aria-label="Больше" style="font-size:20px">A+</button></div>
+  </div>
+  <div>
+    <p class="label">Гарнитура</p>
+    <div class="seg" role="radiogroup" aria-label="Гарнитура"><span class="on" role="radio" aria-checked="true" style="font-family:var(--font-read)">Literata</span><span role="radio" aria-checked="false">Onest</span></div>
+  </div>
+  <div>
+    <p class="label">Тема чтения</p>
+    <div class="th" role="radiogroup" aria-label="Тема чтения">
+      <button class="l" role="radio" aria-checked="false"><span>Aa</span>Светлая</button>
+      <button class="sp on" role="radio" aria-checked="true"><span>Aa</span>Сепия</button>
+      <button class="dk" role="radio" aria-checked="false"><span>Aa</span>Тёмная</button>
+    </div>
+  </div>
+  <div>
+    <p class="label">Межстрочный интервал</p>
+    <div class="seg" role="radiogroup" aria-label="Интервал"><span role="radio" aria-checked="false">Плотно</span><span class="on" role="radio" aria-checked="true">Обычно</span><span role="radio" aria-checked="false">Свободно</span></div>
+  </div>
+  <div>
+    <button class="row swr" role="switch" aria-checked="true"><div class="f1"><div class="t">Подсвечивать новые слова</div><div class="s">синим — новые, жёлтым — на изучении</div></div><span class="toggle on" aria-hidden="true"></span></button>
+    <button class="row swr" role="switch" aria-checked="false"><div class="f1"><div class="t">Перевод по тапу</div><div class="s">выключено — сначала попробуй догадаться</div></div><span class="toggle" aria-hidden="true"></span></button>
+  </div>
+</section>
+</div>

@@ -1,0 +1,46 @@
+<!--meta {"title":"Предложение Plus"}-->
+<style>
+.pw-art{position:relative;height:200px;border-radius:var(--r-xl);background:var(--gold-100);display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.pw-art::before{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:var(--gold-150);top:-120px;left:50%;margin-left:-150px;opacity:.9}
+.pw-art .lex{position:relative;margin-bottom:14px}
+.pw-crown{position:absolute;top:22px;left:50%;margin-left:-22px;width:44px;height:44px;color:var(--gold-text)}
+.pw-book{position:absolute;bottom:20px;width:46px;height:60px;border-radius:8px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18)}
+.pw-book.l{left:56px;background:var(--fill-sky);transform:rotate(-10deg)}
+.pw-book.l2{left:96px;bottom:16px;height:48px;width:36px;background:var(--fill-ember);transform:rotate(-4deg)}
+.pw-book.r{right:60px;background:var(--fill-leaf);transform:rotate(9deg)}
+.opt .pr{margin-left:auto;text-align:right;font:700 16px/1.15 var(--font-display)}
+.opt .pr small{display:block;font:500 12px/1.3 var(--font-body);color:var(--text-2)}
+.opt.on{border-color:var(--gold-500);background:var(--gold-100);box-shadow:0 3px 0 0 var(--fill-sun-edge)}
+.opt.on .radio{border-color:var(--gold-text)}.opt.on .radio::after{background:var(--gold-text)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Library.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="ttl"><span class="badge plus" style="font-size:11px">LexReader Plus</span></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="pw-art" aria-hidden="true">
+    <i class="ic ic-crown-f pw-crown s40"></i>
+    <span class="pw-book l"></span><span class="pw-book l2"></span><span class="pw-book r"></span>
+    <i class="lex joy s120 bob"></i>
+  </div>
+  <div class="center stack s4">
+    <h1 class="h1">Читай без ограничений</h1>
+    <p class="lead">Ты уже прочитал 3 текста из 3 на Free. Plus откроет всю библиотеку</p>
+  </div>
+  <div class="stack s8">
+    <div class="rowx"><span class="sw gold sm"><i class="ic ic-library s18"></i></span><div class="f1 sm"><b>Безлимит текстов и видео</b> — Treasure Island, Tech News и всё, что импортируешь</div></div>
+    <div class="rowx"><span class="sw blue sm"><i class="ic ic-cards s18"></i></span><div class="f1 sm"><b>Сколько угодно карточек</b> и колод в «Мозге»</div></div>
+    <div class="rowx"><span class="sw green sm"><i class="ic ic-chart s18"></i></span><div class="f1 sm"><b>Полная статистика</b> — память, время, навыки</div></div>
+  </div>
+  <div class="stack s8" role="radiogroup" aria-label="План">
+    <button class="opt on" role="radio" aria-checked="true"><span class="radio on"></span><div><div class="rowx s6">Год <span class="badge plus" style="font-size:11px">выгоднее</span></div><div class="xs muted" style="font-weight:500">3 588 ₽ сразу</div></div><span class="pr">299 ₽<small>в месяц</small></span></button>
+    <button class="opt" role="radio" aria-checked="false"><span class="radio"></span><div>Месяц<div class="xs muted" style="font-weight:500">без обязательств</div></div><span class="pr">399 ₽<small>в месяц</small></span></button>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-sun" href="Purchase-success.dc.html">Попробовать Plus</a>
+  <a class="link2" href="Library.dc.html" style="padding:6px 0">Не сейчас</a>
+</footer>
+</div>

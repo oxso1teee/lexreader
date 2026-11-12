@@ -1,0 +1,71 @@
+<!--meta {"title":"Профиль"}-->
+<style>
+.hub{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hub a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 10px;border-radius:var(--r-md);background:var(--surface-card);border:var(--stroke);text-align:center;font:700 12px/1.2 var(--font-body);position:relative}
+.hub .badge{position:absolute;top:-9px;right:-2px;padding:2px 5px}
+</style>
+<div class="app">
+<header class="pagehead">
+  <h1>Профиль</h1>
+  <a class="iconbtn box" href="Account-settings.dc.html" aria-label="Настройки аккаунта"><i class="ic ic-settings"></i></a>
+</header>
+<main class="body">
+  <a class="card rowx" href="Profile-edit.dc.html">
+    <span class="avatar lg me">С</span>
+    <div class="f1"><div class="h2">Сергей</div><div class="sm muted">Учит английский · уровень B1</div><div class="rowx s6" style="margin-top:6px"><span class="badge">Free</span><span class="xs faint">с 28 сентября</span></div></div>
+    <i class="ic ic-pencil faint"></i>
+  </a>
+
+  <div class="grid3">
+    <a class="stat" href="Streak-calendar.dc.html"><b class="num c-orange">12</b><span>дней стрик</span></a>
+    <a class="stat" href="Stats-detail.dc.html"><b class="num c-gold">1 240</b><span>всего XP</span></a>
+    <a class="stat" href="Words-learned.dc.html"><b class="num c-blue">842</b><span>слов знаю</span></a>
+  </div>
+
+  <nav class="hub" aria-label="Разделы">
+    <a href="Twin-home.dc.html"><span class="sw green"><i class="ic ic-sprout"></i></span>Мой<br>английский</a>
+    <a href="Achievements-gallery.dc.html"><span class="sw gold"><i class="ic ic-award"></i></span>Достиже&shy;ния</a>
+    <a href="Friends-list.dc.html"><span class="sw blue"><i class="ic ic-users"></i></span>Друзья<span class="badge soon">скоро</span></a>
+    <a href="AI-hub.dc.html"><span class="sw s-ink"><i class="ic ic-spark2"></i></span>Репетитор<span class="badge soon">скоро</span></a>
+  </nav>
+
+  <a class="card t-gold rowx" href="Pricing-plans.dc.html">
+    <span class="sw s-gold"><i class="ic ic-crown-f"></i></span>
+    <div class="f1"><div class="h3">LexReader Plus</div><div class="sm muted">Безлимит текстов, видео и карточек · от 299 ₽/мес</div></div>
+    <i class="ic ic-chev"></i>
+  </a>
+
+  <div class="sect"><p class="eyebrow">Обучение</p></div>
+  <div class="list">
+    <a class="row" href="Goal-edit.dc.html"><span class="sw gold"><i class="ic ic-target"></i></span><div class="f1"><div class="t">Цель дня</div><div class="s">50 XP · около 10 минут</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Curriculum.dc.html"><span class="sw green"><i class="ic ic-map"></i></span><div class="f1"><div class="t">Учебный путь</div><div class="s">Общий английский B1 · 44%</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Study-plan.dc.html"><span class="sw green"><i class="ic ic-calendar"></i></span><div class="f1"><div class="t">План недели</div><div class="s">15 минут в день под цель</div></div><span class="badge soon">скоро</span></a>
+    <a class="row" href="Notification-settings.dc.html"><span class="sw blue"><i class="ic ic-bell"></i></span><div class="f1"><div class="t">Напоминания</div><div class="s">Каждый день в 21:00</div></div><i class="ic ic-chev faint"></i></a>
+    <div class="row"><span class="sw"><i class="ic ic-volume"></i></span><div class="f1"><div class="t">Звук и анимации</div></div><button class="toggle on" aria-label="Звук включён" aria-pressed="true"></button></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Оформление</p></div>
+  <div class="card stack s8">
+    <div class="rowx"><span class="sw"><i class="ic ic-moon"></i></span><div class="f1 t b">Тема</div></div>
+    <div class="seg" role="radiogroup" aria-label="Тема оформления" id="themeseg"><button data-theme-choice="light" role="radio">Светлая</button><button data-theme-choice="dark" role="radio">Тёмная</button><button data-theme-choice="system" role="radio">Системная</button></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Аккаунт и данные</p></div>
+  <div class="list">
+    <a class="row" href="Subscription.dc.html"><span class="sw gold"><i class="ic ic-card-pay"></i></span><div class="f1"><div class="t">Подписка</div><div class="s">Free · 2 из 3 текстов</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Extension-connect.dc.html"><span class="sw"><i class="ic ic-puzzle"></i></span><div class="f1"><div class="t">Расширение браузера</div><div class="s">1 активный токен</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Data-privacy.dc.html"><span class="sw"><i class="ic ic-shield"></i></span><div class="f1"><div class="t">Данные и приватность</div><div class="s">Экспорт, удаление</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Help-support.dc.html"><span class="sw"><i class="ic ic-help"></i></span><div class="f1"><div class="t">Помощь</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Whats-new.dc.html"><span class="sw"><i class="ic ic-spark2"></i></span><div class="f1"><div class="t">Что нового</div></div><span class="count">2</span></a>
+  </div>
+  <a class="link2" href="Login.dc.html">Выйти из аккаунта</a>
+</main>
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab" href="Main.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="tab" href="Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a class="tab" href="Brain-home.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a class="tab" href="Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a class="tab on" href="Profile.dc.html" aria-current="page"><i class="ic ic-user"></i>Профиль</a>
+</nav>
+<script>(function(){var s=document.getElementById('themeseg');function p(){var m=window.LexTheme?LexTheme.get():'system';s.querySelectorAll('button').forEach(function(b){var on=b.dataset.themeChoice===m;b.classList.toggle('on',on);b.setAttribute('aria-checked',on)})}s.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&window.LexTheme){LexTheme.set(b.dataset.themeChoice);p()}});p()})();</script>
+</div>

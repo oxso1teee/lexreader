@@ -1,0 +1,43 @@
+<!--meta {"title":"Пригласить в общий стрик"}-->
+<style>
+.ill{display:flex;align-items:center;justify-content:center;padding:6px 0 2px}
+.ill .avatar{box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 0 0 5px var(--surface-app)}
+.ill .flame{width:64px;height:64px;border-radius:50%;margin:0 -14px;z-index:1;background:var(--fill-ember);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -4px 0 var(--fill-ember-edge),0 0 0 5px var(--surface-app)}
+.slot{width:88px;height:88px;border-radius:50%;border:3px dashed rgba(var(--ink-rgb),.3);display:flex;align-items:center;justify-content:center;color:var(--text-3);background:var(--surface-card);box-shadow:0 0 0 5px var(--surface-app)}
+.stp{display:flex;gap:12px;align-items:flex-start}
+.stp .n{width:28px;height:28px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font:700 13px/1 var(--font-display);background:var(--gold-150);color:var(--orange-text)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Friend-streak.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Общий стрик</div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="ill" role="img" aria-label="Ты и пустое место для друга, между вами огонь">
+    <span class="avatar me xl" style="box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 0 0 5px var(--surface-app)">С</span>
+    <span class="flame"><i class="ic ic-flame-f s32"></i></span>
+    <span class="slot"><i class="ic ic-user-plus s32"></i></span>
+  </div>
+  <div class="center stack s8">
+    <h1 class="h1">Позови друга<br>в общий стрик</h1>
+    <p class="lead">Занимайтесь каждый сам — серия общая. Так проще не бросить.</p>
+  </div>
+
+  <div class="card stack" style="gap:14px">
+    <div class="stp"><span class="n">1</span><div><div class="b sm">Отправь ссылку одному другу</div><div class="xs faint">В мессенджер, почту — куда удобно</div></div></div>
+    <div class="stp"><span class="n">2</span><div><div class="b sm">Друг принимает приглашение</div><div class="xs faint">Нужен аккаунт LexReader — бесплатный подойдёт</div></div></div>
+    <div class="stp"><span class="n">3</span><div><div class="b sm">Каждый день занимаетесь оба</div><div class="xs faint">Пропустит один — общий стрик сгорит у обоих</div></div></div>
+  </div>
+
+  <div>
+    <span class="label">Твоя ссылка-приглашение</span>
+    <div class="field" style="padding-right:4px"><i class="ic ic-link faint"></i><span class="f1 mono" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">lexreader.app/s/7K2B-q9xa</span><button class="iconbtn" aria-label="Скопировать ссылку"><i class="ic ic-copy"></i></button></div>
+    <p class="hint">Можно пригласить только одного человека. Ссылка действует 7 дней.</p>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-ember" href="Friend-streak.dc.html"><i class="ic ic-share2"></i>Поделиться ссылкой</a>
+  <button class="btn b-ghost sm"><i class="ic ic-copy s18"></i>Скопировать</button>
+</footer>
+</div>

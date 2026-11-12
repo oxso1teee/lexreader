@@ -1,0 +1,45 @@
+<!--meta {"title":"Отмена подписки"}-->
+<style>
+.keep .ic{color:var(--green-text)}.lose .ic{color:var(--orange-text)}
+.opt{min-height:48px;font-size:15px;padding:8px 14px}
+.cs-blk{padding:12px 16px;display:flex;flex-direction:column;gap:6px}
+.cs-ln{display:flex;gap:10px;align-items:center;font-size:14px;line-height:1.35}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Subscription.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Отмена подписки</div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="rowx" style="padding:0 4px;align-items:flex-start">
+    <i class="lex sad s56" aria-hidden="true"></i>
+    <div class="f1"><h1 class="h2">Жаль расставаться</h1><p class="sm muted" style="margin:4px 0 0">Plus работает до <b>24 ноября</b>. Потом — Free, без списаний</p></div>
+  </div>
+  <div class="card p0">
+    <div class="cs-blk keep">
+      <p class="eyebrow c-green">Останется навсегда</p>
+      <div class="cs-ln"><i class="ic ic-check s18"></i>842 слова, карточки и колоды</div>
+      <div class="cs-ln"><i class="ic ic-check s18"></i>Стрик 12 дней, 1 240 XP и достижения</div>
+      <div class="cs-ln"><i class="ic ic-check s18"></i>Первые 3 текста — с прогрессом</div>
+    </div>
+    <hr class="divider" style="margin:0">
+    <div class="cs-blk lose">
+      <p class="eyebrow c-orange">Закроется после 24 ноября</p>
+      <div class="cs-ln"><i class="ic ic-lock s18"></i>Остальные 34 текста — только для чтения</div>
+      <div class="cs-ln"><i class="ic ic-lock s18"></i>Импорт: 1 видео в неделю, 100 карточек</div>
+    </div>
+  </div>
+  <div class="sect"><p class="eyebrow">Почему уходишь? <span style="text-transform:none;letter-spacing:0;font-weight:500">· необязательно</span></p></div>
+  <div class="stack s8" role="radiogroup" aria-label="Причина">
+    <button class="opt on" role="radio" aria-checked="true"><span class="radio on"></span>Дорого сейчас</button>
+    <button class="opt" role="radio" aria-checked="false"><span class="radio"></span>Хватает бесплатного</button>
+    <button class="opt" role="radio" aria-checked="false"><span class="radio"></span>Делаю паузу в учёбе</button>
+  </div>
+  <div class="banner warn"><i class="ic ic-bulb"></i><div>Годовой план — 299 ₽/мес вместо 399 ₽. Можно перейти вместо отмены</div></div>
+</main>
+<footer class="dock row line">
+  <a class="btn b-ghost" href="Subscription.dc.html">Оставить Plus</a>
+  <a class="btn b-red" href="Subscription.dc.html">Отменить</a>
+</footer>
+</div>

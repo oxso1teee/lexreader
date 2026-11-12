@@ -1,0 +1,41 @@
+<!--meta {"title":"Коллекция — Для отпуска"}-->
+<style>
+.row .cover{font-size:11px}
+.chero{border-radius:var(--r-xl);padding:18px 20px 16px;background:var(--fill-ember);color:#fff;box-shadow:inset 0 -6px 0 0 var(--fill-ember-edge)}
+.menu{position:absolute;right:12px;top:92px;z-index:var(--z-modal);width:220px;background:var(--surface-overlay);border:var(--stroke);border-radius:var(--r-md);box-shadow:var(--shadow-2);padding:6px;display:flex;flex-direction:column}
+.menu a{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:10px;font:600 14.5px/1.2 var(--font-body)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Collections.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Коллекция</div>
+  <button class="iconbtn" aria-label="Действия" aria-expanded="true" style="background:var(--surface-sunken)"><i class="ic ic-more s24"></i></button>
+</header>
+<div class="menu" role="menu" aria-label="Действия с коллекцией">
+  <a role="menuitem" href="Collection-detail.dc.html"><i class="ic ic-pencil"></i>Переименовать</a>
+  <a role="menuitem" href="Share-card.dc.html"><i class="ic ic-share2"></i>Поделиться</a>
+  <a role="menuitem" href="Collections.dc.html" class="c-red"><i class="ic ic-trash"></i>Удалить коллекцию</a>
+</div>
+<main class="body">
+  <section class="chero">
+    <p class="eyebrow" style="color:inherit">Коллекция</p>
+    <div class="h1" style="margin-top:4px">Для отпуска</div>
+    <div class="sm" style="margin-top:4px">6 материалов · 4 текста, 2 видео · ~74 мин</div>
+    <div class="rowx s8" style="margin-top:14px"><div class="bar lg f1" role="progressbar" aria-valuenow="48" aria-valuemax="100" aria-label="Общий прогресс 48%"><i style="width:48%;background:#fff"></i></div><b class="num sm">48%</b></div>
+    <div class="xs" style="margin-top:6px">Пройдено 3 из 6 · слова из коллекции — в колоде «Путешествия»</div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Материалы</p><a href="Deck-detail.dc.html">Колода · 64</a></div>
+  <div class="list">
+    <a class="row" href="Text-detail.dc.html"><span class="cover c-green">Travel</span><div class="f1"><div class="t">Travel English Basics</div><div class="s">Текст · 12 мин · A2–B1</div><div class="bar sm" style="margin-top:6px"><i style="width:100%"></i></div></div><span class="badge green"><i class="ic ic-check s14"></i>готово</span></a>
+    <a class="row" href="Text-detail.dc.html"><span class="cover c-teal">Lisbon</span><div class="f1"><div class="t">Lost in Lisbon</div><div class="s">Текст · 15 мин · B1</div><div class="bar sm" style="margin-top:6px"><i style="width:100%"></i></div></div><span class="badge green"><i class="ic ic-check s14"></i>готово</span></a>
+    <a class="row" href="Watch.dc.html"><span class="cover c-ink video" aria-hidden="true"></span><div class="f1"><div class="t">Life in London</div><div class="s">Видео · 8:24 · B1</div><div class="bar sm" style="margin-top:6px"><i style="width:30%"></i></div></div><span class="v">30%</span></a>
+    <a class="row" href="Text-detail.dc.html"><span class="cover c-ember">Kyoto</span><div class="f1"><div class="t">A Week in Kyoto</div><div class="s">Текст · 18 мин · B1</div><div class="bar sm" style="margin-top:6px"><i style="width:55%"></i></div></div><span class="v">55%</span></a>
+    <a class="row" href="Text-detail.dc.html"><span class="cover c-sand">Airport</span><div class="f1"><div class="t">Airport Survival Guide</div><div class="s">Текст · 7 мин · A2</div></div><span class="v faint">не начато</span></a>
+    <a class="row" href="Watch.dc.html"><span class="cover c-sky video" aria-hidden="true"></span><div class="f1"><div class="t">British accents explained</div><div class="s">Видео · 14:02 · B1–B2</div></div><span class="v faint">не начато</span></a>
+  </div>
+</main>
+<footer class="dock line">
+  <a class="btn b-leaf" href="Import-hub.dc.html"><i class="ic ic-plus"></i>Добавить материал</a>
+</footer>
+</div>

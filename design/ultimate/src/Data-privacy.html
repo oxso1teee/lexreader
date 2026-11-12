@@ -1,0 +1,51 @@
+<!--meta {"title":"Данные и приватность"}-->
+<style>
+.toggle{height:44px;padding:8px 0;background-clip:content-box}.toggle::after{top:11px}
+.store{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.store>div{background:var(--surface-card);border-radius:12px;padding:10px;text-align:center}
+.store b{display:block;font:700 18px/1.1 var(--font-display)}
+.store span{font:500 12px/1.3 var(--font-body);color:var(--text-2)}
+button.row{width:100%;border:0;background:none;text-align:left;cursor:pointer}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Profile.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Данные и приватность</div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="card t-green">
+    <div class="rowx" style="gap:12px">
+      <span class="sw s-green"><i class="ic ic-shield"></i></span>
+      <div class="f1"><div class="h3">Что мы храним</div><div class="xs muted" style="margin-top:2px">Только то, что нужно для учёбы. Тексты не уходят третьим лицам.</div></div>
+    </div>
+    <div class="store">
+      <div><b class="c-blue">842</b><span>слов в «Мозге»</span></div>
+      <div><b class="c-green">37</b><span>текстов, видео</span></div>
+      <div><b class="c-orange">12</b><span>дней стрика</span></div>
+    </div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Экспорт</p></div>
+  <div class="list">
+    <button class="row"><span class="sw blue"><i class="ic ic-download"></i></span><div class="f1"><div class="t">Скачать мои данные</div><div class="s">весь аккаунт · JSON · ~2,4 МБ</div></div><span class="badge">JSON</span></button>
+    <button class="row"><span class="sw green"><i class="ic ic-cards"></i></span><div class="f1"><div class="t">Экспорт словаря</div><div class="s">842 слова с переводами · для Anki</div></div><span class="badge">CSV</span></button>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Использование данных</p></div>
+  <div class="list">
+    <div class="row"><span class="sw gold"><i class="ic ic-bulb"></i></span><div class="f1"><div class="t">«Мой английский» учитывает активность</div><div class="s">правила на устройстве и сервере, без ИИ и без передачи текстов</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Мой английский учитывает активность"></button></div>
+    <div class="row"><span class="sw"><i class="ic ic-chart"></i></span><div class="f1"><div class="t">Аналитика использования</div><div class="s">обезличенно: какие экраны открываешь</div></div><button class="toggle" role="switch" aria-checked="false" aria-label="Аналитика использования"></button></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Документы</p></div>
+  <div class="list">
+    <button class="row"><span class="sw"><i class="ic ic-text"></i></span><div class="f1 t">Политика конфиденциальности</div><i class="ic ic-external faint s18"></i></button>
+    <button class="row"><span class="sw"><i class="ic ic-scale"></i></span><div class="f1 t">Условия использования</div><i class="ic ic-external faint s18"></i></button>
+  </div>
+
+  <div class="list">
+    <a class="row danger" href="Delete-account.dc.html"><span class="sw red"><i class="ic ic-trash"></i></span><div class="f1"><div class="t">Удалить все мои данные</div><div class="s">вместе с аккаунтом, без восстановления</div></div><i class="ic ic-chev faint s18"></i></a>
+  </div>
+</main>
+</div>

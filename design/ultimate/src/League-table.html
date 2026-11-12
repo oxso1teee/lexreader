@@ -1,0 +1,53 @@
+<!--meta {"title":"Лига недели"}-->
+<style>
+.lr{display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:56px}
+.lr+.lr{border-top:var(--stroke-soft)}
+.lr .pl{width:24px;text-align:center;font:700 15px/1 var(--font-display);color:var(--text-2);flex:none}
+.lr .nm{flex:1;font:600 15px/1.2 var(--font-body);min-width:0}
+.lr .xp{font:700 14px/1 var(--font-body);color:var(--text-2);white-space:nowrap}
+.lr.me{background:var(--green-100);box-shadow:inset 4px 0 0 var(--green-400)}
+.lr.me .nm,.lr.me .xp,.lr.me .pl{color:var(--green-text);font-weight:700}
+.zone{display:flex;align-items:center;gap:8px;padding:6px 14px;font:700 11.5px/1.2 var(--font-body);letter-spacing:.06em;text-transform:uppercase}
+.zone.up{color:var(--green-text);background:var(--green-100)}
+.zone.dn{color:var(--red-text);background:var(--red-100)}
+.medalpl{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px/1 var(--font-display);flex:none}
+.plaque{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-radius:var(--r-lg);background:var(--surface-card);border:2px solid var(--green-400)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Progress.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Лига недели<small>Серебряная лига · 8 участников</small></div>
+  <a class="iconbtn" href="Weekly-rank.dc.html" aria-label="Пьедестал"><i class="ic ic-trophy"></i></a>
+</header>
+<main class="body">
+  <section class="hero sky rowx" style="padding:16px 18px 20px">
+    <div class="f1">
+      <p class="eyebrow">Рейтинг недели · 10–16 ноя</p>
+      <div class="rowx s8" style="margin-top:6px;align-items:baseline"><b class="num xl">4</b><span class="h3">место · 310 XP</span></div>
+      <div class="rowx s6 sm b" style="margin-top:6px"><i class="ic ic-timer s16"></i>осталось 3 дня 7 ч</div>
+    </div>
+    <i class="lex think pale s88" aria-hidden="true"></i>
+  </section>
+
+  <div class="list">
+    <div class="zone up"><i class="ic ic-arrow-up s14"></i>Зона повышения · топ-3</div>
+    <div class="lr"><span class="medalpl fill-sun">1</span><span class="avatar a2">А</span><span class="nm">Аня</span><span class="xp">510 XP</span></div>
+    <div class="lr"><span class="medalpl" style="background:var(--paper-300)">2</span><span class="avatar a1">М</span><span class="nm">Макс</span><span class="xp">420 XP</span></div>
+    <div class="lr" style="border-bottom:3px solid var(--green-400)"><span class="medalpl fill-ember">3</span><span class="avatar a4">Л</span><span class="nm">Лена</span><span class="xp">350 XP</span></div>
+    <div class="lr me" aria-current="true"><span class="pl">4</span><span class="avatar me">С</span><span class="nm">Ты</span><span class="xp">310 XP</span></div>
+    <div class="lr"><span class="pl">5</span><span class="avatar a6">Д</span><span class="nm">Дима</span><span class="xp">280 XP</span></div>
+    <div class="lr"><span class="pl">6</span><span class="avatar a5">О</span><span class="nm">Олег</span><span class="xp">235 XP</span></div>
+    <div class="zone dn"><i class="ic ic-arrow-down s14"></i>Зона вылета</div>
+    <div class="lr"><span class="pl">7</span><span class="avatar a3">И</span><span class="nm">Ира</span><span class="xp">140 XP</span></div>
+    <div class="lr"><span class="pl">8</span><span class="avatar a1">П</span><span class="nm">Паша</span><span class="xp">85 XP</span></div>
+  </div>
+  <p class="xs faint center" style="margin:0">Топ-3 переходят в Золотую лигу, двое последних — в Бронзовую</p>
+</main>
+<footer class="dock line">
+  <div class="plaque">
+    <span class="sw s-green round"><i class="ic ic-arrow-up"></i></span>
+    <div class="f1"><div class="b sm">До 3 места — 40 XP</div><div class="xs muted">это одно занятие</div></div>
+    <a class="btn b-leaf sm fit" href="Lesson-start.dc.html">Начать</a>
+  </div>
+</footer>
+</div>

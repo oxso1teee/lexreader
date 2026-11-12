@@ -1,0 +1,55 @@
+<!--meta {"title":"Достижение — подробно"}-->
+<style>
+.medal{width:72px;height:80px;margin:0 auto;display:flex;align-items:center;justify-content:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--m,var(--fill-sky));color:#fff}
+.medal.m-sun{--m:var(--fill-sun);color:var(--fill-ink)}.medal.m-leaf{--m:var(--fill-leaf)}.medal.m-ember{--m:var(--fill-ember)}.medal.m-off{--m:var(--surface-sunken);color:var(--text-3)}
+.bgach{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px}
+.big{position:relative;width:150px;height:168px;margin:4px auto 0}
+.big .hx{position:absolute;inset:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.big .o{background:var(--fill-sun)}
+.big .i{inset:8px;background:var(--fill-sky);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff}
+.big .i b{font:700 13px/1 var(--font-display);letter-spacing:.06em}
+.big .ribbon{position:absolute;left:50%;bottom:-18px;width:56px;height:40px;margin-left:-28px;background:var(--fill-sun);clip-path:polygon(0 0,100% 0,100% 100%,50% 72%,0 100%);z-index:-1}
+.lvls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lvls>div{border-radius:14px;padding:10px 8px;text-align:center;background:var(--surface-sunken)}
+.lvls .on{background:var(--blue-100);outline:2px solid var(--blue-400)}
+</style>
+<div class="app">
+<header class="hdr">
+  <span class="iconbtn" aria-hidden="true"><i class="ic ic-back s24"></i></span>
+  <div class="ttl">Достижения<small>Сергей · уровень 7</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body" aria-hidden="true">
+  <div class="card lg" style="height:112px"></div>
+  <div class="grid3">
+    <div class="card p0 bgach"><div class="medal"><i class="ic ic-book s28"></i></div><div class="b xs">Книжный червь</div></div>
+    <div class="card p0 bgach"><div class="medal m-ember"><i class="ic ic-flame-f s28"></i></div><div class="b xs">Огонёк</div></div>
+    <div class="card p0 bgach"><div class="medal m-leaf"><i class="ic ic-brain s28"></i></div><div class="b xs">Память</div></div>
+  </div>
+</main>
+<div class="scrim"></div>
+<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="ach-t" style="padding-top:10px">
+  <div class="big pop" role="img" aria-label="Медаль «Книжный червь», уровень 2">
+    <div class="ribbon"></div>
+    <div class="hx o"></div>
+    <div class="hx i"><i class="ic ic-book s48"></i><b>УРОВЕНЬ 2</b></div>
+  </div>
+  <div class="center" style="margin-top:14px">
+    <p class="eyebrow c-blue">Получено 9 ноября 2026</p>
+    <h2 class="h1" id="ach-t" style="margin-top:6px">Книжный червь</h2>
+    <p class="lead" style="margin-top:4px">Прочитано 10 глав на английском. Последняя — глава 3 «The Last Lighthouse».</p>
+  </div>
+  <div class="card">
+    <div class="rowx between"><b class="sm">До уровня 3</b><b class="sm c-blue">10 / 25 глав</b></div>
+    <div class="bar lg blue" style="margin:8px 0 10px" role="progressbar" aria-valuenow="10" aria-valuemax="25" aria-label="10 из 25 глав"><i style="width:40%"></i></div>
+    <div class="lvls">
+      <div><b class="sm">Ур. 1</b><div class="xs faint">3 главы</div></div>
+      <div class="on"><b class="sm c-blue">Ур. 2</b><div class="xs muted">10 глав</div></div>
+      <div><b class="sm muted">Ур. 3</b><div class="xs faint">25 глав</div></div>
+    </div>
+  </div>
+  <div class="rowx s8 xs muted" style="justify-content:center"><i class="ic ic-users s16"></i>Есть у 18% учеников уровня B1</div>
+  <a class="btn b-leaf" href="Share-card.dc.html"><i class="ic ic-share2"></i>Поделиться</a>
+  <a class="link2" href="Achievements-gallery.dc.html" style="padding:8px 0">Закрыть</a>
+</section>
+</div>

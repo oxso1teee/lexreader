@@ -1,0 +1,39 @@
+<!--meta {"title":"Цель чтения","planned":true}-->
+<style>
+.ring{position:relative;width:184px;height:184px;margin:0 auto}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sw-row{width:100%;border:0;background:none;text-align:left;cursor:pointer}
+.opt .f1 small{display:block;font:500 12.5px/1.3 var(--font-body);color:var(--text-3);margin-top:2px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Reading-history.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Цель чтения<small>в неделю</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="card lg center">
+    <div class="ring" role="img" aria-label="Прогресс недели: 2 из 3 текстов">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="var(--progress-track)" stroke-width="12"/><circle cx="50" cy="50" r="42" fill="none" stroke="var(--green-400)" stroke-width="12" stroke-linecap="round" stroke-dasharray="176 264"/></svg>
+      <div class="c"><b class="num xl">2<span class="faint" style="font-size:22px">/3</span></b><span class="xs faint" style="max-width:92px;line-height:1.25">текста за неделю</span></div>
+    </div>
+    <div class="rowx s8" style="justify-content:center;margin-top:14px"><i class="lex wink s40" aria-hidden="true"></i><div class="sm muted" style="text-align:left">Ещё один текст — и неделя в зачёт. <b>Lost in Lisbon</b> осталось 15 мин.</div></div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Сколько читать</p></div>
+  <div class="stack s8" role="radiogroup" aria-label="Недельная цель">
+    <button class="opt" role="radio" aria-checked="false"><span class="radio"></span><div class="f1">Спокойно<small>1 текст в неделю · ~20 мин</small></div><span class="badge">A2+</span></button>
+    <button class="opt on" role="radio" aria-checked="true"><span class="radio on"></span><div class="f1">Регулярно<small>3 текста в неделю · ~1 час</small></div><span class="badge blue">твой темп</span></button>
+    <button class="opt" role="radio" aria-checked="false"><span class="radio"></span><div class="f1">Интенсивно<small>5 текстов в неделю · ~2 часа</small></div><span class="badge gold">+15% XP</span></button>
+  </div>
+
+  <div class="list">
+    <button class="row sw-row" role="switch" aria-checked="true"><span class="sw green"><i class="ic ic-bell"></i></span><div class="f1"><div class="t">Напоминать по вечерам</div><div class="s">в 20:00, если за день ничего не прочитал</div></div><span class="toggle on" aria-hidden="true"></span></button>
+    <button class="row sw-row" role="switch" aria-checked="true"><span class="sw gold"><i class="ic ic-flame"></i></span><div class="f1"><div class="t">Считать в стрик</div><div class="s">10 минут чтения засчитываются как занятие</div></div><span class="toggle on" aria-hidden="true"></span></button>
+  </div>
+</main>
+<footer class="dock line">
+  <a class="btn b-leaf" href="Reading-history.dc.html">Сохранить цель</a>
+</footer>
+</div>
