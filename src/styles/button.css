@@ -70,15 +70,25 @@
     --btn-label: #fff;
   }
 
+  /* Белый текст требует глубокой заливки (--sky-fill / --ember-fill, см.
+     tokens.css): базовые --sky (#1cb0f6) и --ember (#ff9500) дают белому
+     тексту ~2.4:1 и ~2.2:1. */
   .btn-sky {
-    --btn-fill: var(--sky);
-    --btn-edge: var(--sky-edge);
+    --btn-fill: var(--sky-fill);
+    --btn-edge: var(--sky-fill-edge);
     --btn-label: #fff;
   }
 
   .btn-ember {
-    --btn-fill: var(--color-warning);
-    --btn-edge: var(--ember-edge);
+    --btn-fill: var(--ember-fill);
+    --btn-edge: var(--ember-fill-edge);
+    --btn-label: #fff;
+  }
+
+  /* ИИ / planned — тёмно-зелёная заливка, как .b-ink/.hero.ink в макетах. */
+  .btn-ink {
+    --btn-fill: var(--ink-fill);
+    --btn-edge: var(--ink-fill-edge);
     --btn-label: #fff;
   }
 
@@ -104,5 +114,17 @@
     --btn-fill: var(--sun);
     --btn-edge: var(--sun-edge);
     --btn-label: #1a1a1a;
+  }
+
+  /* Состояние загрузки: кнопка остаётся на месте (не прыгает), клики
+     блокируются, вместо иконки/текста можно показать спиннер. */
+  .btn-block {
+    display: flex;
+    width: 100%;
+  }
+
+  .btn[aria-busy="true"] {
+    cursor: progress;
+    pointer-events: none;
   }
 }

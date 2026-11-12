@@ -6,6 +6,7 @@ import RegisterServiceWorker from "./register-service-worker";
 import NativeBridge from "./native-bridge";
 import { THEME_INIT_SCRIPT } from "./theme-init-script";
 import { siteUrl } from "@/lib/site-url";
+import { Toaster } from "@/components/ui/toast";
 import { MomentProvider } from "@/components/product/moments/moment-provider";
 import WeeklyRankGate from "@/components/product/moments/weekly-rank-gate";
 import WelcomeBackGate from "@/components/product/moments/welcome-back-gate";
@@ -63,13 +64,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Красит мобильный браузер/PWA-хром (статус-бар) — видно почти на каждом
-  // экране на телефоне. Не CSS custom property (metadata — обычный JS
-  // объект, не может ссылаться на var(--leaf)) — raw hex, держать в
-  // синхроне с --leaf из src/styles/tokens.css вручную при следующей
-  // смене акцента (redesign/duolingo-flat: старый forest #1f4d3b → leaf
-  // #4fce23).
-  themeColor: "#4fce23",
+  // Красит мобильный браузер/PWA-хром (статус-бар). Metadata — обычный JS
+  // объект и не может ссылаться на CSS-переменные, поэтому значения —
+  // raw hex фона приложения (--background) для каждой схемы; держать в
+  // синхроне с src/app/globals.css при смене поверхностей. Раньше здесь
+  // был акцентный #4fce23 (устаревший --leaf), из-за чего в тёмной теме
+  // статус-бар светился зелёным поверх тёмного приложения.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f1ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#131316" },
+  ],
   // M3 Slice 1: без viewportFit "cover" env(safe-area-inset-*) в
   // MobileBottomNav не активен на iOS (docs/ui/current-ui-audit.md §5).
   viewportFit: "cover",
@@ -110,6 +114,9 @@ export default function RootLayout({
           <TwinInsightGate />
           {children}
         </MomentProvider>
+        {/* Единая система уведомлений: toast.* из "@/lib/ui/toast" + статус
+            сети. Вне MomentProvider — не зависит от очереди «моментов». */}
+        <Toaster />
       </body>
     </html>
   );

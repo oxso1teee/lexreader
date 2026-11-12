@@ -1,31 +1,7 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
-import {
-  isThemePreference,
-  resolveTheme,
-  THEME_STORAGE_KEY,
-  type ThemePreference,
-} from "@/lib/theme";
-
-const listeners = new Set<() => void>();
-
-function getSnapshot(): ThemePreference {
-  const raw = localStorage.getItem(THEME_STORAGE_KEY);
-  return isThemePreference(raw) ? raw : "system";
-}
-function getServerSnapshot(): ThemePreference {
-  return "system";
-}
-function subscribe(onChange: () => void): () => void {
-  listeners.add(onChange);
-  return () => listeners.delete(onChange);
-}
-
-function applyResolvedTheme(preference: ThemePreference) {
-  const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.setAttribute("data-theme", resolveTheme(preference, systemPrefersDark));
-}
+import { useTheme } from "@/lib/ui/use-theme";
+import type { ThemePreference } from "@/lib/theme";
 
 const OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: "light", label: "Светлая" },
@@ -45,25 +21,10 @@ const OPTIONS: { value: ThemePreference; label: string }[] = [
 // (settings-client.tsx собирает несколько таких строк в одну карточку
 // "Оформление и устройство" вместо стопки из отдельных карточек на
 // каждую мелкую настройку).
+// Состояние темы и запись в localStorage/data-theme — в src/lib/ui/use-theme.ts
+// (единая точка, общая для всего приложения).
 export default function ThemeToggle() {
-  const preference = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-
-  // Применяет тему сразу при выборе и держит её в синхроне, если открыта
-  // системная тема и пользователь переключил тему ОС, не заходя обратно
-  // сюда (иначе "Системная" была бы live только в момент клика).
-  useEffect(() => {
-    applyResolvedTheme(preference);
-    if (preference !== "system") return;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => applyResolvedTheme(preference);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, [preference]);
-
-  function select(next: ThemePreference) {
-    localStorage.setItem(THEME_STORAGE_KEY, next);
-    listeners.forEach((l) => l());
-  }
+  const { preference, setTheme: select } = useTheme();
 
   return (
     <div>
