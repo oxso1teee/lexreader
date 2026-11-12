@@ -1,0 +1,59 @@
+<!--meta {"title":"Группы","planned":true}-->
+<style>
+.astack{display:flex}.astack .avatar{box-shadow:0 0 0 2px var(--fill-leaf)}.astack .avatar+.avatar{margin-left:-8px}
+.more{width:28px;height:28px;border-radius:50%;margin-left:-8px;background:var(--fill-leaf-edge);color:#fff;box-shadow:0 0 0 2px var(--fill-leaf);display:flex;align-items:center;justify-content:center;font:700 11px/1 var(--font-body)}
+.hero .bar{background:rgba(0,0,0,.22)}.hero .bar>i{background:var(--gold-400)}
+.grow-row{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;position:relative;min-height:68px}
+.list>.grow-row+.grow-row::before{content:"";position:absolute;left:14px;right:14px;top:0;border-top:var(--stroke-soft)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Friends-list.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Группы<small>учитесь вместе ради общей цели</small></div>
+  <a class="iconbtn" href="Search-results.dc.html" aria-label="Поиск групп"><i class="ic ic-search"></i></a>
+</header>
+<main class="body">
+  <p class="eyebrow" style="margin:2px 4px -4px">Моя группа</p>
+  <section class="hero">
+    <div class="rowx top between">
+      <div>
+        <div class="h2">Клуб B1</div>
+        <div class="sm" style="margin-top:4px">18 участников · ты на 3 месте</div>
+      </div>
+      <span class="sw lg round" style="background:rgba(255,255,255,.2);color:#fff"><i class="ic ic-users s28"></i></span>
+    </div>
+    <div class="rowx between" style="margin-top:16px"><span class="eyebrow">Цель недели</span><span class="b sm">2 400 / 3 000 XP</span></div>
+    <div class="bar lg" style="margin-top:8px" role="progressbar" aria-valuenow="2400" aria-valuemax="3000" aria-label="Цель недели"><i style="width:80%"></i></div>
+    <div class="rowx between" style="margin-top:12px">
+      <div class="astack"><span class="avatar a1 sm">А</span><span class="avatar a5 sm">М</span><span class="avatar a2 sm">Л</span><span class="more">+15</span></div>
+      <span class="sm b">Твой вклад: 310 XP</span>
+    </div>
+    <a class="btn b-white" href="Group-detail.dc.html" style="margin-top:14px">Открыть клуб</a>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Рекомендуем</p><span class="xs faint">по уровню B1</span></div>
+  <div class="list">
+    <div class="grow-row">
+      <span class="sw s-blue"><i class="ic ic-compass"></i></span>
+      <div class="f1"><div class="b">Travel English</div><div class="xs faint">126 участников · A2–B1</div></div>
+      <button class="btn b-leaf sm fit">Вступить</button>
+    </div>
+    <div class="grow-row">
+      <span class="sw s-gold"><i class="ic ic-book"></i></span>
+      <div class="f1"><div class="b">Читаем классику</div><div class="xs faint">42 участника · Treasure Island</div></div>
+      <button class="btn b-leaf sm fit">Вступить</button>
+    </div>
+    <div class="grow-row">
+      <span class="sw s-ember"><i class="ic ic-laptop"></i></span>
+      <div class="f1"><div class="b">Tech English</div><div class="xs faint">64 участника · B1–B2</div></div>
+      <button class="btn b-ghost sm fit" disabled style="--f:var(--surface-sunken);--l:var(--text-2)"><i class="ic ic-clock s18"></i>Заявка</button>
+    </div>
+  </div>
+
+  <button class="card dash rowx" style="width:100%;text-align:left;cursor:pointer;min-height:68px">
+    <span class="sw green"><i class="ic ic-plus"></i></span>
+    <div class="f1"><div class="b">Создать свою группу</div><div class="xs faint">Пригласи до 30 человек и задай цель недели</div></div>
+    <i class="ic ic-chev faint"></i>
+  </button>
+</main>
+</div>

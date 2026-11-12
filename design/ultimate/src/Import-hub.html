@@ -1,0 +1,43 @@
+<!--meta {"title":"Добавить материал"}-->
+<style>
+.row .cover,.hscroll .cover{font-size:11px}
+.way{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;min-height:150px;position:relative}
+.way .sw{width:52px;height:52px;border-radius:16px}
+.way .badge{position:absolute;top:14px;right:12px}
+.way .badge.soon{font-size:11px}
+.way .sw.s-ink{opacity:.85}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Library.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Добавить материал<small>в твою библиотеку</small></div>
+  <a class="iconbtn" href="Help-article.dc.html" aria-label="Как это работает"><i class="ic ic-help s24"></i></a>
+</header>
+<main class="body">
+  <div class="grid2">
+    <a class="card press way" href="Import-text.dc.html"><span class="sw s-green"><i class="ic ic-link s28"></i></span><div><div class="h3">Ссылка на статью</div><div class="xs faint" style="margin-top:2px">BBC, Medium, блоги</div></div></a>
+    <a class="card press way" href="Import-youtube.dc.html"><span class="sw s-ember"><i class="ic ic-video s28"></i></span><div><div class="h3">Видео с YouTube</div><div class="xs faint" style="margin-top:2px">с субтитрами или без</div></div></a>
+    <a class="card press way" href="Import-text.dc.html"><span class="sw s-blue"><i class="ic ic-paste s28"></i></span><div><div class="h3">Вставить текст</div><div class="xs faint" style="margin-top:2px">до 20 000 символов</div></div></a>
+    <div class="card sunk way" aria-disabled="true"><span class="badge soon">Скоро</span><span class="sw s-ink"><i class="ic ic-camera s28"></i></span><div><div class="h3">Фото страницы</div><div class="xs faint" style="margin-top:2px">распознаем текст</div></div></div>
+  </div>
+
+  <section class="card t-gold">
+    <div class="rowx between"><div class="h3">Лимит Free</div><b class="num sm c-gold">2 из 3</b></div>
+    <div class="bar gold" style="margin-top:10px" role="progressbar" aria-valuenow="2" aria-valuemax="3" aria-label="2 из 3 текстов"><i style="width:67%"></i></div>
+    <p class="sm muted" style="margin:8px 0 4px">Ещё 1 текст бесплатно. В Plus — без ограничений, от 299 ₽/мес.</p>
+    <a class="linkc" href="Pricing-plans.dc.html">Сравнить тарифы</a>
+  </section>
+
+  <a class="card rowx" href="Extension-connect.dc.html">
+    <span class="sw blue lg"><i class="ic ic-laptop s24"></i></span>
+    <div class="f1"><div class="h3">Расширение для браузера</div><div class="sm muted">Сохраняй статьи в один клик прямо с сайта</div></div>
+    <i class="ic ic-chev faint"></i>
+  </a>
+
+  <div class="sect"><p class="eyebrow">Недавно добавлено</p></div>
+  <div class="list">
+    <a class="row" href="Watch.dc.html"><span class="cover c-ink video" aria-hidden="true"></span><div class="f1"><div class="t">Life in London</div><div class="s">YouTube · 3 дня назад</div></div><span class="badge green">готово</span></a>
+    <a class="row" href="Reader.dc.html"><span class="cover c-sky">Light-house</span><div class="f1"><div class="t">The Last Lighthouse</div><div class="s">Текст · 2 недели назад</div></div><span class="badge green">готово</span></a>
+  </div>
+</main>
+</div>

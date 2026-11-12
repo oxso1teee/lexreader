@@ -1,0 +1,106 @@
+<!--meta {"title":"Прогресс · desktop","w":1280,"h":800}-->
+<style>
+.dhead{display:flex;align-items:center;gap:16px;padding:28px 32px 4px;flex:none}
+.dhead h1{font:700 28px/1.15 var(--font-display);margin:0;letter-spacing:-.01em}
+.dhead .seg{width:340px}
+.main>.body{padding:16px 32px 28px;gap:16px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:20px;align-items:start}
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.krow .stat{padding:12px 14px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}
+.charts{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px}
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;height:262px;flex:1}
+.heat i{border-radius:4px;background:var(--surface-sunken)}
+.heat .l1{background:var(--green-200)}.heat .l2{background:var(--green-400)}.heat .l3{background:var(--green-500)}.heat .l4{background:var(--green-700)}
+.heat .lt{background:none;border:2px dashed var(--orange-600)}.heat .lx{background:none;border:1px dashed rgba(var(--ink-rgb),.14)}
+.hdays{display:grid;grid-template-rows:repeat(7,1fr);gap:4px;height:262px;font:600 11px/1 var(--font-body);color:var(--text-3);align-items:center}
+.leg{display:flex;gap:3px;align-items:center}.leg i{width:12px;height:12px;border-radius:3px;display:block}
+.xpc{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:262px}
+.xpc div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;min-width:0}
+.xpc i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--gold-100)}
+.xpc i.on{background:var(--gold-500)}
+.xpc b{font:700 11px/1 var(--font-body);color:var(--text-2)}
+.xpc span{font:600 11px/1 var(--font-body);color:var(--text-3);white-space:nowrap}
+.lb .row{min-height:46px;padding:6px 12px}
+.lb .row.me{background:var(--green-100)}
+.rk{width:20px;font:700 14px/1 var(--font-display);text-align:center;color:var(--text-3)}
+.sk{display:grid;grid-template-columns:96px 1fr 36px;align-items:center;gap:10px}
+.sidecard{box-shadow:none}
+</style>
+<div class="app desk">
+<aside class="side" aria-label="Основная навигация">
+  <div class="logo"><i class="lex happy s40"></i>LexReader</div>
+  <a href="D-Today.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a href="D-Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a href="D-Practice.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a class="on" aria-current="page" href="D-Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a href="D-Settings.dc.html"><i class="ic ic-user"></i>Профиль</a>
+  <div class="card sm mta sidecard">
+    <div class="rowx s8"><span class="sw s-ember sm"><i class="ic ic-flame-f s18"></i></span><div class="f1"><div class="b sm">12 дней подряд</div><div class="xs faint">рекорд 21 · 1 заморозка</div></div></div>
+    <div class="rowx between" style="margin-top:10px"><span class="xs muted">Сегодня 30 / 50 XP</span><span class="xs b c-gold">1 240 XP</span></div>
+    <div class="bar sm gold" style="margin-top:6px"><i style="width:60%"></i></div>
+  </div>
+</aside>
+<div class="main">
+  <header class="dhead">
+    <h1 class="f1">Прогресс</h1>
+    <div class="seg" role="tablist"><button role="tab">Неделя</button><button role="tab" class="on" aria-selected="true">12 недель</button><button role="tab">Всё время</button></div>
+    <a class="btn b-ghost sm fit" href="Weekly-report.dc.html"><i class="ic ic-calendar s18"></i>Отчёт недели</a>
+  </header>
+  <main class="body">
+    <div class="cols">
+      <div class="stack s16">
+        <div class="krow">
+          <a class="stat" href="Words-learned.dc.html"><span class="xs muted"><i class="dot" style="background:var(--green-500)"></i>Знаю слов</span><b class="num lg c-green">842</b><span>+38 за месяц</span></a>
+          <a class="stat" href="Reading-history.dc.html"><span class="xs muted"><i class="dot" style="background:var(--blue-500)"></i>Прочитано</span><b class="num lg c-blue">37</b><span>текстов и видео</span></a>
+          <a class="stat" href="Stats-detail.dc.html"><span class="xs muted"><i class="dot" style="background:var(--gold-500)"></i>XP за неделю</span><b class="num lg c-gold">310</b><span>всего 1 240</span></a>
+          <a class="stat" href="Time-spent.dc.html"><span class="xs muted"><i class="dot" style="background:var(--orange-600)"></i>Минут</span><b class="num lg c-orange">96</b><span>за неделю</span></a>
+        </div>
+        <div class="charts">
+          <section class="card">
+            <div class="rowx between"><div class="h3">Активность · 12 недель</div><span class="xs b c-green">71 день из 81</span></div>
+            <div class="rowx" style="margin-top:14px;gap:8px;align-items:stretch">
+              <div class="hdays"><span>Пн</span><span></span><span>Ср</span><span></span><span>Пт</span><span></span><span>Вс</span></div>
+              <div class="heat" role="img" aria-label="Теплокарта активности за 12 недель, последние 12 дней без пропусков"><i class="l2"></i><i class="l1"></i><i class="l3"></i><i class="l0"></i><i class="l0"></i><i class="l0"></i><i class="l2"></i><i class="l0"></i><i class="l1"></i><i class="l0"></i><i class="l0"></i><i class="l3"></i><i class="l3"></i><i class="l0"></i><i class="l1"></i><i class="l0"></i><i class="l3"></i><i class="l0"></i><i class="l0"></i><i class="l1"></i><i class="l0"></i><i class="l3"></i><i class="l0"></i><i class="l1"></i><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i class="l0"></i><i class="l2"></i><i class="l1"></i><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l0"></i><i class="l0"></i><i class="l0"></i><i class="l1"></i><i class="l4"></i><i class="l3"></i><i class="l2"></i><i class="l4"></i><i class="l4"></i><i class="l2"></i><i class="l2"></i><i class="l1"></i><i class="l1"></i><i class="l1"></i><i class="l0"></i><i class="l2"></i><i class="l4"></i><i class="l2"></i><i class="l4"></i><i class="l2"></i><i class="l0"></i><i class="l0"></i><i class="l3"></i><i class="l1"></i><i class="l2"></i><i class="l1"></i><i class="l4"></i><i class="l3"></i><i class="l0"></i><i class="l0"></i><i class="l2"></i><i class="l2"></i><i class="l2"></i><i class="l4"></i><i class="l4"></i><i class="l2"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><i class="l2"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><i class="l3"></i><i class="l4"></i><i class="lt"></i><i class="lx"></i><i class="lx"></i><i class="lx"></i></div>
+            </div>
+            <div class="rowx between xs faint" style="margin-top:8px;padding-left:28px"><span>24 авг</span><span>октябрь</span><span class="leg">меньше<i style="background:var(--surface-sunken)"></i><i style="background:var(--green-200)"></i><i style="background:var(--green-400)"></i><i style="background:var(--green-700)"></i>больше</span></div>
+          </section>
+          <section class="card">
+            <div class="rowx between"><div class="h3">XP по неделям</div><span class="xs b c-gold">в среднем 242</span></div>
+            <div class="xpc" style="margin-top:14px" role="img" aria-label="XP по неделям: от 90 до 350, текущая неделя 310"><div><b>&nbsp;</b><i style="height:51%"></i><span>&nbsp;</span></div><div><b>&nbsp;</b><i style="height:63%"></i><span>31.08</span></div><div><b>&nbsp;</b><i style="height:40%"></i><span>&nbsp;</span></div><div><b>&nbsp;</b><i style="height:74%"></i><span>14.09</span></div><div><b>&nbsp;</b><i style="height:86%"></i><span>&nbsp;</span></div><div><b>&nbsp;</b><i style="height:26%"></i><span>28.09</span></div><div><b>&nbsp;</b><i style="height:69%"></i><span>&nbsp;</span></div><div><b>&nbsp;</b><i style="height:80%"></i><span>12.10</span></div><div><b>&nbsp;</b><i style="height:57%"></i><span>&nbsp;</span></div><div><b>&nbsp;</b><i style="height:94%"></i><span>26.10</span></div><div><b>350</b><i style="height:100%"></i><span>&nbsp;</span></div><div><b>310</b><i class="on" style="height:89%"></i><span>9.11</span></div></div>
+          </section>
+        </div>
+        <div class="grid3" style="gap:12px">
+          <a class="card sm rowx" href="Skill-breakdown.dc.html"><span class="sw green sm"><i class="ic ic-target s18"></i></span><div class="f1"><div class="b sm">Навыки</div><div class="xs faint">сильнее всего чтение</div></div><i class="ic ic-chev faint"></i></a>
+          <a class="card sm rowx" href="Learning-history.dc.html"><span class="sw blue sm"><i class="ic ic-history s18"></i></span><div class="f1"><div class="b sm">История</div><div class="xs faint">64 занятия</div></div><i class="ic ic-chev faint"></i></a>
+          <a class="card sm rowx" href="Achievements-gallery.dc.html"><span class="sw gold sm"><i class="ic ic-medal s18"></i></span><div class="f1"><div class="b sm">Достижения</div><div class="xs faint">14 из 40 открыто</div></div><i class="ic ic-chev faint"></i></a>
+        </div>
+      </div>
+      <aside class="stack s16">
+        <a class="card t-orange rowx" href="Streak-calendar.dc.html" style="gap:10px;padding:14px 16px"><i class="ic ic-flame-f s40 c-orange"></i><div><div class="num lg c-orange">12 дней</div><div class="xs muted">рекорд 21 · 1 заморозка в запасе</div></div></a>
+        <section>
+          <div class="sect" style="margin-bottom:8px"><p class="eyebrow">Рейтинг недели</p><a href="League-table.dc.html">Таблица</a></div>
+          <div class="list lb">
+            <div class="row"><span class="rk c-gold">1</span><span class="avatar sm a2">М</span><div class="f1 b sm">Макс</div><span class="v">540</span></div>
+            <div class="row"><span class="rk">2</span><span class="avatar sm a5">Л</span><div class="f1 b sm">Лена</div><span class="v">455</span></div>
+            <div class="row"><span class="rk">3</span><span class="avatar sm a4">Д</span><div class="f1 b sm">Дима</div><span class="v">372</span></div>
+            <div class="row me"><span class="rk c-green">4</span><span class="avatar sm a3">С</span><div class="f1 b sm">Ты</div><span class="v c-green">310 XP</span></div>
+          </div>
+          <div class="xs faint" style="margin:8px 4px 0">До 3 места — 62 XP. Лига обновится в воскресенье.</div>
+        </section>
+        <a class="card" href="Twin-home.dc.html" style="display:block">
+          <div class="rowx between"><div class="h3">Мой английский</div><span class="badge green">без ИИ</span></div>
+          <div class="xs faint" style="margin-top:4px">Оценка по правилам на устройстве, тексты не отправляются</div>
+          <div class="stack s8" style="margin-top:12px">
+            <div class="sk"><span class="sm sb">Чтение</span><div class="bar sm"><i style="width:72%"></i></div><span class="xs b right">B1+</span></div>
+            <div class="sk"><span class="sm sb">Словарь</span><div class="bar sm blue"><i style="width:64%"></i></div><span class="xs b right">B1</span></div>
+            <div class="sk"><span class="sm sb">Грамматика</span><div class="bar sm ember"><i style="width:48%"></i></div><span class="xs b right">A2+</span></div>
+            <div class="sk"><span class="sm sb">Аудирование</span><div class="bar sm gold"><i style="width:55%"></i></div><span class="xs b right">B1</span></div>
+          </div>
+          <div class="banner warn" style="margin-top:12px;padding:10px 12px"><i class="ic ic-alert s18"></i><div class="xs"><b class="sm">Слабая тема</b>Present Perfect vs Past Simple</div></div>
+        </a>
+      </aside>
+    </div>
+  </main>
+</div>
+</div>

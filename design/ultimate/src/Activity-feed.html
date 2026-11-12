@@ -1,0 +1,46 @@
+<!--meta {"title":"Лента друзей","planned":true}-->
+<style>
+.post{display:flex;flex-direction:column;gap:10px}
+.post .meta{display:flex;align-items:center;gap:10px}
+.post .att{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-md);background:var(--surface-sunken)}
+.post .foot{display:flex;align-items:center;gap:8px}
+.post .chip{min-height:44px;padding:8px 14px}
+.chip .ic{width:18px;height:18px}
+.chip.on .ic{color:var(--green-text)}
+.who{display:flex}.who .avatar{box-shadow:0 0 0 2px var(--surface-card)}.who .avatar+.avatar{margin-left:-6px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Friends-list.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Лента друзей<small>Аня, Макс, Лена, Дима</small></div>
+  <a class="iconbtn" href="Notification-settings.dc.html" aria-label="Настройки уведомлений"><i class="ic ic-bell"></i></a>
+</header>
+<main class="body">
+  <div class="seg" role="tablist"><button class="on" role="tab" aria-selected="true">Все</button><button role="tab">Достижения</button><button role="tab">Дуэли</button></div>
+
+  <div class="sect"><p class="eyebrow">Сегодня</p></div>
+  <article class="card post">
+    <div class="meta"><span class="avatar a1">А</span><div class="f1"><div class="sm"><b>Аня</b> получила достижение</div><div class="xs faint">12 мин назад</div></div></div>
+    <div class="att"><span class="sw s-ember round"><i class="ic ic-flame-f"></i></span><div class="f1"><div class="b sm">50 дней подряд</div><div class="xs faint">Есть у 4% учеников</div></div><span class="badge gold">+50 XP</span></div>
+    <div class="foot"><button class="chip on"><i class="ic ic-thumb"></i>Поздравил</button><div class="who mla"><span class="avatar a5 sm">М</span><span class="avatar me sm" style="box-shadow:0 0 0 2px var(--surface-card)">С</span></div><span class="xs faint">2</span></div>
+  </article>
+
+  <article class="card post">
+    <div class="meta"><span class="avatar a5">М</span><div class="f1"><div class="sm"><b>Макс</b> выиграл дуэль у Димы</div><div class="xs faint">1 ч назад</div></div></div>
+    <div class="att"><span class="sw s-blue round"><i class="ic ic-swords"></i></span><div class="f1"><div class="b sm">8 : 6 · Путешествия</div><div class="xs faint">10 раундов, на 12 секунд быстрее</div></div><a class="btn b-sky sm fit" href="Duel-create.dc.html">Вызвать</a></div>
+    <div class="foot"><button class="chip"><i class="ic ic-thumb"></i>Поздравить</button><span class="xs faint mla">1 реакция</span></div>
+  </article>
+
+  <article class="card post" style="border-color:var(--green-400)">
+    <div class="meta"><span class="avatar me">С</span><div class="f1"><div class="sm"><b>Ты</b> дочитал главу</div><div class="xs faint">2 ч назад</div></div><span class="badge green">Твоя запись</span></div>
+    <div class="att"><span class="cover c-sky" style="width:36px;height:48px"></span><div class="f1"><div class="en sm">The Last Lighthouse</div><div class="xs faint">Глава 3 из 5 · +12 новых слов</div></div><span class="badge gold">+40 XP</span></div>
+    <div class="foot"><div class="who"><span class="avatar a1 sm">А</span><span class="avatar a2 sm">Л</span></div><span class="xs faint">Аня и Лена поздравили</span></div>
+  </article>
+
+  <div class="sect"><p class="eyebrow">Вчера</p></div>
+  <article class="card post">
+    <div class="meta"><span class="avatar a2">Л</span><div class="f1"><div class="sm"><b>Лена</b> держит стрик 5 дней</div><div class="xs faint">Вчера, 21:40</div></div></div>
+    <div class="foot"><button class="chip"><i class="ic ic-thumb"></i>Поздравить</button></div>
+  </article>
+</main>
+</div>

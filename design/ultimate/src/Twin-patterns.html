@@ -1,0 +1,55 @@
+<!--meta {"title":"Паттерны ошибок"}-->
+<style>
+.pt{display:flex;flex-direction:column;gap:10px}
+.pt .ph{display:flex;align-items:flex-start;gap:12px}
+.pt svg{width:84px;height:34px;flex:none}
+.pt .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Twin-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Паттерны ошибок<small>повторяющиеся ошибки за 6 недель</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="grid3">
+    <div class="stat t-orange"><b class="num c-orange">3</b><span>активных</span></div>
+    <div class="stat t-green"><b class="num c-green">1</b><span>устранён</span></div>
+    <div class="stat"><b class="num">19</b><span>ошибок всего</span></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Активные · по частоте</p></div>
+  <a class="card press pt" href="Twin-pattern-detail.dc.html">
+    <div class="ph">
+      <div class="f1"><div class="h3">Present Perfect vs Past Simple</div><div class="xs faint" style="margin-top:3px">последний раз вчера · проверка текста</div></div>
+      <svg class="c-red" viewBox="0 0 84 34" role="img" aria-label="Растёт: 2, 1, 3, 2, 4, 3 за неделю"><polyline points="2,26 18,30 34,20 50,26 66,8 82,14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="meta"><span class="badge red">7 раз за 2 недели</span><span class="badge red"><i class="ic ic-arrow-up s14"></i>чаще</span><span class="badge gold mla">Фокус недели</span></div>
+  </a>
+  <a class="card press pt" href="Twin-pattern-detail.dc.html">
+    <div class="ph">
+      <div class="f1"><div class="h3">Артикли a / the</div><div class="xs faint" style="margin-top:3px">последний раз 3 дня назад · карточки</div></div>
+      <svg class="c-green" viewBox="0 0 84 34" role="img" aria-label="Снижается: 5, 4, 4, 2, 2, 1 за неделю"><polyline points="2,6 18,12 34,12 50,22 66,22 82,28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="meta"><span class="badge orange">5 раз за 2 недели</span><span class="badge green"><i class="ic ic-arrow-down s14"></i>реже</span></div>
+  </a>
+  <a class="card press pt" href="Twin-pattern-detail.dc.html">
+    <div class="ph">
+      <div class="f1"><div class="h3">Предлоги времени in / on / at</div><div class="xs faint" style="margin-top:3px">последний раз 5 дней назад · диагностика</div></div>
+      <svg class="faint" viewBox="0 0 84 34" role="img" aria-label="Без изменений: 1, 2, 1, 2, 1, 2 за неделю"><polyline points="2,22 18,16 34,22 50,16 66,22 82,16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="meta"><span class="badge">3 раза за 2 недели</span><span class="badge"><i class="ic ic-minus s14"></i>без изменений</span></div>
+  </a>
+
+  <div class="sect"><p class="eyebrow">Устранённые</p></div>
+  <a class="card t-green rowx" href="Twin-pattern-detail.dc.html">
+    <span class="sw s-green round"><i class="ic ic-check"></i></span>
+    <div class="f1"><div class="b">Порядок слов в вопросах</div><div class="xs muted">0 ошибок 3 недели подряд · было 6</div></div>
+    <span class="badge green">устранён</span>
+  </a>
+  <p class="rowx s6 xs faint" style="margin:0 4px"><i class="ic ic-shield s16"></i>Паттерн — 3+ одинаковые ошибки по одному правилу. Без ИИ.</p>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Mission-detail.dc.html">Потренировать главный · 6 мин</a>
+</footer>
+</div>

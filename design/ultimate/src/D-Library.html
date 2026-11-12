@@ -1,0 +1,90 @@
+<!--meta {"title":"Библиотека · desktop","w":1280,"h":800}-->
+<style>
+.dhead{display:flex;align-items:center;gap:16px;padding:28px 32px 4px;flex:none}
+.dhead h1{font:700 28px/1.15 var(--font-display);margin:0;letter-spacing:-.01em}
+.main>.body{padding:16px 32px 28px;gap:16px}
+.srch{max-width:520px}
+.kbd{font:700 11px/1 var(--font-mono);padding:4px 6px;border-radius:6px;border:var(--stroke-soft);background:var(--surface-sunken);color:var(--text-2)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr) 1.4fr;gap:16px}
+.stats .stat{display:flex;align-items:center;gap:12px;padding:12px 16px}
+.stats .stat span{margin-top:2px}
+.now{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.shelf{display:grid;grid-template-columns:repeat(5,1fr);gap:20px 18px}
+.shelf .cover.lg{width:100%;height:180px;font-size:15px;padding:12px}
+.shelf a{display:flex;flex-direction:column;gap:6px;min-width:0}
+.shelf .t{font:700 14.5px/1.25 var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tagc{position:absolute;top:8px;left:8px}
+.sidecard{box-shadow:none}
+</style>
+<div class="app desk">
+<aside class="side" aria-label="Основная навигация">
+  <div class="logo"><i class="lex happy s40"></i>LexReader</div>
+  <a href="D-Today.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="on" aria-current="page" href="D-Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a href="D-Practice.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a href="D-Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a href="D-Settings.dc.html"><i class="ic ic-user"></i>Профиль</a>
+  <div class="card sm mta sidecard">
+    <div class="rowx s8"><span class="sw s-ember sm"><i class="ic ic-flame-f s18"></i></span><div class="f1"><div class="b sm">12 дней подряд</div><div class="xs faint">рекорд 21 · 1 заморозка</div></div></div>
+    <div class="rowx between" style="margin-top:10px"><span class="xs muted">Сегодня 30 / 50 XP</span><span class="xs b c-gold">1 240 XP</span></div>
+    <div class="bar sm gold" style="margin-top:6px"><i style="width:60%"></i></div>
+  </div>
+</aside>
+<div class="main">
+  <header class="dhead">
+    <h1>Библиотека</h1>
+    <div class="field f1 srch" style="margin-left:16px"><i class="ic ic-search faint"></i><span class="ph f1">Поиск по названию, автору или слову…</span><span class="kbd">Ctrl K</span></div>
+    <a class="btn b-ghost sm fit" href="Import-youtube.dc.html"><i class="ic ic-video s18"></i>YouTube</a>
+    <a class="btn b-leaf sm fit" href="Import-hub.dc.html" style="min-width:150px"><i class="ic ic-plus s18"></i>Добавить</a>
+  </header>
+  <main class="body">
+    <div class="stats">
+      <a class="stat" href="Words-learned.dc.html"><span class="sw green"><i class="ic ic-brain"></i></span><div><b class="num">816</b><span>слов знаешь</span></div></a>
+      <a class="stat" href="Reading-history.dc.html"><span class="sw blue"><i class="ic ic-book"></i></span><div><b class="num">4</b><span>материала в библиотеке</span></div></a>
+      <a class="stat" href="Reading-goal.dc.html"><span class="sw orange"><i class="ic ic-clock"></i></span><div><b class="num">96 мин</b><span>чтения за неделю</span></div></a>
+      <a class="stat t-gold" href="Limit-reached.dc.html"><span class="sw s-gold"><i class="ic ic-lock"></i></span><div class="f1"><b class="num">3 / 3</b><span class="c-gold" style="color:var(--gold-text)">лимит Free · открой больше с Plus</span></div></a>
+    </div>
+
+    <div class="rowx s8 wrap">
+      <span class="chip on">Все · 10</span><span class="chip"><i class="ic ic-book s16"></i>Тексты</span><span class="chip"><i class="ic ic-video s16"></i>Видео</span><span class="chip">Начатые</span><span class="chip">Завершённые</span>
+      <span class="chip mla"><i class="ic ic-filter s16"></i>Уровень: A2–B2</span><span class="chip"><i class="ic ic-sliders s16"></i>Сначала новые</span>
+    </div>
+
+    <div class="sect"><p class="eyebrow">Читаю сейчас</p><a href="Reading-history.dc.html">История чтения</a></div>
+    <div class="now">
+      <a class="card press rowx" href="D-Reader.dc.html" style="gap:16px">
+        <span class="cover md c-sky">The Last Light&shy;house</span>
+        <div class="f1">
+          <div class="rowx s8"><span class="badge blue">Текст</span><span class="cefr">B1</span></div>
+          <div class="h3" style="margin-top:6px;font-size:17px">The Last Lighthouse</div>
+          <div class="xs faint">Глава 3 из 5 · осталось 6 мин · 14 новых слов</div>
+          <div class="rowx s8" style="margin-top:10px"><div class="bar" style="flex:1"><i style="width:64%"></i></div><span class="sm b">64%</span></div>
+        </div>
+      </a>
+      <a class="card press rowx" href="D-Watch.dc.html" style="gap:16px">
+        <span class="cover md c-ink video">Life in London</span>
+        <div class="f1">
+          <div class="rowx s8"><span class="badge orange">Видео</span><span class="cefr">B1</span></div>
+          <div class="h3" style="margin-top:6px;font-size:17px">Life in London</div>
+          <div class="xs faint">Субтитры · 6 мин осталось · 4 слова сохранено</div>
+          <div class="rowx s8" style="margin-top:10px"><div class="bar" style="flex:1"><i style="width:30%"></i></div><span class="sm b">30%</span></div>
+        </div>
+      </a>
+    </div>
+
+    <div class="sect"><p class="eyebrow">Мои материалы и тексты уровня B1</p><span class="xs faint">10 материалов</span></div>
+    <div class="shelf">
+      <a href="Text-detail.dc.html"><span class="cover lg c-gold">Treasure Island</span><div class="t">Treasure Island</div><div class="rowx s6"><span class="cefr">B1</span><span class="xs faint">Роман · 42 мин</span></div><div class="bar sm"><i style="width:12%"></i></div></a>
+      <a href="Text-detail.dc.html"><span class="cover lg c-teal">Travel English Basics</span><div class="t">Travel English Basics</div><div class="rowx s6"><span class="cefr">A2–B1</span><span class="xs faint">Курс · 8 уроков</span></div><div class="bar sm"><i style="width:45%"></i></div></a>
+      <a href="Text-detail.dc.html"><span class="cover lg c-green">Tech News Weekly</span><div class="t">Tech News Weekly</div><div class="rowx s6"><span class="cefr">B1–B2</span><span class="xs faint">Статьи · 6 мин</span></div><div class="xs c-green b">Новое</div></a>
+      <a href="Text-detail.dc.html"><span class="cover lg c-ember">A Week in Kyoto</span><div class="t">A Week in Kyoto</div><div class="rowx s6"><span class="cefr">B1</span><span class="xs faint">Рассказ · 18 мин</span></div><div class="xs faint">Не начато</div></a>
+      <a href="Text-detail.dc.html"><span class="cover lg c-sand">Lost in Lisbon</span><div class="t">Lost in Lisbon</div><div class="rowx s6"><span class="cefr">A2</span><span class="xs faint">Рассказ · 15 мин</span></div><div class="xs c-green b">Прочитано · 100%</div></a>
+      <a href="Text-detail.dc.html"><span class="cover lg c-sky video">Coffee Shop Talks</span><div class="t">Coffee Shop Talks</div><div class="rowx s6"><span class="cefr">A2</span><span class="xs faint">Видео · 9 мин</span></div><div class="xs faint">Не начато</div></a>
+      <a href="Text-detail.dc.html"><span class="cover lg c-ink">Night Train to Prague</span><div class="t">Night Train to Prague</div><div class="rowx s6"><span class="cefr">B1</span><span class="xs faint">Рассказ · 22 мин</span></div><div class="xs faint">Не начато</div></a>
+      <a href="Paywall-offer.dc.html"><span class="cover lg c-gold lock">Startup Stories</span><div class="t">Startup Stories</div><div class="rowx s6"><span class="cefr">B2</span><span class="xs faint">Подкаст · 12 мин</span></div><div class="xs faint rowx s6"><i class="ic ic-lock s14"></i>Лимит Free<span class="badge plus" style="font-size:11px">Plus</span></div></a>
+      <a href="Paywall-offer.dc.html"><span class="cover lg c-teal lock">The Garden Diaries</span><div class="t">The Garden Diaries</div><div class="rowx s6"><span class="cefr">A2</span><span class="xs faint">Дневник · 10 мин</span></div><div class="xs faint rowx s6"><i class="ic ic-lock s14"></i>Лимит Free<span class="badge plus" style="font-size:11px">Plus</span></div></a>
+      <a href="Import-hub.dc.html"><span class="cover lg card dash" style="color:var(--text-2);align-items:center;justify-content:center;flex-direction:column;gap:8px;text-align:center"><i class="ic ic-plus s32"></i>Свой текст или видео</span><div class="t">Добавить материал</div><div class="xs faint">Текст, ссылка, YouTube</div></a>
+    </div>
+  </main>
+</div>
+</div>

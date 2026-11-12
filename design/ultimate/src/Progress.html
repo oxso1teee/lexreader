@@ -1,0 +1,78 @@
+<!--meta {"title":"Прогресс"}-->
+<style>
+.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
+.heat i{height:22px;border-radius:6px;background:var(--surface-sunken)}
+.heat i.l1{background:var(--green-200)}.heat i.l2{background:var(--fill-leaf)}.heat i.l3{background:var(--green-600)}
+.heat i.today{background:none;border:2px dashed var(--gold-500)}
+.wd{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:6px;text-align:center}
+.mini{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;margin-top:10px}
+.mini .bar{height:8px}
+</style>
+<div class="app">
+<header class="pagehead">
+  <h1>Прогресс</h1>
+  <a class="iconbtn box" href="Weekly-report.dc.html" aria-label="Итоги недели"><i class="ic ic-share2"></i></a>
+</header>
+<main class="body">
+  <div class="seg" role="tablist" aria-label="Период"><button class="on" role="tab" aria-selected="true">Неделя</button><button role="tab">Месяц</button><button role="tab">Всё время</button></div>
+
+  <a class="card t-orange rowx" href="Streak-calendar.dc.html">
+    <span class="sw s-ember lg"><i class="ic ic-flame-f s28"></i></span>
+    <div class="f1"><div class="num c-orange">12 дней</div><div class="sm c-orange">Рекорд 21 · 1 заморозка в запасе</div></div>
+    <i class="ic ic-chev c-orange"></i>
+  </a>
+
+  <div class="grid2">
+    <a class="stat" href="Words-learned.dc.html"><span class="xs b" style="margin:0 0 6px;color:var(--text-2)"><i class="ic ic-book s14 c-green"></i> Знаю слов</span><b class="num lg c-green">842</b></a>
+    <a class="stat" href="Reading-history.dc.html"><span class="xs b" style="margin:0 0 6px;color:var(--text-2)"><i class="ic ic-library s14 c-blue"></i> Прочитано текстов</span><b class="num lg c-blue">37</b></a>
+    <a class="stat" href="Stats-detail.dc.html"><span class="xs b" style="margin:0 0 6px;color:var(--text-2)"><i class="ic ic-bolt-f s14 c-gold"></i> XP за неделю</span><b class="num lg c-gold">310</b></a>
+    <a class="stat" href="Time-spent.dc.html"><span class="xs b" style="margin:0 0 6px;color:var(--text-2)"><i class="ic ic-clock s14 c-orange"></i> Минут за неделю</span><b class="num lg c-orange">96</b></a>
+  </div>
+
+  <a class="card" href="Learning-history.dc.html" aria-label="Активность за 5 недель">
+    <div class="rowx between"><span class="h3">Последние 5 недель</span><span class="xs faint">меньше → больше</span></div>
+    <div class="heat" role="img" aria-label="Карта активности: 26 из 34 дней с занятиями">
+      <i></i><i class="l1"></i><i class="l2"></i><i class="l1"></i><i></i><i></i><i class="l1"></i>
+      <i class="l2"></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i></i><i class="l1"></i><i class="l2"></i>
+      <i class="l1"></i><i class="l3"></i><i class="l3"></i><i class="l2"></i><i class="l2"></i><i></i><i class="l1"></i>
+      <i class="l2"></i><i class="l1"></i><i class="l3"></i><i class="l3"></i><i class="l2"></i><i class="l1"></i><i class="l2"></i>
+      <i class="l3"></i><i class="l3"></i><i class="l2"></i><i class="today"></i><i></i><i></i><i></i>
+    </div>
+    <div class="wd xs faint"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+  </a>
+
+  <div class="grid2">
+    <a class="card sm" href="League-table.dc.html"><p class="eyebrow">Рейтинг недели</p><div class="rowx s8" style="margin-top:8px"><i class="ic ic-trophy c-gold s24"></i><span class="num">4 место</span></div><div class="xs faint" style="margin-top:4px">до 3-го — 40 XP</div></a>
+    <a class="card sm" href="Duel-won.dc.html"><p class="eyebrow">Дуэль с Аней</p><div class="rowx s8" style="margin-top:8px"><span class="num c-green">3 : 2</span></div><div class="xs faint" style="margin-top:4px">ты ведёшь</div></a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Мой английский</p><a href="Twin-home.dc.html">Подробнее</a></div>
+  <a class="card" href="Twin-home.dc.html">
+    <div class="rowx"><span class="sw green"><i class="ic ic-sprout"></i></span><div class="f1"><div class="h3">Стадия «Росток»</div><div class="xs faint">по правилам, без ИИ · 214 подтверждений</div></div></div>
+    <div class="mini sm">
+      <span>Чтение</span><div class="bar"><i style="width:82%"></i></div><span class="b c-green">+8</span>
+      <span>Словарь</span><div class="bar"><i style="width:76%"></i></div><span class="b c-green">+6</span>
+      <span>На слух</span><div class="bar blue"><i style="width:61%"></i></div><span class="b c-green">+3</span>
+      <span>Грамматика</span><div class="bar ember"><i style="width:54%"></i></div><span class="b c-red">−2</span>
+    </div>
+  </a>
+
+  <div class="sect"><p class="eyebrow">Ещё</p></div>
+  <div class="list">
+    <a class="row" href="Level-map.dc.html"><span class="sw s-green"><span class="b xs">B1</span></span><div class="f1"><div class="t">Уровень B1 · 64%</div><div class="s">до B2 — около 1 200 слов</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Skill-breakdown.dc.html"><span class="sw blue"><i class="ic ic-target"></i></span><div class="f1"><div class="t">Навыки</div><div class="s">слабее всего — на слух</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Achievements-gallery.dc.html"><span class="sw gold"><i class="ic ic-award"></i></span><div class="f1"><div class="t">Достижения</div><div class="s">9 из 24 · последнее «Книжный червь»</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Milestones.dc.html"><span class="sw orange"><i class="ic ic-flag"></i></span><div class="f1"><div class="t">Вехи</div><div class="s">до 1 000 слов — 158</div></div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Challenge-weekly.dc.html"><span class="sw blue"><i class="ic ic-users"></i></span><div class="f1"><div class="t">Испытание недели</div><div class="s">командная цель</div></div><span class="badge soon">скоро</span></a>
+    <a class="row" href="Season-pass.dc.html"><span class="sw orange"><i class="ic ic-leaf"></i></span><div class="f1"><div class="t">Сезон «Листопад»</div><div class="s">награды сезона</div></div><span class="badge soon">скоро</span></a>
+    <a class="row" href="Weekly-report.dc.html"><span class="sw green"><i class="ic ic-calendar"></i></span><div class="f1"><div class="t">Отчёт недели</div><div class="s">+22% к прошлой неделе</div></div><i class="ic ic-chev faint"></i></a>
+  </div>
+</main>
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab" href="Main.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="tab" href="Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a class="tab" href="Brain-home.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a class="tab on" href="Progress.dc.html" aria-current="page"><i class="ic ic-chart"></i>Прогресс</a>
+  <a class="tab" href="Profile.dc.html"><i class="ic ic-user"></i>Профиль</a>
+</nav>
+</div>

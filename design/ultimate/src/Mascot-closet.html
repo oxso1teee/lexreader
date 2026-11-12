@@ -1,0 +1,53 @@
+<!--meta {"title":"Гардероб Lex","planned":true}-->
+<style>
+.stage{position:relative;height:262px;border-radius:var(--r-xl);background:var(--blue-100);display:flex;align-items:flex-end;justify-content:center;overflow:hidden;flex:none}
+.stage .pod{position:absolute;bottom:18px;left:50%;width:220px;height:44px;margin-left:-110px;border-radius:50%;background:var(--surface-card);box-shadow:inset 0 -8px 0 rgba(var(--ink-rgb),.12)}
+.stage .lex{position:relative;z-index:1;margin-bottom:34px}
+.stage .hat{position:absolute;z-index:2;left:50%;top:52px;margin-left:-40px}
+.stage .ray{position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,var(--surface-card) 0,transparent 62%);opacity:.7}
+.it{position:relative;aspect-ratio:1;border-radius:16px;border:var(--stroke);background:var(--surface-card);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;min-height:44px}
+.it.on{border-color:var(--green-400);background:var(--green-100);box-shadow:0 3px 0 rgba(43,130,15,.35)}
+.it .tag{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.it .pr{font:700 11px/1 var(--font-body);color:var(--gold-text);display:flex;align-items:center;gap:2px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Shop.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Гардероб Lex<small>12 из 28 предметов</small></div>
+  <span class="pill xp" style="font-size:14px;padding:6px 10px;margin-right:6px" aria-label="Баланс: 640 монет"><i class="ic ic-coins s18"></i>640</span>
+</header>
+<main class="body">
+  <div class="stage" role="img" aria-label="Lex в осенней шапке на подиуме">
+    <div class="ray"></div>
+    <div class="pod"></div>
+    <svg class="hat" width="80" height="44" viewBox="0 0 80 44" aria-hidden="true"><path d="M10 38 C12 6 68 6 70 38 Z" fill="var(--fill-ember)"/><rect x="2" y="32" width="76" height="10" rx="5" fill="var(--fill-ember-edge)"/><circle cx="40" cy="8" r="7" fill="var(--gold-400)"/></svg>
+    <i class="lex joy s160 bob"></i>
+  </div>
+
+  <div class="seg" role="tablist">
+    <button class="on" role="tab" aria-selected="true">Головные</button>
+    <button role="tab" aria-selected="false">Аксессуары</button>
+    <button role="tab" aria-selected="false">Фон</button>
+  </div>
+
+  <div class="grid4">
+    <button class="it on" aria-pressed="true" aria-label="Осенняя шапка, надета"><svg width="40" height="24" viewBox="0 0 80 44" aria-hidden="true"><path d="M10 38 C12 6 68 6 70 38 Z" fill="var(--fill-ember)"/><rect x="2" y="32" width="76" height="10" rx="5" fill="var(--fill-ember-edge)"/><circle cx="40" cy="8" r="7" fill="var(--gold-400)"/></svg><span class="tag fill-leaf"><i class="ic ic-check s14"></i></span></button>
+    <button class="it" aria-label="Синяя шапка, есть"><svg width="40" height="24" viewBox="0 0 80 44" aria-hidden="true"><path d="M10 38 C12 6 68 6 70 38 Z" fill="var(--fill-sky)"/><rect x="2" y="32" width="76" height="10" rx="5" fill="var(--fill-sky-edge)"/></svg></button>
+    <button class="it" aria-label="Кепка, есть"><svg width="40" height="24" viewBox="0 0 80 44" aria-hidden="true"><path d="M14 36 C14 8 58 8 58 36 Z" fill="var(--fill-leaf)"/><rect x="40" y="30" width="38" height="8" rx="4" fill="var(--fill-leaf-edge)"/></svg></button>
+    <button class="it" aria-label="Корона, 900 монет"><i class="ic ic-crown-f s28 c-gold"></i><span class="pr"><i class="ic ic-coins s14"></i>900</span></button>
+    <button class="it" aria-label="Цилиндр, 600 монет"><svg width="32" height="28" viewBox="0 0 64 56" aria-hidden="true"><rect x="14" y="4" width="36" height="40" rx="4" fill="var(--fill-ink)"/><rect x="14" y="30" width="36" height="7" fill="var(--fill-red)"/><rect x="2" y="42" width="60" height="10" rx="5" fill="var(--fill-ink)"/></svg><span class="pr"><i class="ic ic-coins s14"></i>600</span></button>
+    <button class="it" aria-label="Наушники, есть"><i class="ic ic-headphones s28 c-blue"></i></button>
+    <button class="it" aria-label="Закрыто: уровень 10"><i class="ic ic-lock s24 faint"></i><span class="xs faint b">ур. 10</span></button>
+    <button class="it" aria-label="Закрыто: сезонный пропуск"><i class="ic ic-lock s24 faint"></i><span class="xs faint b">сезон</span></button>
+  </div>
+  <div class="rowx s8 xs muted" style="justify-content:center;flex-wrap:wrap"><span class="rowx s6"><i class="ic ic-check-circle s16 c-green"></i>надет</span><span>·</span><span>без цены — уже твой</span><span>·</span><span class="rowx s6"><i class="ic ic-lock s16"></i>закрыт</span></div>
+  <div class="card sm rowx">
+    <span class="sw orange"><i class="ic ic-leaf"></i></span>
+    <div class="f1"><div class="b sm">Осенняя шапка</div><div class="xs muted">награда сезона «Листопад», уровень 9</div></div>
+    <button class="btn b-ghost sm fit">Снять</button>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Profile.dc.html">Сохранить образ</a>
+</footer>
+</div>

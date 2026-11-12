@@ -1,0 +1,44 @@
+<!--meta {"title":"Вход"}-->
+<style>
+.or{display:flex;align-items:center;gap:12px;font:600 12.5px/1 var(--font-body);color:var(--text-3)}
+.or::before,.or::after{content:"";flex:1;border-top:var(--stroke-soft)}
+.forgot{display:flex;align-items:center;justify-content:flex-end;min-height:44px;margin:-4px 0 -8px;font:700 13.5px/1.2 var(--font-body);color:var(--green-text)!important}
+.lhero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:4px 8px 4px}
+.lhero .pills{display:flex;gap:8px;margin-top:6px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Splash.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Вход</div>
+  <a class="iconbtn" href="Help-support.dc.html" aria-label="Помощь"><i class="ic ic-help"></i></a>
+</header>
+<main class="body" style="gap:14px">
+  <div class="lhero">
+    <i class="lex wink s88 bob" aria-hidden="true"></i>
+    <h1 class="h1">С возвращением!</h1>
+    <p class="lead sm">Маяк ждёт: глава 3 «The Last Lighthouse» прочитана на 64%</p>
+    <div class="pills"><span class="pill streak sm"><i class="ic ic-flame-f s16"></i>12 дней</span><span class="pill xp sm"><i class="ic ic-bolt-f s16"></i>1 240 XP</span></div>
+  </div>
+
+  <div>
+    <label class="label">Email</label>
+    <div class="field ok"><i class="ic ic-mail s18 faint"></i><span class="f1">sergey@example.com</span><i class="ic ic-check-circle s18 c-green"></i></div>
+  </div>
+  <div>
+    <label class="label">Пароль</label>
+    <div class="field err focus"><i class="ic ic-lock s18 faint"></i><span class="f1 caret" style="letter-spacing:.18em">••••••••</span><button class="iconbtn" aria-label="Показать пароль" style="margin-right:-10px"><i class="ic ic-eye s18"></i></button></div>
+    <p class="hint err rowx s6"><i class="ic ic-alert s14"></i>Неверный email или пароль. Осталось 4 попытки.</p>
+    <a class="forgot" href="Reset-password.dc.html">Забыли пароль?</a>
+  </div>
+
+  <a class="btn b-leaf" href="Main.dc.html">Войти</a>
+  <div class="or">или</div>
+  <a class="btn b-ghost" href="Magic-link-sent.dc.html"><i class="ic ic-mail"></i>Войти по ссылке из письма</a>
+  <p class="center xs faint" style="margin:0">Без пароля: пришлём одноразовую ссылку на почту.</p>
+  <div class="grow"></div>
+</main>
+<footer class="dock line" style="padding-top:4px;flex-direction:row;justify-content:center;align-items:center;gap:6px">
+  <span class="sm muted">Нет аккаунта?</span>
+  <a class="linkc" href="Signup.dc.html" style="font-size:15px;margin:0;padding:13px 6px">Создать</a>
+</footer>
+</div>

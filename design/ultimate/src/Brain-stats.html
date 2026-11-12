@@ -1,0 +1,67 @@
+<!--meta {"title":"Статистика памяти"}-->
+<style>
+.chart{width:100%;height:132px;display:block}
+.chart .ax{stroke:var(--progress-track);stroke-width:1}
+.chart .b{fill:var(--blue-400)}
+.chart .b.t{fill:var(--green-400)}
+.chart text{font:600 12px var(--font-body);fill:var(--text-3)}
+.ring{width:96px;height:96px;position:relative;flex:none;display:flex;align-items:center;justify-content:center}
+.ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.mat{display:flex;height:14px;border-radius:99px;overflow:hidden;gap:2px}
+.mat i{display:block;height:100%}
+.leg{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font:600 12.5px/1.3 var(--font-body);color:var(--text-2)}
+.leg i{width:10px;height:14px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px}
+.fc7{display:flex;gap:6px;align-items:flex-end;height:84px}
+.fc7>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end;height:100%}
+.fc7 i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:var(--blue-100);border:2px solid var(--blue-400)}
+.fc7 small{font:600 11px/1 var(--font-body);color:var(--text-3)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Brain-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Статистика памяти<small>842 слова · 6 колод</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="seg" role="tablist"><button class="on" role="tab" aria-selected="true">Неделя</button><button role="tab">Месяц</button><button role="tab">Год</button></div>
+  <section class="card">
+    <div class="rowx between"><div><div class="h3">Повторений в день</div><div class="xs faint">всего 286 · в среднем 41</div></div><span class="badge green"><i class="ic ic-arrow-up s14"></i>+12%</span></div>
+    <svg class="chart" viewBox="0 0 320 132" role="img" aria-label="Повторений по дням: пн 38, вт 52, ср 29, чт 61, пт 44, сб 15, вс 47">
+      <line class="ax" x1="0" y1="110" x2="320" y2="110"/>
+      <line class="ax" x1="0" y1="60" x2="320" y2="60" stroke-dasharray="3 4"/>
+      <rect class="b" x="8" y="53" width="30" height="57" rx="6"/>
+      <rect class="b" x="53" y="32" width="30" height="78" rx="6"/>
+      <rect class="b" x="98" y="67" width="30" height="43" rx="6"/>
+      <rect class="b" x="143" y="18" width="30" height="92" rx="6"/>
+      <rect class="b" x="188" y="44" width="30" height="66" rx="6"/>
+      <rect class="b" x="233" y="88" width="30" height="22" rx="6"/>
+      <rect class="b t" x="278" y="40" width="30" height="70" rx="6"/>
+      <text x="16" y="126">Пн</text><text x="61" y="126">Вт</text><text x="106" y="126">Ср</text><text x="151" y="126">Чт</text><text x="196" y="126">Пт</text><text x="241" y="126">Сб</text><text x="284" y="126">Вс</text>
+      <text x="282" y="34">47</text><text x="149" y="12">61</text>
+    </svg>
+  </section>
+  <div class="grid2">
+    <section class="card rowx" style="grid-column:span 2">
+      <div class="ring" role="img" aria-label="Удержание 89 процентов">
+        <svg viewBox="0 0 96 96" width="96" height="96"><circle cx="48" cy="48" r="40" fill="none" stroke="var(--progress-track)" stroke-width="10"/><circle cx="48" cy="48" r="40" fill="none" stroke="var(--blue-400)" stroke-width="10" stroke-linecap="round" stroke-dasharray="224 252"/></svg>
+        <span class="num">89%</span>
+      </div>
+      <div class="f1"><div class="h3">Удержание</div><p class="sm muted" style="margin:4px 0 0">Из 100 карточек ты вспоминаешь 89. Цель в настройках — 90%.</p></div>
+    </section>
+  </div>
+  <section class="card">
+    <div class="rowx between"><div class="h3">Прогноз на 7 дней</div><span class="xs faint">карточек</span></div>
+    <div class="fc7" style="margin-top:10px" role="img" aria-label="Прогноз: 31, 18, 42, 24, 9, 27, 35">
+      <div><i style="height:44px"></i><small>Вт</small></div><div><i style="height:26px"></i><small>Ср</small></div><div><i style="height:60px"></i><small>Чт</small></div><div><i style="height:35px"></i><small>Пт</small></div><div><i style="height:14px"></i><small>Сб</small></div><div><i style="height:40px"></i><small>Вс</small></div><div><i style="height:51px"></i><small>Пн</small></div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="h3">Зрелость карточек</div>
+    <div class="mat" style="margin-top:10px" role="img" aria-label="Новые 120, молодые 324, зрелые 398">
+      <i style="width:14%;background:var(--paper-300)"></i><i style="width:39%;background:var(--blue-400)"></i><i style="width:47%;background:var(--green-400)"></i>
+    </div>
+    <div class="leg" style="margin-top:10px"><span><i style="background:var(--paper-300)"></i>Новые · 120</span><span><i style="background:var(--blue-400)"></i>Молодые · 324</span><span><i style="background:var(--green-400)"></i>Зрелые (21+ дн.) · 398</span></div>
+  </section>
+  <div class="banner info"><i class="ic ic-sun"></i><div><b>Лучшее время — утро</b>С 8 до 10 ты вспоминаешь на 7% лучше, чем вечером.</div></div>
+</main>
+</div>

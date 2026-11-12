@@ -1,0 +1,51 @@
+<!--meta {"title":"Редактирование профиля"}-->
+<style>
+.avwrap{position:relative;width:88px;margin:4px auto 0}
+.avwrap .edit{position:absolute;right:-6px;bottom:-6px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--surface-app)}
+.colors{display:flex;justify-content:center;gap:10px}
+.colors .avatar{width:44px;height:44px;font-size:0;cursor:pointer;border:0}
+.colors .avatar.sel{box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 3px var(--surface-app),0 0 0 5px var(--green-400)}
+.toggle{height:44px;padding:8px 0;background-clip:content-box}.toggle::after{top:11px}
+.count-r{float:right;font-weight:500;color:var(--text-3)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Account-settings.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="ttl">Профиль</div>
+  <span class="gap"></span>
+</header>
+<main class="body" style="gap:12px">
+  <div class="avwrap"><span class="avatar xl me">С</span><span class="edit fill-leaf" aria-hidden="true"><i class="ic ic-pencil s18"></i></span></div>
+  <div class="stack s8">
+    <p class="center xs faint" style="margin:0">Цвет аватара · буква берётся из имени</p>
+    <div class="colors" role="radiogroup" aria-label="Цвет аватара">
+      <button class="avatar me sel" role="radio" aria-checked="true" aria-label="Хвойный"></button>
+      <button class="avatar a1" role="radio" aria-checked="false" aria-label="Синий"></button>
+      <button class="avatar a2" role="radio" aria-checked="false" aria-label="Терракотовый"></button>
+      <button class="avatar a4" role="radio" aria-checked="false" aria-label="Охра"></button>
+      <button class="avatar a5" role="radio" aria-checked="false" aria-label="Бирюзовый"></button>
+      <button class="avatar a6" role="radio" aria-checked="false" aria-label="Графит"></button>
+    </div>
+  </div>
+  <div>
+    <label class="label">Имя<span class="count-r">6 / 30</span></label>
+    <div class="field focus"><span class="f1 caret">Сергей</span></div>
+      </div>
+  <div>
+    <label class="label">О себе <span class="faint" style="font-weight:500">· необязательно</span><span class="count-r">0 / 120</span></label>
+    <div class="field area" style="min-height:72px"><span class="ph">Например: учу английский для работы, люблю детективы</span></div>
+  </div>
+  <section class="list">
+    <div class="row"><span class="sw gold"><i class="ic ic-trophy"></i></span><div class="f1"><div class="t">Показывать меня в рейтинге недели</div><div class="s">Сейчас 4 место, 310 XP · видно имя и аватар</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Показывать в рейтинге"></button></div>
+  </section>
+  <div class="sect"><p class="eyebrow">Так тебя видят в лиге</p></div>
+  <section class="list" aria-label="Превью строки рейтинга">
+    <div class="row"><span class="num sm faint" style="width:22px">3</span><span class="avatar sm a2">Л</span><div class="f1 t">Лена</div><span class="v">352 XP</span></div>
+    <div class="row" style="background:var(--green-100)"><span class="num sm c-green" style="width:22px">4</span><span class="avatar sm me">С</span><div class="f1"><div class="t">Сергей</div><div class="s">это ты</div></div><span class="v">310 XP</span></div>
+  </section>
+  <div class="grow"></div>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Account-settings.dc.html">Сохранить</a>
+</footer>
+</div>

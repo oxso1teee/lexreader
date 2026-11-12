@@ -1,0 +1,43 @@
+<!--meta {"title":"Удаление аккаунта"}-->
+<style>
+.btn[disabled]{--l:var(--text-2)}
+.loss .row{min-height:60px;padding:10px 14px}
+.loss .num{font-size:17px;min-width:56px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Account-settings.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Удаление аккаунта</div>
+  <span class="gap"></span>
+</header>
+<main class="body" style="gap:12px">
+  <div class="rowx" style="gap:14px;padding:0 2px">
+    <span class="sw red lg" style="width:64px;height:64px;border-radius:20px"><i class="ic ic-alert s32"></i></span>
+    <div class="f1"><h1 class="h2">Удалить аккаунт навсегда?</h1><p class="sm muted" style="margin:4px 0 0">Восстановить его будет нельзя, даже через поддержку.</p></div>
+  </div>
+
+  <section class="list loss" aria-label="Что пропадёт">
+    <div class="row"><b class="num c-blue">842</b><div class="f1"><div class="t">слова в «Мозге»</div><div class="s">и вся история повторений</div></div></div>
+    <div class="row"><b class="num c-orange">12</b><div class="f1"><div class="t">дней стрика</div><div class="s">рекорд 21 день тоже</div></div></div>
+    <div class="row"><b class="num c-green">37</b><div class="f1"><div class="t">текстов и видео</div><div class="s">прогресс чтения и закладки</div></div></div>
+    <div class="row"><span class="sw gold sm" style="margin:0 24px 0 0"><i class="ic ic-crown s18"></i></span><div class="f1"><div class="t">Подписка отменится</div><div class="s">списаний больше не будет</div></div></div>
+  </section>
+
+  <a class="card sm t-blue rowx" href="Data-privacy.dc.html" style="gap:12px;min-height:56px">
+    <span class="sw s-blue sm"><i class="ic ic-download s18"></i></span>
+    <div class="f1"><div class="b sm">Сначала скачать данные</div><div class="xs muted">словарь в CSV, всё остальное в JSON</div></div>
+    <i class="ic ic-chev s18"></i>
+  </a>
+
+  <div>
+    <label class="label">Введите УДАЛИТЬ для подтверждения</label>
+    <div class="field"><span class="ph">УДАЛИТЬ</span></div>
+    <p class="hint">Кнопка станет активной после ввода слова</p>
+  </div>
+  <div class="grow"></div>
+</main>
+<footer class="dock">
+  <button class="btn b-red" disabled aria-disabled="true"><i class="ic ic-trash"></i>Удалить навсегда</button>
+  <a class="btn b-ghost" href="Account-settings.dc.html">Оставить аккаунт</a>
+</footer>
+</div>

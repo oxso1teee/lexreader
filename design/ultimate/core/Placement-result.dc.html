@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Твой уровень</title></head>
+<body>
+<x-dc>
+<helmet>
+<script src="theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&display=swap">
+<style>
+body{margin:0;background:var(--paper-200)}
+a{color:var(--green-500)}a:hover{color:var(--green-text)}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:var(--paper-50);color:var(--ink-900);font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.muted{color:rgba(var(--ink-rgb),.68)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:54px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-leaf{--f:var(--fill-leaf);--e:var(--fill-leaf-edge);--l:#fff}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes stamp{0%{transform:scale(2.4) rotate(-20deg);opacity:0}60%{transform:scale(.92) rotate(4deg);opacity:1}100%{transform:none;opacity:1}}
+.stamp{animation:stamp .5s 1.9s cubic-bezier(.3,.7,.4,1) both}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bob{animation:bob 2.2s ease-in-out infinite}
+@keyframes burst{0%{transform:translate(0,0) rotate(0) scale(.2);opacity:1}75%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1);opacity:0}}
+.cf{position:absolute;left:0;top:0;animation:burst var(--t) var(--d) cubic-bezier(.1,.7,.3,1) both}
+.seg{flex:1;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:900 13px/1 Unbounded,sans-serif;transition:background .2s,color .2s}
+.can{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:15px;line-height:1.35;animation:rise .35s var(--d) both}
+.ck{width:22px;height:22px;border-radius:99px;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px}
+</style>
+<link rel="stylesheet" href="design-system.css">
+</helmet>
+<div class="app">
+  <div style="position: relative; text-align: center; padding-top: 60px">
+    <div style="position: absolute; left: 50%; top: 150px; width: 0; height: 0">
+      <span class="cf" style="width:10px;height:20px;background:var(--fill-leaf);border-radius:99px;--dx:-22px;--dy:-168px;--r:278deg;--d:2.04s;--t:1.13s"></span><span class="cf" style="width:10px;height:20px;background:var(--gold-400);border-radius:99px;--dx:-115px;--dy:74px;--r:173deg;--d:2.10s;--t:1.14s"></span><span class="cf" style="width:9px;height:18px;background:var(--blue-400);border-radius:99px;--dx:-66px;--dy:118px;--r:-255deg;--d:2.01s;--t:1.39s"></span><span class="cf" style="width:11px;height:22px;background:var(--gold-500);border-radius:2px;--dx:89px;--dy:65px;--r:203deg;--d:2.14s;--t:1.35s"></span><span class="cf" style="width:9px;height:18px;background:var(--green-200);border-radius:2px;--dx:-174px;--dy:-9px;--r:-151deg;--d:2.03s;--t:1.50s"></span><span class="cf" style="width:10px;height:10px;background:var(--fill-leaf);border-radius:2px;--dx:100px;--dy:-17px;--r:-81deg;--d:2.14s;--t:1.46s"></span><span class="cf" style="width:7px;height:7px;background:var(--gold-400);border-radius:2px;--dx:-56px;--dy:-84px;--r:101deg;--d:2.02s;--t:1.41s"></span><span class="cf" style="width:10px;height:10px;background:var(--blue-400);border-radius:2px;--dx:9px;--dy:114px;--r:298deg;--d:2.10s;--t:1.58s"></span><span class="cf" style="width:8px;height:16px;background:var(--gold-500);border-radius:2px;--dx:-88px;--dy:111px;--r:-14deg;--d:2.12s;--t:1.51s"></span><span class="cf" style="width:7px;height:7px;background:var(--green-200);border-radius:2px;--dx:-21px;--dy:-179px;--r:213deg;--d:2.02s;--t:1.52s"></span><span class="cf" style="width:10px;height:10px;background:var(--fill-leaf);border-radius:2px;--dx:105px;--dy:-50px;--r:321deg;--d:2.07s;--t:1.57s"></span><span class="cf" style="width:7px;height:14px;background:var(--gold-400);border-radius:99px;--dx:70px;--dy:-164px;--r:187deg;--d:2.02s;--t:1.14s"></span><span class="cf" style="width:7px;height:7px;background:var(--blue-400);border-radius:2px;--dx:-81px;--dy:-125px;--r:58deg;--d:2.06s;--t:1.27s"></span><span class="cf" style="width:10px;height:20px;background:var(--gold-500);border-radius:2px;--dx:88px;--dy:-50px;--r:157deg;--d:2.13s;--t:1.67s"></span><span class="cf" style="width:6px;height:6px;background:var(--green-200);border-radius:99px;--dx:-56px;--dy:-117px;--r:40deg;--d:2.03s;--t:1.14s"></span><span class="cf" style="width:8px;height:8px;background:var(--fill-leaf);border-radius:2px;--dx:21px;--dy:-165px;--r:-124deg;--d:2.02s;--t:1.47s"></span><span class="cf" style="width:7px;height:7px;background:var(--gold-400);border-radius:2px;--dx:-105px;--dy:-24px;--r:47deg;--d:2.03s;--t:1.48s"></span><span class="cf" style="width:6px;height:12px;background:var(--blue-400);border-radius:2px;--dx:-35px;--dy:154px;--r:-212deg;--d:2.05s;--t:1.12s"></span><span class="cf" style="width:7px;height:7px;background:var(--gold-500);border-radius:2px;--dx:-123px;--dy:89px;--r:-92deg;--d:2.11s;--t:1.11s"></span><span class="cf" style="width:8px;height:16px;background:var(--green-200);border-radius:2px;--dx:131px;--dy:119px;--r:229deg;--d:2.13s;--t:1.21s"></span><span class="cf" style="width:9px;height:9px;background:var(--fill-leaf);border-radius:2px;--dx:176px;--dy:-40px;--r:-332deg;--d:2.13s;--t:1.28s"></span><span class="cf" style="width:11px;height:22px;background:var(--gold-400);border-radius:99px;--dx:109px;--dy:-99px;--r:-327deg;--d:2.07s;--t:1.60s"></span><span class="cf" style="width:9px;height:9px;background:var(--blue-400);border-radius:2px;--dx:108px;--dy:-4px;--r:225deg;--d:2.02s;--t:1.64s"></span><span class="cf" style="width:11px;height:22px;background:var(--gold-500);border-radius:2px;--dx:113px;--dy:38px;--r:-78deg;--d:2.02s;--t:1.22s"></span><span class="cf" style="width:6px;height:12px;background:var(--green-200);border-radius:99px;--dx:-181px;--dy:-59px;--r:131deg;--d:2.12s;--t:1.33s"></span><span class="cf" style="width:7px;height:14px;background:var(--fill-leaf);border-radius:2px;--dx:-181px;--dy:-1px;--r:275deg;--d:2.06s;--t:1.19s"></span>
+    </div>
+    <div class="bob" style="display: inline-block"><svg viewBox="0 0 128 150" width="96" height="112" aria-hidden="true"><ellipse cx="64" cy="128" rx="34" ry="9" fill="rgba(0,0,0,0.06)"></ellipse><path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="var(--green-400)"></path><path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="var(--green-100)" opacity="0.9"></path><ellipse cx="54" cy="62" rx="3.2" ry="4.4" fill="var(--green-600)"></ellipse><ellipse cx="66" cy="62" rx="3.2" ry="4.4" fill="var(--green-600)"></ellipse><path d="M53 71q7 7 14 0" fill="none" stroke="var(--green-600)" stroke-width="2.4" stroke-linecap="round"></path><path d="M50 62q4-5 8 0M62 62q4-5 8 0" fill="none" stroke="var(--green-600)" stroke-width="2.6" stroke-linecap="round"></path><path d="M52 70q8 10 16 0z" fill="var(--green-600)"></path><ellipse cx="90" cy="100" rx="19" ry="12" fill="var(--gold-500)" transform="rotate(-28 90 100)"></ellipse><ellipse cx="94" cy="96" rx="8" ry="5" fill="var(--gold-400)" transform="rotate(-28 94 96)" opacity="0.85"></ellipse></svg></div>
+    <div class="rise muted" style="font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-top: 10px">Мини-тест пройден</div>
+    <h1 class="disp rise" style="margin: 6px 24px 0; font-size: 24px; line-height: 1.2; font-weight: 900; animation-delay: .1s">Твой уровень</h1>
+    <div class="stamp disp" style="display: inline-block; margin-top: 10px; padding: 8px 20px; border-radius: 18px; background: var(--fill-leaf); color: #fff; font-size: 44px; font-weight: 900; box-shadow: inset 0 -6px 0 0 var(--fill-leaf-edge)">B1</div>
+  </div>
+
+  <div class="rise" style="margin: 20px 20px 0; animation-delay: .3s" role="img" aria-label="Шкала уровней от A1 до C2, твой уровень B1">
+    <div style="display: flex; gap: 6px">
+      <span class="seg" style="background: var(--green-200); color: var(--green-text)">A1</span><span class="seg" style="background: var(--green-200); color: var(--green-text)">A2</span><span class="seg" style="background: var(--fill-leaf); color: #fff; box-shadow: inset 0 -4px 0 0 var(--fill-leaf-edge)">B1</span><span class="seg" style="background: var(--paper-100); color:rgba(var(--ink-rgb),.62)">B2</span><span class="seg" style="background: var(--paper-100); color:rgba(var(--ink-rgb),.62)">C1</span><span class="seg" style="background: var(--paper-100); color:rgba(var(--ink-rgb),.62)">C2</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-top: 6px" class="muted"><span>новичок</span><span>свободно</span></div>
+  </div>
+
+  <div class="rise" style="margin: 16px 20px 0; padding: 6px 16px; border-radius: 20px; background:var(--paper-0); border: 2px solid rgba(var(--ink-rgb),.12); animation-delay: 2.1s">
+    <div class="can" style="--d: 2.2s; border-bottom: 2px solid var(--paper-400)"><span class="ck" style="background: var(--fill-leaf)"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M5 12l5 5L20 7" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Читаешь адаптированные книги и понимаешь суть</div>
+    <div class="can" style="--d: 2.3s; border-bottom: 2px solid var(--paper-400)"><span class="ck" style="background: var(--fill-leaf)"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M5 12l5 5L20 7" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Знаешь примерно 2 000 слов</div>
+    <div class="can" style="--d: 2.4s"><span class="ck" style="background: var(--gold-100)"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="var(--gold-700)" stroke-width="3.4" stroke-linecap="round"></path></svg></span>Подтянем: фразовые глаголы и времена</div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; animation-delay: 2.6s">
+    <a class="btn b-leaf" href="Goal-pick.dc.html">Подобрать тексты под B1</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.t0 = Date.now();
+    this.iv = setInterval(() => { this.forceUpdate(); if (Date.now() - this.t0 > 2000) clearInterval(this.iv); }, 40);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const el = this.t0 ? Date.now() - this.t0 : 0;
+    const names = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    const step = Math.min(2, Math.floor(Math.max(0, el - 500) / 400));
+    const lit = el >= 500;
+    const lv = names.map((t, k) => {
+      let style = 'background: var(--paper-100); color:rgba(var(--ink-rgb),.62)';
+      if (lit && k < step) style = 'background: var(--green-200); color: var(--green-text)';
+      if (lit && k === step) style = 'background: var(--fill-leaf); color: #fff; box-shadow: inset 0 -4px 0 0 var(--fill-leaf-edge)';
+      return { t, style };
+    });
+    let s = 13;
+    const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const cols = ['var(--green-400)', 'var(--gold-400)', 'var(--blue-400)', 'var(--gold-500)', 'var(--green-200)'];
+    const cf = [];
+    for (let i = 0; i < 26; i++) {
+      const a = r() * Math.PI * 2;
+      const d = 100 + r() * 120;
+      const w = 6 + Math.round(r() * 5);
+      cf.push({ style: 'width:' + w + 'px;height:' + (r() < .5 ? w : w * 2) + 'px;background:' + cols[i % 5] + ';border-radius:' + (r() < .3 ? '99px' : '2px') + ';--dx:' + Math.round(Math.cos(a) * d) + 'px;--dy:' + Math.round(Math.sin(a) * d) + 'px;--r:' + Math.round(r() * 720 - 360) + 'deg;--d:' + (2 + r() * 0.15).toFixed(2) + 's;--t:' + (1.1 + r() * 0.6).toFixed(2) + 's' });
+    }
+    return { lv, cf };
+  }
+}
+</script>
+</body>
+</html>

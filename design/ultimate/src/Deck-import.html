@@ -1,0 +1,53 @@
+<!--meta {"title":"Новая колода"}-->
+<style>
+.toggle{height:44px;padding:8px 0;background-clip:content-box}.toggle::after{top:11px}
+.src{display:flex;align-items:center;gap:12px;padding:12px 14px;position:relative}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Brain-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Новая колода</div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div>
+    <label class="label" for="dn">Название</label>
+    <div class="field ok" id="dn" role="textbox"><span class="f1">Lost in Lisbon · слова</span><i class="ic ic-check-circle c-green s18"></i></div>
+  </div>
+  <div class="sect"><p class="eyebrow">Откуда карточки</p></div>
+  <div class="stack s8" role="radiogroup" aria-label="Источник">
+    <a class="card src" href="Deck-import.dc.html" role="radio" aria-checked="true" style="border-color:var(--blue-400);background:var(--blue-100)">
+      <span class="radio on" aria-hidden="true"></span>
+      <span class="sw s-blue"><i class="ic ic-book"></i></span>
+      <div class="f1"><div class="t rowx s6" style="font:700 15px/1.3 var(--font-body)">Из моего чтения <span class="badge green">рекомендуем</span></div><div class="s" style="font:500 12.5px/1.35 var(--font-body);color:var(--text-2)">Слова, которые ты нажимал в «Lost in Lisbon»</div></div>
+    </a>
+    <a class="card src" href="Deck-import.dc.html" role="radio" aria-checked="false">
+      <span class="radio" aria-hidden="true"></span>
+      <span class="sw blue"><i class="ic ic-upload"></i></span>
+      <div class="f1"><div style="font:700 15px/1.3 var(--font-body)">Файл CSV или Anki</div><div style="font:500 12.5px/1.35 var(--font-body);color:var(--text-3)">.csv, .txt, .apkg — колонки «слово; перевод»</div></div>
+    </a>
+    <a class="card src" href="Card-edit.dc.html" role="radio" aria-checked="false">
+      <span class="radio" aria-hidden="true"></span>
+      <span class="sw blue"><i class="ic ic-pencil"></i></span>
+      <div class="f1"><div style="font:700 15px/1.3 var(--font-body)">Вручную</div><div style="font:500 12.5px/1.35 var(--font-body);color:var(--text-3)">Пустая колода, карточки добавишь сам</div></div>
+    </a>
+    <div class="card src sunk" aria-disabled="true">
+      <i class="ic ic-lock faint" aria-hidden="true" style="width:24px;flex:none"></i>
+      <span class="sw s-ink"><i class="ic ic-sparkle"></i></span>
+      <div class="f1"><div class="rowx s6" style="font:700 15px/1.3 var(--font-body)">Сгенерировать по теме <span class="badge soon" style="font-size:11px">Скоро</span></div><div style="font:500 12.5px/1.35 var(--font-body);color:var(--text-3)">Подборка слов по запросу — появится позже</div></div>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="rowx between"><div class="h3">Будет добавлено 38 слов</div><a class="linkc" href="Deck-import.dc.html">Выбрать</a></div>
+    <p class="xs faint" style="margin:4px 0 0">из 61 нажатого · 23 уже есть в словаре и будут пропущены</p>
+    <div class="rowx s6 wrap" style="margin-top:10px">
+      <span class="chip word sm">tram</span><span class="chip word sm">cobblestone</span><span class="chip word sm">tile</span><span class="chip word sm">to wander</span><span class="chip word sm">fado</span><span class="chip word sm">viewpoint</span><span class="chip word sm">pastry</span><span class="chip sm">+31</span>
+    </div>
+    <div class="rowx between" style="margin-top:12px"><div><div class="b sm">Сразу поставить в повторение</div><div class="xs faint">по 10 новых в день</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Сразу поставить в повторение"></button></div>
+  </section>
+</main>
+<footer class="dock">
+  <a class="btn b-sky" href="Deck-detail.dc.html">Создать колоду · 38 слов</a>
+</footer>
+</div>

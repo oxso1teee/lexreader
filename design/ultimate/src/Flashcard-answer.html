@@ -1,0 +1,36 @@
+<!--meta {"title":"Карточка — ответ"}-->
+<style>
+.fc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:24px 20px;box-shadow:0 6px 0 0 rgba(var(--ink-rgb),.12)}
+.rate{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rate .btn{flex-direction:column;gap:2px;padding:10px 4px 14px;min-height:60px;font-size:14px!important}
+.rate .btn small{font:600 11px/1 var(--font-body)}
+</style>
+<div class="app">
+<header class="lessonbar">
+  <a class="iconbtn" href="Quit-confirm.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="bar lg" role="progressbar" aria-valuenow="12" aria-valuemax="47" aria-label="12 из 47"><i style="width:26%;background:var(--blue-400)"></i></div>
+  <span class="b sm faint" style="min-width:44px;text-align:right">12/47</span>
+</header>
+<main class="body" style="padding-top:12px">
+  <div class="rowx between"><span class="badge blue">Из чтения</span><span class="xs faint">встречал 7 раз · последний повтор 4 дня назад</span></div>
+  <section class="card fc grow">
+    <div class="en" style="font-size:38px;line-height:1.1">reluctant</div>
+    <div class="rowx s8"><span class="faint">/rɪˈlʌktənt/</span><span class="cefr">прил.</span>
+      <button class="iconbtn box" aria-label="Прослушать" style="width:40px;height:40px"><i class="ic ic-volume s18"></i></button></div>
+    <hr class="divider" style="margin:10px 0">
+    <div class="h2">неохотный, нежелающий</div>
+    <p class="read" style="font-size:16px;margin:8px 0 0">She was <span class="hl">reluctant</span> to leave the lighthouse.</p>
+    <p class="sm muted" style="margin:0">Ей не хотелось уходить с маяка.</p>
+    <a class="linkc" href="Word-detail.dc.html" style="margin-top:8px">Подробнее о слове</a>
+  </section>
+  <p class="center xs faint" style="margin:0">Насколько легко вспомнил?</p>
+</main>
+<footer class="dock">
+  <div class="rate">
+    <a class="btn b-red" href="Flashcard-review.dc.html">Забыл<small>&lt; 10 мин</small></a>
+    <a class="btn b-ember" href="Flashcard-review.dc.html">Трудно<small>1 день</small></a>
+    <a class="btn b-sky" href="Flashcard-review.dc.html">Хорошо<small>4 дня</small></a>
+    <a class="btn b-leaf" href="Flashcard-review.dc.html">Легко<small>9 дней</small></a>
+  </div>
+</footer>
+</div>

@@ -1,0 +1,93 @@
+<!--meta {"title":"Сегодня · планшет","w":834,"h":1112}-->
+<style>
+.app.tablet .pagehead{padding:44px 32px 8px}
+.app.tablet .pagehead h1{font-size:28px}
+.app.tablet>.body{padding:12px 32px 24px;gap:16px}
+.app.tablet .tabbar{width:520px;margin:0 auto 24px}
+.tc{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+.ring{width:84px;height:84px;border-radius:50%;background:conic-gradient(var(--gold-500) 60%,var(--progress-track) 0);display:grid;place-items:center;flex:none}
+.ring::before{content:"";width:62px;height:62px;border-radius:50%;background:var(--surface-card);grid-area:1/1}
+.ring i{grid-area:1/1}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
+.wk i.d{display:grid;place-items:center;height:40px;border-radius:10px;background:var(--surface-sunken);color:#fff}
+.wk i.d.on{background:var(--fill-ember)}
+.wk i.d.now{background:none;border:2px dashed var(--orange-600)}
+.wk span{font:600 12px/1 var(--font-body);color:var(--text-3);display:block;margin-top:6px}
+.lb .row{min-height:52px;padding:8px 14px}
+.lb .row.me{background:var(--green-100)}
+.rk{width:20px;font:700 14px/1 var(--font-display);text-align:center;color:var(--text-3)}
+</style>
+<div class="app tablet">
+<header class="pagehead">
+  <div class="rowx" style="gap:14px"><i class="lex happy s56"></i><div><h1>Доброе утро, Сергей</h1><div class="sm muted" style="margin-top:4px">Четверг, 12 ноября · ещё 20 XP до цели</div></div></div>
+  <div class="rowx s8">
+    <span class="pill lvl"><span class="cefr">EN</span>B1</span>
+    <a class="pill streak" href="Streak-calendar.dc.html" style="min-height:44px"><i class="ic ic-flame-f s18"></i>12</a>
+    <a class="pill xp" href="Level-up.dc.html" style="min-height:44px"><i class="ic ic-bolt-f s18"></i>1 240</a>
+  </div>
+</header>
+<main class="body">
+  <div class="tc">
+    <div class="stack s16">
+      <section class="hero">
+        <div class="rowx top between">
+          <div class="f1"><p class="eyebrow">Занятие на сегодня · урок 4 из 6</p><div class="h1" style="font-size:24px;margin-top:8px">Слова из «The Last Lighthouse»</div></div>
+          <i class="lex joy pale s56 bob" aria-hidden="true"></i>
+        </div>
+        <div class="rowx wrap" style="gap:14px;margin-top:10px;font:600 14px/1.2 var(--font-body)">
+          <span class="rowx s6"><i class="ic ic-list s18"></i>12 заданий</span><span class="rowx s6"><i class="ic ic-clock s18"></i>~5 мин</span><span class="rowx s6"><i class="ic ic-sprout s18"></i>3 новых слова</span>
+        </div>
+        <a class="btn b-white" href="Lesson-start.dc.html" style="margin-top:18px">Начать занятие</a>
+      </section>
+      <div class="sect"><p class="eyebrow">Продолжить</p><a href="T-Library.dc.html">Библиотека</a></div>
+      <a class="card press" href="T-Reader.dc.html" style="display:block">
+        <div class="rowx" style="gap:16px">
+          <span class="cover md c-sky">The Last Light&shy;house</span>
+          <div class="f1"><div class="rowx s8"><span class="badge blue">Текст</span><span class="cefr">B1</span></div><div class="h3" style="font-size:18px;margin-top:6px">The Last Lighthouse</div><div class="xs faint">Глава 3 из 5 · осталось 6 мин</div>
+          <div class="rowx s8" style="margin-top:10px"><div class="bar" style="flex:1"><i style="width:64%"></i></div><span class="sm b">64%</span></div></div>
+        </div>
+        <p class="read" style="font-size:15px;margin:12px 0 0;color:var(--text-2)">«She was <span class="hl">reluctant</span> to leave the lighthouse. For eleven years it had been her home…»</p>
+      </a>
+      <a class="card rowx" href="Watch.dc.html"><span class="cover c-ink video" role="img" aria-label="Обложка: Life in London"></span><div class="f1"><div class="b">Life in London</div><div class="xs faint">Видео · 6 мин осталось</div><div class="bar sm" style="margin-top:8px"><i style="width:30%"></i></div></div><span class="sm b muted">30%</span></a>
+      <a class="card rowx" href="Mission-detail.dc.html"><span class="sw orange lg"><i class="ic ic-puzzle s24"></i></span><div class="f1"><div class="b">Present Perfect vs Past Simple</div><div class="xs faint">Слабая тема · миссия на 6 мин</div></div><i class="ic ic-chev faint"></i></a>
+      <div class="grid2" style="gap:16px">
+        <a class="card rowx" href="Hard-words.dc.html"><span class="sw orange"><i class="ic ic-flame"></i></span><div class="f1"><div class="b sm">Трудные слова</div><div class="xs faint">6 слов · 2 мин</div></div></a>
+        <a class="card rowx" href="Duel-create.dc.html"><span class="sw blue"><i class="ic ic-swords"></i></span><div class="f1"><div class="b sm">Дуэль с Аней</div><div class="xs faint">счёт 3 : 2</div></div></a>
+      </div>
+    </div>
+    <div class="stack s16">
+      <a class="card press rowx" href="Goal-edit.dc.html" style="gap:16px">
+        <div class="ring" role="img" aria-label="30 из 50 XP"><i class="ic ic-bolt-f s28 c-gold"></i></div>
+        <div><div class="num lg">30/50</div><div class="xs faint" style="margin-top:4px">XP сегодня · цель дня</div></div>
+      </a>
+      <a class="card press" href="Brain-home.dc.html" style="display:block">
+        <div class="rowx"><span class="sw s-blue lg"><i class="ic ic-cards s24"></i></span><div class="f1"><div class="num lg">47</div><div class="xs faint">карточек на повтор · ~6 мин</div></div></div>
+        <span class="btn b-sky sm" style="margin-top:12px">Повторить</span>
+      </a>
+      <section class="card">
+        <div class="rowx between"><div class="h3">Неделя</div><span class="xs b c-orange">Рекорд 21</span></div>
+        <div class="wk" style="margin-top:12px" role="img" aria-label="Стрик: пн–ср выполнено, четверг сегодня">
+          <div><i class="d on"><i class="ic ic-flame-f s16"></i></i><span>Пн</span></div><div><i class="d on"><i class="ic ic-flame-f s16"></i></i><span>Вт</span></div><div><i class="d on"><i class="ic ic-flame-f s16"></i></i><span>Ср</span></div><div><i class="d now"></i><span class="b c-orange">Чт</span></div><div><i class="d"></i><span>Пт</span></div><div><i class="d"></i><span>Сб</span></div><div><i class="d"></i><span>Вс</span></div>
+        </div>
+      </section>
+      <a class="card rowx" href="Daily-quests.dc.html"><span class="sw gold"><i class="ic ic-target"></i></span><div class="f1"><div class="b sm">Задания дня · 2/3</div><div class="bar sm gold" style="margin-top:6px"><i style="width:66%"></i></div></div></a>
+      <section>
+        <div class="sect" style="margin-bottom:8px"><p class="eyebrow">Рейтинг недели</p><a href="League-table.dc.html">Таблица</a></div>
+        <div class="list lb">
+          <div class="row"><span class="rk">3</span><span class="avatar sm a4">Д</span><div class="f1 b sm">Дима</div><span class="v">372</span></div>
+          <div class="row me"><span class="rk c-green">4</span><span class="avatar sm a3">С</span><div class="f1 b sm">Ты</div><span class="v c-green">310 XP</span></div>
+          <div class="row"><span class="rk">5</span><span class="avatar sm a1">А</span><div class="f1 b sm">Аня</div><span class="v">288</span></div>
+        </div>
+      </section>
+      <a class="card t-orange rowx" href="Friend-streak.dc.html"><span class="avatar sm a1">А</span><div class="f1"><div class="b sm">Общий стрик с Аней</div><div class="xs muted">9 дней подряд</div></div><span class="num sm c-orange">9</span></a>
+    </div>
+  </div>
+</main>
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab on" href="T-Today.dc.html" aria-current="page"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="tab" href="T-Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a class="tab" href="Brain-home.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a class="tab" href="Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a class="tab" href="Profile.dc.html"><i class="ic ic-user"></i>Профиль</a>
+</nav>
+</div>

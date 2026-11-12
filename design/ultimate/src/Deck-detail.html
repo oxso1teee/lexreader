@@ -1,0 +1,87 @@
+<!--meta {"title":"Колода — Путешествия"}-->
+<style>
+.ring{width:84px;height:84px;flex:none;position:relative;display:flex;align-items:center;justify-content:center}
+.ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{font-size:20px;color:#fff}
+.wrow .dots i.hot{background:var(--orange-400)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Brain-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Путешествия<small>колода · 64 карточки</small></div>
+  <a class="iconbtn" href="Deck-detail.dc.html" aria-label="Меню колоды"><i class="ic ic-more s24"></i></a>
+</header>
+<main class="body" style="padding-bottom:88px">
+  <section class="hero sky">
+    <div class="rowx between">
+      <div class="f1">
+        <p class="eyebrow">Сегодня к повторению</p>
+        <div class="num xl" style="margin-top:6px">12</div>
+        <div class="b" style="font-size:15px">карточек · ~3 мин</div>
+      </div>
+      <div class="ring" role="img" aria-label="Выучено 58 процентов">
+        <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="9"/><circle cx="42" cy="42" r="36" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-dasharray="131 226"/></svg>
+        <span class="num">58%</span>
+      </div>
+    </div>
+    <div class="rowx s8 wrap" style="margin-top:10px;font:600 13px/1.2 var(--font-body)"><span>37 выучено</span><span>·</span><span>19 учу</span><span>·</span><span>8 новых</span></div>
+    <a class="btn b-white" href="Flashcard-review.dc.html" style="margin-top:14px">Учить 12 карточек</a>
+  </section>
+
+  <div class="seg" role="tablist">
+    <button class="on" role="tab" aria-selected="true">Все</button>
+    <button role="tab">Повторить</button>
+    <button role="tab">Новые</button>
+    <button role="tab">Выучены</button>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Карточки · 64</p><a href="Deck-detail.dc.html">По силе памяти</a></div>
+  <div class="list wrow">
+    <a class="row" href="Word-detail.dc.html">
+      <div class="f1"><div class="t en">customs</div><div class="s">таможня</div></div>
+      <span class="badge orange"><i class="ic ic-flame s14"></i>забывается</span>
+      <span class="dots" aria-label="Сила памяти 1 из 4"><i class="on hot"></i><i></i><i></i><i></i></span>
+      <i class="ic ic-chev s18 faint"></i>
+    </a>
+    <a class="row" href="Word-detail.dc.html">
+      <div class="f1"><div class="t en">round trip</div><div class="s">поездка туда и обратно</div></div>
+      <span class="badge orange"><i class="ic ic-flame s14"></i>забывается</span>
+      <span class="dots" aria-label="Сила памяти 2 из 4"><i class="on hot"></i><i class="on hot"></i><i></i><i></i></span>
+      <i class="ic ic-chev s18 faint"></i>
+    </a>
+    <a class="row" href="Word-detail.dc.html">
+      <div class="f1"><div class="t en">boarding pass</div><div class="s">посадочный талон</div></div>
+      <span class="dots" aria-label="Сила памяти 2 из 4"><i class="on"></i><i class="on"></i><i></i><i></i></span>
+      <i class="ic ic-chev s18 faint"></i>
+    </a>
+    <a class="row" href="Word-detail.dc.html">
+      <div class="f1"><div class="t en">aisle seat</div><div class="s">место у прохода</div></div>
+      <span class="badge blue">новое</span>
+      <span class="dots" aria-label="Сила памяти 0 из 4"><i></i><i></i><i></i><i></i></span>
+      <i class="ic ic-chev s18 faint"></i>
+    </a>
+    <a class="row" href="Word-detail.dc.html">
+      <div class="f1"><div class="t en">layover</div><div class="s">пересадка, стыковка</div></div>
+      <span class="dots" aria-label="Сила памяти 3 из 4"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+      <i class="ic ic-chev s18 faint"></i>
+    </a>
+    <a class="row" href="Word-detail.dc.html">
+      <div class="f1"><div class="t en">shore</div><div class="s">берег</div></div>
+      <span class="dots" aria-label="Сила памяти 4 из 4"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
+      <i class="ic ic-chev s18 faint"></i>
+    </a>
+    <a class="row" href="Word-detail.dc.html">
+      <div class="f1"><div class="t en">itinerary</div><div class="s">маршрут поездки</div></div>
+      <span class="dots" aria-label="Сила памяти 3 из 4"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+      <i class="ic ic-chev s18 faint"></i>
+    </a>
+    <a class="row" href="Word-detail.dc.html">
+      <div class="f1"><div class="t en">gale</div><div class="s">шторм, сильный ветер</div></div>
+      <span class="dots" aria-label="Сила памяти 4 из 4"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
+      <i class="ic ic-chev s18 faint"></i>
+    </a>
+  </div>
+  <p class="center xs faint" style="margin:0">Показано 8 из 64 · листай дальше</p>
+</main>
+<a class="fab" style="bottom:32px" href="Card-edit.dc.html" aria-label="Добавить карточку"><i class="ic ic-plus s28"></i></a>
+</div>

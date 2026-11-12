@@ -1,0 +1,43 @@
+<!--meta {"title":"Режимы тренировки"}-->
+<style>
+.mode{display:flex;align-items:center;gap:14px;padding:14px 16px;position:relative}
+.mode .ck{position:absolute;top:10px;right:12px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Brain-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Режим тренировки<small>что повторяем и как</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="seg" role="tablist" aria-label="Какие карточки">
+    <button class="on" role="tab" aria-selected="true">Все · 47</button>
+    <button role="tab">Трудные · 6</button>
+    <button role="tab">Новые · 9</button>
+  </div>
+  <div class="sect"><p class="eyebrow">Как повторять</p><span class="xs faint">FSRS учитывает все режимы</span></div>
+  <div class="stack s8" role="radiogroup" aria-label="Режим">
+    <a class="card mode on" href="Flashcard-review.dc.html" aria-checked="true" role="radio" style="border-color:var(--blue-400);background:var(--blue-100)">
+      <span class="sw s-blue lg"><i class="ic ic-cards s24"></i></span>
+      <div class="f1"><div class="h3">Карточки</div><div class="sm muted">Классика: вспомнил — оценил. Самый точный для памяти.</div><div class="rowx s6 xs faint" style="margin-top:6px"><i class="ic ic-timer s14"></i>~6 мин · 47 карточек</div></div>
+      <i class="ic ic-check-circle c-blue ck" aria-hidden="true"></i>
+    </a>
+    <a class="card mode" href="Flashcard-mc.dc.html" role="radio" aria-checked="false">
+      <span class="sw blue lg"><i class="ic ic-list s24"></i></span>
+      <div class="f1"><div class="h3">Выбор перевода</div><div class="sm muted">4 варианта, один верный. Быстро и в транспорте.</div><div class="rowx s6 xs faint" style="margin-top:6px"><i class="ic ic-timer s14"></i>~4 мин</div></div>
+    </a>
+    <a class="card mode" href="Flashcard-type.dc.html" role="radio" aria-checked="false">
+      <span class="sw blue lg"><i class="ic ic-type s24"></i></span>
+      <div class="f1"><div class="h3">Написать слово</div><div class="sm muted">Видишь перевод — печатаешь слово. Тренирует правописание.</div><div class="rowx s6 xs faint" style="margin-top:6px"><i class="ic ic-timer s14"></i>~9 мин</div></div>
+    </a>
+    <a class="card mode" href="Listening-exercise.dc.html" role="radio" aria-checked="false">
+      <span class="sw blue lg"><i class="ic ic-headphones s24"></i></span>
+      <div class="f1"><div class="h3">На слух</div><div class="sm muted">Слушаешь слово и пишешь его. Для тех, что знаешь глазами.</div><div class="rowx s6 xs faint" style="margin-top:6px"><i class="ic ic-timer s14"></i>~7 мин · нужен звук</div></div>
+    </a>
+  </div>
+  <div class="banner info"><i class="ic ic-info"></i><div><b>Оценка памяти общая</b>Какой бы режим ни выбрал, ответ попадёт в тот же график повторений.</div></div>
+</main>
+<footer class="dock">
+  <a class="btn b-sky" href="Flashcard-review.dc.html">Начать: Карточки · 47</a>
+</footer>
+</div>
