@@ -738,6 +738,158 @@
     }
   }
 
+  /* ---------- Choice card (ChoiceGroup / ChoiceCard) ----------
+     Карточка с нативным радио внутри (макеты .opt): невидимый input лежит
+     поверх всей карточки, поэтому клик и фокус — на нём, а вид — на :has(). */
+  .choice-group {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+  .choice-group-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .choice-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    min-height: 3.5rem;
+    padding: 0.625rem 0.875rem;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-btn);
+    background-color: var(--surface);
+    box-shadow: 0 3px 0 0 var(--border-strong);
+    color: var(--foreground);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) ease-out,
+      background-color var(--dur-fast) ease-out;
+  }
+  .choice-card:not(.choice-card-static):hover:not(:has(:disabled)) {
+    border-color: var(--sky);
+  }
+  .choice-card:has(.choice-card-input:checked) {
+    border-color: var(--sky);
+    background-color: var(--sky-tint);
+    box-shadow: 0 3px 0 0 color-mix(in oklab, var(--sky-fill) 40%, transparent);
+  }
+  .choice-card:has(.choice-card-input:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .choice-card:has(.choice-card-input:disabled) {
+    opacity: 0.55;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .choice-card-static {
+    box-shadow: none;
+    cursor: default;
+  }
+  .choice-card-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+  .choice-card-swatch {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.75rem;
+    background-color: var(--surface-sunken);
+    color: var(--text-secondary);
+  }
+  .choice-card-swatch svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .choice-swatch-leaf {
+    background-color: var(--leaf-tint);
+    color: var(--leaf-text);
+  }
+  .choice-swatch-sky {
+    background-color: var(--sky-tint);
+    color: var(--sky-text);
+  }
+  .choice-swatch-sun {
+    background-color: var(--sun-tint);
+    color: var(--sun-text);
+  }
+  .choice-swatch-ember {
+    background-color: var(--ember-tint);
+    color: var(--ember-text);
+  }
+  .choice-swatch-danger {
+    background-color: var(--danger-tint);
+    color: var(--danger-text);
+  }
+  /* У выбранной карточки подложка уже цветная — плитку иконки делаем светлой. */
+  .choice-card:has(.choice-card-input:checked) .choice-card-swatch {
+    background-color: var(--surface);
+  }
+  .choice-card-key {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    border: 2px solid var(--border-strong);
+    border-radius: 0.5rem;
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .choice-card:has(.choice-card-input:checked) .choice-card-key {
+    border-color: var(--sky-fill);
+    background-color: var(--sky-fill);
+    color: #fff;
+  }
+  .choice-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .choice-card-label {
+    overflow-wrap: anywhere;
+  }
+  .choice-card-desc {
+    margin-top: 0.0625rem;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .choice-card-check {
+    display: none;
+    flex: none;
+    width: 1.375rem;
+    height: 1.375rem;
+    color: var(--sky-text);
+  }
+  .choice-card:has(.choice-card-input:checked) .choice-card-check {
+    display: block;
+  }
+
   /* ---------- Alert ---------- */
   .alert {
     display: flex;

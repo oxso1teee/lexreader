@@ -1,137 +1,58 @@
 "use client";
 
-import { Check, Mail } from "lucide-react";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import {
+  BookOpen,
+  Briefcase,
+  Compass,
+  GraduationCap,
+  House,
+  Mail,
+  MessagesSquare,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
-import { LANGUAGES, READY_LANGUAGES } from "@/lib/languages";
-import { GOALS } from "@/lib/onboarding/goals";
-import { SELF_REPORT_LEVELS } from "@/lib/onboarding/self-report-levels";
-import { completeOnboarding, type OnboardingState } from "./actions";
-import { joinLanguageWaitlist, type WaitlistState } from "./waitlist-actions";
-import RateLimitNotice from "@/components/rate-limit-notice";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui";
+import { useActionState, useEffect, useState } from "react";
+import { AuthBody, AuthDock } from "@/components/product/auth/auth-screen";
 import { PasswordField } from "@/components/product/auth/password-field";
-import { track } from "@/lib/posthog-client";
+import { LanguagePicker } from "@/components/product/onboarding/language-picker";
 import { SplashScreen } from "@/components/product/onboarding/splash-screen";
+import { LexSay, StepShell } from "@/components/product/onboarding/step-shell";
+import RateLimitNotice from "@/components/rate-limit-notice";
+import { Alert, Button, ChoiceGroup, Input, type ChoiceTone } from "@/components/ui";
+import { GOALS, type GoalId } from "@/lib/onboarding/goals";
+import { SELF_REPORT_LEVELS } from "@/lib/onboarding/self-report-levels";
+import type { SelfReportedCefr } from "@/lib/placement/types";
+import { track } from "@/lib/posthog-client";
+import { useRetryBlock } from "@/lib/ui/use-retry-block";
+import { completeOnboarding, type OnboardingState } from "./actions";
 
-const STEP_COUNT = 6;
+// Визард до создания аккаунта: Splash (шаг 0, экран «моментов») → цель →
+// изучаемый язык → родной язык → уровень → аккаунт. Шаги 1–5 в каркасе макетов
+// Onboarding-why / Placement-question: полоса прогресса «Шаг N из 5», Lex со
+// словами, карточки выбора, закреплённая кнопка «Далее». Логика шагов, аналитика
+// и completeOnboarding — прежние.
+const TOTAL_STEPS = 5;
 
-// Раздел 5 промта 2026-07-30 (запуск): библиотека готова только для
-// английского — вместо выбора языка без контента открываем лист ожидания.
-function WaitlistLanguageCell({ code, name }: { code: string; name: string }) {
-  const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<WaitlistState, FormData>(
-    joinLanguageWaitlist,
-    {},
-  );
+// Иконка и подпись у цели — оформление реальных вариантов GOALS (id и label
+// остаются источником правды), а не новые данные.
+const GOAL_VISUALS: Record<GoalId, { icon: LucideIcon; tone: ChoiceTone; description: string }> = {
+  everyday: { icon: House, tone: "leaf", description: "Повседневные тексты и слова" },
+  travel: { icon: Compass, tone: "sun", description: "Отели, кафе, дорога" },
+  work_it: { icon: Briefcase, tone: "sky", description: "Письма, документация, созвоны" },
+  study: { icon: GraduationCap, tone: "ember", description: "Статьи, учебники, экзамены" },
+  friends_international: { icon: MessagesSquare, tone: "leaf", description: "Друзья и знакомые из других стран" },
+  reading_content: { icon: BookOpen, tone: "sky", description: "Книги, статьи и видео в оригинале" },
+  general: { icon: Sparkles, tone: "neutral", description: "Без конкретной цели" },
+};
 
-  if (state.ok) {
-    return (
-      <div className="flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] px-4 py-3 text-left text-sm text-[var(--text-secondary)]">
-        {name} — сообщим, когда будет готово
-        <Check aria-hidden="true" className="h-4 w-4 shrink-0" />
-      </div>
-    );
-  }
-
-  if (open) {
-    return (
-      <form action={formAction} className="col-span-2 flex flex-col gap-2 rounded-lg border border-[var(--border-strong)] p-3">
-        <input type="hidden" name="language" value={code} />
-        <p className="text-sm font-medium">{name} — оставь почту, сообщим, когда будет готово</p>
-        <input
-          type="email"
-          name="email"
-          required
-          placeholder="Email"
-          className="w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--color-forest)]"
-        />
-        {state.error && <p className="text-xs text-[var(--color-danger-text)]">{state.error}</p>}
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-            Отмена
-          </Button>
-          <Button type="submit" variant="leaf" size="sm" disabled={pending} className="flex-1">
-            {pending ? "Сохраняем…" : "Сообщить мне"}
-          </Button>
-        </div>
-      </form>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => setOpen(true)}
-      className="flex items-center justify-between rounded-lg border border-[var(--border-strong)] px-4 py-3 text-left text-sm text-[var(--text-secondary)] transition-colors hover:border-[var(--sky)]"
-    >
-      {name}
-      <span className="rounded-full bg-[var(--surface-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-        Скоро
-      </span>
-    </button>
-  );
-}
-
-function LanguagePicker({
-  value,
-  onChange,
-  exclude,
-  restrictToReady,
-}: {
-  value: string;
-  onChange: (code: string) => void;
-  exclude?: string;
-  restrictToReady?: boolean;
-}) {
-  const [query, setQuery] = useState("");
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return LANGUAGES.filter((l) => l.code !== exclude).filter(
-      (l) => !q || l.name.toLowerCase().includes(q),
-    );
-  }, [query, exclude]);
-
-  return (
-    <div className="flex flex-col gap-3">
-      <input
-        type="text"
-        placeholder="Поиск языка…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-4 py-2.5 text-base outline-none focus:border-[var(--color-forest)]"
-      />
-      {filtered.length === 0 ? (
-        <p className="py-4 text-center text-sm text-[var(--text-secondary)]">
-          Ничего не найдено — попробуй другой запрос.
-        </p>
-      ) : (
-        <div className="grid max-h-72 grid-cols-2 gap-2 overflow-y-auto">
-          {filtered.map((l) =>
-            restrictToReady && !READY_LANGUAGES.includes(l.code) ? (
-              <WaitlistLanguageCell key={l.code} code={l.code} name={l.name} />
-            ) : (
-              <button
-                key={l.code}
-                type="button"
-                onClick={() => onChange(l.code)}
-                className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
-                  value === l.code
-                    ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
-                    : "border-[var(--border-strong)] hover:border-[var(--sky)]"
-                }`}
-              >
-                {l.name}
-              </button>
-            ),
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+const LEVEL_HINTS: Record<SelfReportedCefr, string> = {
+  A1: "Знаю отдельные слова и фразы",
+  A2: "Понимаю простые тексты и фразы",
+  B1: "Читаю несложные тексты без перевода",
+  B2: "Свободно читаю оригиналы",
+  unsure: "Определим коротким тестом",
+};
 
 export default function OnboardingWizard() {
   const [step, setStep] = useState(0);
@@ -143,24 +64,10 @@ export default function OnboardingWizard() {
   // каждого server action, и после ошибки email пришлось бы вводить заново.
   const [email, setEmail] = useState("");
 
-  const [state, formAction, pending] = useActionState<OnboardingState, FormData>(
-    completeOnboarding,
-    {},
-  );
-  const [blocked, setBlocked] = useState(false);
-  const [prevRetryAfterSeconds, setPrevRetryAfterSeconds] = useState(state.retryAfterSeconds);
-  if (state.retryAfterSeconds !== prevRetryAfterSeconds) {
-    setPrevRetryAfterSeconds(state.retryAfterSeconds);
-    setBlocked(Boolean(state.retryAfterSeconds));
-  }
+  const [state, formAction, pending] = useActionState<OnboardingState, FormData>(completeOnboarding, {});
+  const [blocked, unblock] = useRetryBlock(state.retryAfterSeconds);
 
-  const canAdvance = [
-    true,
-    !!primaryGoal,
-    !!targetLanguage,
-    !!nativeLanguage,
-    !!selfReportedCefr,
-  ][step];
+  const canAdvance = [true, !!primaryGoal, !!targetLanguage, !!nativeLanguage, !!selfReportedCefr][step];
 
   // M3 Slice 9 — mounts exactly once, on first render of the pre-account
   // wizard (same "mount = start" proxy the old first-win flow used for
@@ -174,182 +81,164 @@ export default function OnboardingWizard() {
     return <SplashScreen onStart={() => setStep(1)} />;
   }
 
-  return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-10">
-      <div className="mb-8 flex gap-1.5">
-        {Array.from({ length: STEP_COUNT }).map((_, i) => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full ${
-              i <= step ? "bg-[var(--color-forest)]" : "bg-[var(--border-strong)]"
-            }`}
-          />
-        ))}
-      </div>
+  const back = () => setStep((s) => s - 1);
 
-      {step === 1 && (
-        <div className="flex flex-1 flex-col gap-4">
-          <h2 className="text-xl font-semibold">Для чего тебе английский?</h2>
-          <div className="flex flex-col gap-2">
-            {GOALS.map((g) => (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => {
-                  setPrimaryGoal(g.id);
-                  track("onboarding_goal_selected", { goal: g.id });
-                }}
-                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
-                  primaryGoal === g.id
-                    ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
-                    : "border-[var(--border-strong)] hover:border-[var(--sky)]"
-                }`}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+  if (step === 5) {
+    return (
+      <StepShell step={5} total={TOTAL_STEPS} onBack={back}>
+        <form action={formAction} className="flex flex-1 flex-col md:flex-none">
+          <AuthBody>
+            <LexSay mood="joy" heading="Создай аккаунт">
+              Слова и прогресс сохранятся на всех твоих устройствах.
+            </LexSay>
+            <input type="hidden" name="primaryGoal" value={primaryGoal} />
+            <input type="hidden" name="targetLanguage" value={targetLanguage} />
+            <input type="hidden" name="nativeLanguage" value={nativeLanguage} />
+            <input type="hidden" name="selfReportedCefr" value={selfReportedCefr} />
 
-      {step === 2 && (
-        <div className="flex flex-1 flex-col gap-4">
-          <h2 className="text-xl font-semibold">Какой язык учишь?</h2>
-          <LanguagePicker
-            value={targetLanguage}
-            restrictToReady
-            onChange={(code) => {
-              setTargetLanguage(code);
-              // Найдено при повторном аудите: следующий шаг (родной язык)
-              // уже исключает targetLanguage из списка, но если пользователь
-              // вернётся сюда и сменит целевой язык на тот, что уже выбран
-              // как родной, коллизия обнаруживалась только на финальном
-              // сабмите без автоперехода назад. Сбрасываем родной язык
-              // сразу же, чтобы коллизия была невозможна.
-              if (code === nativeLanguage) setNativeLanguage("");
-            }}
-          />
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="flex flex-1 flex-col gap-4">
-          <h2 className="text-xl font-semibold">Какой у тебя родной язык?</h2>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Будем переводить на него.
-          </p>
-          <LanguagePicker
-            value={nativeLanguage}
-            onChange={setNativeLanguage}
-            exclude={targetLanguage}
-          />
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="flex flex-1 flex-col gap-4">
-          <h2 className="text-xl font-semibold">Какой у тебя уровень английского?</h2>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Это не экзамен — просто ориентир. Дальше уточним коротким тестом.
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {SELF_REPORT_LEVELS.map((l) => (
-              <button
-                key={l.value}
-                type="button"
-                onClick={() => {
-                  setSelfReportedCefr(l.value);
-                  track("onboarding_level_selected", { self_reported_cefr: l.value });
-                }}
-                className={`rounded-lg border px-4 py-3 text-center font-medium transition-colors ${
-                  l.value === "unsure" ? "col-span-2" : ""
-                } ${
-                  selfReportedCefr === l.value
-                    ? "border-[var(--color-forest)] bg-[var(--color-forest)] text-white"
-                    : "border-[var(--border-strong)] hover:border-[var(--sky)]"
-                }`}
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {step === 5 && (
-        <form action={formAction} className="flex flex-1 flex-col gap-4">
-          <h2 className="text-xl font-semibold">Создай аккаунт</h2>
-          <input type="hidden" name="primaryGoal" value={primaryGoal} />
-          <input type="hidden" name="targetLanguage" value={targetLanguage} />
-          <input type="hidden" name="nativeLanguage" value={nativeLanguage} />
-          <input type="hidden" name="selfReportedCefr" value={selfReportedCefr} />
-
-          <Input
-            label="Email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            autoCapitalize="none"
-            spellCheck={false}
-            required
-            requiredMark={false}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            icon={<Mail />}
-          />
-          <PasswordField name="password" autoComplete="new-password" required meter />
-
-          {blocked && state.retryAfterSeconds ? (
-            <RateLimitNotice
-              key={state.retryAfterSeconds}
-              message={state.error ?? "Слишком много попыток регистрации."}
-              retryAfterSeconds={state.retryAfterSeconds}
-              onExpire={() => setBlocked(false)}
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              required
+              requiredMark={false}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              icon={<Mail />}
             />
-          ) : (
-            state.error &&
-            !state.retryAfterSeconds && (
-              <p role="alert" className="text-sm text-[var(--color-danger-text)]">
-                {state.error}
-              </p>
-            )
-          )}
+            <PasswordField name="password" autoComplete="new-password" required meter />
 
-          <div className="mt-2 flex gap-3">
-            <Button variant="ghost" size="sm" onClick={() => setStep(4)}>
-              Назад
+            {blocked && state.retryAfterSeconds ? (
+              <RateLimitNotice
+                key={state.retryAfterSeconds}
+                message={state.error ?? "Слишком много попыток регистрации."}
+                retryAfterSeconds={state.retryAfterSeconds}
+                onExpire={unblock}
+              />
+            ) : (
+              state.error &&
+              !state.retryAfterSeconds && (
+                <Alert tone="error" live="assertive">
+                  {state.error}
+                </Alert>
+              )
+            )}
+
+            <p className="text-center text-xs text-[var(--text-secondary)]">
+              Создавая аккаунт, ты соглашаешься с{" "}
+              <Link href="/terms" className="underline underline-offset-2">
+                условиями использования
+              </Link>{" "}
+              и{" "}
+              <Link href="/privacy" className="underline underline-offset-2">
+                политикой конфиденциальности
+              </Link>
+              .
+            </p>
+          </AuthBody>
+          <AuthDock>
+            <Button type="submit" block loading={pending} disabled={blocked}>
+              Создать аккаунт и начать
             </Button>
-            <Button type="submit" variant="leaf" size="sm" disabled={pending || blocked} className="flex-1">
-              {pending ? "Создаём…" : "Создать аккаунт и начать"}
-            </Button>
-          </div>
-          <p className="text-center text-xs text-[var(--text-secondary)]">
-            Создавая аккаунт, ты соглашаешься с{" "}
-            <Link href="/terms" className="underline">
-              условиями использования
-            </Link>{" "}
-            и{" "}
-            <Link href="/privacy" className="underline">
-              политикой конфиденциальности
-            </Link>
-            .
-          </p>
+          </AuthDock>
         </form>
-      )}
+      </StepShell>
+    );
+  }
 
-      {step < 5 && (
-        <div className="mt-8 flex gap-3">
-          {step > 0 && (
-            <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
-              Назад
-            </Button>
-          )}
-          <Button variant="leaf" disabled={!canAdvance} onClick={() => setStep((s) => s + 1)} className="flex-1">
-            Далее
-          </Button>
-        </div>
-      )}
-    </div>
+  return (
+    <StepShell step={step} total={TOTAL_STEPS} onBack={back}>
+      <AuthBody>
+        {step === 1 && (
+          <>
+            <LexSay mood="happy" heading="Для чего тебе английский?">
+              Подберу тексты и слова под цель.
+            </LexSay>
+            <ChoiceGroup
+              legend="Для чего тебе английский?"
+              name="goal"
+              value={primaryGoal}
+              onValueChange={(goal) => {
+                setPrimaryGoal(goal);
+                track("onboarding_goal_selected", { goal });
+              }}
+              options={GOALS.map((g) => {
+                const visual = GOAL_VISUALS[g.id];
+                const Icon = visual.icon;
+                return { value: g.id, label: g.label, description: visual.description, icon: <Icon />, tone: visual.tone };
+              })}
+            />
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <LexSay mood="wink" heading="Какой язык учишь?">
+              Пока готов английский — остальные скоро.
+            </LexSay>
+            <LanguagePicker
+              name="target-language"
+              legend="Какой язык учишь?"
+              value={targetLanguage}
+              restrictToReady
+              onChange={(code) => {
+                setTargetLanguage(code);
+                // Следующий шаг (родной язык) уже исключает targetLanguage из
+                // списка, но если пользователь вернётся сюда и сменит целевой язык
+                // на тот, что уже выбран как родной, коллизия обнаруживалась бы
+                // только на финальном сабмите. Сбрасываем родной язык сразу.
+                if (code === nativeLanguage) setNativeLanguage("");
+              }}
+            />
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <LexSay mood="happy" heading="Какой у тебя родной язык?">
+              На него будем переводить слова.
+            </LexSay>
+            <LanguagePicker
+              name="native-language"
+              legend="Какой у тебя родной язык?"
+              value={nativeLanguage}
+              exclude={targetLanguage}
+              onChange={setNativeLanguage}
+            />
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <LexSay mood="think" heading="Какой у тебя уровень английского?">
+              Это не экзамен — просто ориентир. Дальше уточним коротким тестом.
+            </LexSay>
+            <ChoiceGroup
+              legend="Какой у тебя уровень английского?"
+              name="level"
+              value={selfReportedCefr}
+              onValueChange={(level) => {
+                setSelfReportedCefr(level);
+                track("onboarding_level_selected", { self_reported_cefr: level });
+              }}
+              options={SELF_REPORT_LEVELS.map((l) => ({
+                value: l.value,
+                label: l.label,
+                description: LEVEL_HINTS[l.value],
+              }))}
+            />
+          </>
+        )}
+      </AuthBody>
+      <AuthDock>
+        <Button block disabled={!canAdvance} onClick={() => setStep(step + 1)}>
+          Далее
+        </Button>
+      </AuthDock>
+    </StepShell>
   );
 }

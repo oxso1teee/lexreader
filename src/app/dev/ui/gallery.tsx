@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Pencil, Plus, Trash2 } from "lucide-react";
+import { Bell, Briefcase, Compass, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import {
   Alert,
@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   Checkbox,
+  ChoiceGroup,
   Dialog,
   Drawer,
   DropdownMenu,
@@ -59,6 +60,8 @@ export default function UiGallery() {
   const [email, setEmail] = useState("");
   const [demoPassword, setDemoPassword] = useState("");
   const [demoConfirm, setDemoConfirm] = useState("");
+  const [demoGoal, setDemoGoal] = useState("travel");
+  const [demoAnswer, setDemoAnswer] = useState("");
   const [saving, setSaving] = useState(false);
 
   return (
@@ -190,6 +193,48 @@ export default function UiGallery() {
             <Switch label="Письма с итогами недели" />
             <Switch label="Недоступный переключатель" disabled />
           </div>
+        </div>
+      </Section>
+
+      <Section title="Плитки с вариантами">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ChoiceGroup
+            legend="Цель занятий"
+            name="demo-goal"
+            value={demoGoal}
+            onValueChange={setDemoGoal}
+            options={[
+              { value: "travel", label: "Путешествия", description: "Отели, кафе, дорога", icon: <Compass />, tone: "sun" },
+              { value: "work", label: "Работа и карьера", description: "Письма, документация, созвоны", icon: <Briefcase />, tone: "sky" },
+              { value: "self", label: "Для себя", description: "Без конкретной цели", icon: <Sparkles /> },
+            ]}
+          />
+          <ChoiceGroup
+            legend="Какой вариант подходит?"
+            name="demo-answer"
+            numbered
+            value={demoAnswer}
+            onValueChange={setDemoAnswer}
+            options={[
+              { value: "a", label: "lived" },
+              { value: "b", label: "am living" },
+              { value: "c", label: "have lived" },
+              { value: "d", label: "live", disabled: true },
+            ]}
+          />
+          <ChoiceGroup
+            legend="Язык для перевода"
+            name="demo-language"
+            columns={2}
+            defaultValue="es"
+            className="sm:col-span-2"
+            options={[
+              { value: "es", label: "Испанский" },
+              { value: "de", label: "Немецкий" },
+              { value: "fr", label: "Французский" },
+              { value: "it", label: "Итальянский", disabled: true },
+            ]}
+          />
         </div>
       </Section>
 

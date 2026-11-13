@@ -19,7 +19,7 @@ async function open(page: Page, theme: "light" | "dark" = "light") {
 test.describe("рендер и состояния", () => {
   test("все секции справочника на месте", async ({ page }) => {
     await open(page);
-    for (const name of ["Кнопки", "Карточки", "Поля", "Поле пароля", "Lex", "Выбор", "Метки и аватары", "Вкладки, меню, слои", "Прогресс и загрузка", "Сообщения и уведомления", "Состояния экрана"]) {
+    for (const name of ["Кнопки", "Карточки", "Поля", "Поле пароля", "Lex", "Выбор", "Плитки с вариантами", "Метки и аватары", "Вкладки, меню, слои", "Прогресс и загрузка", "Сообщения и уведомления", "Состояния экрана"]) {
       await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
     }
   });
@@ -463,6 +463,63 @@ test.describe("Lex и поле пароля (Phase 2, экраны входа)",
     const box = await page.getByRole("button", { name: "Показать пароль" }).first().boundingBox();
     expect(box?.width).toBeGreaterThanOrEqual(44);
     expect(box?.height).toBeGreaterThanOrEqual(44);
+  });
+});
+
+test.describe("ChoiceGroup (Phase 2, онбординг)", () => {
+  test("радио-семантика: группа с вопросом, короткое имя карточки, описание отдельно, выбор кликом и стрелками", async ({ page }) => {
+    await open(page);
+    const group = page.getByRole("group", { name: "Цель занятий" });
+    const travel = group.getByRole("radio", { name: "Путешествия" });
+
+    await expect(travel).toBeChecked();
+    // Имя карточки — только подпись; описание подключено отдельно (aria-describedby).
+    await expect(travel).toHaveAccessibleName("Путешествия");
+    await expect(travel).toHaveAccessibleDescription("Отели, кафе, дорога");
+
+    await group.getByRole("radio", { name: "Работа и карьера" }).click();
+    await expect(group.getByRole("radio", { name: "Работа и карьера" })).toBeChecked();
+    await expect(travel).not.toBeChecked();
+
+    await page.keyboard.press("ArrowDown"); // нативное поведение radio
+    await expect(group.getByRole("radio", { name: "Для себя" })).toBeChecked();
+  });
+
+  test("numbered: цифры выбирают вариант только пока фокус в группе; недоступный вариант не выбирается", async ({ page }) => {
+    await open(page);
+    const group = page.getByRole("group", { name: "Какой вариант подходит?" });
+    await expect(group.locator(".choice-card-key")).toHaveText(["1", "2", "3", "4"]);
+
+    // Вне группы одиночные клавиши ничего не делают (WCAG 2.1.4).
+    await page.locator("body").press("2");
+    await expect(group.getByRole("radio", { checked: true })).toHaveCount(0);
+
+    await group.getByRole("radio", { name: "lived", exact: true }).focus();
+    await page.keyboard.press("3");
+    const haveLived = group.getByRole("radio", { name: "have lived", exact: true });
+    await expect(haveLived).toBeChecked();
+    await expect(haveLived).toBeFocused();
+
+    await page.keyboard.press("4"); // «live» недоступен
+    await expect(haveLived).toBeChecked();
+    await expect(group.getByRole("radio", { name: "live", exact: true })).toBeDisabled();
+  });
+
+  test("две колонки: недоступная карточка не получает фокус и не выбирается", async ({ page }) => {
+    await open(page);
+    const group = page.getByRole("group", { name: "Язык для перевода" });
+    await expect(group.getByRole("radio", { name: "Испанский" })).toBeChecked();
+    await group.getByRole("radio", { name: "Немецкий" }).click();
+    await expect(group.getByRole("radio", { name: "Немецкий" })).toBeChecked();
+    await expect(group.getByRole("radio", { name: "Итальянский" })).toBeDisabled();
+    // У fieldset Chrome отдаёт grid-template-columns как заданную строку, а не как
+    // пиксели, поэтому колонки проверяем по положению карточек: 2 в ряд.
+    const boxes = await group
+      .locator("label.choice-card")
+      .evaluateAll((cards) => cards.map((card) => ({ x: Math.round(card.getBoundingClientRect().x), y: Math.round(card.getBoundingClientRect().y) })));
+    expect(boxes[0].y).toBe(boxes[1].y);
+    expect(boxes[2].y).toBeGreaterThan(boxes[0].y);
+    expect(boxes[2].x).toBe(boxes[0].x);
   });
 });
 

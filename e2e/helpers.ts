@@ -27,13 +27,13 @@ export async function signUpFreshAccount(page: Page): Promise<string> {
   await page.goto("/onboarding");
   // Шаг 0 визарда — Splash (stage 7) с одной кнопкой; «Далее» там нет.
   await page.getByRole("button", { name: "Начать бесплатно" }).click();
-  await page.getByRole("button", { name: "Для жизни" }).click();
+  await page.getByRole("radio", { name: "Для жизни" }).check();
   await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Английский" }).click();
+  await page.getByRole("radio", { name: "Английский" }).check();
   await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "Русский" }).click();
+  await page.getByRole("radio", { name: "Русский" }).check();
   await page.getByRole("button", { name: "Далее" }).click();
-  await page.getByRole("button", { name: "A2", exact: true }).click();
+  await page.getByRole("radio", { name: "A2", exact: true }).check();
   await page.getByRole("button", { name: "Далее" }).click();
 
   await page.getByLabel("Email").fill(email);
@@ -95,10 +95,13 @@ export async function getSystemTextIdByTitle(title: string): Promise<string> {
 // это окно молча теряется: ни ошибки, ни реакции (в Match-режиме live-region
 // остаётся пустым). Под нагрузкой окно растёт. Ждём не паузу, а сам факт
 // гидратации — React кладёт `__reactProps$…` на DOM-узел, когда подключает его.
-export async function waitForHydration(locator: Locator): Promise<void> {
+// timeoutMs — по умолчанию 5 с; первый заход на холодный сервер под нагрузкой
+// может гидратироваться заметно дольше.
+export async function waitForHydration(locator: Locator, timeoutMs = 5_000): Promise<void> {
   await expect
     .poll(() => locator.first().evaluate((el) => Object.keys(el).some((k) => k.startsWith("__reactProps"))), {
       message: "элемент не гидратирован: клик до гидратации теряется",
+      timeout: timeoutMs,
     })
     .toBe(true);
 }
