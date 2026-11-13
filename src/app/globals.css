@@ -42,7 +42,7 @@
   --color-accent-blue: #2563eb;
   --color-accent-red: #dc2626;
   /* redesign/duolingo-flat: Unbounded (display/headings) + Onest (body) —
-     next/font/google, both loaded in src/app/layout.tsx with the latin+
+     next/font/local (self-hosted), both loaded in src/app/layout.tsx with the latin+
      cyrillic subsets (app is Russian-first). Geist Sans removed (no
      component referenced --font-geist-sans/font-sans by name outside this
      file — grepped), Geist Mono kept (font-mono is used in 8 files for
