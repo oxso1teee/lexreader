@@ -103,6 +103,165 @@ export interface EarnBackMoment {
   streakBeforeBreak: number;
 }
 
+// Этап 6 (docs/moments/ROADMAP.md) — друзья и соревнование. Overtaken/
+// Weekly-rank/Friend-streak идут через обычную очередь (ниже); Duel-won
+// показывается inline в /duel/[id] (duel-room.tsx), не через очередь — у
+// него нет отдельной ветки в Moment/MOMENT_PRIORITY, своя узкая форма пропсов
+// экспортируется отдельно из src/lib/duel.ts (DuelClaimResult).
+export interface OvertakenMoment {
+  kind: "overtaken";
+  id: string;
+  friendName: string;
+  friendInitial: string;
+  theirRank: number;
+  xpGapToReclaim: number;
+  /** Очки за неделю (get_weekly_leaderboard) — для строк рейтинга. */
+  theirScore?: number;
+  myScore?: number;
+  /** Строка над другом (ранг theirRank-1), если она есть. */
+  above?: { initial: string; score: number } | null;
+}
+
+export interface WeeklyRankPodiumEntry {
+  rank: 1 | 2 | 3;
+  name: string;
+  initial: string;
+  score: number;
+}
+
+export interface WeeklyRankMoment {
+  kind: "weekly_rank";
+  id: string;
+  /** "13–19 окт". */
+  weekLabel: string;
+  myRank: number;
+  myScore: number;
+  /** null — уже в топ-3, либо соседа снизу нет. */
+  xpGapToNextTier: number | null;
+  podium: WeeklyRankPodiumEntry[];
+  rowBelow: { rank: number; name: string; initial: string; score: number } | null;
+}
+
+export interface FriendStreakPartnerView {
+  /** profiles.id партнёра — нужен remindFriendAction (кнопка "Позвать"). */
+  id: string;
+  name: string;
+  initial: string;
+  personalStreak: number;
+}
+
+export interface FriendStreakMoment {
+  kind: "friend_streak";
+  id: string;
+  sharedStreak: number;
+  friendName: string;
+  partners: FriendStreakPartnerView[];
+}
+
+// Этап 7 (docs/moments/ROADMAP.md) — первый запуск и система.
+export interface NotifyAskMoment {
+  kind: "notify_ask";
+  id: string;
+}
+
+export interface WelcomeBackMoment {
+  kind: "welcome_back";
+  id: string;
+  name: string;
+  daysAway: number;
+  /** getDueCount — реально просроченные карточки, не декоративное число. */
+  dueReviewCount: number;
+  continueChapter: { textId: string; collectionTitle: string; chapterPosition: number } | null;
+}
+
+export interface RateAppMoment {
+  kind: "rate_app";
+  id: string;
+}
+
+export interface WeekRecapWordOfWeek {
+  headword: string;
+  translation: string;
+  contextSentence: string | null;
+  timesSeen: number;
+  timesCorrect: number;
+}
+
+export interface WeekRecapMoment {
+  kind: "week_recap";
+  id: string;
+  /** "13–19 окт". */
+  weekLabel: string;
+  newWordsCount: number;
+  alreadyKnownCount: number;
+  wordOfWeek: WeekRecapWordOfWeek | null;
+  minutesRead: number;
+  chaptersRead: number;
+  activeDays: number;
+}
+
+// Этап 4 (docs/moments/ROADMAP.md) — чтение и слова.
+export interface ChapterDoneMoment {
+  kind: "chapter_done";
+  id: string;
+  textTitle: string;
+  collectionTitle: string;
+  /** Позиция текста внутри коллекции (texts.collection_order), как уже
+   *  считает welcome-back-actions.ts для continueChapter. */
+  chapterPosition: number;
+  wordsRead: number;
+  /** Новых слов, сохранённых в карточки за эту конкретную сессию чтения. */
+  newWordsCount: number;
+  /** Первые до 4 из этих слов — чипы «Слова главы в твоих карточках». */
+  newWords?: string[];
+  /** comprehensionPercent(): доля слов без подсказки перевода. */
+  comprehension?: number;
+  /** Последний абзац текста — «страница» в открывающейся книжке. */
+  excerpt?: string;
+  /** Следующий текст той же коллекции по collection_order — null, если это
+   *  последний (коллекция прочитана полностью). */
+  nextTextId: string | null;
+}
+
+export interface ReviewDueMoment {
+  kind: "review_due";
+  id: string;
+  /** getDueCount — реально просроченные карточки, не декоративное число. */
+  dueCount: number;
+  /** Первые просроченные слова (front карточек), до 5 — чипы на экране. */
+  words?: string[];
+  /** estimateReviewMinutes(dueCount). */
+  minutes?: number;
+}
+
+export interface TwinInsightSkillDelta {
+  category: string;
+  label: string;
+  trend: "up" | "down" | "flat";
+  status: "weak" | "developing" | "strong";
+}
+
+export interface TwinInsightMoment {
+  kind: "twin_insight";
+  id: string;
+  weekLabel: string;
+  skills: TwinInsightSkillDelta[];
+  /** Самый слабый паттерн недели (pickTopPattern) — честная рекомендация
+   *  фокуса, не выдуманная. null, если данных ещё нет. */
+  focusLabel: string | null;
+}
+
+export interface UnitDoneMoment {
+  kind: "unit_done";
+  id: string;
+  pathTitle: string;
+  stageTitle: string;
+  stageIndex: number;
+  stagesTotal: number;
+  skillsInStage: number;
+  nextStageTitle: string | null;
+}
+
 export type Moment =
   | GoalDoneMoment
   | StreakUpMoment
@@ -113,7 +272,18 @@ export type Moment =
   | StreakMilestoneMoment
   | FreezeUsedMoment
   | PerfectWeekMoment
-  | EarnBackMoment;
+  | EarnBackMoment
+  | OvertakenMoment
+  | WeeklyRankMoment
+  | FriendStreakMoment
+  | NotifyAskMoment
+  | WelcomeBackMoment
+  | RateAppMoment
+  | WeekRecapMoment
+  | ChapterDoneMoment
+  | ReviewDueMoment
+  | TwinInsightMoment
+  | UnitDoneMoment;
 export type MomentKind = Moment["kind"];
 
 // Порядок показа после занятия (ROADMAP, этап 1/2): Result (не момент — сам
@@ -132,6 +302,28 @@ export const MOMENT_PRIORITY: Record<MomentKind, number> = {
   level_up: 30,
   achievement: 30,
   word_mastered: 20,
+  // Этап 6 — социальные уведомления: не блокируют итог занятия (не входят
+  // в основную цепочку после сессии), но заметнее, чем просто "информация".
+  overtaken: 38,
+  friend_streak: 38,
+  weekly_rank: 25,
+  // Этап 7 — не блокируют итог занятия: notify_ask идёт почти в конце
+  // батча (после первого занятия, рядом с word_mastered), rate_app —
+  // самым последним (показывается следом за уже показанным позитивным
+  // моментом, см. moment-provider.tsx). Welcome-back/Week-recap приходят
+  // отдельным push от гейта, приоритет среди них не играет роли.
+  notify_ask: 15,
+  week_recap: 25,
+  welcome_back: 15,
+  rate_app: 5,
+  // Этап 4 — чтение/слова: chapter_done идёт сразу после сессионного итога
+  // чтения (та же "роль", что perfect/goal_done у review-сессии); unit_done
+  // заметнее, чем обычная похвала — закрытие целого раздела пути;
+  // review_due/twin_insight — информационные гейты, не блокируют итог.
+  chapter_done: 55,
+  unit_done: 32,
+  review_due: 18,
+  twin_insight: 22,
 };
 
 /** Больше подряд не показываем — остальные подождут следующего действия. */

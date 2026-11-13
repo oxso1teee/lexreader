@@ -24,6 +24,12 @@ export interface UpsertWordResult {
   deckId?: string;
   learningState?: string;
   contextCount?: number;
+  /** docs/moments/mockups/Reader.dc.html — тост "слово в карточках · +N XP".
+   *  true/ненулевой только на САМОМ первом сохранении слова (addXp(2) ниже
+   *  уже реально начисляется только в этой ветке) — повторный тап по уже
+   *  изученному слову не должен фармить XP. */
+  wasNew?: boolean;
+  xpAwarded?: number;
 }
 
 // M3 Slice 12 Gate #3 — a context carrying a video timestamp is provenance 'video' regardless
@@ -285,7 +291,7 @@ export async function saveVocabularyItem(
   // "отправить в тетрадь" из Мозга — сюда стекается почти весь прогресс по
   // словарю, поэтому проверка достижений живёт именно здесь.
   await checkAndAwardAchievements(supabase, userId, input.language);
-  await addXp(supabase, userId, 2);
+  const xpResult = await addXp(supabase, userId, 2);
 
   // M3 Slice 5: только новое слово, не повторный просмотр — иначе повторные
   // подсказки одного и того же слова засоряли бы Evidence Explorer дублями.
@@ -308,5 +314,7 @@ export async function saveVocabularyItem(
     deckId: link?.deckId,
     learningState: link?.learningState,
     contextCount: link?.contextCount,
+    wasNew: true,
+    xpAwarded: xpResult ? 2 : 0,
   };
 }

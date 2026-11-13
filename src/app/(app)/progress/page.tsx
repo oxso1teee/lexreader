@@ -11,19 +11,17 @@ import Link from "next/link";
 import { cardClassName } from "@/components/ui/card";
 import { Share2 } from "lucide-react";
 import ActivityHeatmap from "./activity-heatmap";
-import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
-import StreakHero from "@/components/product/streak-hero";
-import WeekActivityRow from "./week-activity-row";
 import LineChart from "./line-chart";
+import { getWeeklyLeaderboard } from "@/lib/leaderboard";
 import HardestWords from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
 import PersonalRecords from "./personal-records";
-import PageHeader from "@/components/product/page-header";
 import InsightBanner from "@/components/product/progress/insight-banner";
 import ActivityWeekCard from "@/components/product/progress/activity-week-card";
 import SkillSection from "@/components/product/progress/skill-section";
 import ProgressViewTracker from "./progress-view-tracker";
+import ProgressOverview from "./progress-overview";
 
 // M3 Slice 4: moved to src/lib/brain-stats.ts (computeHardestWords) so
 // Practice Home can reuse the same ranking instead of a second
@@ -84,7 +82,7 @@ export default async function ProgressPage({
   searchParams: Promise<{ period?: string }>;
 }) {
   const { period: periodParam } = await searchParams;
-  const period = periodParam ?? "30";
+  const period = periodParam ?? "7";
   const chartDays = period === "all" ? 30 : Number(period);
 
   const profile = await requireProfile();
@@ -115,6 +113,9 @@ export default async function ProgressPage({
     activePathState,
     { count: familiarWords },
     { count: activeWords },
+    weeklyXpQuery,
+    leaderboardRows,
+    { data: activeDuel },
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -244,6 +245,28 @@ export default async function ProgressPage({
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language)
       .eq("learning_state", "active"),
+    // Progress.dc.html — "XP за неделю": честная сумма activity_days.xp
+    // этой ISO-недели (тот же источник, что и дневная цель в xp-actions.ts),
+    // не предположение по числу сессий.
+    supabase
+      .from("activity_days")
+      .select("xp")
+      .eq("user_id", profile.id)
+      .gte("day", isoWeekStart(new Date()).toISOString().slice(0, 10)),
+    // "Рейтинг недели" — тот же RPC, что уже использует /leaderboard
+    // (src/lib/leaderboard.ts), просто читаем свою строку по isYou.
+    getWeeklyLeaderboard(supabase),
+    // "Дуэль с …" — самая недавняя активная дуэль, где участвует текущий
+    // пользователь (duels — единственная таблица дуэлей с открытым
+    // authenticated SELECT, см. комментарий в миграции 0050).
+    supabase
+      .from("duels")
+      .select("creator_id, opponent_id, creator_score, opponent_score, creator_initials, opponent_initials")
+      .or(`creator_id.eq.${profile.id},opponent_id.eq.${profile.id}`)
+      .eq("status", "active")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -251,6 +274,19 @@ export default async function ProgressPage({
   const cardsCreated = flashcardsQuery.count ?? 0;
   const reviewLogs = reviewLogQuery.data ?? [];
   const answersGiven = reviewLogs.length;
+
+  // Progress.dc.html's top summary row.
+  const weeklyXp = (weeklyXpQuery.data ?? []).reduce((sum, row) => sum + row.xp, 0);
+  const myRank = leaderboardRows.find((row) => row.isYou)?.rank ?? null;
+  const duelView = activeDuel
+    ? {
+        isCreator: activeDuel.creator_id === profile.id,
+        myScore: activeDuel.creator_id === profile.id ? activeDuel.creator_score : activeDuel.opponent_score,
+        opponentScore: activeDuel.creator_id === profile.id ? activeDuel.opponent_score : activeDuel.creator_score,
+        opponentInitials:
+          (activeDuel.creator_id === profile.id ? activeDuel.opponent_initials : activeDuel.creator_initials) ?? "?",
+      }
+    : null;
 
   const effectiveChartDays =
     period === "all"
@@ -295,17 +331,6 @@ export default async function ProgressPage({
     activityCounts[key] = (activityCounts[key] ?? 0) + 1;
   }
 
-  // Progress mockup alignment — 7 дней текущей недели (Пн→Вс) для
-  // WeekActivityRow, из уже посчитанного activityCounts выше — без нового
-  // запроса. Будущие дни недели просто не встречаются как ключ в
-  // activityCounts, честно остаются false.
-  const weekStart = isoWeekStart(new Date());
-  const activeDaysThisWeek = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStart);
-    d.setUTCDate(d.getUTCDate() + i);
-    return (activityCounts[isoDate(d)] ?? 0) > 0;
-  });
-
   const daysSinceLastReading = lastReadingRow ? daysSince(lastReadingRow.started_at) : null;
 
   const insight = decideProgressInsight({
@@ -335,37 +360,23 @@ export default async function ProgressPage({
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
       <ProgressViewTracker />
-      <PageHeader title="Прогресс" description={`Язык: ${profile.target_language}`} />
+      <ProgressOverview
+        period={period}
+        streakCurrent={profile.streak_current}
+        streakLongest={profile.streak_longest}
+        freezeAvailable={profile.streak_freeze_available}
+        knownWords={knownWords ?? 0}
+        finishedTexts={finishedTexts ?? 0}
+        weeklyXp={weeklyXp}
+        reviewsThisWeek={reviewsThisWeek}
+        activityCounts={activityCounts}
+        myRank={myRank}
+        duel={duelView ? { myScore: duelView.myScore, opponentScore: duelView.opponentScore, opponentInitials: duelView.opponentInitials } : null}
+      />
 
+      <h2 className="mo-disp mt-4 text-lg font-bold">Подробнее</h2>
       <InsightBanner insight={insight} />
-
       {languageTwinState.kind !== "hidden" && <LanguageTwinSummaryCard state={languageTwinState} variant="progress" />}
-
-      {/* docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C,
-          Тир 3 — недельная лига. Лёгкая ссылка-карточка, не отдельный
-          RPC-запрос на этой и без того тяжёлой Promise.all-странице — вся
-          реальная агрегация/приватность живёт на самой /leaderboard. */}
-      <Link href="/leaderboard" className={cardClassName({ interactive: true, className: "focus-ring flex items-center justify-between gap-3" })}>
-        <div>
-          <p className="text-body-sm font-semibold">Недельная лига</p>
-          <p className="text-caption text-[var(--text-secondary)]">Сравни активность за неделю с другими участниками</p>
-        </div>
-        <span aria-hidden="true" className="text-[var(--text-secondary)]">→</span>
-      </Link>
-
-      {/* docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C,
-          Тир 3 — живые дуэли. Та же лёгкая ссылка-карточка, без своего
-          RPC-запроса здесь — вся игровая логика на /duel. */}
-      <Link href="/duel" className={cardClassName({ interactive: true, className: "focus-ring flex items-center justify-between gap-3" })}>
-        <div>
-          <p className="text-body-sm font-semibold">Дуэль по словарю</p>
-          <p className="text-caption text-[var(--text-secondary)]">Пригласи друга на дуэль 1 на 1 в реальном времени</p>
-        </div>
-        <span aria-hidden="true" className="text-[var(--text-secondary)]">→</span>
-      </Link>
-
-      {/* M3 Slice 8 §11: compact only — active Path, content progress,
-          current stage, skills improved/confident. No giant LMS dashboard. */}
       {activePathState && (
         <Link
           href={`/learning-paths/${activePathState.path.slug}`}
@@ -382,9 +393,6 @@ export default async function ProgressPage({
           </div>
         </Link>
       )}
-
-      <StreakHero days={profile.streak_current} bestStreak={profile.streak_longest} />
-      <WeekActivityRow activeDays={activeDaysThisWeek} />
 
       <div>
         <h2 className="text-h3 mb-2">Показатели</h2>
@@ -423,8 +431,6 @@ export default async function ProgressPage({
           </div>
         </div>
       )}
-
-      <PeriodTabs current={period} />
 
       <div>
         <h2 className="mb-2 font-semibold">Словарный запас</h2>

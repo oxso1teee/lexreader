@@ -33,6 +33,7 @@ import { findMatchingMissionForSkill } from "@/lib/learning-paths/mission-match.
 import { recommendPath, type PathRecommendation } from "@/lib/learning-paths/recommendation.ts";
 import { getOrGenerateActiveMissions } from "@/lib/missions/persist";
 import type { EnrollmentRow, LearningPath, PathSlug, Skill, SkillProgressRow, Stage } from "@/lib/learning-paths/types.ts";
+import type { UnitDoneMoment } from "@/lib/moments/types";
 
 const PATH = "/learning-paths";
 
@@ -196,7 +197,12 @@ async function advanceCurrentPosition(supabase: Awaited<ReturnType<typeof create
   await setCurrentStage(supabase, userId, path.slug, stage.key, mod?.key ?? null);
 }
 
-async function maybeCompletePathAndAdvance(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, path: LearningPath, skillKey: string) {
+async function maybeCompletePathAndAdvance(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  path: LearningPath,
+  skillKey: string,
+): Promise<UnitDoneMoment | null> {
   await advanceCurrentPosition(supabase, userId, path, skillKey);
   const rows = await getSkillProgressForPath(supabase, userId, path.slug, path.version);
 
@@ -205,17 +211,40 @@ async function maybeCompletePathAndAdvance(supabase: Awaited<ReturnType<typeof c
   // comparing this skill against the OTHER skills already in `rows` is
   // enough to know whether it just tipped the stage over.
   const stage = findStageForSkill(path, skillKey);
+  let unitDone: UnitDoneMoment | null = null;
   if (stage && stageStatus(stage, rows, null) === "completed") {
     captureServerEvent(userId, "stage_completed", { path_slug: path.slug, stage_key: stage.key });
+    // docs/moments/ROADMAP.md, этап 4 — Unit-done. stageIndex/nextStageTitle
+    // из реального порядка path.stages (curriculum, не из БД) — тот же
+    // массив, что уже рисует [pathSlug]/page.tsx и path-map.tsx.
+    const stageIndex = path.stages.findIndex((s) => s.key === stage.key);
+    const nextStage = path.stages[stageIndex + 1] ?? null;
+    unitDone = {
+      kind: "unit_done",
+      id: `unit-done-${userId}-${path.slug}-${stage.key}`,
+      pathTitle: path.title,
+      stageTitle: stage.title,
+      stageIndex: stageIndex + 1,
+      stagesTotal: path.stages.length,
+      skillsInStage: stage.modules.flatMap((m) => m.skills).length,
+      nextStageTitle: nextStage?.title ?? null,
+    };
   }
 
   if (isPathComplete(path, rows)) {
     await markPathCompleted(supabase, userId, path.slug);
     captureServerEvent(userId, "learning_path_completed", { path_slug: path.slug });
   }
+
+  return unitDone;
 }
 
-export async function completeLessonAction(pathSlug: PathSlug, skillKey: string): Promise<SkillProgressRow | null> {
+export interface CompleteLessonResult {
+  progress: SkillProgressRow | null;
+  unitDoneMoment: UnitDoneMoment | null;
+}
+
+export async function completeLessonAction(pathSlug: PathSlug, skillKey: string): Promise<CompleteLessonResult | null> {
   if (!isValidSkillForPath(pathSlug, skillKey)) return null;
   const path = getPath(pathSlug);
   if (!path) return null;
@@ -225,10 +254,10 @@ export async function completeLessonAction(pathSlug: PathSlug, skillKey: string)
   const progress = await getOrCreateSkillProgress(supabase, profile.id, path.slug, path.version, skillKey);
   const patch = applyLessonCompletion(progress, new Date().toISOString());
   const updated = await applySkillProgressPatch(supabase, profile.id, progress.id, patch);
-  await maybeCompletePathAndAdvance(supabase, profile.id, path, skillKey);
+  const unitDoneMoment = await maybeCompletePathAndAdvance(supabase, profile.id, path, skillKey);
 
   revalidateLearningPaths();
-  return updated ?? progress;
+  return { progress: updated ?? progress, unitDoneMoment };
 }
 
 export interface KnowledgeCheckSubmitResult {

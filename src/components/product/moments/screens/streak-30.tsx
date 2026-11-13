@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
 import type { StreakMilestoneMoment } from "@/lib/moments/types";
 import { MomentScreen } from "../moment-screen";
@@ -35,6 +35,20 @@ const RAIN = rain();
 
 export function Streak30Screen({ moment, onClose }: { moment: StreakMilestoneMoment; onClose: () => void }) {
   const n = useCountUp(moment.milestone, { delay: 300, duration: 1200 });
+  const [copied, setCopied] = useState(false);
+  async function share() {
+    const text = `${moment.milestone} дней подряд читаю в LexReader без пропусков.`;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ text });
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      // Отмена шаринга — не ошибка.
+    }
+  }
 
   return (
     <MomentScreen
@@ -44,13 +58,23 @@ export function Streak30Screen({ moment, onClose }: { moment: StreakMilestoneMom
       onClose={onClose}
       footerDelay={2}
       footer={
-        <Button
-          className="mo-cta"
-          onClick={onClose}
-          style={{ ["--btn-fill" as string]: "#fff", ["--btn-edge" as string]: "#ffd9a3", ["--btn-label" as string]: "var(--ember-text)" }}
-        >
-          Продолжить
-        </Button>
+        <div style={{ display: "flex", gap: 12 }}>
+          <Button
+            onClick={share}
+            style={{ flex: 1, gap: 8, ["--btn-fill" as string]: "rgba(255,255,255,.18)", ["--btn-edge" as string]: "rgba(0,0,0,.15)", ["--btn-label" as string]: "#fff" } as CSSProperties}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+            </svg>
+            {copied ? "Скопировано" : "Поделиться"}
+          </Button>
+          <Button
+            onClick={onClose}
+            style={{ flex: 1, ["--btn-fill" as string]: "#fff", ["--btn-edge" as string]: "#ffd9a3", ["--btn-label" as string]: "var(--ember-text)" } as CSSProperties}
+          >
+            Продолжить
+          </Button>
+        </div>
       }
     >
       {RAIN.map((p, i) => (

@@ -615,7 +615,14 @@ export default function ReviewSession({
   // docs/moments/mockups/Mistakes.dc.html — после последней карточки
   // исходного прохода, если были ошибки и их ещё не пропустили.
   if (overlay === "mistakes") {
-    return <MistakesScreen words={mistakeWordsSnapshot} onRetry={retryMistakes} onSkip={skipMistakes} />;
+    return (
+      <MistakesScreen
+        words={mistakeWordsSnapshot}
+        progress={cards.length > 0 ? cards.length / (cards.length + mistakeWordsSnapshot.length) : 0.85}
+        onRetry={retryMistakes}
+        onSkip={skipMistakes}
+      />
+    );
   }
 
   if (done) {
@@ -649,13 +656,6 @@ export default function ReviewSession({
           missionId={missionId}
           missionCorrectCount={tally[2] + tally[3]}
           missionIncorrectCount={tally[0] + tally[1]}
-          // Review mockup alignment — реальные слова этой сессии (front —
-          // всегда язык изучения, back — родной, см. комментарий у speak()
-          // выше), не новый запрос: cards уже в состоянии этого компонента.
-          // SessionComplete — прямой ребёнок этого файла (не через
-          // review-mode-switcher.tsx), так что новый проп не требует правок
-          // вне заявленных двух файлов.
-          cards={originalCardsRef.current.map((c) => ({ front: c.front, back: c.back }))}
           // docs/moments/mockups/Result.dc.html — этап 1: honest sums
           // накопленные за сессию выше, не пересчёт задним числом.
           xpEarned={sessionResult?.xpEarned ?? 0}
@@ -1009,7 +1009,12 @@ export default function ReviewSession({
           combo={halfwaySnapshot.combo}
           xpSoFar={halfwaySnapshot.xpSoFar}
           cardsRemaining={cards.length - (index + 1)}
+          progress={cards.length > 0 ? (index + 1) / cards.length : 0.5}
           onContinue={() => setOverlay(null)}
+          onQuit={() => {
+            setOverlay(null);
+            setShowQuitConfirm(true);
+          }}
         />
       )}
 
