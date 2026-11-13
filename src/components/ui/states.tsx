@@ -38,15 +38,22 @@ export function OfflineState({ action }: { action?: React.ReactNode }) {
 
 export function NotFoundState({ homeHref = "/home", homeLabel = "На главную" }: { homeHref?: string; homeLabel?: string }) {
   return (
-    <ErrorState
-      icon={Compass}
-      title="Такой страницы нет"
-      body="Возможно, ссылка устарела или в адресе опечатка. Вернись на главную — всё твоё на месте."
-      action={
-        <ButtonLink href={homeHref} className="mt-2">
-          {homeLabel}
-        </ButtonLink>
-      }
-    />
+    <div className="flex flex-col items-center">
+      {/* Декоративный «404» из макета Not-found; без него e2e (pdf/youtube
+          import) не отличают чужой текст от несуществующей страницы. */}
+      <span aria-hidden="true" className="text-[96px] font-bold leading-none tracking-tight text-[var(--text-tertiary)] [font-family:var(--font-display)]">
+        404
+      </span>
+      <ErrorState
+        icon={Compass}
+        title="Такой страницы нет"
+        body="Возможно, ссылка устарела или в адресе опечатка. Вернись на главную — всё твоё на месте."
+        action={
+          <ButtonLink href={homeHref} className="mt-2">
+            {homeLabel}
+          </ButtonLink>
+        }
+      />
+    </div>
   );
 }
