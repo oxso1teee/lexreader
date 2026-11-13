@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { login } from "./helpers";
+import { login, dismissLessonStart } from "./helpers";
 
 // M3 Slice 4.1: "color-contrast" used to be excluded here on purpose —
 // text-black/40, /50 (the existing secondary-text convention) and
@@ -107,6 +107,7 @@ test("Review Session has no serious/critical axe violations on desktop, question
   await page.setViewportSize({ width: 1280, height: 800 });
   await login(page);
   await page.goto("/brain/all/review");
+  await dismissLessonStart(page);
   await expect(page.getByRole("button", { name: "Показать ответ" })).toBeVisible({ timeout: 10_000 });
 
   let results = await new AxeBuilder({ page }).include("body").analyze();
@@ -123,6 +124,7 @@ test("Review Session has no serious/critical axe violations on mobile (390px)", 
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page);
   await page.goto("/brain/all/review");
+  await dismissLessonStart(page);
   await expect(page.getByRole("button", { name: "Показать ответ" })).toBeVisible({ timeout: 10_000 });
 
   const results = await new AxeBuilder({ page }).include("body").analyze();
@@ -134,6 +136,7 @@ test("Review Session is keyboard-navigable: Space reveals, Escape with nothing g
 }) => {
   await login(page);
   await page.goto("/brain/all/review");
+  await dismissLessonStart(page);
   await expect(page.getByRole("button", { name: "Показать ответ" })).toBeVisible({ timeout: 10_000 });
 
   await page.keyboard.press("Space");
@@ -157,6 +160,7 @@ test("Review Session is keyboard-navigable: Space reveals, Escape with nothing g
 test("Review Session keyboard shortcuts don't fire while editing a card", async ({ page }) => {
   await login(page);
   await page.goto("/brain/all/review");
+  await dismissLessonStart(page);
   await expect(page.getByRole("button", { name: "Показать ответ" })).toBeVisible({ timeout: 10_000 });
 
   await page.getByRole("button", { name: "Редактировать карточку" }).click();

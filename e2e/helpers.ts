@@ -121,6 +121,24 @@ export async function clickAndWaitForNav(
   throw lastError;
 }
 
+// docs/moments/ROADMAP.md, этап 3 — Lesson-start (review-session.tsx)
+// теперь блокирует cards-режим полным экраном перед первой (не
+// резюмируемой) сессией. playwright.config.ts уже ставит
+// reducedMotion:"reduce" глобально, так что кнопка "Поехали" видна сразу,
+// без ожидания таймера анимации. Вызывать сразу после page.goto(".../review")
+// и ДО любого ожидания "Показать ответ" — для резюмируемых сессий (где
+// Lesson-start не показывается) кнопка просто не появится за отведённый
+// короткий таймаут, и это не ошибка.
+export async function dismissLessonStart(page: Page) {
+  const readyButton = page.getByRole("button", { name: "Поехали" });
+  try {
+    await readyButton.waitFor({ state: "visible", timeout: 2_000 });
+    await readyButton.click();
+  } catch {
+    // Резюмируемая сессия — Lesson-start не показывается, это ожидаемо.
+  }
+}
+
 export async function restoreTestPassword() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",

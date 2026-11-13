@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { test, expect } from "@playwright/test";
-import { signUpFreshAccount, completeOnboardingForTest } from "./helpers";
+import { signUpFreshAccount, completeOnboardingForTest, dismissLessonStart } from "./helpers";
 
 // test-gap-map.md / release-blockers.md P1 #5: the review session
 // (reviewWord -> srs_state + review_log persistence) had NO automated
@@ -87,6 +87,7 @@ test("review 'cards' mode: grading a due card persists srs_state + review_log an
   try {
     // --- The card is available for review. ---
     await page.goto(`/brain/${deckId}/review`);
+    await dismissLessonStart(page);
     await expect(page.getByRole("button", { name: "Показать ответ" })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("e2e-review-word").first()).toBeVisible();
 
