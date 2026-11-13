@@ -1,0 +1,77 @@
+/* LexReader v8 — unified light/dark design-token system.
+   Light values are unchanged from v7 (reference-matched). Dark values are
+   purpose-tuned per token, not a blanket invert: text-on-light accent
+   shades (the 600/700 steps) are relit as bright-on-dark, tint
+   backgrounds (100/150) become low-alpha washes, and neutral/ink/paper
+   ladders get a dedicated dark ramp. Theme resolution happens in
+   theme.js; this file only reacts to the `data-theme` attribute it sets
+   (or, lacking one, to the OS preference via the media query below). */
+:root {
+  /* paper / ink — light (unchanged from v7) */
+  --paper-0: #fff; --paper-50: #f5f1ea; --paper-100: #ece6db; --paper-200: #e9e4da;
+  --paper-300: #d6cfc3; --paper-400: #f0ebe2; --ink-900: #1a1a1a; --ink-600: #5c5648; --ink-400: #8a8373;
+  --ink-rgb: 26,26,26;
+
+  /* accents — light (unchanged from v7) */
+  --green-100: #e3f6d3; --green-200: #cdeeb0; --green-400: #2b820f; --green-500: #166534;
+  --green-600: #1c540a; --green-700: #123706;
+  --gold-100: #fff1b8; --gold-150: #ffe8c2; --gold-400: #ffc700; --gold-500: #ff9500;
+  --gold-600: #e0a500; --gold-700: #7a5900;
+  --blue-100: #ddf4ff; --blue-400: #1cb0f6; --blue-500: #0b79b0; --blue-600: #0c7c9c; --blue-700: #075a85;
+  --blue-600-rgb: 12,124,156;
+  --red-100: #ffdede; --red-400: #df2d2d; --red-600: #c21b1b; --orange-600: #c2410c; --orange-700: #9a330a;
+  --purple-500: #8b5cf6;
+
+  --font-display: "Unbounded", ui-rounded, "SF Pro Rounded", "Segoe UI Rounded", system-ui, sans-serif;
+  --font-body: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* semantic aliases — point at the ramps above, so they flip for free
+     whenever the ramps are redefined in a dark scope below */
+  --bg: var(--paper-200);
+  --surface: var(--paper-0);
+  --surface-2: var(--paper-50);
+  --surface-3: var(--paper-100);
+  --text-primary: var(--ink-900);
+  --text-secondary: rgba(var(--ink-rgb), .68);
+  --text-tertiary: var(--ink-400);
+  --border: rgba(var(--ink-rgb), .18);
+  --border-soft: rgba(var(--ink-rgb), .12);
+  --accent: var(--green-500);
+  --accent-2: var(--blue-500);
+  --success: var(--green-500);
+  --warning: var(--gold-600);
+  --error: var(--red-400);
+  --nav-bg: var(--paper-0);
+  --nav-active-bg: var(--green-100);
+  --nav-active-fg: var(--ink-900);
+  --progress-track: var(--paper-300);
+  --progress-fill: var(--green-500);
+  --hover-overlay: rgba(var(--ink-rgb), .06);
+  --active-overlay: rgba(var(--ink-rgb), .12);
+  /* fixed dark chip + white content, for toasts/shadows that must stay
+     dark regardless of theme (not tied to the ink ladder, which inverts) */
+  --inverse-surface: #1a1a1a;
+  --inverse-on-surface: #fff;
+  /* button-shadow accents for variants outside the paper/green/blue ramps
+     (.b-gold/.b-ghost/.b-purple) — named here so every screen using them
+     gets a theme-aware shadow for free instead of a hardcoded hex that
+     never adapts in dark mode. */
+  --shadow-gold: #db7a00;
+  --shadow-ghost: #c9c2b6;
+  --shadow-purple: #6c3ce0;
+  color-scheme: light;
+}
+
+/* ---- dark ramp, applied whichever way the theme got selected ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper-0: #1c1c20; --paper-50: #131316; --paper-100: #23232a; --paper-200: #0d0d0f; --paper-300: #35353e; --paper-400: #272730; --ink-900: #f3f1ec; --ink-600: #b7b2a7; --ink-400: #847f74; --ink-rgb: 243,241,236; --green-100: rgba(52,179,94,.18); --green-200: rgba(52,179,94,.30); --green-400: #1e8449; --green-500: #34b35e; --green-600: #1f7a42; --green-700: #1c7a3c; --gold-100: rgba(255,199,0,.16); --gold-150: rgba(255,149,0,.18); --gold-400: #ffd43d; --gold-500: #ffa733; --gold-600: #ffc24d; --gold-700: #f0b429; --blue-100: rgba(28,176,246,.16); --blue-400: #4fc3ff; --blue-500: #2fa0d8; --blue-600: #5bc8ea; --blue-600-rgb: 91,200,234; --blue-700: #1c6f93; --red-100: rgba(255,99,99,.16); --red-400: #ff6b6b; --red-600: #ff4d4d; --orange-600: #ff7a45; --orange-700: #cc5a2e; --purple-500: #a78bfa; --inverse-surface: #2e2c28; --shadow-gold: #a66000; --shadow-ghost: #4a4a52; --shadow-purple: #5a2fc2; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --paper-0: #1c1c20; --paper-50: #131316; --paper-100: #23232a; --paper-200: #0d0d0f; --paper-300: #35353e; --paper-400: #272730; --ink-900: #f3f1ec; --ink-600: #b7b2a7; --ink-400: #847f74; --ink-rgb: 243,241,236; --green-100: rgba(52,179,94,.18); --green-200: rgba(52,179,94,.30); --green-400: #1e8449; --green-500: #34b35e; --green-600: #1f7a42; --green-700: #1c7a3c; --gold-100: rgba(255,199,0,.16); --gold-150: rgba(255,149,0,.18); --gold-400: #ffd43d; --gold-500: #ffa733; --gold-600: #ffc24d; --gold-700: #f0b429; --blue-100: rgba(28,176,246,.16); --blue-400: #4fc3ff; --blue-500: #2fa0d8; --blue-600: #5bc8ea; --blue-600-rgb: 91,200,234; --blue-700: #1c6f93; --red-100: rgba(255,99,99,.16); --red-400: #ff6b6b; --red-600: #ff4d4d; --orange-600: #ff7a45; --orange-700: #cc5a2e; --purple-500: #a78bfa; --inverse-surface: #2e2c28; --shadow-gold: #a66000; --shadow-ghost: #4a4a52; --shadow-purple: #5a2fc2; color-scheme: dark; }
+
+.app { font-family: var(--font-body); }
+.disp { font-family: var(--font-display); }
+.link-secondary { display: inline-block; text-decoration: underline; color: var(--ink-600);
+  font: 600 14px/1.3 var(--font-body); background: none; border: 0; cursor: pointer; }
+.link-secondary:hover { color: var(--ink-900); }
+a { color: var(--green-500); } a:hover { color: var(--green-600); }
+a:focus-visible { outline: 3px solid var(--gold-500); outline-offset: 2px; border-radius: 6px; }

@@ -1,0 +1,49 @@
+<!--meta {"title":"Командное испытание","planned":true}-->
+<style>
+.mem{display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:60px}
+.mem+.mem{border-top:var(--stroke-soft)}
+.mem.me{background:var(--green-100);box-shadow:inset 4px 0 0 var(--green-400)}
+.mem .nm{font:700 14.5px/1.2 var(--font-body)}
+.mem .xp{font:700 14px/1 var(--font-body);white-space:nowrap}
+.goalbar{position:relative;height:22px;border-radius:99px;background:rgba(0,0,0,.24);overflow:hidden;display:flex}
+.goalbar i{display:block;height:100%}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Friends-list.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Испытание недели<small>команда «Маяк» · 5 человек</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="hero">
+    <div class="rowx top between">
+      <div>
+        <p class="eyebrow">Вместе к цели</p>
+        <div class="rowx s6" style="align-items:baseline;margin-top:6px"><b class="num lg">2 400</b><span class="h3">/ 3 000 XP</span></div>
+      </div>
+      <span class="badge" style="background:rgba(0,0,0,.22);color:#fff;font-size:12px;padding:6px 10px"><i class="ic ic-timer s14"></i>2 д 14 ч</span>
+    </div>
+    <div class="goalbar" style="margin:14px 0 8px" role="img" aria-label="Собрано 2400 из 3000 XP, 80%, твой вклад 310 XP">
+      <i style="width:69.7%;background:var(--fill-sun)"></i><i style="width:10.3%;background:#fff"></i>
+    </div>
+    <div class="rowx between sm b"><span class="rowx s6"><i style="width:10px;height:10px;border-radius:3px;background:#fff;display:inline-block"></i>твой вклад 310</span><span>осталось 600 XP</span></div>
+  </section>
+
+  <div class="card sm t-gold rowx">
+    <span class="sw s-gold"><i class="ic ic-gift"></i></span>
+    <div class="f1"><div class="b sm">Награда каждому: сундук команды</div><div class="xs muted">+100 XP и заморозка стрика, если успеем до воскресенья</div></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Вклад участников</p><span class="xs faint">за эту неделю</span></div>
+  <div class="list">
+    <div class="mem"><span class="avatar a2">А</span><div class="f1"><div class="rowx between"><span class="nm">Аня</span><span class="xp">720</span></div><div class="bar sm gold" style="margin-top:6px"><i style="width:100%"></i></div></div></div>
+    <div class="mem"><span class="avatar a1">М</span><div class="f1"><div class="rowx between"><span class="nm">Макс</span><span class="xp">560</span></div><div class="bar sm gold" style="margin-top:6px"><i style="width:78%"></i></div></div></div>
+    <div class="mem"><span class="avatar a4">Л</span><div class="f1"><div class="rowx between"><span class="nm">Лена</span><span class="xp">470</span></div><div class="bar sm gold" style="margin-top:6px"><i style="width:65%"></i></div></div></div>
+    <div class="mem"><span class="avatar a6">Д</span><div class="f1"><div class="rowx between"><span class="nm">Дима</span><span class="xp">340</span></div><div class="bar sm gold" style="margin-top:6px"><i style="width:47%"></i></div></div></div>
+    <div class="mem me" aria-current="true"><span class="avatar me">С</span><div class="f1"><div class="rowx between"><span class="nm c-green">Ты · 4 из 5</span><span class="xp c-green">310</span></div><div class="bar sm" style="margin-top:6px"><i style="width:43%"></i></div><div class="xs muted" style="margin-top:4px">+40 XP — и обгонишь Диму</div></div></div>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Lesson-start.dc.html">Внести вклад — занятие 5 мин</a>
+</footer>
+</div>

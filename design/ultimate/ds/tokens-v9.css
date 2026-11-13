@@ -1,0 +1,54 @@
+
+/* ================================================================
+   LexReader Ultimate Design System — v9 token extension.
+   Everything above is the approved v8 colour ramp (unchanged).
+   v9 adds the non-colour scales (space, radius, type, elevation,
+   motion, z) and a named surface ladder so dark mode has explicit
+   levels instead of reusing one card colour for every layer.
+   ================================================================ */
+:root {
+  /* spacing — 4pt grid */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+  /* radius */
+  --r-xs: 8px; --r-sm: 12px; --r-md: 16px; --r-lg: 20px; --r-xl: 24px; --r-2xl: 28px; --r-full: 999px;
+  /* type scale (size/line) — display = Unbounded, body = Onest, reading = Literata */
+  --font-read: "Literata", Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --fs-display: 40px; --fs-h1: 24px; --fs-h2: 20px; --fs-h3: 17px; --fs-body: 15px; --fs-sm: 13.5px; --fs-xs: 12px; --fs-micro: 11px;
+  /* stroke + elevation. The product is "flat with a chunky edge":
+     cards get a 2px border, pressable things get a 4px bottom edge;
+     real drop shadows are reserved for floating layers. */
+  --stroke: 2px solid rgba(var(--ink-rgb), .16);
+  --stroke-soft: 1px solid rgba(var(--ink-rgb), .10);
+  --edge: 4px;
+  --shadow-1: 0 1px 2px rgba(26,22,14,.08), 0 6px 16px -8px rgba(26,22,14,.16);
+  --shadow-2: 0 2px 4px rgba(26,22,14,.08), 0 16px 32px -12px rgba(26,22,14,.24);
+  --shadow-3: 0 -8px 40px -8px rgba(26,22,14,.28);
+  --scrim: rgba(26,22,14,.48);
+  /* surface ladder: canvas < app < card < raised < overlay */
+  --surface-canvas: var(--paper-200);
+  --surface-app: var(--paper-50);
+  --surface-card: var(--paper-0);
+  --surface-sunken: var(--paper-100);
+  --surface-raised: var(--paper-0);
+  --surface-overlay: var(--paper-0);
+  /* text ladder (all ≥ 4.5:1 on app/card surfaces in both themes) */
+  --text-1: var(--ink-900);
+  --text-2: rgba(var(--ink-rgb), .70);
+  --text-3: rgba(var(--ink-rgb), .62);
+  --text-disabled: rgba(var(--ink-rgb), .40);
+  /* text-safe accent shades (for coloured TEXT on light tints) */
+  --green-text: #1c6a0a; --blue-text: #075a85; --gold-text: #7a5900; --orange-text: #b23a08; --red-text: #b51a1a;
+  --focus: 0 0 0 3px var(--gold-400);
+  /* solid fills: backgrounds that carry WHITE text. Unlike the 400/500 accent steps (relit bright for dark mode), these stay deep in both themes. */
+  --fill-leaf: #2b820f; --fill-leaf-deep: #166534; --fill-warm: #0e7f8e; --fill-warm-edge: #0a5e69; --fill-teal: #0c7c9c; --fill-leaf-edge: #1c540a; --fill-sky: #0b79b0; --fill-sky-edge: #075a85; --fill-ember: #c2410c; --fill-ember-edge: #9a330a; --fill-red: #d42828; --fill-red-edge: #a81d1d; --fill-sun: #ffc700; --fill-sun-edge: #db7a00; --fill-ink: #1f2a22; --fill-ink-edge: #0f1611;
+  /* motion */
+  --ease-out: cubic-bezier(.2,.8,.2,1); --ease-spring: cubic-bezier(.2,.9,.3,1.3);
+  --dur-1: .15s; --dur-2: .3s; --dur-3: .45s;
+  /* z */
+  --z-nav: 10; --z-sheet: 20; --z-modal: 30; --z-toast: 40;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --stroke: 2px solid rgba(var(--ink-rgb), .14); --stroke-soft: 1px solid rgba(var(--ink-rgb), .09); --shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 6px 16px -8px rgba(0,0,0,.6); --shadow-2: 0 2px 4px rgba(0,0,0,.4), 0 16px 32px -12px rgba(0,0,0,.7); --shadow-3: 0 -8px 40px -8px rgba(0,0,0,.7); --scrim: rgba(0,0,0,.62); --surface-raised: #26262d; --surface-overlay: #2b2b33; --text-2: rgba(var(--ink-rgb), .74); --text-3: rgba(var(--ink-rgb), .64); --green-text: #6fd58f; --blue-text: #7fd0f5; --gold-text: #ffd166; --orange-text: #ff9a6b;  --fill-leaf: #1e8449; --fill-leaf-deep: #1b7a3e; --fill-warm: #0e7f8e; --fill-warm-edge: #0a5e69; --fill-teal: #0f7591; --fill-leaf-edge: #14602f; --fill-sky: #1479ad; --fill-sky-edge: #0a557c; --fill-ember: #c2410c; --fill-ember-edge: #8f2f08; --fill-red: #cf3030; --fill-red-edge: #9c1f1f; --fill-sun: #ffc93d; --fill-sun-edge: #a66000; --fill-ink: #24352a; --fill-ink-edge: #111a14; --red-text: #ff8a8a; }
+}
+:root[data-theme="dark"] { --stroke: 2px solid rgba(var(--ink-rgb), .14); --stroke-soft: 1px solid rgba(var(--ink-rgb), .09); --shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 6px 16px -8px rgba(0,0,0,.6); --shadow-2: 0 2px 4px rgba(0,0,0,.4), 0 16px 32px -12px rgba(0,0,0,.7); --shadow-3: 0 -8px 40px -8px rgba(0,0,0,.7); --scrim: rgba(0,0,0,.62); --surface-raised: #26262d; --surface-overlay: #2b2b33; --text-2: rgba(var(--ink-rgb), .74); --text-3: rgba(var(--ink-rgb), .64); --green-text: #6fd58f; --blue-text: #7fd0f5; --gold-text: #ffd166; --orange-text: #ff9a6b;  --fill-leaf: #1e8449; --fill-leaf-deep: #1b7a3e; --fill-warm: #0e7f8e; --fill-warm-edge: #0a5e69; --fill-teal: #0f7591; --fill-leaf-edge: #14602f; --fill-sky: #1479ad; --fill-sky-edge: #0a557c; --fill-ember: #c2410c; --fill-ember-edge: #8f2f08; --fill-red: #cf3030; --fill-red-edge: #9c1f1f; --fill-sun: #ffc93d; --fill-sun-edge: #a66000; --fill-ink: #24352a; --fill-ink-edge: #111a14; --red-text: #ff8a8a; }

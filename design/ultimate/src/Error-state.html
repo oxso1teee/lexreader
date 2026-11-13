@@ -1,0 +1,42 @@
+<!--meta {"title":"Ошибка импорта"}-->
+<style>
+.er-ill{position:relative;width:220px;height:140px;align-self:center;display:flex;align-items:flex-end;justify-content:center}
+.er-tv{position:absolute;right:6px;top:10px;width:84px;height:62px;border-radius:14px;background:var(--surface-card);border:var(--stroke);display:flex;align-items:center;justify-content:center;color:var(--red-text);transform:rotate(8deg)}
+.er-tv::after{content:"";position:absolute;bottom:-10px;left:50%;margin-left:-14px;width:28px;height:6px;border-radius:3px;background:rgba(var(--ink-rgb),.16)}
+.er-ill .lex{position:relative;margin-right:60px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Import-hub.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Импорт видео</div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="er-ill" aria-hidden="true">
+    <span class="er-tv"><i class="ic ic-alert s32"></i></span>
+    <i class="lex sad s88"></i>
+  </div>
+  <div class="center stack s4">
+    <h1 class="h2">Не получилось обработать видео</h1>
+    <p class="lead">У ролика «Life in London — Episode 4» нет речи, которую мы смогли распознать: похоже, там только музыка или звук слишком тихий</p>
+  </div>
+  <div class="card rowx" style="gap:10px">
+    <span class="cover video c-sky" style="width:64px;height:44px;border-radius:10px"></span>
+    <div class="f1"><div class="b sm">Life in London — Episode 4</div><div class="xs faint">youtube.com · 12:40</div></div>
+    <span class="badge red">Ошибка</span>
+  </div>
+  <div class="sect"><p class="eyebrow">Что попробовать</p></div>
+  <div class="list">
+    <div class="row"><span class="sw blue sm"><i class="ic ic-subtitles s18"></i></span><div class="f1"><div class="t">Видео с субтитрами</div><div class="s">ролики с CC обрабатываются надёжнее</div></div></div>
+    <div class="row"><span class="sw green sm"><i class="ic ic-paste s18"></i></span><div class="f1"><div class="t">Вставь текст вручную</div><div class="s">скопируй расшифровку с YouTube</div></div></div>
+  </div>
+  <p class="center xs faint" style="margin:0">Код для поддержки: <span class="mono">IMP-422 · whisper_no_speech</span></p>
+</main>
+<footer class="dock">
+  <div class="dock row" style="padding:0;gap:10px">
+    <a class="btn b-leaf" href="Import-processing.dc.html"><i class="ic ic-refresh s18"></i>Повторить</a>
+    <a class="btn b-ghost" href="Import-text.dc.html">Вставить текст</a>
+  </div>
+  <a class="link2" href="Main.dc.html" style="padding:4px 0">На главную</a>
+</footer>
+</div>

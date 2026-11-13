@@ -1,0 +1,68 @@
+<!--meta {"title":"Основания оценки"}-->
+<style>
+.ev{display:flex;gap:12px;align-items:flex-start;padding:12px 8px 12px 14px}
+.ev+.ev{border-top:var(--stroke-soft)}
+.ev .q{font:400 15px/1.45 var(--font-read);margin:4px 0 6px}
+.ev .iconbtn{margin:-8px 0 0 auto}
+.ev.off{background:var(--surface-sunken)}.ev.off .q{text-decoration:line-through;color:var(--text-3)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Twin-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Основания оценки<small>214 записей за 6 недель</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="banner"><i class="ic ic-shield"></i><div><b>Каждая оценка — из твоих действий</b>Правила сравнивают ответ с эталоном. Без ИИ, записи хранятся только у тебя.</div></div>
+  <div class="seg" role="tablist" aria-label="Навык">
+    <button class="on" role="tab" aria-selected="true">Все</button>
+    <button role="tab" aria-selected="false">Чтение</button>
+    <button role="tab" aria-selected="false">Словарь</button>
+    <button role="tab" aria-selected="false">Грамм.</button>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Сегодня</p><span class="xs faint">4 записи</span></div>
+  <section class="list">
+    <div class="ev">
+      <span class="sw blue sm"><i class="ic ic-pencil s18"></i></span>
+      <div class="f1"><div class="rowx s6"><span class="b sm">Проверка текста</span><span class="badge red"><i class="ic ic-close s14"></i>ошибка</span></div>
+        <div class="q">“Yesterday I <span class="hl-r">have finished</span> chapter 3”</div>
+        <div class="xs faint">Грамматика · Past Simple · 09:42</div></div>
+      <button class="iconbtn" aria-label="Действия с записью"><i class="ic ic-more"></i></button>
+    </div>
+    <div class="ev">
+      <span class="sw green sm"><i class="ic ic-cards s18"></i></span>
+      <div class="f1"><div class="rowx s6"><span class="b sm">Карточка</span><span class="badge green"><i class="ic ic-check s14"></i>верно</span></div>
+        <div class="q"><b>reluctant</b> — неохотный</div>
+        <div class="xs faint">Словарь · «Хорошо» · 09:15</div></div>
+      <button class="iconbtn" aria-label="Действия с записью"><i class="ic ic-more"></i></button>
+    </div>
+    <div class="ev">
+      <span class="sw gold sm"><i class="ic ic-book s18"></i></span>
+      <div class="f1"><div class="rowx s6"><span class="b sm">Чтение</span><span class="badge green"><i class="ic ic-check s14"></i>верно</span></div>
+        <div class="q">“…found <b>refuge</b> in the old tower” — без перевода</div>
+        <div class="xs faint">Чтение · The Last Lighthouse, гл. 3 · 08:50</div></div>
+      <button class="iconbtn" aria-label="Действия с записью"><i class="ic ic-more"></i></button>
+    </div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Вчера</p><span class="xs faint">11 записей</span></div>
+  <section class="list">
+    <div class="ev off">
+      <span class="sw sm"><i class="ic ic-eye-off s18"></i></span>
+      <div class="f1"><div class="rowx s6"><span class="b sm">Карточка</span><span class="badge">исключено</span></div>
+        <div class="q"><b>gale</b> — шторм</div>
+        <div class="xs faint">Случайное нажатие · не влияет на оценку</div></div>
+      <button class="btn b-ghost sm fit" style="margin:0 6px 0 0">Вернуть</button>
+    </div>
+    <div class="ev">
+      <span class="sw blue sm"><i class="ic ic-headphones s18"></i></span>
+      <div class="f1"><div class="rowx s6"><span class="b sm">Видео</span><span class="badge red"><i class="ic ic-close s14"></i>ошибка</span></div>
+        <div class="q">“the <b>shore</b> was empty” — открыт перевод</div>
+        <div class="xs faint">На слух · Life in London · 21:10</div></div>
+      <button class="iconbtn" aria-label="Действия с записью"><i class="ic ic-more"></i></button>
+    </div>
+  </section>
+  <p class="center xs faint" style="margin:0">Что-то не так? Нажми «⋯» у записи и исключи её из оценки.</p>
+</main>
+</div>

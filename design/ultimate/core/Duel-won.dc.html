@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Победа в дуэли</title></head>
+<body>
+<x-dc>
+<helmet>
+<script src="theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&display=swap">
+<style>
+body{margin:0;background:var(--paper-200)}
+a{color:#fff}a:hover{color:var(--gold-100)}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:var(--fill-sky);color:#fff;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:54px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-white{--f:#fff;--e:#bfe6fb;--l:#075a85}
+.b-ghost{--f:rgba(0,0,0,.26);--e:rgba(0,0,0,.4);--l:#fff}
+@keyframes inL{0%{transform:translateX(-200px)}70%{transform:translateX(10px)}100%{transform:none}}
+@keyframes inR{0%{transform:translateX(200px)}70%{transform:translateX(-10px)}100%{transform:none}}
+.inL{animation:inL .5s .1s cubic-bezier(.2,.9,.3,1.1) both}
+.inR{animation:inR .5s .1s cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes clash{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.4) rotate(8deg);opacity:1}100%{transform:none;opacity:1}}
+.clash{animation:clash .4s .55s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes crown{0%{transform:translateY(-140px) rotate(-30deg);opacity:0}60%{transform:translateY(6px) rotate(6deg);opacity:1}80%{transform:translateY(-4px)}100%{transform:none;opacity:1}}
+.crown{animation:crown .6s 2.1s cubic-bezier(.3,.7,.4,1) both}
+@keyframes win{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.winner{animation:win .5s 2.1s ease-in-out 2}
+@keyframes sadden{to{filter:grayscale(.6);transform:scale(.92)}}
+.loser{animation:sadden .4s 2.1s ease-out both}
+.av{width:86px;height:86px;border-radius:999px;display:flex;align-items:center;justify-content:center;font:900 34px/1 Unbounded,sans-serif;border:4px solid #fff}
+.col{width:100%;height:118px;clip-path:polygon(0 0,100% 0,100% 72%,50% 100%,0 72%);display:flex;align-items:flex-start;justify-content:center;padding-top:16px;font:900 32px/1 Unbounded,sans-serif;position:relative}
+.col .shine{position:absolute;left:10%;top:6px;width:30%;height:40%;border-radius:40%;background:rgba(0,0,0,.2);transform:rotate(-20deg)}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes burst{0%{transform:translate(0,0) rotate(0) scale(.2);opacity:1}75%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(1);opacity:0}}
+.cf{position:absolute;left:0;top:0;animation:burst var(--t) var(--d) cubic-bezier(.1,.7,.3,1) both}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;font-weight:700;font-size:15px}
+</style>
+<link rel="stylesheet" href="design-system.css">
+</helmet>
+<div class="app">
+  <div aria-hidden="true" style="position: absolute; width: 480px; height: 480px; border-radius: 999px; background: var(--blue-700); opacity: .5; left: -45px; top: 30px"></div>
+
+  <div class="rise" style="position: relative; text-align: center; padding-top: 64px; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff">Дуэль · 10 заданий</div>
+
+  <div style="position: relative; display: flex; align-items: flex-end; gap: 22px; padding: 26px 40px 0; height: 400px">
+    <div style="position: absolute; left: 50%; top: 120px; width: 0; height: 0">
+      <span class="cf" style="width:7px;height:14px;background:var(--gold-400);border-radius:2px;--dx:65px;--dy:-196px;--r:114deg;--d:2.11s;--t:1.33s"></span><span class="cf" style="width:7px;height:7px;background:var(--paper-0);border-radius:99px;--dx:104px;--dy:-127px;--r:243deg;--d:2.14s;--t:1.61s"></span><span class="cf" style="width:8px;height:8px;background:var(--fill-leaf);border-radius:2px;--dx:-80px;--dy:-153px;--r:-173deg;--d:2.22s;--t:1.84s"></span><span class="cf" style="width:8px;height:8px;background:var(--gold-500);border-radius:2px;--dx:-184px;--dy:179px;--r:21deg;--d:2.11s;--t:1.70s"></span><span class="cf" style="width:9px;height:9px;background:#bfe6fb;border-radius:99px;--dx:-67px;--dy:-189px;--r:-46deg;--d:2.12s;--t:1.82s"></span><span class="cf" style="width:9px;height:9px;background:var(--gold-400);border-radius:2px;--dx:22px;--dy:-91px;--r:-71deg;--d:2.25s;--t:1.67s"></span><span class="cf" style="width:7px;height:7px;background:var(--paper-0);border-radius:99px;--dx:83px;--dy:-98px;--r:61deg;--d:2.18s;--t:1.58s"></span><span class="cf" style="width:10px;height:10px;background:var(--fill-leaf);border-radius:2px;--dx:-234px;--dy:46px;--r:119deg;--d:2.12s;--t:1.60s"></span><span class="cf" style="width:9px;height:9px;background:var(--gold-500);border-radius:2px;--dx:-145px;--dy:193px;--r:-155deg;--d:2.23s;--t:1.63s"></span><span class="cf" style="width:10px;height:20px;background:#bfe6fb;border-radius:2px;--dx:70px;--dy:-123px;--r:-245deg;--d:2.20s;--t:1.89s"></span><span class="cf" style="width:9px;height:18px;background:var(--gold-400);border-radius:2px;--dx:-184px;--dy:165px;--r:258deg;--d:2.19s;--t:1.21s"></span><span class="cf" style="width:7px;height:7px;background:var(--paper-0);border-radius:2px;--dx:-199px;--dy:135px;--r:-185deg;--d:2.20s;--t:1.25s"></span><span class="cf" style="width:8px;height:16px;background:var(--fill-leaf);border-radius:2px;--dx:-188px;--dy:-88px;--r:62deg;--d:2.23s;--t:1.48s"></span><span class="cf" style="width:10px;height:10px;background:var(--gold-500);border-radius:2px;--dx:-64px;--dy:-200px;--r:-111deg;--d:2.10s;--t:1.57s"></span><span class="cf" style="width:8px;height:8px;background:#bfe6fb;border-radius:2px;--dx:-253px;--dy:139px;--r:77deg;--d:2.21s;--t:1.47s"></span><span class="cf" style="width:10px;height:10px;background:var(--gold-400);border-radius:99px;--dx:-245px;--dy:140px;--r:-217deg;--d:2.18s;--t:1.28s"></span><span class="cf" style="width:6px;height:12px;background:var(--paper-0);border-radius:99px;--dx:137px;--dy:19px;--r:-26deg;--d:2.18s;--t:1.52s"></span><span class="cf" style="width:10px;height:10px;background:var(--fill-leaf);border-radius:2px;--dx:-96px;--dy:-131px;--r:154deg;--d:2.17s;--t:1.83s"></span><span class="cf" style="width:11px;height:22px;background:var(--gold-500);border-radius:2px;--dx:-252px;--dy:-117px;--r:-123deg;--d:2.24s;--t:1.52s"></span><span class="cf" style="width:9px;height:18px;background:#bfe6fb;border-radius:99px;--dx:-211px;--dy:36px;--r:32deg;--d:2.19s;--t:1.28s"></span><span class="cf" style="width:9px;height:9px;background:var(--gold-400);border-radius:2px;--dx:-157px;--dy:-158px;--r:283deg;--d:2.12s;--t:1.84s"></span><span class="cf" style="width:7px;height:14px;background:var(--paper-0);border-radius:2px;--dx:-231px;--dy:-31px;--r:-136deg;--d:2.16s;--t:1.73s"></span><span class="cf" style="width:10px;height:10px;background:var(--fill-leaf);border-radius:2px;--dx:-222px;--dy:79px;--r:304deg;--d:2.18s;--t:1.79s"></span><span class="cf" style="width:6px;height:6px;background:var(--gold-500);border-radius:99px;--dx:-216px;--dy:-85px;--r:-14deg;--d:2.12s;--t:1.75s"></span><span class="cf" style="width:7px;height:14px;background:#bfe6fb;border-radius:2px;--dx:-288px;--dy:-61px;--r:-16deg;--d:2.14s;--t:1.45s"></span><span class="cf" style="width:11px;height:22px;background:var(--gold-400);border-radius:2px;--dx:-56px;--dy:206px;--r:309deg;--d:2.20s;--t:1.89s"></span><span class="cf" style="width:9px;height:18px;background:var(--paper-0);border-radius:2px;--dx:-31px;--dy:-135px;--r:222deg;--d:2.22s;--t:1.79s"></span><span class="cf" style="width:10px;height:20px;background:var(--fill-leaf);border-radius:99px;--dx:130px;--dy:-47px;--r:-242deg;--d:2.23s;--t:1.61s"></span><span class="cf" style="width:8px;height:8px;background:var(--gold-500);border-radius:2px;--dx:-59px;--dy:170px;--r:287deg;--d:2.14s;--t:1.81s"></span><span class="cf" style="width:9px;height:18px;background:#bfe6fb;border-radius:2px;--dx:-159px;--dy:-101px;--r:-209deg;--d:2.15s;--t:1.49s"></span>
+    </div>
+    <div class="inL" style="flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end">
+      <svg class="crown" viewBox="0 0 128 60" width="56" height="26" aria-hidden="true" style="margin-bottom: 4px"><defs><linearGradient id="crownGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"></stop><stop offset="1" stop-color="var(--gold-600)"></stop></linearGradient></defs><path d="M10 56 L18 12 L42 36 L64 4 L86 36 L110 12 L118 56 Z" fill="url(#crownGrad)" stroke="var(--gold-700)" stroke-width="6" stroke-linejoin="round"></path><path d="M22 50 L106 50" stroke="var(--gold-700)" stroke-width="4" stroke-linecap="round" opacity=".35"></path><circle cx="18" cy="14" r="5" fill="var(--red-400)" stroke="var(--gold-700)" stroke-width="2"></circle><circle cx="64" cy="8" r="6" fill="var(--blue-400)" stroke="var(--gold-700)" stroke-width="2"></circle><circle cx="110" cy="14" r="5" fill="var(--red-400)" stroke="var(--gold-700)" stroke-width="2"></circle><path d="M20 22 L30 34" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".5"></path></svg>
+      <div class="av winner" style="background: var(--fill-leaf)">С</div>
+      <div style="font-weight: 700; font-size: 16px; margin: 8px 0 10px">Ты</div>
+      <div class="col" style="background: var(--gold-400); color: #4d3800; box-shadow: inset 0 -6px 0 0 var(--gold-600)"><span class="shine" aria-hidden="true"></span>10</div>
+    </div>
+    <div class="clash disp" style="position: absolute; left: 50%; top: 150px; width: 54px; height: 54px; margin-left: -27px; border-radius: 999px; background:var(--paper-0); color:var(--blue-text); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900">VS</div>
+    <div class="inR" style="flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end">
+      <div class="av loser" style="background: var(--fill-warm)">А</div>
+      <div style="font-weight: 700; font-size: 16px; margin: 8px 0 10px">Аня</div>
+      <div class="col" style="background:rgba(0,0,0,.26); color: #fff">7</div>
+    </div>
+  </div>
+
+  <div style="position: relative; text-align: center; padding: 22px 24px 0">
+    <h1 class="disp rise" style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 900; animation-delay: 2.2s">Победа!</h1>
+    <p class="rise" style="margin: 8px 0 0; font-size: 16px; 2; animation-delay: 2.3s">10 из 10 и на 18 секунд быстрее</p>
+    <div class="rise" style="display: flex; gap: 8px; justify-content: center; margin-top: 16px; animation-delay: 2.45s">
+      <span class="chip" style="background: var(--gold-400); color: #4d3800">+25 XP</span>
+      <span class="chip" style="background:rgba(0,0,0,.26)">3 победы подряд</span>
+    </div>
+  </div>
+
+  <div class="rise" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 20px 34px; display: flex; gap: 12px; animation-delay: 2.7s">
+    <a class="btn b-ghost" href="Duel-invite.dc.html" style="flex: 0 0 auto; width: auto; padding-left: 18px; padding-right: 18px">Реванш</a>
+    <a class="btn b-white" href="Main.dc.html" style="flex: 1">Забрать награду</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.t0 = Date.now();
+    this.iv = setInterval(() => { this.forceUpdate(); if (Date.now() - this.t0 > 3400) clearInterval(this.iv); }, 33);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const el = this.t0 ? Date.now() - this.t0 : 0;
+    const p = Math.min(1, Math.max(0, (el - 800) / 1200));
+    const e = 1 - Math.pow(1 - p, 2);
+    const q = Math.min(1, Math.max(0, (el - 2450) / 700));
+    const me = Math.round(e * 10);
+    const her = Math.min(7, Math.round(e * 10));
+    let s = 41;
+    const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const cols = ['var(--gold-400)', '#fff', 'var(--green-400)', 'var(--gold-500)', '#bfe6fb'];
+    const cf = [];
+    for (let i = 0; i < 30; i++) {
+      const a = r() * Math.PI * 2;
+      const d = 120 + r() * 120;
+      const w = 6 + Math.round(r() * 5);
+      cf.push({ style: 'width:' + w + 'px;height:' + (r() < .5 ? w : w * 2) + 'px;background:' + cols[i % 5] + ';border-radius:' + (r() < .3 ? '99px' : '2px') + ';--dx:' + Math.round(Math.cos(a) * d - 70) + 'px;--dy:' + Math.round(Math.sin(a) * d) + 'px;--r:' + Math.round(r() * 720 - 360) + 'deg;--d:' + (2.1 + r() * 0.15).toFixed(2) + 's;--t:' + (1.2 + r() * 0.7).toFixed(2) + 's' });
+    }
+    return { me, her, hMe: 40 + me * 13, hHer: 40 + her * 13, xp: Math.round((1 - Math.pow(1 - q, 3)) * 25), cf };
+  }
+}
+</script>
+</body>
+</html>

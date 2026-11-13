@@ -1,0 +1,40 @@
+<!--meta {"title":"Карточка — напиши слово"}-->
+<style>
+.q{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:22px 20px 20px}
+.letters{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.letters span{width:27px;height:36px;border-radius:9px;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center;font:600 18px/1 var(--font-read);color:var(--text-1)}
+.letters span.ok{background:var(--blue-100);color:var(--blue-text)}
+.letters span.gap{background:none;width:8px}
+</style>
+<div class="app">
+<header class="lessonbar">
+  <a class="iconbtn" href="Quit-confirm.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="bar lg" role="progressbar" aria-valuenow="8" aria-valuemax="47" aria-label="8 из 47"><i style="width:17%;background:var(--blue-400)"></i></div>
+  <span class="b sm faint" style="min-width:44px;text-align:right">8/47</span>
+</header>
+<main class="body" style="padding-top:12px">
+  <div class="rowx between"><span class="badge gold"><i class="ic ic-compass s14"></i>Путешествия</span><span class="xs faint">режим: написать слово</span></div>
+  <section class="card q">
+    <p class="eyebrow">Напиши по-английски</p>
+    <div class="h1" style="margin-top:4px">поездка туда и обратно</div>
+    <p class="sm muted" style="margin:4px 0 0">сущ. · 2 слова · встречалось в «Travel English Basics»</p>
+    <hr class="divider" style="margin:8px 0">
+    <div class="letters" aria-label="10 букв, подсказка: первая r">
+      <span class="ok">r</span><span class="ok">o</span><span class="ok">u</span><span class="ok">n</span><span class="ok">d</span><span class="gap"></span><span class="ok">t</span><span class="ok">r</span><span></span><span></span>
+    </div>
+  </section>
+  <div>
+    <label class="label" for="ans">Твой ответ</label>
+    <div class="field focus" id="ans" role="textbox" aria-label="Ответ"><span class="en" style="font-size:20px">round tr<span class="caret"></span></span><span class="mla xs faint">8 / 10</span></div>
+    <p class="hint rowx s6"><i class="ic ic-bulb s16 c-gold"></i>Подсказка: первая буква — r. Пробелы и регистр не важны.</p>
+  </div>
+  <div class="card sm sunk rowx">
+    <span class="sw blue sm"><i class="ic ic-quote s18"></i></span>
+    <p class="read f1" style="font-size:14px;margin:0">Is this ticket one-way or a <span class="hl-b">______</span>?</p>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-sky" href="Flashcard-answer.dc.html">Проверить</a>
+  <a class="link2" href="Flashcard-answer.dc.html">Показать ответ</a>
+</footer>
+</div>

@@ -1,0 +1,56 @@
+<!--meta {"title":"Сезонный пропуск","planned":true}-->
+<style>
+.track{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 4px;scrollbar-width:none}
+.track::-webkit-scrollbar{display:none}
+.lvl{flex:none;width:78px;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.lvl .n{align-self:center;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px/1 var(--font-display);background:var(--surface-sunken);color:var(--text-2)}
+.lvl.got .n{background:var(--fill-leaf);color:#fff}
+.lvl.cur .n{background:var(--fill-ember);color:#fff;box-shadow:0 0 0 3px var(--surface-app),0 0 0 5px var(--orange-600)}
+.rw{height:84px;border-radius:14px;border:var(--stroke);background:var(--surface-card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;font:700 11.5px/1.15 var(--font-body);padding:4px;position:relative}
+.rw.plus{background:var(--gold-100);border-color:rgba(224,165,0,.4)}
+.rw.got{border-color:var(--green-400)}
+.rw.got::after{content:"";position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--fill-leaf) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/12px no-repeat}
+.rw.cur{border-color:var(--orange-600);border-width:2px;box-shadow:0 3px 0 rgba(var(--ink-rgb),.12)}
+.rw .lk{position:absolute;top:6px;right:6px;color:var(--text-3)}
+.lanes{display:flex;flex-direction:column;gap:6px;padding-top:36px;flex:none;width:40px}
+.lanes span{height:84px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:700 11.5px/1 var(--font-body);letter-spacing:.08em;text-transform:uppercase;border-radius:12px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Progress.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Сезонный пропуск<small>1 октября — 30 ноября</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="hero ember">
+    <div class="rowx top between">
+      <div>
+        <p class="eyebrow">Сезон «Листопад»</p>
+        <div class="rowx s8" style="align-items:baseline;margin-top:6px"><b class="num xl">14</b><span class="h3">уровень<br>из 30</span></div>
+      </div>
+      <i class="lex cool pale s88" aria-hidden="true"></i>
+    </div>
+    <div class="rowx between sm b" style="margin:10px 0 6px"><span>До 15 уровня</span><span>180 / 250</span></div>
+    <div class="bar lg" style="background:rgba(0,0,0,.22)"><i style="width:72%;background:var(--fill-sun)"></i></div>
+    <div class="rowx s6 sm b" style="margin-top:10px"><i class="ic ic-timer s16"></i>до конца сезона 18 дней</div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Дорожка наград</p><span class="rowx s6"><span class="badge green">Free · верх</span><span class="badge gold">Plus · низ</span></span></div>
+  <div class="track" role="list" aria-label="Награды сезона по уровням">
+      <div class="lvl got" role="listitem"><span class="n">12</span><div class="rw got"><i class="ic ic-snow s24 c-blue"></i>Заморозка</div><div class="rw plus got"><i class="ic ic-coins s24 c-gold"></i>150 монет</div></div>
+      <div class="lvl got" role="listitem"><span class="n">13</span><div class="rw got"><i class="ic ic-coins s24 c-gold"></i>50 монет</div><div class="rw plus got"><i class="ic ic-leaf s24 c-green"></i>Шарф Lex</div></div>
+      <div class="lvl cur" role="listitem"><span class="n">14</span><div class="rw cur"><i class="ic ic-bolt-f s24 c-gold"></i>2× XP<br>на час</div><div class="rw plus cur"><i class="ic ic-lock s16 lk"></i><i class="ic ic-gift s24 c-orange"></i>Сундук</div></div>
+      <div class="lvl" role="listitem"><span class="n">15</span><div class="rw"><i class="ic ic-lock s16 lk"></i><i class="ic ic-coins s24 faint"></i>75 монет</div><div class="rw plus"><i class="ic ic-lock s16 lk"></i><i class="ic ic-crown s24 c-gold"></i>Корона</div></div>
+      <div class="lvl" role="listitem"><span class="n">16</span><div class="rw"><i class="ic ic-lock s16 lk"></i><i class="ic ic-snow s24 faint"></i>Заморозка</div><div class="rw plus"><i class="ic ic-lock s16 lk"></i><i class="ic ic-image s24 c-gold"></i>Фон «Осень»</div></div>
+    </div>
+
+  <div class="sect"><p class="eyebrow">Как качать сезон</p></div>
+  <div class="list">
+    <div class="row"><span class="sw gold"><i class="ic ic-bolt"></i></span><div class="f1"><div class="t">Любой XP идёт в сезон</div><div class="s">1 XP = 1 очко сезона</div></div><span class="v">+310 за неделю</span></div>
+    <div class="row"><span class="sw orange"><i class="ic ic-target"></i></span><div class="f1"><div class="t">Задания сезона</div><div class="s">2 из 5 на этой неделе</div></div><span class="v">+100</span></div>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-sun" href="Pricing-plans.dc.html"><i class="ic ic-crown-f"></i>Открыть линию Plus</a>
+</footer>
+</div>

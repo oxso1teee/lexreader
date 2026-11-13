@@ -1,0 +1,134 @@
+<!--meta {"title":"Сегодня · desktop","w":1280,"h":800}-->
+<style>
+.dhead{display:flex;align-items:center;gap:16px;padding:28px 32px 4px;flex:none}
+.dhead h1{font:700 28px/1.15 var(--font-display);margin:0;letter-spacing:-.01em}
+.main>.body{padding:20px 32px 28px;gap:20px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+.lhero{display:flex;align-items:center;gap:24px;padding:28px 32px 30px}
+.lhero .h1{font-size:30px;margin-top:8px}
+.ring{width:60px;height:60px;border-radius:50%;background:conic-gradient(var(--gold-500) 60%,var(--progress-track) 0);display:grid;place-items:center;flex:none}
+.ring::before{content:"";width:42px;height:42px;border-radius:50%;background:var(--surface-card);grid-area:1/1}
+.ring b{grid-area:1/1;font:700 15px/1 var(--font-display)}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
+.wk i{display:grid;place-items:center;height:36px;border-radius:10px;background:var(--surface-sunken);color:#fff}
+.wk i.on{background:var(--fill-ember)}
+.wk i.now{background:none;border:2px dashed var(--orange-600)}
+.wk span{font:600 12px/1 var(--font-body);color:var(--text-3);display:block;margin-top:6px}
+.lb .row{min-height:52px;padding:8px 14px}
+.lb .row.me{background:var(--green-100)}
+.rk{width:22px;font:700 14px/1 var(--font-display);text-align:center;color:var(--text-3)}
+.sidecard{box-shadow:none}
+</style>
+<div class="app desk">
+<aside class="side" aria-label="Основная навигация">
+  <div class="logo"><i class="lex happy s40"></i>LexReader</div>
+  <a class="on" aria-current="page" href="D-Today.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a href="D-Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a href="D-Practice.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a href="D-Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a href="D-Settings.dc.html"><i class="ic ic-user"></i>Профиль</a>
+  <div class="card sm mta sidecard">
+    <div class="rowx s8"><span class="sw s-ember sm"><i class="ic ic-flame-f s18"></i></span><div class="f1"><div class="b sm">12 дней подряд</div><div class="xs faint">рекорд 21 · 1 заморозка</div></div></div>
+    <div class="rowx between" style="margin-top:10px"><span class="xs muted">Сегодня 30 / 50 XP</span><span class="xs b c-gold">1 240 XP</span></div>
+    <div class="bar sm gold" style="margin-top:6px"><i style="width:60%"></i></div>
+  </div>
+</aside>
+<div class="main">
+  <header class="dhead">
+    <div class="f1"><h1>Доброе утро, Сергей</h1><div class="sm muted" style="margin-top:4px">Четверг, 12 ноября · ещё 20 XP до цели дня</div></div>
+    <span class="pill lvl"><span class="cefr">EN</span>B1</span>
+    <a class="pill streak" href="Streak-calendar.dc.html" style="min-height:44px"><i class="ic ic-flame-f s18"></i>12</a>
+    <a class="pill xp" href="Level-up.dc.html" style="min-height:44px"><i class="ic ic-bolt-f s18"></i>1 240</a>
+    <a class="iconbtn box" href="Notification-settings.dc.html" aria-label="Уведомления"><i class="ic ic-bell"></i></a>
+  </header>
+  <main class="body">
+    <div class="cols">
+      <div class="stack s16">
+        <section class="hero lhero">
+          <div class="f1">
+            <p class="eyebrow">Занятие на сегодня · урок 4 из 6 · +20 XP</p>
+            <div class="h1">Слова из «The Last Lighthouse»</div>
+            <div class="rowx wrap" style="gap:14px;margin-top:12px;font:600 14px/1.2 var(--font-body)">
+              <span class="rowx s6"><i class="ic ic-list s18"></i>12 заданий</span>
+              <span class="rowx s6"><i class="ic ic-clock s18"></i>~5 мин</span>
+              <span class="rowx s6"><i class="ic ic-sprout s18"></i>3 новых слова</span>
+            </div>
+            <div class="rowx" style="margin-top:20px">
+              <a class="btn b-white fit" href="D-Lesson.dc.html" style="min-width:220px">Начать занятие</a>
+              <span class="sm b">Enter — начать</span>
+            </div>
+          </div>
+          <i class="lex joy pale s160 bob" aria-hidden="true"></i>
+        </section>
+
+        <div class="grid3" style="gap:16px">
+          <a class="card press rowx" href="Goal-edit.dc.html" style="gap:14px">
+            <div class="ring" role="img" aria-label="30 из 50 XP"><b><i class="ic ic-bolt-f s24 c-gold"></i></b></div>
+            <div><div class="num">30/50</div><div class="xs faint" style="margin-top:4px">XP сегодня · цель дня</div></div>
+          </a>
+          <a class="card press rowx" href="D-Practice.dc.html" style="gap:14px">
+            <span class="sw blue lg"><i class="ic ic-cards s24"></i></span>
+            <div><div class="num">47</div><div class="xs faint" style="margin-top:4px">карточек на повтор</div></div>
+          </a>
+          <a class="card press rowx" href="Daily-quests.dc.html" style="gap:14px">
+            <span class="sw gold lg"><i class="ic ic-target s24"></i></span>
+            <div class="f1"><div class="num">2/3</div><div class="xs faint" style="margin-top:4px">задания дня</div><div class="bar sm gold" style="margin-top:6px"><i style="width:66%"></i></div></div>
+          </a>
+        </div>
+
+        <div class="sect"><p class="eyebrow">Продолжить</p><a href="D-Library.dc.html">Вся библиотека</a></div>
+        <a class="card press rowx" href="D-Reader.dc.html" style="gap:20px;padding:16px 20px">
+          <span class="cover md c-sky">The Last Light&shy;house</span>
+          <div class="f1">
+            <div class="rowx s8"><span class="badge blue">Текст</span><span class="cefr">B1</span><span class="xs faint">глава 3 из 5 · осталось 6 мин</span></div>
+            <div class="h2" style="margin-top:8px">The Last Lighthouse</div>
+            <p class="read" style="font-size:15px;margin:6px 0 0;color:var(--text-2)">«She was <span class="hl">reluctant</span> to leave the lighthouse. For eleven years it had been her home…»</p>
+            <div class="rowx" style="margin-top:10px"><div class="bar" style="flex:1"><i style="width:64%"></i></div><span class="sm b">64%</span></div>
+          </div>
+          <span class="btn b-leaf sm fit" style="min-width:150px">Читать дальше</span>
+        </a>
+        <div class="grid2" style="gap:16px">
+          <a class="card rowx" href="D-Watch.dc.html"><span class="cover c-ink video" role="img" aria-label="Обложка: Life in London"></span><div class="f1"><div class="b">Life in London</div><div class="xs faint">Видео · 6 мин осталось</div><div class="bar sm" style="margin-top:8px"><i style="width:30%"></i></div></div><span class="sm b muted">30%</span></a>
+          <a class="card rowx" href="Mission-detail.dc.html"><span class="sw orange lg"><i class="ic ic-puzzle s24"></i></span><div class="f1"><div class="b">Present Perfect vs Past Simple</div><div class="xs faint">Слабая тема · миссия на 6 мин</div></div><i class="ic ic-chev faint"></i></a>
+        </div>
+      </div>
+
+      <aside class="stack s16">
+        <section class="card">
+          <div class="rowx between"><div class="h3">Неделя</div><span class="xs b c-orange">Рекорд: 21 день</span></div>
+          <div class="wk" style="margin-top:12px" role="img" aria-label="Стрик: понедельник–среда выполнено, четверг сегодня">
+            <div><i class="on"><i class="ic ic-flame-f s16"></i></i><span>Пн</span></div>
+            <div><i class="on"><i class="ic ic-flame-f s16"></i></i><span>Вт</span></div>
+            <div><i class="on"><i class="ic ic-flame-f s16"></i></i><span>Ср</span></div>
+            <div><i class="now"></i><span class="c-orange b">Чт</span></div>
+            <div><i></i><span>Пт</span></div><div><i></i><span>Сб</span></div><div><i></i><span>Вс</span></div>
+          </div>
+        </section>
+        <section>
+          <div class="sect" style="margin-bottom:8px"><p class="eyebrow">Рейтинг недели</p><a href="League-table.dc.html">Таблица</a></div>
+          <div class="list lb">
+            <div class="row"><span class="rk c-gold">1</span><span class="avatar sm a2">М</span><div class="f1 b sm">Макс</div><span class="v">540 XP</span></div>
+            <div class="row"><span class="rk">2</span><span class="avatar sm a5">Л</span><div class="f1 b sm">Лена</div><span class="v">455 XP</span></div>
+            <div class="row"><span class="rk">3</span><span class="avatar sm a4">Д</span><div class="f1 b sm">Дима</div><span class="v">372 XP</span></div>
+            <div class="row me"><span class="rk c-green">4</span><span class="avatar sm a3">С</span><div class="f1 b sm">Ты</div><span class="v c-green">310 XP</span></div>
+            <div class="row"><span class="rk">5</span><span class="avatar sm a1">А</span><div class="f1 b sm">Аня</div><span class="v">288 XP</span></div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="rowx between"><div class="h3">Новые слова урока</div><span class="xs faint">из главы 3</span></div>
+          <div class="stack s8" style="margin-top:10px">
+            <div class="rowx"><span class="chip word">reluctant</span><span class="sm muted f1">неохотный</span></div>
+            <div class="rowx"><span class="chip word">refuge</span><span class="sm muted f1">убежище</span></div>
+            <div class="rowx"><span class="chip word">beacon</span><span class="sm muted f1">маяк, сигнальный огонь</span></div>
+          </div>
+        </section>
+        <a class="card t-orange rowx" href="Friend-streak.dc.html">
+          <div class="rowx" style="gap:0"><span class="avatar sm a3">С</span><span class="avatar sm a1" style="margin-left:-8px">А</span></div>
+          <div class="f1"><div class="b sm">Общий стрик с Аней</div><div class="xs muted">9 дней · Аня уже занималась</div></div>
+          <span class="num sm c-orange rowx s6"><i class="ic ic-flame-f s18"></i>9</span>
+        </a>
+      </aside>
+    </div>
+  </main>
+</div>
+</div>

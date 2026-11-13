@@ -1,0 +1,60 @@
+<!--meta {"title":"ИИ — произношение","planned":true}-->
+<style>
+.atop{align-items:flex-start}
+.apr-syl{display:flex;gap:8px;justify-content:center}
+.apr-syl>div{min-width:96px;padding:12px 14px 10px;border-radius:14px;border:2px solid;text-align:center}
+.apr-syl .g{background:var(--green-100);border-color:var(--green-400)}
+.apr-syl .r{background:var(--red-100);border-color:var(--red-400)}
+.apr-syl b{display:block;font:600 24px/1.2 var(--font-read)}
+.apr-syl span{display:block;font:500 12px/1.3 var(--font-body);color:var(--text-2);white-space:nowrap}
+.app .apr-mic{width:88px;height:88px;border-radius:50%;border:0;background:var(--fill-leaf);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -5px 0 0 var(--fill-leaf-edge),0 0 0 8px var(--green-100);cursor:pointer}
+.apr-ring{position:relative;width:76px;height:76px;flex:none}
+.apr-ring svg{width:76px;height:76px;transform:rotate(-90deg)}
+.apr-ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 16px/1 var(--font-display)}
+.apr-try{display:flex;gap:8px}
+.apr-try>div{flex:1;text-align:center;padding:8px 4px;border-radius:12px;background:var(--surface-sunken);font:700 15px/1.2 var(--font-display)}
+.apr-try>div small{display:block;font:500 11.5px/1.3 var(--font-body);color:var(--text-3);margin-top:2px}
+.apr-try>div.on{background:var(--green-100);color:var(--green-text)}
+</style>
+<div class="app">
+<header class="lessonbar">
+  <a class="iconbtn" href="AI-hub.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="bar lg" role="progressbar" aria-valuenow="3" aria-valuemax="8" aria-label="Слово 3 из 8"><i style="width:37%"></i></div>
+  <span class="b sm faint" style="min-width:44px;text-align:right">3/8</span>
+</header>
+<main class="body" style="padding-top:10px">
+  <section class="card lg stack" style="align-items:center;text-align:center;gap:10px">
+    <span class="badge blue">Из чтения · The Last Lighthouse</span>
+    <div class="en" style="font-size:40px;line-height:1.1">reluctant</div>
+    <div class="faint">/rɪˈlʌk.tənt/ · неохотный</div>
+    <div class="apr-syl" role="img" aria-label="Слоги: re — хорошо, luc — проблемный, tant — хорошо">
+      <div class="g"><b>re</b><span>/rɪ/</span><span class="c-green b">хорошо</span></div>
+      <div class="r"><b>luc</b><span>/ˈlʌk/</span><span class="c-red b">ударение</span></div>
+      <div class="g"><b>tant</b><span>/tənt/</span><span class="c-green b">хорошо</span></div>
+    </div>
+  </section>
+
+  <div class="rowx" style="justify-content:center;gap:28px;padding:14px 0">
+    <button class="iconbtn box" aria-label="Послушать образец" style="width:56px;height:56px;border-radius:50%"><i class="ic ic-volume s24"></i></button>
+    <button class="apr-mic" aria-label="Записать ещё раз"><i class="ic ic-mic s40"></i></button>
+    <button class="iconbtn box" aria-label="Послушать мою запись" style="width:56px;height:56px;border-radius:50%"><i class="ic ic-play s24"></i></button>
+  </div>
+
+  <section class="card rowx atop" style="gap:14px">
+    <div class="apr-ring" role="img" aria-label="Точность 72%">
+      <svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="31" fill="none" stroke-width="8" style="stroke:var(--progress-track)"/><circle cx="38" cy="38" r="31" fill="none" stroke-width="8" stroke-linecap="round" stroke-dasharray="140 195" style="stroke:var(--gold-500)"/></svg>
+      <b>72%</b>
+    </div>
+    <div class="f1"><div class="b">Почти! Ударение на «luc»</div><div class="sm muted" style="margin-top:2px">Звук <b>/ʌ/</b> короткий, как «а» в «мачта». Сейчас он ближе к «у» — сделай его открытее и громче.</div></div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Попытки</p><span class="xs faint">лучше на 14%</span></div>
+  <div class="apr-try">
+    <div>58%<small>1-я</small></div><div>64%<small>2-я</small></div><div class="on">72%<small>сейчас</small></div>
+  </div>
+</main>
+<footer class="dock row">
+  <a class="btn b-ghost" href="AI-pronunciation.dc.html">Следующее</a>
+  <a class="btn b-leaf" href="AI-pronunciation.dc.html"><i class="ic ic-refresh s18"></i>Ещё раз</a>
+</footer>
+</div>

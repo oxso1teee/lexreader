@@ -1,0 +1,72 @@
+<!--meta {"title":"Программа"}-->
+<style>
+.app .rowx.top{padding:0;flex:initial}
+.unit{display:flex;gap:12px;align-items:flex-start}
+.unit .no{width:40px;height:40px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font:700 16px/1 var(--font-display)}
+.unit .no.done{background:var(--fill-leaf);color:#fff}
+.unit .no.cur{background:var(--fill-ember);color:#fff;box-shadow:0 0 0 4px var(--gold-150)}
+.unit .no.off{background:var(--surface-sunken);color:var(--text-3)}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.off{background:var(--surface-sunken);border-color:transparent;color:var(--text-2)}
+.off .xs,.off .s{color:var(--text-2)}
+.lvl.off{background:none}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Main.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Программа<small>Общий английский · B1</small></div>
+  <a class="iconbtn" href="Course-pick.dc.html" aria-label="Сменить курс"><i class="ic ic-swap s24"></i></a>
+</header>
+<main class="body">
+  <section class="hero">
+    <div class="rowx top between">
+      <div>
+        <p class="eyebrow">Пройдено курса</p>
+        <div class="num xl" style="margin-top:6px">44%</div>
+        <div class="sm b">2 из 5 разделов · 19 из 47 навыков</div>
+      </div>
+      <i class="lex happy pale s88 bob" aria-hidden="true"></i>
+    </div>
+    <div class="bar lg" style="margin-top:12px;background:rgba(255,255,255,.25)"><i style="width:44%;background:#fff"></i></div>
+    <div class="card sm" style="margin-top:14px;color:var(--text-1);border-color:transparent">
+      <div class="rowx s8"><span class="sw orange sm"><i class="ic ic-target s18"></i></span>
+        <div class="f1"><div class="xs faint b">Следующий шаг · раздел 3</div><div class="b sm">Деловая переписка</div></div>
+        <a class="btn b-leaf sm fit" href="Unit-overview.dc.html">Начать</a></div>
+    </div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Разделы</p><span class="xs faint">~12 недель по 15 мин</span></div>
+  <a class="card unit" href="Unit-overview.dc.html">
+    <span class="no done"><i class="ic ic-check s24"></i></span>
+    <div class="f1"><div class="rowx between"><span class="h3">Знакомство и быт</span><span class="xs c-green b">8/8</span></div>
+      <div class="xs faint">Говорим о себе, доме и привычках</div>
+      <div class="tags"><span class="badge">Present Simple</span><span class="badge">120 слов</span></div></div>
+  </a>
+  <a class="card unit" href="Unit-overview.dc.html">
+    <span class="no done"><i class="ic ic-check s24"></i></span>
+    <div class="f1"><div class="rowx between"><span class="h3">Путешествия</span><span class="xs c-green b">10/10</span></div>
+      <div class="xs faint">Аэропорт, отель, дорога, истории</div>
+      <div class="tags"><span class="badge">Past Simple / Continuous</span><span class="badge">150 слов</span></div></div>
+  </a>
+  <section class="card unit" style="border-color:var(--orange-600);box-shadow:0 4px 0 0 var(--gold-150)">
+    <span class="no cur">3</span>
+    <div class="f1"><div class="rowx between"><span class="h3">Работа и карьера</span><span class="badge orange">сейчас</span></div>
+      <div class="xs faint">Собеседование, письма, планы</div>
+      <div class="tags"><span class="badge blue">Present Perfect</span><span class="badge">140 слов</span></div>
+      <div class="rowx s8" style="margin-top:10px"><div class="bar f1" style="flex:1"><i style="width:33%"></i></div><span class="xs b">3 из 9</span></div>
+      <a class="btn b-leaf sm" href="Unit-overview.dc.html" style="margin-top:12px">Продолжить раздел</a></div>
+  </section>
+  <div class="card unit off">
+    <span class="no off"><i class="ic ic-lock s18"></i></span>
+    <div class="f1"><div class="h3">Еда и город</div>
+      <div class="xs faint">Откроется после раздела 3</div>
+      <div class="tags"><span class="badge">Conditionals 1–2</span><span class="badge">11 навыков</span></div></div>
+  </div>
+  <div class="card unit off">
+    <span class="no off"><i class="ic ic-lock s18"></i></span>
+    <div class="f1"><div class="h3">Технологии и медиа</div>
+      <div class="xs faint">Откроется после раздела 4</div>
+      <div class="tags"><span class="badge">Passive Voice</span><span class="badge">9 навыков</span></div></div>
+  </div>
+</main>
+</div>

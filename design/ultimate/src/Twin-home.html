@@ -1,0 +1,68 @@
+<!--meta {"title":"Мой английский"}-->
+<style>
+.app .rowx.top{padding:0}
+.stg{display:flex;align-items:flex-start;margin-top:16px;position:relative}
+.stg::before{content:"";position:absolute;left:12.5%;right:12.5%;top:17px;height:4px;border-radius:2px;background:rgba(255,255,255,.28)}
+.stg::after{content:"";position:absolute;left:12.5%;width:25%;top:17px;height:4px;border-radius:2px;background:#fff}
+.stg>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1;font:700 11.5px/1.2 var(--font-body)}
+.stg .n{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--fill-leaf-edge);color:rgba(255,255,255,.9);border:2px solid rgba(255,255,255,.35)}
+.stg .done .n{background:#fff;color:var(--fill-leaf);border-color:#fff}
+.stg .cur .n{width:44px;height:44px;margin-top:-3px;background:#fff;color:var(--fill-leaf);border-color:var(--gold-400);border-width:3px;box-shadow:0 0 0 4px rgba(255,255,255,.3)}
+.sk{display:grid;grid-template-columns:96px 1fr 30px 46px;align-items:center;gap:10px;padding:9px 0}
+.sk+.sk{border-top:var(--stroke-soft)}
+.sk .bar{height:10px}
+.tl{display:flex;flex-direction:column;gap:8px;padding:12px;min-height:104px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Progress.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Мой английский<small>оценка по правилам, без ИИ</small></div>
+  <a class="iconbtn" href="Twin-settings.dc.html" aria-label="Настройки"><i class="ic ic-settings"></i></a>
+</header>
+<main class="body">
+  <section class="hero">
+    <div class="rowx top">
+      <div class="f1">
+        <p class="eyebrow">Стадия 2 из 4</p>
+        <div class="h1" style="margin-top:6px">Росток</div>
+        <p class="sm" style="margin:6px 0 0">Уверенно читаешь B1, грамматика пока догоняет словарь</p>
+      </div>
+      <i class="lex joy pale s88 bob" aria-hidden="true"></i>
+    </div>
+    <div class="stg" role="img" aria-label="Стадии роста: Семечко пройдено, сейчас Росток, дальше Побег и Дерево">
+      <div class="done"><span class="n"><i class="ic ic-check s18"></i></span>Семечко</div>
+      <div class="cur"><span class="n"><i class="ic ic-sprout s18"></i></span>Росток</div>
+      <div><span class="n"><i class="ic ic-leaf s18"></i></span>Побег</div>
+      <div><span class="n"><i class="ic ic-lock s16"></i></span>Дерево</div>
+    </div>
+    <a class="rowx s8" href="Twin-evidence.dc.html" style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.3);min-height:44px;font:600 13px/1.3 var(--font-body)">
+      <i class="ic ic-shield s18"></i><span class="f1">На основе 214 подтверждений за 6 недель</span><i class="ic ic-chev s18"></i>
+    </a>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Навыки · за неделю</p><a href="Twin-timeline.dc.html">История</a></div>
+  <section class="card" style="padding:6px 16px" role="img" aria-label="Чтение 82, Словарь 76, На слух 61, Грамматика 54">
+    <div class="sk"><span class="b sm">Чтение</span><div class="bar"><i style="width:82%"></i></div><span class="b sm right">82</span><span class="badge green">+4</span></div>
+    <div class="sk"><span class="b sm">Словарь</span><div class="bar"><i style="width:76%"></i></div><span class="b sm right">76</span><span class="badge green">+3</span></div>
+    <div class="sk"><span class="b sm">На слух</span><div class="bar blue"><i style="width:61%"></i></div><span class="b sm right">61</span><span class="badge green">+2</span></div>
+    <div class="sk"><span class="b sm">Грамматика</span><div class="bar ember"><i style="width:54%"></i></div><span class="b sm right">54</span><span class="badge red">−1</span></div>
+  </section>
+
+  <a class="card t-gold rowx" href="Twin-pattern-detail.dc.html">
+    <span class="sw s-gold lg"><i class="ic ic-target s24"></i></span>
+    <div class="f1"><p class="eyebrow c-gold">Фокус недели</p><div class="b" style="margin-top:3px">Present Perfect vs Past Simple</div><div class="xs muted" style="margin-top:2px">7 ошибок за 2 недели · 6 мин тренировки</div></div>
+    <i class="ic ic-chev"></i>
+  </a>
+
+  <div class="sect"><p class="eyebrow">Разделы</p></div>
+  <div class="grid3">
+    <a class="card sm tl" href="Twin-diagnostic.dc.html"><span class="sw green sm"><i class="ic ic-target s18"></i></span><span class="b sm">Диагностика</span></a>
+    <a class="card sm tl" href="Twin-correction.dc.html"><span class="sw blue sm"><i class="ic ic-pencil s18"></i></span><span class="b sm">Проверка текста</span></a>
+    <a class="card sm tl" href="Twin-patterns.dc.html"><span class="sw red sm"><i class="ic ic-puzzle s18"></i></span><span class="b sm">Паттерны ошибок</span></a>
+    <a class="card sm tl" href="Twin-recommendations.dc.html"><span class="sw gold sm"><i class="ic ic-bulb s18"></i></span><span class="b sm">Рекомендации</span></a>
+    <a class="card sm tl" href="Twin-timeline.dc.html"><span class="sw green sm"><i class="ic ic-sprout s18"></i></span><span class="b sm">История роста</span></a>
+    <a class="card sm tl" href="Twin-evidence.dc.html"><span class="sw blue sm"><i class="ic ic-list s18"></i></span><span class="b sm">Основания оценки</span></a>
+  </div>
+  <div class="banner"><i class="ic ic-shield"></i><div>Оценка считается по правилам прямо в приложении: без ИИ, тексты не уходят наружу.</div></div>
+</main>
+</div>

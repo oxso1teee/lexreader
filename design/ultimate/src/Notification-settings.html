@@ -1,0 +1,44 @@
+<!--meta {"title":"Уведомления"}-->
+<style>
+.toggle{height:44px;padding:8px 0;background-clip:content-box}.toggle::after{top:11px}
+.app .timev{border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:12px;background:var(--surface-sunken);font:700 15px/1 var(--font-display);color:var(--text-1)}
+.preview{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:var(--r-md);background:var(--surface-card);border:var(--stroke)}
+.preview .ap{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Profile.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Уведомления</div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="banner ok"><i class="ic ic-check-circle"></i><div class="f1"><b>Push включены на этом устройстве</b>Pixel 8 · не больше 1 напоминания в день</div></div>
+  <div class="preview" aria-label="Пример уведомления">
+    <span class="ap fill-leaf"><i class="ic ic-leaf s18"></i></span>
+    <div class="f1"><div class="rowx between"><span class="xs b">LexReader</span><span class="xs faint">21:00</span></div><div class="sm" style="margin-top:2px">Стрик 12 дней ждёт — 3 минуты в «The Last Lighthouse», и день засчитан</div></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Напоминания</p></div>
+  <div class="list">
+    <div class="row"><span class="sw green"><i class="ic ic-bell"></i></span><div class="f1"><div class="t">Ежедневное</div><div class="s">если пропустил</div></div><button class="timev" aria-label="Время напоминания 21:00">21:00<i class="ic ic-chev-down s14 faint"></i></button><button class="toggle on" role="switch" aria-checked="true" aria-label="Ежедневное напоминание"></button></div>
+    <div class="row"><span class="sw orange"><i class="ic ic-flame"></i></span><div class="f1"><div class="t">Стрик под угрозой</div><div class="s">за 2 часа до полуночи</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Стрик под угрозой"></button></div>
+    <div class="row"><span class="sw blue"><i class="ic ic-brain"></i></span><div class="f1"><div class="t">Слова забываются</div><div class="s">когда на повторении больше 40 карточек</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Слова забываются"></button></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Соревнование</p></div>
+  <div class="list">
+    <div class="row"><span class="sw red"><i class="ic ic-swords"></i></span><div class="f1"><div class="t">Вызов на дуэль</div><div class="s">друг прислал ссылку на дуэль</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Вызов на дуэль"></button></div>
+    <div class="row"><span class="sw gold"><i class="ic ic-trophy"></i></span><div class="f1"><div class="t">Обогнали в рейтинге</div><div class="s">сейчас ты 4-й в лиге недели</div></div><button class="toggle" role="switch" aria-checked="false" aria-label="Обогнали в рейтинге"></button></div>
+    <div class="row"><span class="sw orange"><i class="ic ic-users"></i></span><div class="f1"><div class="t">Общий стрик</div><div class="s">Аня напомнит, что вы на 9-м дне</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Общий стрик"></button></div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Письма</p></div>
+  <div class="list">
+    <div class="row"><span class="sw"><i class="ic ic-mail"></i></span><div class="f1"><div class="t">Итоги недели</div><div class="s">по понедельникам на s•••@gmail.com</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Итоги недели"></button></div>
+  </div>
+
+  <div class="list">
+    <div class="row"><span class="sw"><i class="ic ic-moon"></i></span><div class="f1"><div class="t">Тихие часы</div><div class="s">ничего не присылаем ночью</div></div><button class="timev" aria-label="Тихие часы 23:00–8:00">23:00–8:00</button></div>
+  </div>
+</main>
+</div>

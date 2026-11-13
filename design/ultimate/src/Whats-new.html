@@ -1,0 +1,47 @@
+<!--meta {"title":"Что нового"}-->
+<style>
+.wn-hero{display:flex;flex-direction:column;gap:10px}
+.wn-ill{height:132px;border-radius:var(--r-lg);background:var(--blue-100);display:flex;align-items:center;justify-content:center;gap:14px}
+.wn-ill .vs{font:700 18px/1 var(--font-display);color:var(--blue-text)}
+.tl{position:relative;display:flex;flex-direction:column;gap:12px;padding-left:22px}
+.tl::before{content:"";position:absolute;left:6px;top:8px;bottom:8px;border-left:2px dashed rgba(var(--ink-rgb),.18)}
+.tl>.card{position:relative}
+.tl>.card::before{content:"";position:absolute;left:-23px;top:18px;width:12px;height:12px;border-radius:50%;background:var(--surface-app);border:3px solid var(--green-400)}
+.tl>.card p{margin:4px 0 0}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Help-support.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Что нового<small>история обновлений</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="card lg wn-hero">
+    <div class="wn-ill" role="img" aria-label="Дуэль двух игроков">
+      <span class="avatar lg me">С</span><span class="vs">VS</span><span class="avatar lg a2">А</span>
+    </div>
+    <div class="rowx s8"><span class="badge solid">Новое</span><span class="xs faint">2.14 · 6 ноября</span></div>
+    <h1 class="h2">Дуэли по ссылке</h1>
+    <p class="sm muted" style="margin:0">Отправь ссылку другу и соревнуйтесь в реальном времени: 10 слов из твоих колод, кто быстрее и точнее</p>
+    <a class="btn b-leaf sm" href="Duel-create.dc.html"><i class="ic ic-swords s18"></i>Создать дуэль</a>
+  </section>
+  <div class="sect"><p class="eyebrow">Ранее</p></div>
+  <div class="tl">
+    <div class="card">
+      <div class="rowx s8"><span class="badge blue">Улучшено</span><span class="xs faint">2.13 · 24 октября</span></div>
+      <div class="b" style="margin-top:6px">Субтитры к видео быстрее</div>
+      <p class="sm muted">Расшифровка 10-минутного ролика теперь занимает около минуты</p>
+    </div>
+    <div class="card">
+      <div class="rowx s8"><span class="badge solid">Новое</span><span class="xs faint">2.12 · 9 октября</span></div>
+      <div class="b" style="margin-top:6px">Общий стрик с другом</div>
+      <p class="sm muted">Пригласи по ссылке и держите серию вместе</p>
+    </div>
+    <div class="card">
+      <div class="rowx s8"><span class="badge red">Исправлено</span><span class="xs faint">2.11.2 · 30 сентября</span></div>
+      <div class="b" style="margin-top:6px">Заморозка в полночь</div>
+      <p class="sm muted">Заморозка больше не срабатывает раньше времени при смене часового пояса</p>
+    </div>
+  </div>
+</main>
+</div>

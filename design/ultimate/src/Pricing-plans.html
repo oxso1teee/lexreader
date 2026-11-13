@@ -1,0 +1,63 @@
+<!--meta {"title":"Тарифы"}-->
+<style>
+.plans{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;align-items:stretch}
+.plan{display:flex;flex-direction:column;gap:6px;padding:14px 12px 12px}
+.plan.plus{border-color:var(--gold-500);background:var(--gold-100);box-shadow:0 4px 0 0 var(--fill-sun-edge);margin-bottom:4px;position:relative}
+.plan .price{font:700 26px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.plan .price small{font:600 13px/1 var(--font-body);color:var(--text-2)}
+.cmp{display:grid;grid-template-columns:1fr 78px 70px;align-items:center}
+.cmp>div{padding:11px 10px;min-height:44px;display:flex;align-items:center;font:500 13.5px/1.3 var(--font-body)}
+.cmp>div:nth-child(3n+2),.cmp>div:nth-child(3n){justify-content:center;font-weight:700;text-align:center}
+.cmp>div:nth-child(3n){background:var(--gold-100);color:var(--gold-text)}
+.cmp>.hd{font:700 11.5px/1.2 var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);min-height:36px}
+.cmp>.hd:nth-child(3){color:var(--gold-text)}
+.cmp>div:not(.hd){border-top:var(--stroke-soft)}
+.inf{font:700 20px/1 var(--font-display)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Profile.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Тарифы<small>сейчас у тебя Free</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="rowx s8" style="padding:2px 4px 0;align-items:flex-start">
+    <i class="lex happy s56" aria-hidden="true"></i>
+    <div class="f1"><h1 class="h2">Читай сколько хочешь</h1><p class="sm muted" style="margin:4px 0 0">Plus снимает лимиты на тексты, видео и карточки</p></div>
+  </div>
+  <div class="seg" role="tablist" aria-label="Период оплаты">
+    <button class="on" role="tab" aria-selected="true">Год <span class="badge gold" style="margin-left:6px">−25%</span></button>
+    <button role="tab" aria-selected="false">Месяц</button>
+  </div>
+  <div class="plans">
+    <div class="card plan">
+      <span class="b">Free</span>
+      <div class="price">0 ₽</div>
+      <span class="xs faint">навсегда</span>
+      <span class="badge mta" style="align-self:flex-start">Текущий</span>
+    </div>
+    <div class="card plan plus">
+      <div class="rowx between s6"><span class="b rowx s6"><i class="ic ic-crown-f s18 c-gold"></i>Plus</span><span class="badge plus" style="font-size:11px">Выгодно</span></div>
+      <div class="price">299 ₽<small> /мес</small></div>
+      <span class="xs muted">3 588 ₽ в год · <span class="strike">4 788 ₽</span></span>
+      <span class="xs b c-gold mta">Экономия 1 200 ₽</span>
+    </div>
+  </div>
+  <div class="sect"><p class="eyebrow">Сравнение</p></div>
+  <div class="card p0">
+    <div class="cmp" role="table" aria-label="Сравнение Free и Plus">
+      <div class="hd">Возможность</div><div class="hd">Free</div><div class="hd">Plus</div>
+      <div>Тексты в библиотеке</div><div>3</div><div><span class="inf" aria-label="без лимита">∞</span></div>
+      <div>Карточки в «Мозге»</div><div>100</div><div><span class="inf" aria-label="без лимита">∞</span></div>
+      <div>Импорт видео</div><div class="xs" style="white-space:nowrap">1 в нед.</div><div><span class="inf" aria-label="без лимита">∞</span></div>
+      <div>Статистика</div><div class="xs">базовая</div><div class="xs">полная</div>
+      <div>Браузерное расширение</div><div><i class="ic ic-check s18 c-green" aria-label="есть"></i></div><div><i class="ic ic-check s18" aria-label="есть"></i></div>
+    </div>
+  </div>
+  <div class="banner info"><i class="ic ic-shield"></i><div>Оплата через Stripe. Слова и прогресс остаются твоими на любом тарифе.</div></div>
+</main>
+<footer class="dock line">
+  <a class="btn b-sun" href="Purchase-success.dc.html"><i class="ic ic-crown-f s18"></i>Оформить Plus · 3 588 ₽/год</a>
+  <p class="center xs faint" style="margin:0">Отмена в любой момент · доступ сохранится до конца периода</p>
+</footer>
+</div>

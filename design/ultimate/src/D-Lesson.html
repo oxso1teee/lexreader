@@ -1,0 +1,60 @@
+<!--meta {"title":"Занятие · desktop","w":1280,"h":800}-->
+<style>
+.app.desk{flex-direction:column}
+.ltop{display:grid;grid-template-columns:1fr minmax(0,720px) 1fr;align-items:center;gap:16px;padding:20px 28px;flex:none}
+.ltop .bar{width:100%}
+.lbody{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 28px 40px;overflow:hidden}
+.lcol{width:100%;max-width:720px;display:flex;flex-direction:column;gap:24px}
+.ctx{display:flex;align-items:center;gap:18px;padding:28px 28px}
+.ctx .read{font-size:24px;line-height:1.5;margin:0}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.opts .opt{min-height:92px;font-size:19px;padding:16px 20px}
+.opts .opt .k{width:30px;height:30px;font-size:13px}
+.lfoot{flex:none;border-top:var(--stroke-soft);background:var(--surface-card);padding:18px 28px}
+.lfoot .in{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:16px}
+.kbd{font:700 11.5px/1 var(--font-mono);padding:5px 7px;border-radius:6px;border:var(--stroke-soft);background:var(--surface-sunken);color:var(--text-2)}
+.say::before{display:none}
+</style>
+<div class="app desk">
+<header class="ltop">
+  <div class="rowx s8"><a class="iconbtn box" href="Quit-confirm.dc.html" aria-label="Выйти из занятия"><i class="ic ic-close s24"></i></a><span class="xs faint">Esc</span></div>
+  <div class="stack s4">
+    <div class="rowx between"><span class="xs b faint">Слова из «The Last Lighthouse»</span><span class="xs b faint">3 / 12</span></div>
+    <div class="bar lg" role="progressbar" aria-valuenow="3" aria-valuemax="12" aria-label="Задание 3 из 12"><i style="width:25%"></i></div>
+  </div>
+  <div class="rowx s8" style="justify-content:flex-end"><span class="pill streak"><i class="ic ic-flame-f s18"></i>Комбо 3</span><span class="pill xp"><i class="ic ic-bolt-f s18"></i>+6 XP</span></div>
+</header>
+<main class="lbody">
+  <div class="lcol">
+    <div class="rowx top between">
+      <div>
+        <p class="eyebrow c-blue" style="color:var(--blue-text)">Новое слово · задание 3 из 12</p>
+        <h1 class="h1" style="font-size:30px;margin-top:8px">Что значит выделенное слово?</h1>
+      </div>
+      <div class="rowx s8"><div class="say sm" style="max-width:240px">Подсказка: Мара не хотела уходить с маяка</div><i class="lex think s88" aria-hidden="true"></i></div>
+    </div>
+    <section class="card ctx">
+      <button class="iconbtn" aria-label="Прослушать предложение" style="width:56px;height:56px;background:var(--fill-sky);color:#fff;border-radius:16px;box-shadow:inset 0 -4px 0 var(--fill-sky-edge)"><i class="ic ic-volume s24"></i></button>
+      <div class="f1"><p class="read">She was <span class="hl b">reluctant</span> to leave the lighthouse.</p><div class="xs faint" style="margin-top:4px">из «The Last Lighthouse», глава 3</div></div>
+    </section>
+    <div class="opts" role="radiogroup" aria-label="Варианты ответа">
+      <button class="opt on" role="radio" aria-checked="true"><span class="k">1</span>неохотный</button>
+      <button class="opt" role="radio" aria-checked="false"><span class="k">2</span>уверенный</button>
+      <button class="opt" role="radio" aria-checked="false"><span class="k">3</span>усталый</button>
+      <button class="opt" role="radio" aria-checked="false"><span class="k">4</span>вежливый</button>
+    </div>
+    <div class="rowx s8 wrap" style="justify-content:center">
+      <span class="chip sm"><i class="ic ic-sprout s14"></i>reluctant · новое</span>
+      <span class="chip sm"><i class="ic ic-repeat s14"></i>refuge · повтор</span>
+      <span class="chip sm"><i class="ic ic-repeat s14"></i>beacon · повтор</span>
+    </div>
+  </div>
+</main>
+<footer class="lfoot">
+  <div class="in">
+    <span class="sm muted rowx s8"><span class="kbd">1–4</span> выбрать <span class="kbd">Enter</span> проверить</span>
+    <button class="btn b-ghost sm fit mla"><i class="ic ic-arrow-right s18"></i>Пропустить</button>
+    <a class="btn b-leaf fit" href="Lesson-build.dc.html" style="min-width:220px">Проверить</a>
+  </div>
+</footer>
+</div>

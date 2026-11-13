@@ -1,0 +1,49 @@
+<!--meta {"title":"Регистрация"}-->
+<style>
+.str{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:8px}
+.str i{height:6px;border-radius:3px;background:var(--progress-track)}
+.str i.on{background:var(--gold-500)}
+.perks{display:flex;gap:8px;flex-wrap:wrap}
+.perks span{display:inline-flex;align-items:center;gap:6px;font:600 12.5px/1.2 var(--font-body);color:var(--green-text);background:var(--green-100);border-radius:var(--r-full);padding:6px 10px}
+.terms u{text-underline-offset:2px;color:var(--text-1)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Splash.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Регистрация<small>бесплатно · 1 минута</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body" style="gap:12px">
+  <section class="rowx top" style="gap:12px">
+    <div class="f1">
+      <h1 class="h2">Сохрани прогресс и&nbsp;слова</h1>
+      <p class="lead sm" style="margin-top:6px">Твой уровень B1 и первые 14 слов из теста уже ждут в аккаунте.</p>
+    </div>
+    <i class="lex joy s56 bob" aria-hidden="true"></i>
+  </section>
+  <div class="perks"><span><i class="ic ic-cards s14"></i>Карточки SRS</span><span><i class="ic ic-flame s14"></i>Стрик</span><span><i class="ic ic-laptop s14"></i>Везде</span></div>
+
+  <div>
+    <label class="label">Имя</label>
+    <div class="field ok"><i class="ic ic-user s18 faint"></i><span class="f1">Сергей</span><i class="ic ic-check-circle s18 c-green"></i></div>
+  </div>
+  <div>
+    <label class="label">Email</label>
+    <div class="field ok"><i class="ic ic-mail s18 faint"></i><span class="f1">sergey@example.com</span><i class="ic ic-check-circle s18 c-green"></i></div>
+  </div>
+  <div>
+    <label class="label">Пароль</label>
+    <div class="field focus"><i class="ic ic-lock s18 faint"></i><span class="f1 caret" style="letter-spacing:.18em">•••••••</span><button class="iconbtn" aria-label="Показать пароль" style="margin-right:-10px"><i class="ic ic-eye-off s18"></i></button></div>
+    <div class="str" role="img" aria-label="Надёжность пароля: средняя"><i class="on"></i><i class="on"></i><i></i></div>
+    <p class="hint rowx between" style="margin-top:4px"><span>Средний — добавь ещё 1 символ</span><b class="c-gold">2 из 3</b></p>
+  </div>
+
+  <a class="btn b-leaf" href="Main.dc.html" style="margin-top:2px">Создать аккаунт</a>
+  <p class="terms center xs muted" style="margin:0">Нажимая «Создать аккаунт», ты принимаешь <u>Условия использования</u> и <u>Политику конфиденциальности</u></p>
+  <div class="grow"></div>
+</main>
+<footer class="dock line" style="padding-top:4px;flex-direction:row;justify-content:center;align-items:center;gap:6px">
+  <span class="sm muted">Уже есть аккаунт?</span>
+  <a class="linkc" href="Login.dc.html" style="font-size:15px;margin:0;padding:13px 6px">Войти</a>
+</footer>
+</div>

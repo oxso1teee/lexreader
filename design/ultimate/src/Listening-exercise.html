@@ -1,0 +1,47 @@
+<!--meta {"title":"Диктант на слух"}-->
+<style>
+.app .playbig{width:112px;height:112px;border-radius:32px;background:var(--fill-sky);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -6px 0 0 var(--fill-sky-edge);border:0;cursor:pointer}
+.wave{display:flex;align-items:center;gap:4px;height:48px}
+.wave i{width:5px;border-radius:3px;background:var(--blue-400);height:var(--h)}
+.wave i:nth-child(n+9){opacity:.35}
+.spd{display:flex;gap:6px}
+.spd .chip{min-height:44px;padding:8px 16px;font-size:14px}
+</style>
+<div class="app">
+<header class="lessonbar">
+  <a class="iconbtn" href="Quit-confirm.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="bar lg" role="progressbar" aria-valuenow="6" aria-valuemax="8" aria-label="Задание 6 из 8"><i style="width:75%"></i></div>
+  <span class="pill streak" style="padding:4px 10px;font-size:14px"><i class="ic ic-flame-f s16"></i>12</span>
+</header>
+<main class="body" style="padding-top:12px">
+  <p class="eyebrow">Аудирование · задание 6 из 8</p>
+  <h2 class="h2">Напиши, что услышишь</h2>
+  <a class="card sm rowx" href="Watch.dc.html">
+    <span class="cover video c-ember" style="width:44px;height:44px;border-radius:10px;padding:0"></span>
+    <div class="f1"><div class="b sm">Life in London</div><div class="xs faint">видео · фрагмент 02:14–02:19</div></div>
+    <i class="ic ic-chev faint"></i>
+  </a>
+  <div class="center" style="padding:10px 0 4px">
+    <div class="rowx" style="justify-content:center;gap:16px">
+      <button class="playbig" aria-label="Прослушать фрагмент"><i class="ic ic-play-f s48"></i></button>
+      <div class="wave" role="img" aria-label="Звуковая волна">
+        <i style="--h:14px"></i><i style="--h:28px"></i><i style="--h:44px"></i><i style="--h:22px"></i><i style="--h:36px"></i><i style="--h:18px"></i><i style="--h:40px"></i><i style="--h:26px"></i><i style="--h:32px"></i><i style="--h:14px"></i><i style="--h:24px"></i><i style="--h:10px"></i>
+      </div>
+    </div>
+    <div class="rowx" style="justify-content:center;margin-top:14px">
+      <div class="spd" role="group" aria-label="Скорость"><span class="chip">0.5×</span><span class="chip on">1×</span></div>
+      <span class="badge orange"><i class="ic ic-headphones s14"></i>осталось 2 прослушивания</span>
+    </div>
+  </div>
+  <div>
+    <span class="label">Твой ответ</span>
+    <div class="field area focus" style="min-height:112px"><span class="read caret" style="font-size:17px">People in London have always loved their</span></div>
+    <p class="hint">Регистр и знаки препинания не важны · 10 слов</p>
+  </div>
+  <div class="banner info"><i class="ic ic-bulb"></i><div>Подсказка: в этом фрагменте — Present Perfect с <span class="en">always</span>.</div></div>
+</main>
+<footer class="dock row">
+  <a class="btn b-ghost" href="Fill-blank.dc.html" style="padding-left:8px;padding-right:8px">Не могу слушать</a>
+  <a class="btn b-leaf" href="Listening-exercise.dc.html">Проверить</a>
+</footer>
+</div>

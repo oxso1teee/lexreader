@@ -1,0 +1,58 @@
+<!--meta {"title":"Расширение браузера"}-->
+<style>
+.flow{display:grid;grid-template-columns:1fr 18px 1fr 18px 1fr;align-items:center;gap:4px;margin-top:12px}
+.flow .arr{color:var(--text-3);display:flex;justify-content:center}
+.fx{background:var(--surface-card);border:var(--stroke);border-radius:12px;padding:8px;height:90px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.fx .ln{height:5px;border-radius:3px;background:var(--surface-sunken)}
+.fx .w{align-self:flex-start;font:600 12px/1.2 var(--font-read);background:var(--gold-100);border-radius:4px;padding:1px 4px}
+.fx.card2{align-items:center;justify-content:center;text-align:center;background:var(--blue-100);border-color:rgba(var(--blue-600-rgb),.3)}
+.fx .cap{font:700 11px/1.2 var(--font-body);color:var(--text-2);margin-top:auto}
+.stp{display:flex;gap:12px;align-items:flex-start}
+.stp .n{width:26px;height:26px;border-radius:50%;font:700 13px/26px var(--font-body);text-align:center;flex:none}
+.stp .n.done{background:var(--fill-leaf);color:#fff}.stp .n.cur{background:var(--blue-100);color:var(--blue-text)}
+.tok{display:flex;align-items:center;gap:8px;background:var(--surface-card);border-radius:12px;padding:4px 4px 4px 12px;margin-top:10px}
+.tok .mono{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app .revoke{min-height:44px;padding:0 10px;border:0;background:none;font:700 13.5px/1 var(--font-body);color:var(--red-text);cursor:pointer}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Profile.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Расширение браузера<small>Chrome · Edge · Firefox</small></div>
+  <a class="iconbtn" href="Help-article.dc.html" aria-label="Справка"><i class="ic ic-help"></i></a>
+</header>
+<main class="body">
+  <section class="card sunk" role="img" aria-label="Схема: слово на сайте сохраняется карточкой в Мозг">
+    <div class="h3">Переводи слова на любом сайте</div>
+    <div class="xs muted" style="margin-top:2px">Двойной клик — перевод, ещё клик — карточка в «Мозге»</div>
+    <div class="flow">
+      <div class="fx"><span class="ln" style="width:90%"></span><span class="w">beacon</span><span class="ln" style="width:70%"></span><span class="cap">bbc.com</span></div>
+      <span class="arr"><i class="ic ic-arrow-right s16"></i></span>
+      <div class="fx"><span class="en" style="font-size:14px">beacon</span><span class="xs muted">маяк</span><span class="cap c-green">+ в колоду</span></div>
+      <span class="arr"><i class="ic ic-arrow-right s16"></i></span>
+      <div class="fx card2"><i class="ic ic-cards c-blue s24"></i><span class="cap" style="margin-top:4px">Из чтения</span></div>
+    </div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Подключение</p><span class="xs faint">2 из 3</span></div>
+  <section class="card stack s8">
+    <div class="stp"><span class="n done"><i class="ic ic-check s14" style="vertical-align:-2px"></i></span><div class="sm">Установи LexReader из магазина расширений</div></div>
+    <div class="stp"><span class="n done"><i class="ic ic-check s14" style="vertical-align:-2px"></i></span><div class="sm">Создай токен ниже и скопируй его</div></div>
+    <div class="stp"><span class="n cur">3</span><div class="sm"><b>Вставь токен</b> в окне расширения → «Подключить аккаунт»</div></div>
+  </section>
+
+  <section class="banner warn" style="display:block">
+    <div class="rowx s8"><i class="ic ic-key"></i><b style="display:inline">Новый токен — показан один раз</b></div>
+    <div class="tok"><span class="mono">lxr_7Hq2·9fKd·wP4m·Zx81</span><button class="iconbtn box" aria-label="Скопировать токен"><i class="ic ic-copy s18"></i></button></div>
+    <div class="xs" style="margin-top:8px">Сохрани сейчас: после закрытия экрана увидеть его снова нельзя.</div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Активные токены</p></div>
+  <div class="list">
+    <div class="row"><span class="sw blue"><i class="ic ic-laptop"></i></span><div class="f1"><div class="t">Chrome · MacBook</div><div class="s">создан 3 окт · активен сегодня</div></div><button class="revoke">Отозвать</button></div>
+    <div class="row"><span class="sw"><i class="ic ic-globe"></i></span><div class="f1"><div class="t">Firefox · рабочий ПК</div><div class="s">создан 18 авг · не используется 41 день</div></div><button class="revoke">Отозвать</button></div>
+  </div>
+</main>
+<footer class="dock">
+  <button class="btn b-leaf"><i class="ic ic-plus"></i>Создать токен</button>
+</footer>
+</div>
