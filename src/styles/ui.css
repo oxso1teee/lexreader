@@ -175,6 +175,37 @@
   .field-hint-error {
     color: var(--danger-text);
   }
+  /* Поле с иконкой слева и/или кнопкой справа (пароль: «показать»). Текст не
+     заезжает под иконки за счёт padding; кнопка справа — зона 44px. */
+  .field-adorned {
+    position: relative;
+  }
+  .field-icon {
+    position: absolute;
+    inset-block: 0;
+    left: 0.875rem;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    color: var(--text-tertiary);
+  }
+  .field-icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .field-control-icon {
+    padding-left: 2.75rem;
+  }
+  .field-adornment {
+    position: absolute;
+    inset-block: 0;
+    right: 0.25rem;
+    display: flex;
+    align-items: center;
+  }
+  .field-control-adorned {
+    padding-right: 3.25rem;
+  }
 
   /* ---------- Checkbox / Radio / Switch ---------- */
   .choice {

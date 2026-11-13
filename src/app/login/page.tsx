@@ -1,17 +1,36 @@
 import { redirect } from "next/navigation";
+import LoginFlow from "@/components/product/auth/login-flow";
 import { getProfile } from "@/lib/auth";
-import LoginForm from "./login-form";
+import { safeNextPath } from "@/lib/auth/safe-next";
 
-export default async function LoginPage() {
+export const metadata = { title: "Вход · LexReader" };
+
+function first(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+// Режим экрана задаёт URL: /login, /login?mode=signup (регистрация),
+// /login?reason=expired (сессия истекла), /login?error=link (ссылка из письма
+// не сработала), /login?next=/read/… (куда вернуть после входа).
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const next = safeNextPath(first(params.next));
+
   const profile = await getProfile();
   if (profile) {
-    redirect("/home");
+    redirect(next ?? "/home");
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-6 py-10">
-      <h1 className="text-2xl font-semibold">Вход в LexReader</h1>
-      <LoginForm />
-    </div>
+    <LoginFlow
+      mode={first(params.mode) === "signup" ? "signup" : "signin"}
+      reason={first(params.reason) === "expired" ? "expired" : null}
+      linkFailed={first(params.error) === "link"}
+      next={next}
+    />
   );
 }

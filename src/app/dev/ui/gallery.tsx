@@ -33,6 +33,9 @@ import {
   Tooltip,
   toast,
 } from "@/components/ui";
+import { PasswordField } from "@/components/product/auth/password-field";
+import { PasswordRequirements } from "@/components/product/auth/password-meter";
+import { LEX_MOODS, Lex } from "@/components/product/mascot/lex";
 import { useTheme } from "@/lib/ui/use-theme";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -54,6 +57,8 @@ export default function UiGallery() {
   const [period, setPeriod] = useState("week");
   const [lastAction, setLastAction] = useState("—");
   const [email, setEmail] = useState("");
+  const [demoPassword, setDemoPassword] = useState("");
+  const [demoConfirm, setDemoConfirm] = useState("");
   const [saving, setSaving] = useState(false);
 
   return (
@@ -132,6 +137,35 @@ export default function UiGallery() {
             <option value="uk">Українська</option>
           </Select>
           <Textarea label="Заметка" placeholder="Что запомнилось?" wrapperClassName="sm:col-span-2" />
+        </div>
+      </Section>
+
+      <Section title="Поле пароля">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <PasswordField label="Новый пароль" name="demo-password" autoComplete="new-password" meter onValueChange={setDemoPassword} />
+          <PasswordField label="Повтори пароль" name="demo-confirm" autoComplete="new-password" onValueChange={setDemoConfirm} />
+          <div className="sm:col-span-2">
+            <PasswordRequirements password={demoPassword} confirmation={demoConfirm} />
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Lex">
+        <div className="flex flex-wrap items-end gap-4">
+          {LEX_MOODS.map((mood) => (
+            <figure key={mood} className="flex flex-col items-center gap-1">
+              <Lex mood={mood} size={64} />
+              <figcaption className="text-caption">{mood}</figcaption>
+            </figure>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-end gap-4">
+          {LEX_MOODS.map((mood) => (
+            <Lex key={mood} mood={mood} tone="pale" size={48} />
+          ))}
+          <Lex tone="ghost" size={56} />
+          <Lex mood="wink" size={88} bob />
+          <Lex mood="joy" size={120} />
         </div>
       </Section>
 

@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
+import { maskEmail } from "@/lib/auth/email";
 import SetPasswordForm from "./set-password-form";
+
+export const metadata = { title: "Новый пароль · LexReader" };
 
 // P0-АУДИТ (раздел 4, M7): пробовал ужесточить проверку до "именно сессия
 // восстановления пароля" через amr-claim JWT (amr: [{method: "recovery"}]) —
@@ -15,18 +18,10 @@ import SetPasswordForm from "./set-password-form";
 export default async function ResetPasswordConfirmPage() {
   const user = await getSessionUser();
   if (!user) {
-    redirect("/reset-password");
+    // Зашли напрямую, без ссылки из письма (или сессия уже закончилась):
+    // раньше это молча бросало на форму запроса — теперь объясняем.
+    redirect("/reset-password?error=link");
   }
 
-  return (
-    <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-6 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Новый пароль</h1>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Придумай новый пароль для входа в LexReader.
-        </p>
-      </div>
-      <SetPasswordForm />
-    </div>
-  );
+  return <SetPasswordForm maskedEmail={user.email ? maskEmail(user.email) : null} />;
 }

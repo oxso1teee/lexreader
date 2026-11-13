@@ -53,18 +53,55 @@ function FieldShell({
   );
 }
 
-export function Input({ label, hint, error, wrapperClassName, className, id, required, ...props }: FieldChrome & ComponentProps<"input">) {
+// icon — иконка слева внутри поля (декоративная); adornment — элемент справа
+// (например, кнопка «Показать пароль»). Оба необязательны: без них разметка та
+// же, что и раньше. aria-describedby вызывающего ДОБАВЛЯЕТСЯ к hint/error, а не
+// затирает их.
+export function Input({
+  label,
+  hint,
+  error,
+  wrapperClassName,
+  className,
+  id,
+  required,
+  icon,
+  adornment,
+  requiredMark = true,
+  "aria-describedby": describedByProp,
+  ...props
+}: FieldChrome & {
+  icon?: ReactNode;
+  adornment?: ReactNode;
+  /** Звёздочка у обязательного поля. Макеты Ultimate DS её не рисуют — на формах, где обязательны все поля, выключаем. */
+  requiredMark?: boolean;
+} & ComponentProps<"input">) {
   const ids = useFieldIds(id);
+  const control = (
+    <input
+      id={ids.fieldId}
+      className={cx("field-control", icon ? "field-control-icon" : false, adornment ? "field-control-adorned" : false, className)}
+      required={required}
+      aria-invalid={error ? true : undefined}
+      aria-describedby={describedBy(ids, hint, error, describedByProp)}
+      {...props}
+    />
+  );
   return (
-    <FieldShell ids={ids} label={label} hint={hint} error={error} required={required} wrapperClassName={wrapperClassName}>
-      <input
-        id={ids.fieldId}
-        className={cx("field-control", className)}
-        required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(ids, hint, error, props["aria-describedby"])}
-        {...props}
-      />
+    <FieldShell ids={ids} label={label} hint={hint} error={error} required={required && requiredMark} wrapperClassName={wrapperClassName}>
+      {icon || adornment ? (
+        <div className="field-adorned">
+          {icon ? (
+            <span aria-hidden="true" className="field-icon">
+              {icon}
+            </span>
+          ) : null}
+          {control}
+          {adornment ? <span className="field-adornment">{adornment}</span> : null}
+        </div>
+      ) : (
+        control
+      )}
     </FieldShell>
   );
 }

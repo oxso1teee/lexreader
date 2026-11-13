@@ -5,7 +5,9 @@
 const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_WINDOW_MS = 15 * 60_000;
 
-export type AuthAction = "login" | "signup" | "reset-password";
+// "magic-link" — вход по ссылке из письма (/login): такой же источник писем,
+// как и сброс пароля, поэтому свой бакет и тот же лимит.
+export type AuthAction = "login" | "signup" | "reset-password" | "magic-link";
 
 // Раньше login/signup/password-reset делили один и тот же identifier-бакет
 // (email становился общим ключом для всех трёх), из-за чего сброс пароля мог
@@ -15,6 +17,14 @@ export type AuthAction = "login" | "signup" | "reset-password";
 export function authAttemptKey(action: AuthAction, raw: string): string | null {
   const key = raw.trim().toLowerCase();
   return key ? `${action}:${key}` : null;
+}
+
+// Сколько попыток останется ПОСЛЕ только что проваленной. isAuthAttemptAllowed
+// блокирует, когда в окне уже `limit` неудач (count >= limit), поэтому после
+// k-й неудачи осталось limit − k; 0 — следующая попытка будет заблокирована.
+// failuresBefore — неудачи в окне ДО этой попытки (attemptsInWindow).
+export function attemptsLeftAfterFailure(limit: number, failuresBefore: number): number {
+  return Math.max(0, limit - (failuresBefore + 1));
 }
 
 // UNIFIED-UI-SLICE-1 (hosted preview rate-limit audit): значения по

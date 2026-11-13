@@ -6,9 +6,9 @@ export const TEST_PASSWORD = "newtestpass456";
 
 export async function login(page: Page, email = TEST_EMAIL, password = TEST_PASSWORD) {
   await page.goto("/login");
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByPlaceholder("Пароль").fill(password);
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Пароль", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
   // Логин идёт через Server Action + redirect(); без явного ожидания
   // следующий page.goto() может улететь раньше, чем auth-cookie реально
   // закоммитится, и словить неавторизованный редирект на /onboarding.
@@ -36,8 +36,8 @@ export async function signUpFreshAccount(page: Page): Promise<string> {
   await page.getByRole("button", { name: "A2", exact: true }).click();
   await page.getByRole("button", { name: "Далее" }).click();
 
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByPlaceholder("Пароль (мин. 6 символов)").fill("testpass123");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Пароль", { exact: true }).fill("testpass123");
   await page.getByRole("button", { name: "Создать аккаунт и начать" }).click();
 
   await page.waitForURL(/\/onboarding\/placement$/);

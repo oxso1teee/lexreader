@@ -8,9 +8,9 @@ test("login with correct credentials redirects to home", async ({ page }) => {
 
 test("login with wrong password shows a generic error", async ({ page }) => {
   await page.goto("/login");
-  await page.getByPlaceholder("Email").fill(TEST_EMAIL);
-  await page.getByPlaceholder("Пароль").fill("definitely-wrong-password");
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByLabel("Email").fill(TEST_EMAIL);
+  await page.getByLabel("Пароль", { exact: true }).fill("definitely-wrong-password");
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
   await expect(page.getByText("Неверный email или пароль.")).toBeVisible();
 });
 
@@ -18,17 +18,17 @@ test("login with non-existent email shows the same generic error (no user enumer
   page,
 }) => {
   await page.goto("/login");
-  await page.getByPlaceholder("Email").fill("does-not-exist@example.com");
-  await page.getByPlaceholder("Пароль").fill(TEST_PASSWORD);
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByLabel("Email").fill("does-not-exist@example.com");
+  await page.getByLabel("Пароль", { exact: true }).fill(TEST_PASSWORD);
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
   await expect(page.getByText("Неверный email или пароль.")).toBeVisible();
 });
 
 test("password reset request shows a generic confirmation message", async ({ page }) => {
   await page.goto("/reset-password");
-  await page.getByPlaceholder("Email").fill(TEST_EMAIL);
-  await page.getByRole("button", { name: "Отправить ссылку для сброса" }).click();
-  await expect(page.getByText(/Если такой email зарегистрирован/)).toBeVisible();
+  await page.getByLabel("Email").fill(TEST_EMAIL);
+  await page.getByRole("button", { name: "Отправить ссылку" }).click();
+  await expect(page.getByText(/Если аккаунт с этим email есть/)).toBeVisible();
 });
 
 // Раньше login/signup/password-reset делили один identifier-бакет — неудачный
@@ -45,15 +45,15 @@ test("a failed login attempt does not consume the password-reset bucket for the 
   const email = `rate-limit-bucket-check-${Date.now()}@example.com`;
 
   await page.goto("/login");
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByPlaceholder("Пароль").fill("whatever-wrong-password");
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Пароль", { exact: true }).fill("whatever-wrong-password");
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
   await expect(page.getByText("Неверный email или пароль.")).toBeVisible();
 
   await page.goto("/reset-password");
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByRole("button", { name: "Отправить ссылку для сброса" }).click();
-  await expect(page.getByText(/Если такой email зарегистрирован/)).toBeVisible();
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Отправить ссылку" }).click();
+  await expect(page.getByText(/Если аккаунт с этим email есть/)).toBeVisible();
 });
 
 // Раньше в наборе не было ни одного теста, доходящего до конца ссылки сброса
@@ -84,26 +84,26 @@ test("password reset completion: follow real link, set new password, log in with
   // TEST_PASSWORD сломанным для всех остальных тестов набора.
   try {
     await page.goto("/reset-password");
-    await page.getByPlaceholder("Email").fill(TEST_EMAIL);
-    await page.getByRole("button", { name: "Отправить ссылку для сброса" }).click();
+    await page.getByLabel("Email").fill(TEST_EMAIL);
+    await page.getByRole("button", { name: "Отправить ссылку" }).click();
     await page.waitForTimeout(500);
 
     await page.goto(await latestMailpitLink());
     await expect(page).toHaveURL(/\/reset-password\/confirm/);
 
-    await page.getByPlaceholder("Новый пароль (мин. 6 символов)").fill(tempPassword);
-    await page.getByPlaceholder("Повтори пароль").fill(tempPassword);
-    await page.getByRole("button", { name: "Сохранить новый пароль" }).click();
-    await page.waitForURL(/\/login$/, { timeout: 5000 });
+    await page.getByLabel("Новый пароль", { exact: true }).fill(tempPassword);
+    await page.getByLabel("Повтори пароль", { exact: true }).fill(tempPassword);
+    await page.getByRole("button", { name: "Сохранить и войти" }).click();
+    await page.waitForURL(/\/home$/, { timeout: 10_000 });
 
     // Сессия восстановления пароля всё ещё активна на этот момент — /login
     // для уже залогиненного пользователя сразу редиректит на /home, поэтому
     // явно разлогиниваемся перед проверкой входа с новым паролем.
     await page.context().clearCookies();
     await page.goto("/login");
-    await page.getByPlaceholder("Email").fill(TEST_EMAIL);
-    await page.getByPlaceholder("Пароль").fill(tempPassword);
-    await page.getByRole("button", { name: "Войти" }).click();
+    await page.getByLabel("Email").fill(TEST_EMAIL);
+    await page.getByLabel("Пароль", { exact: true }).fill(tempPassword);
+    await page.getByRole("button", { name: "Войти", exact: true }).click();
     await expect(page).toHaveURL(/\/home$/);
   } finally {
     await restoreTestPassword();

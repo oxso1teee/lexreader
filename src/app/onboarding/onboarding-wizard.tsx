@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Mail } from "lucide-react";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { LANGUAGES, READY_LANGUAGES } from "@/lib/languages";
@@ -10,6 +10,8 @@ import { completeOnboarding, type OnboardingState } from "./actions";
 import { joinLanguageWaitlist, type WaitlistState } from "./waitlist-actions";
 import RateLimitNotice from "@/components/rate-limit-notice";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui";
+import { PasswordField } from "@/components/product/auth/password-field";
 import { track } from "@/lib/posthog-client";
 import { SplashScreen } from "@/components/product/onboarding/splash-screen";
 
@@ -137,6 +139,9 @@ export default function OnboardingWizard() {
   const [targetLanguage, setTargetLanguage] = useState("");
   const [nativeLanguage, setNativeLanguage] = useState("");
   const [selfReportedCefr, setSelfReportedCefr] = useState("");
+  // Управляемое поле: React 19 сбрасывает неуправляемые поля формы после
+  // каждого server action, и после ошибки email пришлось бы вводить заново.
+  const [email, setEmail] = useState("");
 
   const [state, formAction, pending] = useActionState<OnboardingState, FormData>(
     completeOnboarding,
@@ -279,21 +284,21 @@ export default function OnboardingWizard() {
           <input type="hidden" name="nativeLanguage" value={nativeLanguage} />
           <input type="hidden" name="selfReportedCefr" value={selfReportedCefr} />
 
-          <input
-            type="email"
+          <Input
+            label="Email"
             name="email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            autoCapitalize="none"
+            spellCheck={false}
             required
-            placeholder="Email"
-            className="w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-4 py-2.5 text-base outline-none focus:border-[var(--color-forest)]"
+            requiredMark={false}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            icon={<Mail />}
           />
-          <input
-            type="password"
-            name="password"
-            required
-            minLength={6}
-            placeholder="Пароль (мин. 6 символов)"
-            className="w-full rounded-lg border border-[var(--border-strong)] bg-transparent px-4 py-2.5 text-base outline-none focus:border-[var(--color-forest)]"
-          />
+          <PasswordField name="password" autoComplete="new-password" required meter />
 
           {blocked && state.retryAfterSeconds ? (
             <RateLimitNotice

@@ -1,6 +1,8 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { SESSION_HINT_COOKIE } from "@/lib/auth/session-hint";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isStripeConfigured, getStripeClient } from "@/lib/stripe";
@@ -52,5 +54,7 @@ export async function deleteAccount(
   }
 
   await supabase.auth.signOut();
+  // Аккаунта больше нет — «сессия истекла» на этом устройстве показывать нечему.
+  (await cookies()).delete(SESSION_HINT_COOKIE);
   redirect("/login");
 }
