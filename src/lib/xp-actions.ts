@@ -1,5 +1,5 @@
-import type { SupabaseServerClient } from "@/lib/supabase/server";
-import { log } from "@/lib/log";
+import type { SupabaseServerClient } from "./supabase/server.ts";
+import { log } from "./log.ts";
 
 export function todayUtcIso(): string {
   const now = new Date();
@@ -11,6 +11,13 @@ export interface AddXpResult {
   /** activity_days.xp за сегодня (UTC) — цель дня (ROADMAP, этап 1) считается по этому полю, не по total. */
   today: { before: number; after: number };
   goal: number;
+  /** docs/moments/mockups/Double-XP.dc.html — реально начисленная сумма
+   *  (после умножения ×2, если буст активен) — ВСЕГДА используй это поле
+   *  для "+N XP" в UI, не входной `amount` вызова addXp(): при активном
+   *  бусте они расходятся. */
+  awarded: number;
+  /** true — этот конкретный вызов был удвоен активным Double-XP. */
+  boosted: boolean;
 }
 
 // Раздел 5 промта 2026-07-30 (полировка): та же самая точка входа что и
@@ -27,10 +34,17 @@ export async function addXp(supabase: SupabaseServerClient, ownerId: string, amo
   try {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("xp, daily_xp_goal")
+      .select("xp, daily_xp_goal, xp_boost_until")
       .eq("id", ownerId)
       .single();
     if (!profile) return null;
+
+    // docs/moments/mockups/Double-XP.dc.html — удваиваем каждое начисление,
+    // пока активен буст, а не только "занятия целиком": тот же addXp()
+    // вызывается и за отдельное слово/карточку, и за бонусы — единая точка,
+    // как и у остальной XP-логики в этом файле.
+    const boosted = !!profile.xp_boost_until && new Date(profile.xp_boost_until) > new Date();
+    const awarded = boosted ? amount * 2 : amount;
 
     const today = todayUtcIso();
     const { data: existingDay } = await supabase
@@ -41,9 +55,9 @@ export async function addXp(supabase: SupabaseServerClient, ownerId: string, amo
       .maybeSingle();
 
     const xpTodayBefore = existingDay?.xp ?? 0;
-    const xpTodayAfter = xpTodayBefore + amount;
+    const xpTodayAfter = xpTodayBefore + awarded;
     const xpTotalBefore = profile.xp;
-    const xpTotalAfter = xpTotalBefore + amount;
+    const xpTotalAfter = xpTotalBefore + awarded;
 
     await Promise.all([
       supabase.from("profiles").update({ xp: xpTotalAfter }).eq("id", ownerId),
@@ -62,6 +76,8 @@ export async function addXp(supabase: SupabaseServerClient, ownerId: string, amo
       total: { before: xpTotalBefore, after: xpTotalAfter },
       today: { before: xpTodayBefore, after: xpTodayAfter },
       goal: profile.daily_xp_goal,
+      awarded,
+      boosted,
     };
   } catch (e) {
     log.error({ kind: "xp_update", message: e instanceof Error ? e.message : "unknown" });

@@ -296,7 +296,7 @@ export async function reviewWord(
     today: todayUtcIso(),
   });
 
-  return { reviewLogId: logRow?.id ?? null, moments: [...moments, ...perfectWeek.moments], xpAwarded: xpResult ? 1 : 0, isNewCard: wasNew };
+  return { reviewLogId: logRow?.id ?? null, moments: [...moments, ...perfectWeek.moments], xpAwarded: xpResult?.awarded ?? 0, isNewCard: wasNew };
 }
 
 export async function awardPerfectBonus(cardCount: number, durationSec: number): Promise<{ moments: Moment[] }> {
@@ -332,7 +332,7 @@ export async function awardPerfectBonus(cardCount: number, durationSec: number):
     id: `perfect:${Date.now()}`,
     cardCount,
     durationSec,
-    bonusXp: PERFECT_SESSION_BONUS_XP,
+    bonusXp: xpResult.awarded,
   };
 
   return { moments: [perfectMoment, ...extraMoments] };
@@ -372,7 +372,7 @@ export async function awardComboBonus(): Promise<{ xpAwarded: number; moments: M
     today: todayUtcIso(),
   });
 
-  return { xpAwarded: COMBO_BONUS_XP, moments };
+  return { xpAwarded: xpResult.awarded, moments };
 }
 
 export async function getStreakInfo(): Promise<{ current: number; longest: number }> {

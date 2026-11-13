@@ -467,6 +467,111 @@
 }
 .mo-draw { transform-origin: 0 50%; animation: mo-draw 0.4s ease-out both; }
 
+/* Chest.dc.html */
+@keyframes mo-wiggle {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(-8deg); }
+  30% { transform: rotate(8deg); }
+  45% { transform: rotate(-5deg); }
+  60% { transform: rotate(3deg); }
+}
+.mo-wiggle { animation: mo-wiggle 1.2s ease-in-out infinite; transform-origin: 50% 90%; }
+
+@keyframes mo-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  10% { transform: translate(-6px, 2px) rotate(-6deg); }
+  20% { transform: translate(6px, -2px) rotate(6deg); }
+  30% { transform: translate(-8px, 0) rotate(-8deg); }
+  40% { transform: translate(8px, -3px) rotate(8deg); }
+  50% { transform: translate(-9px, 0) rotate(-9deg) scale(1.04); }
+  60% { transform: translate(9px, -4px) rotate(9deg) scale(1.06); }
+  70% { transform: translate(-6px, 0) rotate(-5deg) scale(1.08); }
+  80% { transform: translate(4px, -6px) rotate(3deg) scale(1.1); }
+  90% { transform: translate(0, -8px) scale(1.12, 0.92); }
+}
+.mo-shake { animation: mo-shake 0.75s ease-in both; transform-origin: 50% 90%; }
+
+@keyframes mo-lidopen {
+  0% { transform: none; }
+  100% { transform: translate(40px, -150px) rotate(40deg); opacity: 0; }
+}
+.mo-lidopen { animation: mo-lidopen 0.6s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+
+@keyframes mo-chestflash {
+  0% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+.mo-chestflash { position: absolute; inset: 0; background: #fff1b8; animation: mo-chestflash 0.5s ease-out both; pointer-events: none; z-index: 5; }
+
+@keyframes mo-coin {
+  0% { transform: translate(0, 0) scale(0.3) rotateY(0); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1) rotateY(720deg); opacity: 0; }
+}
+.mo-coin {
+  position: absolute; left: 0; top: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+  border-radius: 99px; background: #ffc700; box-shadow: inset 0 -3px 0 0 #e0a500, 0 0 0 2px #7a5900;
+  animation: mo-coin var(--t) var(--d) cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+@keyframes mo-hint {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.mo-hint { animation: mo-hint 1.2s ease-in-out infinite; }
+
+/* Double-XP.dc.html */
+@keyframes mo-slam {
+  0% { transform: scale(3) rotate(-20deg); opacity: 0; }
+  55% { transform: scale(0.9) rotate(4deg); opacity: 1; }
+  75% { transform: scale(1.05); }
+  100% { transform: none; }
+}
+.mo-slam { animation: mo-slam 0.6s 0.1s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+
+@keyframes mo-zap {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  45% { opacity: 1; }
+  50% { opacity: 0.3; transform: scale(1.12); }
+  55% { opacity: 1; }
+}
+.mo-zap { animation: mo-zap 1.6s 0.8s ease-in-out infinite; }
+
+@keyframes mo-bolt {
+  0% { transform: translate(0, 0) scale(0) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(var(--r)); opacity: 0; }
+}
+.mo-bolt { position: absolute; left: 50%; top: 50%; animation: mo-bolt 1s var(--d) ease-out both; }
+
+@keyframes mo-xpup {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.mo-xpup { display: inline-block; animation: mo-xpup 0.45s 1.6s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+
+@keyframes mo-strike {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.mo-strike { position: absolute; left: -4px; right: -4px; top: 50%; height: 3px; background: #ffc700; border-radius: 3px; transform-origin: 0 50%; animation: mo-strike 0.3s 1.3s ease-out both; }
+
+/* Daily-quests.dc.html */
+@keyframes mo-questbounce {
+  0% { transform: translateY(-120px); }
+  60% { transform: translateY(0); }
+  75% { transform: translateY(-16px); }
+  100% { transform: none; }
+}
+.mo-questbounce { animation: mo-questbounce 0.8s 0.1s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
+
+@keyframes mo-questcheck {
+  0% { transform: scale(0) rotate(-45deg); }
+  70% { transform: scale(1.3); }
+  100% { transform: none; }
+}
+.mo-questcheck { animation: mo-questcheck 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+
 @media (prefers-reduced-motion: reduce) {
   .mo-screen *,
   .mo-screen *::before,
