@@ -6,6 +6,12 @@
 > инцидент и его временное решение (откат деплоя) оставлены ниже без
 > изменений — это исторический факт этой фазы, а не то, что нужно
 > переписывать задним числом.
+>
+> **Обновлено в Phase B/C** (2026-08-01): backup создан, migration 0032
+> применена к production, `FSRS_SCHEMA_READY=true` установлен, shadow-
+> режим подтверждён production smoke test'ом и прямой проверкой БД —
+> см. `fsrs-production-shadow-rollout.md` за полным отчётом.
+> `FSRS_ENABLED` остаётся не задан.
 
 Статус: **остановлено, production код откачен**. PR смёржен, но
 деплой немедленно вызвал вероятный сбой сохранения ревью для реальных
@@ -136,27 +142,33 @@ Production `lexreader.vercel.app` → `dpl_6TJL1goUGP2tdbsLVvvvMTf3whXe`
 (commit `5e3e07e`). Production Supabase не менялся — откатывать в БД
 нечего.
 
-## Безопасный план повторного rollout (обновлён)
+## Безопасный план повторного rollout (обновлён — Phase B/C пройдены)
 
-1. **Backup/PITR сначала** — апгрейд Supabase-проекта на Pro-план (даёт
-   scheduled backups + опцию PITR) ИЛИ ручной `pg_dump`-снимок
-   production БД как временная мера. Отдельное решение владельца,
-   **не выполнено**.
+1. ~~**Backup/PITR сначала**~~ — **выполнено**: ручной `pg_dump`-снимок
+   production БД создан и проверен тестовым restore (Supabase Free-план
+   по-прежнему не даёт Scheduled Backups/PITR — см.
+   `docs/operations/manual-production-backup.md`). Апгрейд на Pro не
+   потребовался для этого rollout.
 2. ~~Устранить причину инцидента в коде~~ — **выполнено**
    (`fix/fsrs-schema-compatibility`, двухфлаговая модель).
-3. Применить `0032_fsrs_state.sql` к production сразу после (1).
-4. Установить `FSRS_SCHEMA_READY=true` в production сразу после (3), в
-   одном контролируемом окне — код к этому моменту уже безопасен и
-   деплоится отдельно от применения миграции (Phase A/B/C/D, см.
-   `fsrs-schema-compatibility.md`).
-5. Провести production smoke test (логин, review session, все 4
-   кнопки, due count, statistics) — с заранее заведённым безопасным
-   тестовым аккаунтом в production.
-6. Понаблюдать за shadow-данными некоторое время (`FSRS_SCHEMA_READY=true`,
-   `FSRS_ENABLED` остаётся `false`).
-7. Только после этого — отдельная, явно запрошенная Phase 2 (решение
-   о `FSRS_ENABLED=true`).
+3. ~~Применить `0032_fsrs_state.sql` к production~~ — **выполнено**
+   2026-08-01, без ошибок, без изменения количества строк. Полный
+   before/after — `fsrs-production-shadow-rollout.md`.
+4. ~~Установить `FSRS_SCHEMA_READY=true` в production~~ — **выполнено**
+   сразу после (3), в одном контролируемом redeploy (`FSRS_ENABLED`
+   остался не задан).
+5. ~~Провести production smoke test~~ — **выполнено**: логин под
+   отдельным тестовым аккаунтом, добавление и review карточки, legacy
+   interval-preview подтверждён на экране, сессия завершена без ошибок,
+   прямая read-only проверка БД подтвердила shadow-запись FSRS-полей
+   при legacy `due_at`/`scheduler_type=sm2`. Подробности —
+   `fsrs-production-shadow-rollout.md`.
+6. **Наблюдение за shadow-данными** (`FSRS_SCHEMA_READY=true`,
+   `FSRS_ENABLED` остаётся `false`) — **начато** 2026-08-01, продолжается;
+   период наблюдения перед Phase D отдельно не зафиксирован по времени.
+7. Только после периода наблюдения — отдельная, явно запрошенная Phase D
+   (решение о `FSRS_ENABLED=true`). **Не начата.**
 
-`FSRS_ENABLED`/`FSRS_SCHEMA_READY` остаются `false`/не заданы на всём
-протяжении этой фазы. FSRS не включался ни на одном этапе. Language
-Twin не начинался.
+`FSRS_ENABLED` остаётся `false`/не задан на всём протяжении этой фазы —
+FSRS не стал авторитетным ни на одном этапе. Language Twin не
+начинался.
