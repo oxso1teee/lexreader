@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Сундук</title></head>
+<body>
+<x-dc>
+<helmet>
+<script src="theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&display=swap">
+<style>
+body{margin:0;background:var(--paper-200)}
+a{color:#fff}a:hover{color:var(--gold-100)}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:radial-gradient(ellipse 260px 300px at 50% 44%,#7a4218 0%,#55280d 48%,#2e1406 100%);color:#fff;font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+@keyframes tw{0%,100%{transform:scale(.3) rotate(0);opacity:.2}50%{transform:scale(1) rotate(45deg);opacity:1}}
+.tw{position:absolute;animation:tw 1.8s ease-in-out infinite}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;font:700 16px/1.2 Onest,sans-serif;text-decoration:none;cursor:pointer;min-height:52px;padding:14px 20px 18px;box-shadow:inset 0 -4px 0 0 var(--e);background:var(--f);color:var(--l);width:100%}
+.btn:active{transform:translateY(4px);box-shadow:none}
+.b-sun{--f:var(--gold-400);--e:var(--gold-600);--l:#1a1a1a}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+@keyframes wiggle{0%,100%{transform:rotate(0)}15%{transform:rotate(-8deg)}30%{transform:rotate(8deg)}45%{transform:rotate(-5deg)}60%{transform:rotate(3deg)}}
+.wiggle{animation:wiggle 1.2s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes lid{0%{transform:none}100%{transform:translate(40px,-150px) rotate(40deg);opacity:0}}
+.lidopen{animation:lid .6s cubic-bezier(.3,.7,.4,1) both}
+@keyframes beam{0%{opacity:0;transform:scaleY(.2)}100%{opacity:1;transform:scaleY(1)}}
+.beam{animation:beam .5s .15s ease-out both;transform-origin:50% 100%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rays{animation:spin 10s linear infinite}
+@keyframes popr{0%{transform:translateY(60px) scale(.3);opacity:0}70%{transform:translateY(-8px) scale(1.08);opacity:1}100%{transform:none;opacity:1}}
+.popr{animation:popr .5s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes hint{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hint{animation:hint 1.2s ease-in-out infinite}
+.rw{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.14)}
+@keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}10%{transform:translate(-6px,2px) rotate(-6deg)}20%{transform:translate(6px,-2px) rotate(6deg)}30%{transform:translate(-8px,0) rotate(-8deg)}40%{transform:translate(8px,-3px) rotate(8deg)}50%{transform:translate(-9px,0) rotate(-9deg) scale(1.04)}60%{transform:translate(9px,-4px) rotate(9deg) scale(1.06)}70%{transform:translate(-6px,0) rotate(-5deg) scale(1.08)}80%{transform:translate(4px,-6px) rotate(3deg) scale(1.1)}90%{transform:translate(0,-8px) scale(1.12,0.92)}}
+.shake{animation:shake .75s ease-in both;transform-origin:50% 90%}
+@keyframes seam{0%,100%{opacity:.2}50%{opacity:1}}
+.seam{animation:seam .18s linear infinite}
+@keyframes flash{0%{opacity:.95}100%{opacity:0}}
+.flash{position:absolute;inset:0;background:var(--gold-100);animation:flash .5s ease-out both;pointer-events:none;z-index:5}
+@keyframes coin{0%{transform:translate(0,0) scale(.3) rotateY(0);opacity:1}70%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1) rotateY(720deg);opacity:0}}
+.coin{position:absolute;left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:99px;background:var(--gold-400);box-shadow:inset 0 -3px 0 0 var(--gold-600), 0 0 0 2px var(--gold-700);animation:coin var(--t) var(--d) cubic-bezier(.15,.7,.3,1) both}
+@keyframes land{0%{transform:translateY(0)}40%{transform:translateY(6px) scale(1.06,.94)}100%{transform:none}}
+.land{animation:land .4s ease-out both;transform-origin:50% 100%}
+.taps{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.ri{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+</style>
+<link rel="stylesheet" href="design-system.css">
+</helmet>
+<div class="app">
+  
+  <div style="position: relative; height: 420px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 40px">
+    <svg class="tw" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="left: 48px; top: 96px; animation-delay: .3s"><path d="M12 0l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="var(--gold-400)"></path></svg>
+    <svg class="tw" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="right: 54px; top: 128px; animation-delay: .9s"><path d="M12 0l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="#ffe49a"></path></svg>
+    <svg class="tw" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="right: 70px; top: 290px; animation-delay: 1.3s"><path d="M12 0l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="var(--gold-400)"></path></svg>
+    <button type="button" aria-label="Открыть сундук" style="position: relative; border: 0; background: none; padding: 0; cursor: pointer">
+      <ellipse cx="110" cy="172" rx="98" ry="15" fill="rgba(0,0,0,.4)" aria-hidden="true"></ellipse>
+      <div class="wiggle">
+        <svg viewBox="0 0 200 175" width="226" height="198" aria-hidden="true" style="overflow: visible">
+          <defs>
+            <linearGradient id="woodBody" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ef9a5c"></stop>
+              <stop offset=".45" stop-color="var(--orange-600)"></stop>
+              <stop offset="1" stop-color="#8a2c08"></stop>
+            </linearGradient>
+            <linearGradient id="woodLid" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffd27a"></stop>
+              <stop offset="1" stop-color="var(--gold-600)"></stop>
+            </linearGradient>
+            <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffe49a"></stop>
+              <stop offset=".5" stop-color="var(--gold-400)"></stop>
+              <stop offset="1" stop-color="var(--gold-700)"></stop>
+            </linearGradient>
+          </defs>
+          <rect x="14" y="70" width="172" height="94" rx="22" fill="url(#woodBody)" stroke="#4a1703" stroke-width="7"></rect>
+          <path d="M66 82v70M116 82v70" stroke="#5c1e05" stroke-width="2" stroke-linecap="round" opacity=".5"></path>
+          <rect x="14" y="104" width="172" height="18" fill="url(#brass)" stroke="#5c3d08" stroke-width="2"></rect>
+          <circle cx="26" cy="113" r="3" fill="var(--gold-700)"></circle>
+          <circle cx="174" cy="113" r="3" fill="var(--gold-700)"></circle>
+          <path d="M14 70h20v10a6 6 0 0 1-6 6H14z" fill="url(#brass)" stroke="#5c3d08" stroke-width="2"></path>
+          <path d="M186 70h-20v10a6 6 0 0 0 6 6h14z" fill="url(#brass)" stroke="#5c3d08" stroke-width="2"></path>
+          <path d="M14 164v-20h20v10a6 6 0 0 1-6 6z" fill="url(#brass)" stroke="#5c3d08" stroke-width="2"></path>
+          <path d="M186 164v-20h-20v10a6 6 0 0 0 6 6z" fill="url(#brass)" stroke="#5c3d08" stroke-width="2"></path>
+          <path d="M82 96h36a6 6 0 0 1 6 6v22a6 6 0 0 1-6 6H82a6 6 0 0 1-6-6v-22a6 6 0 0 1 6-6z" fill="url(#brass)" stroke="#5c3d08" stroke-width="4"></path>
+          <circle cx="100" cy="109" r="5.5" fill="#4a1703"></circle>
+          <path d="M97.5 113h5l3 10h-11z" fill="#4a1703"></path>
+          <g style="transform-origin: 100px 76px">
+            <path d="M16 78 Q100 0 184 78 V86 H16z" fill="url(#woodLid)" stroke="#5c3d08" stroke-width="7" stroke-linejoin="round"></path>
+            <path d="M34 72 Q100 14 166 72M22 80 Q100 8 178 80" stroke="#b97a12" stroke-width="2" fill="none" opacity=".6"></path>
+            <ellipse cx="70" cy="40" rx="26" ry="10" fill="#fff8e0" opacity=".45" transform="rotate(-18 70 40)"></ellipse>
+            <rect x="16" y="78" width="168" height="9" fill="url(#brass)" stroke="#5c3d08" stroke-width="2"></rect>
+            <path d="M84 62h32a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6H84a6 6 0 0 1-6-6V68a6 6 0 0 1 6-6z" fill="url(#brass)" stroke="#5c3d08" stroke-width="4"></path>
+            <circle cx="92" cy="72" r="2.4" fill="#fff6dd"></circle>
+          </g>
+        </svg>
+      </div>
+    </button>
+  </div>
+
+  
+    <div style="text-align: center; padding: 0 28px">
+      <h1 class="disp" style="margin: 0; font-size: 26px; line-height: 1.2; font-weight: 900">Сундук за задания дня</h1>
+      <p style="margin: 10px 0 0; font-size: 15px; ">Ты выполнил все задания дня — загляни внутрь</p>
+    </div>
+
+    <div class="rise" style="margin: 28px 28px 0; padding: 16px 16px 18px; border-radius: 20px; background: rgba(0,0,0,.22); border: 2px solid rgba(255,255,255,.12); animation-delay: .2s">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;  text-align: center">Что может быть внутри</div>
+      <div style="display: flex; gap: 10px; margin-top: 12px">
+        <div style="flex: 1; text-align: center">
+          <div class="ri" style="margin: 0 auto; width: 48px; height: 48px; border-radius: 14px; background: rgba(255,199,0,.18)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="var(--gold-400)" stroke="var(--gold-600)" stroke-width="1.5" stroke-linejoin="round"></path></svg></div>
+          <div style="font-size: 13px; font-weight: 700; margin-top: 6px">10-30 XP</div>
+        </div>
+        <div style="flex: 1; text-align: center">
+          <div class="ri" style="margin: 0 auto; width: 48px; height: 48px; border-radius: 14px; background: rgba(28,176,246,.18)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" style="fill: none; stroke: var(--blue-400); stroke-width: 2.4; stroke-linecap: round"><path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9"></path></svg></div>
+          <div style="font-size: 13px; font-weight: 700; margin-top: 6px">Заморозка</div>
+        </div>
+        <div style="flex: 1; text-align: center">
+          <div class="ri" style="margin: 0 auto; width: 48px; height: 48px; border-radius: 14px; background: rgba(43,130,15,.18)"><div class="disp" style="font-size: 17px; font-weight: 900; color: var(--green-text)">×2</div></div>
+          <div style="font-size: 13px; font-weight: 700; margin-top: 6px">Двойной опыт</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint" style="margin: 22px 0 0; text-align: center; font-size: 16px; font-weight: 700; color: var(--gold-400)">Нажми на сундук, чтобы открыть</p>
+
+    <a class="btn b-leaf" href="Daily-quests.dc.html" style="margin: 22px 20px 0">Продолжить</a>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { phase: 0, at: 0 };
+  }
+  componentWillUnmount() { clearTimeout(this.t); clearInterval(this.iv); }
+  renderVals() {
+    const ph = this.state.phase;
+    const o = ph === 2;
+    const el = o ? Date.now() - this.state.at : 0;
+    const p = Math.min(1, Math.max(0, (el - 500) / 900));
+    let sd = 5;
+    const r = () => { sd = (sd * 9301 + 49297) % 233280; return sd / 233280; };
+    const coins = [];
+    for (let i = 0; i < 18; i++) {
+      const a = -Math.PI * (0.08 + r() * 0.84);
+      const d = 120 + r() * 160;
+      coins.push('--dx:' + Math.round(Math.cos(a) * d) + 'px;--dy:' + Math.round(Math.sin(a) * d) + 'px;--d:' + (r() * 0.15).toFixed(2) + 's;--t:' + (0.9 + r() * 0.6).toFixed(2) + 's');
+    }
+    return {
+      open: o, closed: !o, shaking: ph === 1, coins,
+      xp: Math.round((1 - Math.pow(1 - p, 3)) * 30),
+      wcls: ph === 0 ? 'wiggle' : (ph === 1 ? 'shake' : 'land'),
+      lidcls: o ? 'lidopen' : '',
+      hintText: ph === 1 ? 'Открывается…' : 'Нажми на сундук',
+      aria: o ? 'Сундук открыт' : 'Открыть сундук',
+      openIt: () => {
+        if (this.state.phase !== 0) return;
+        this.setState({ phase: 1 });
+        this.t = setTimeout(() => {
+          this.setState({ phase: 2, at: Date.now() });
+          clearInterval(this.iv);
+          this.iv = setInterval(() => { this.forceUpdate(); if (Date.now() - this.state.at > 1600) clearInterval(this.iv); }, 33);
+        }, 750);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

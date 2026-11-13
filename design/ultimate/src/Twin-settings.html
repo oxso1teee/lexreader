@@ -1,0 +1,48 @@
+<!--meta {"title":"Настройки «Мой английский»"}-->
+<style>
+.pv{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pv>div{display:flex;align-items:center;gap:8px;font:600 13.5px/1.3 var(--font-body)}
+.pv .ic{color:var(--green-text)}
+button.row{width:100%;border:0;background:none;text-align:left;cursor:pointer}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Twin-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Настройки<small>Мой английский</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="card lg">
+    <button class="rowx" role="switch" aria-checked="true" style="width:100%;border:0;background:none;padding:0;text-align:left;cursor:pointer;min-height:48px">
+      <span class="sw s-green lg"><i class="ic ic-sprout s24"></i></span>
+      <div class="f1"><div class="h3">Мой английский</div><div class="xs muted" style="margin-top:2px">Стадия «Росток» · 214 записей</div></div>
+      <span class="toggle on" aria-hidden="true"></span>
+    </button>
+    <p class="sm muted" style="margin:12px 0 0">Собирает оценку навыков из чтения, карточек и занятий. Если выключить — данные сохранятся, но новые записи учитываться не будут.</p>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Какие данные учитывать</p></div>
+  <div class="list">
+    <button class="row" role="switch" aria-checked="true"><span class="sw blue"><i class="ic ic-book"></i></span><div class="f1"><div class="t">Чтение и видео</div><div class="s">открытые слова, переводы, главы</div></div><span class="toggle on" aria-hidden="true"></span></button>
+    <button class="row" role="switch" aria-checked="true"><span class="sw green"><i class="ic ic-cards"></i></span><div class="f1"><div class="t">Карточки «Мозга»</div><div class="s">ответы в повторении</div></div><span class="toggle on" aria-hidden="true"></span></button>
+    <button class="row" role="switch" aria-checked="false"><span class="sw gold"><i class="ic ic-pencil"></i></span><div class="f1"><div class="t">Проверки текста</div><div class="s">найденные несоответствия правилам</div></div><span class="toggle" aria-hidden="true"></span></button>
+  </div>
+
+  <section class="card t-green">
+    <div class="rowx s8"><i class="ic ic-shield s24 c-green"></i><div class="h3">Приватность</div></div>
+    <div class="pv">
+      <div><i class="ic ic-check s18"></i>Оценка по правилам — без ИИ</div>
+      <div><i class="ic ic-check s18"></i>Тексты не уходят во внешние сервисы</div>
+      <div><i class="ic ic-check s18"></i>Записи можно посмотреть и исключить</div>
+    </div>
+  </section>
+
+  <div class="list">
+    <a class="row" href="Twin-evidence.dc.html"><span class="sw"><i class="ic ic-list"></i></span><div class="f1 t">Посмотреть основания</div><i class="ic ic-chev faint"></i></a>
+    <a class="row" href="Share-card.dc.html"><span class="sw"><i class="ic ic-share2"></i></span><div class="f1 t">Поделиться карточкой прогресса</div><i class="ic ic-chev faint"></i></a>
+  </div>
+  <div class="list">
+    <button class="row danger"><span class="sw red"><i class="ic ic-trash"></i></span><div class="f1"><div class="t">Сбросить профиль</div><div class="s">удалит 214 записей и стадию — без возврата</div></div></button>
+  </div>
+</main>
+</div>

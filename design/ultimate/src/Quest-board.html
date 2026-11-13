@@ -1,0 +1,70 @@
+<!--meta {"title":"Задания"}-->
+<style>
+.chest{width:96px;height:84px;flex:none}
+.q .ck{width:28px;height:28px;border-radius:50%;background:var(--fill-leaf);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.q .rw{font:700 13px/1 var(--font-body);color:var(--gold-text);white-space:nowrap;display:flex;align-items:center;gap:3px}
+.q.done .t{color:var(--text-2)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Main.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Задания</div>
+  <span class="pill xp" style="font-size:13px;padding:5px 10px;margin-right:6px"><i class="ic ic-bolt-f s16"></i>1 240</span>
+</header>
+<main class="body">
+  <a class="hero sun rowx" href="Chest.dc.html" style="gap:14px;padding:16px 18px 20px">
+    <svg class="chest" viewBox="0 0 96 84" role="img" aria-label="Сундук дня, закрыт">
+      <ellipse cx="48" cy="78" rx="38" ry="5" fill="var(--fill-sun-edge)" opacity=".35"/>
+      <rect x="10" y="36" width="76" height="40" rx="8" fill="var(--fill-ember)"/>
+      <rect x="10" y="62" width="76" height="14" rx="6" fill="var(--fill-ember-edge)"/>
+      <path d="M10 40 C10 14 86 14 86 40 Z" fill="var(--fill-sun-edge)"/>
+      <path d="M16 38 C18 20 78 20 80 38 Z" fill="var(--gold-400)"/>
+      <rect x="8" y="34" width="80" height="7" rx="3.5" fill="var(--fill-ember-edge)"/>
+      <rect x="38" y="30" width="20" height="22" rx="5" fill="var(--fill-ink)"/>
+      <circle cx="48" cy="41" r="3.5" fill="var(--gold-400)"/>
+    </svg>
+    <div class="f1">
+      <p class="eyebrow">Сундук дня</p>
+      <div class="h2" style="margin-top:4px">2 из 3 заданий</div>
+      <div class="steps" style="margin:10px 0 8px"><i class="on" style="background:var(--fill-ember)"></i><i class="on" style="background:var(--fill-ember)"></i><i style="background:rgba(0,0,0,.14)"></i></div>
+      <div class="sm b">Ещё одно — и сундук откроется</div>
+    </div>
+  </a>
+
+  <div class="sect"><p class="eyebrow">Сегодня</p><span class="rowx s6 xs muted"><i class="ic ic-timer s16"></i>обновятся через 5 ч 12 мин</span></div>
+  <div class="list">
+    <div class="row q done">
+      <span class="sw green"><i class="ic ic-book"></i></span>
+      <div class="f1"><div class="rowx between"><span class="t">Прочитать 10 минут</span><span class="b sm c-green">10/10</span></div><div class="bar sm" style="margin-top:6px"><i style="width:100%"></i></div><div class="s">выполнено в 08:40 · +15 XP получено</div></div>
+      <span class="ck" aria-label="Выполнено"><i class="ic ic-check s18"></i></span>
+    </div>
+    <div class="row q done">
+      <span class="sw blue"><i class="ic ic-cards"></i></span>
+      <div class="f1"><div class="rowx between"><span class="t">Повторить 15 слов</span><span class="b sm c-green">15/15</span></div><div class="bar sm" style="margin-top:6px"><i style="width:100%"></i></div><div class="s">выполнено в 13:05 · +15 XP получено</div></div>
+      <span class="ck" aria-label="Выполнено"><i class="ic ic-check s18"></i></span>
+    </div>
+    <a class="row q" href="Lesson-start.dc.html">
+      <span class="sw orange"><i class="ic ic-flame"></i></span>
+      <div class="f1"><div class="rowx between"><span class="t">5 верных подряд</span><span class="b sm c-gold">3/5</span></div><div class="bar sm gold" style="margin-top:6px"><i style="width:60%"></i></div><div class="s">в любом занятии или дуэли</div></div>
+      <span class="rw"><i class="ic ic-bolt-f s14"></i>+20</span>
+    </a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">На этой неделе</p><span class="xs faint">до воскресенья</span></div>
+  <div class="list">
+    <a class="row q" href="Reader.dc.html">
+      <span class="sw s-blue"><i class="ic ic-library"></i></span>
+      <div class="f1"><div class="rowx between"><span class="t">Дочитать главу 4</span><span class="b sm muted">64%</span></div><div class="bar sm blue" style="margin-top:6px"><i style="width:64%"></i></div><div class="s">The Last Lighthouse</div></div>
+      <span class="rw"><i class="ic ic-bolt-f s14"></i>+50</span>
+    </a>
+    <a class="row q" href="Duel-create.dc.html">
+      <span class="sw s-ink"><i class="ic ic-swords"></i></span>
+      <div class="f1"><div class="rowx between"><span class="t">Выиграть 2 дуэли</span><span class="b sm muted">1/2</span></div><div class="bar sm gold" style="margin-top:6px"><i style="width:50%"></i></div><div class="s">последняя — против Ани, 3:2</div></div>
+      <span class="rw"><i class="ic ic-bolt-f s14"></i>+40</span>
+    </a>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Lesson-start.dc.html">Занятие на 5 мин · +20 XP</a>
+</footer>
+</div>

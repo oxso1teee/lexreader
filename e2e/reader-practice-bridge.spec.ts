@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login, getSystemTextIdByTitle } from "./helpers";
+import { login, getSystemTextIdByTitle, dismissLessonStart } from "./helpers";
 
 // M3 Slice 11 (plan doc §2) — Reader v2's centerpiece: a saved word/phrase must show its real
 // learning_state and a working Practice CTA that routes into a targeted review session, backed
@@ -27,6 +27,7 @@ test("Practice Bridge: saving a word reveals a real learning-state chip and a wo
 
   await practiceLink.click();
   await expect(page).toHaveURL(/\/brain\/[^/]+\/review\?wordIds=/);
+  await dismissLessonStart(page);
   // A targeted single-word session — confirms the flashcardId in the CTA's href really is a
   // reviewable card, not a dangling id.
   await expect(page.getByRole("button", { name: "Показать ответ" })).toBeVisible({ timeout: 15_000 });

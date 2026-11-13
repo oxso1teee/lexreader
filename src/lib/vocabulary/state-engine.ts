@@ -4,7 +4,10 @@
 // writes scheduler state — only review outcomes and mode provenance.
 
 export type LearningState = "new" | "learning" | "familiar" | "active" | "maintenance";
-export type PracticeMode = "cards" | "choice" | "type" | "match";
+// docs/moments/ROADMAP.md, этап 8 — "build" (Lesson-build, собери фразу из
+// тайлов) и "listen" (Lesson-listen, напиши услышанное) добавлены к уже
+// существующим 4 режимам.
+export type PracticeMode = "cards" | "choice" | "type" | "match" | "build" | "listen";
 
 export interface ReviewSignal {
   grade: number; // 0-3, matches review_log.grade
@@ -30,8 +33,12 @@ const MAINTENANCE_MIN_FSRS_STABILITY = 60;
 // grouped with Choice/Match (recognition-among-options) as "weak" evidence, never alone
 // enough to promote to `active`. This matches the explicit product decision: multiple
 // choice (or Cards) must never promote a word to active on its own.
-const STRONG_RECALL_MODES: readonly PracticeMode[] = ["type"];
-const WEAK_EVIDENCE_MODES: readonly PracticeMode[] = ["cards", "choice", "match"];
+// "listen" — пользователь печатает услышанное с нуля, без вариантов на
+// экране (как и "type"): настоящая продукция, не узнавание. "build" —
+// тайлы (ответ + отвлекающие) уже даны, пользователь выбирает порядок из
+// готовых кусков — то же "узнавание среди вариантов", что choice/match.
+const STRONG_RECALL_MODES: readonly PracticeMode[] = ["type", "listen"];
+const WEAK_EVIDENCE_MODES: readonly PracticeMode[] = ["cards", "choice", "match", "build"];
 const SUCCESS_GRADE_THRESHOLD = 2;
 
 function isSuccess(review: ReviewSignal): boolean {

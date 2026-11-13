@@ -1,0 +1,51 @@
+<!--meta {"title":"Профиль друга","planned":true}-->
+<style>
+.duo{display:flex;align-items:center}.duo .avatar{box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 3px var(--gold-150)}.duo .avatar+.avatar{margin-left:-8px}
+.cmp{display:grid;grid-template-columns:44px 1fr 64px;align-items:center;gap:10px}
+.ach{width:96px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:12px 6px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Friends-list.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Профиль друга</div>
+  <a class="iconbtn" href="Friends-list.dc.html" aria-label="Ещё"><i class="ic ic-more"></i></a>
+</header>
+<main class="body">
+  <section class="center stack s8" style="align-items:center;padding-top:2px">
+    <span class="avatar a1 xl">А</span>
+    <h1 class="h1" style="margin-top:6px">Аня</h1>
+    <div class="rowx s8"><span class="badge blue">Уровень B2</span><span class="badge gold">Уровень аккаунта 14</span></div>
+    <div class="xs faint">Друзья с 14 мая · занимается сейчас</div>
+  </section>
+
+  <div class="grid3">
+    <div class="stat t-orange"><b class="num c-orange">54</b><span>дней стрик</span></div>
+    <div class="stat t-gold"><b class="num c-gold">4 120</b><span>XP всего</span></div>
+    <div class="stat t-blue"><b class="num c-blue">1 310</b><span>слов знает</span></div>
+  </div>
+
+  <a class="card t-orange rowx press" href="Friend-streak.dc.html">
+    <div class="duo"><span class="avatar me">С</span><span class="avatar a1">А</span></div>
+    <div class="f1"><div class="b">Общий стрик · 9 дней</div><div class="xs muted">Сегодня вы оба уже позанимались</div></div>
+    <i class="ic ic-flame-f s28 c-orange"></i>
+  </a>
+
+  <div class="sect"><p class="eyebrow">Ты и Аня на этой неделе</p></div>
+  <div class="card stack s8" role="img" aria-label="Ты 310 XP, Аня 520 XP за неделю">
+    <div class="cmp"><span class="avatar me sm">С</span><div class="bar lg"><i style="width:60%"></i></div><span class="b sm right">310 XP</span></div>
+    <div class="cmp"><span class="avatar a1 sm">А</span><div class="bar lg blue"><i style="width:100%"></i></div><span class="b sm right">520 XP</span></div>
+    <div class="xs faint" style="margin-top:2px">Аня впереди на 210 XP — это примерно 4 занятия. Дуэли: 3 победы у тебя, 1 у Ани.</div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Достижения Ани</p><span class="xs faint">12 из 40</span></div>
+  <div class="hscroll">
+    <div class="card sm ach"><span class="sw s-ember round lg"><i class="ic ic-flame-f s24"></i></span><span class="xs b">50 дней подряд</span></div>
+    <div class="card sm ach"><span class="sw s-blue round lg"><i class="ic ic-book s24"></i></span><span class="xs b">10 книг</span></div>
+    <div class="card sm ach"><span class="sw s-gold round lg"><i class="ic ic-trophy s24"></i></span><span class="xs b">Топ-3 лиги</span></div>
+    <div class="card sm ach"><span class="sw s-green round lg"><i class="ic ic-brain s24"></i></span><span class="xs b">1 000 слов</span></div>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-sky" href="Duel-create.dc.html"><i class="ic ic-swords"></i>Вызвать на дуэль</a>
+</footer>
+</div>

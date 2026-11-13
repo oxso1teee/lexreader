@@ -1,0 +1,34 @@
+<!--meta {"title":"Пустая колода"}-->
+<style>
+.es-ill{position:relative;width:200px;height:150px;display:flex;align-items:flex-end;justify-content:center}
+.es-card{position:absolute;width:70px;height:92px;border-radius:14px;border:2px dashed rgba(var(--ink-rgb),.22);background:var(--surface-card)}
+.es-card.a{left:4px;top:24px;transform:rotate(-12deg)}.es-card.b{right:4px;top:24px;transform:rotate(12deg)}
+.es-ill .lex{position:relative}
+.flow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.flow .chip{cursor:default}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Brain-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Путешествия<small>0 карточек</small></div>
+  <a class="iconbtn" href="Card-edit.dc.html" aria-label="Добавить карточку"><i class="ic ic-plus s24"></i></a>
+</header>
+<main class="body">
+  <div class="empty grow" style="justify-content:center">
+    <div class="es-ill" aria-hidden="true"><span class="es-card a"></span><span class="es-card b"></span><i class="lex think s120 bob"></i></div>
+    <h1 class="h2">Колода пока пуста</h1>
+    <p class="lead">Добавь первые слова сам или перенеси готовый набор — повторение начнётся сразу</p>
+  </div>
+  <div class="card t-blue">
+    <div class="rowx s8" style="align-items:flex-start"><span class="sw s-blue sm"><i class="ic ic-bulb s18"></i></span>
+      <div class="f1"><div class="b sm">Слова из чтения попадают сюда сами</div><div class="xs muted" style="margin-top:2px">Нажми на слово в тексте и выбери колоду «Путешествия»</div>
+        <div class="flow"><span class="chip word sm">shore</span><i class="ic ic-arrow-right s16 faint"></i><span class="badge blue">Путешествия</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="dock">
+    <a class="btn b-leaf" href="Card-edit.dc.html"><i class="ic ic-plus s18"></i>Добавить карточку</a>
+    <a class="btn b-ghost" href="Deck-import.dc.html"><i class="ic ic-download s18"></i>Импортировать набор</a>
+</footer>
+</div>

@@ -11,8 +11,10 @@ import {
   updateReviewBest,
   getCurrentStreak,
   awardPerfectBonus,
+  awardComboBonus,
   getStreakInfo,
 } from "./actions";
+import { PERFECT_SESSION_BONUS_XP } from "./constants";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
 import { reviewFsrsCard, type FsrsStateRow } from "@/lib/fsrs";
@@ -22,6 +24,19 @@ import SessionComplete from "./session-complete";
 import { Button } from "@/components/ui/button";
 import { cardClassName } from "@/components/ui/card";
 import type { Moment } from "@/lib/moments/types";
+import { LessonStartScreen } from "./screens/lesson-start";
+import { ComboBanner } from "./screens/combo-banner";
+import { HalfwayScreen } from "./screens/halfway";
+import { MistakesScreen } from "./screens/mistakes";
+import { QuitConfirmSheet } from "./screens/quit-confirm";
+
+// docs/moments/ROADMAP.md, этап 3 — на сколько верных подряд загорается
+// Combo (и повторяется на каждой следующей пятёрке).
+const COMBO_THRESHOLD = 5;
+// Для совсем короткой сессии "середина" не несёт смысла (Halfway.dc.html
+// рассчитан на многозадачное занятие) — тот же порог, что уже есть у
+// multiple-choice-mode.tsx для показа предупреждения о нехватке карточек.
+const MIN_CARDS_FOR_HALFWAY = 4;
 
 export interface ReviewCard {
   flashcardId: string;
@@ -120,6 +135,9 @@ export default function ReviewSession({
   bestSessionCount,
   fsrsEnabled,
   maxIntervalDays,
+  sessionTitle,
+  newCardsCount,
+  reviewCardsCount,
   targetLanguage,
   userId,
   sessionDeckId,
@@ -131,6 +149,9 @@ export default function ReviewSession({
   bestSessionCount: number;
   fsrsEnabled: boolean;
   maxIntervalDays: number;
+  sessionTitle: string;
+  newCardsCount: number;
+  reviewCardsCount: number;
   targetLanguage: string;
   userId: string;
   sessionDeckId: string;
@@ -163,6 +184,13 @@ export default function ReviewSession({
       .filter((c): c is ReviewCard => !!c);
     return restored.length > 0 ? restored : cardsProp;
   });
+  // docs/moments/ROADMAP.md, этап 3 — Mistakes/SessionComplete должны
+  // показывать честные цифры по ВСЕЙ сессии, а не по текущему раунду:
+  // retryMistakes() ниже подменяет `cards` на подмножество (только ошибки)
+  // для второго прохода, так что cards.length/cards.map() в финальном экране
+  // после этого считали бы только 2-3 слова вместо всех. Снимок — один раз
+  // при монтировании (тот же cards, что выше, до любых setCards).
+  const originalCardsRef = useRef(cards);
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(() => {
     const session = loadReviewSession(userId, sessionDeckId);
@@ -196,7 +224,13 @@ export default function ReviewSession({
   // честный вклад, здесь просто накапливается. moments — очередь всплывающих
   // экранов, собранная со всех карточек сессии (+ бонус за Perfect), которую
   // Result отправит в MomentProvider по нажатию своей кнопки.
-  const sessionStartRef = useRef(Date.now());
+  // react-hooks/purity: Date.now() не может звать useRef'ов инициализатор
+  // (считается нечистым вызовом во время рендера) — ставим в useEffect ниже,
+  // к моменту первого grade() эффект уже отработал.
+  const sessionStartRef = useRef(0);
+  useEffect(() => {
+    sessionStartRef.current = Date.now();
+  }, []);
   const momentsRef = useRef<Moment[]>([]);
   const xpEarnedRef = useRef(0);
   const newWordsRef = useRef(0);
@@ -211,6 +245,31 @@ export default function ReviewSession({
   // незначительна (одна строка), а по этому единственному месту решается,
   // какое из двух взаимоисключающих событий отправить при монтировании.
   const wasResumedRef = useRef(!!loadReviewSession(userId, sessionDeckId));
+  // docs/moments/ROADMAP.md, этап 3 — состояние экранов "внутри занятия".
+  // overlay блокирует весь остальной рендер (как Lesson-start/Halfway/
+  // Mistakes в макетах — полноэкранные, не блендятся с вопросом под ними);
+  // Quit-confirm и Combo — не блокирующие, рисуются поверх обычного вопроса
+  // (Combo буквально "поверх текущего повторения карточек", формулировка
+  // задачи), поэтому у них собственные флаги, не часть overlay.
+  // react-hooks/refs: не читаем wasResumedRef.current в лэйзи-инициализаторе
+  // (во время рендера) — повторный прямой вызов loadReviewSession(), тот же
+  // паттерн, что уже у cards/revealed выше (каждый читает localStorage
+  // независимо, а не делится одним ref).
+  const [overlay, setOverlay] = useState<"lesson-start" | "halfway" | "mistakes" | null>(() =>
+    loadReviewSession(userId, sessionDeckId) ? null : "lesson-start",
+  );
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  // combo — реактивный state, не ref: читается во время рендера (цвет точек
+  // прогресса, проп Quit-confirm) — react-hooks/refs запрещает читать
+  // .current во время рендера.
+  const [combo, setCombo] = useState(0);
+  const [comboBanner, setComboBanner] = useState<{ combo: number; xpAwarded: number } | null>(null);
+  const [halfwaySnapshot, setHalfwaySnapshot] = useState<{ combo: number; xpSoFar: number } | null>(null);
+  const [mistakeWordsSnapshot, setMistakeWordsSnapshot] = useState<{ front: string; back: string }[]>([]);
+  const missedIdsRef = useRef<Set<string>>(new Set());
+  const inMistakesRoundRef = useRef(false);
+  const mistakesSkippedRef = useRef(false);
+  const halfwayShownRef = useRef(false);
   // Review mockup alignment — top bar streak flame. Same real, already-used
   // server action session-complete.tsx already calls (getCurrentStreak() ->
   // profiles.streak_current); reusing it here needed zero new props threaded
@@ -271,10 +330,14 @@ export default function ReviewSession({
   }
 
   function exitSession() {
-    if (sessionTotal > 0 && !confirm("Выйти из сессии? Прогресс по уже отвеченным карточкам сохранён.")) {
+    // docs/moments/mockups/Quit-confirm.dc.html — нижняя шторка вместо
+    // браузерного confirm(). Ничего терять ещё не на чём (sessionTotal===0),
+    // как и раньше, выходим сразу без диалога.
+    if (sessionTotal === 0) {
+      router.push("/brain");
       return;
     }
-    router.push("/brain");
+    setShowQuitConfirm(true);
   }
 
   // M3 Slice 4 §6: Space=reveal, 1-4=grade (Again/Hard/Good/Easy — same
@@ -286,7 +349,11 @@ export default function ReviewSession({
       const isTyping =
         target instanceof HTMLElement &&
         (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
-      if (isTyping || done) return;
+      // docs/moments/ROADMAP.md, этап 3 — пока открыт оверлей (Lesson-start/
+      // Halfway/Mistakes) или шторка Quit-confirm, у них свой собственный
+      // Esc/фокус (MomentScreen/QuitConfirmSheet) — здесь просто не мешаем,
+      // иначе "1-4" под оверлеем незаметно оценили бы следующую карточку.
+      if (isTyping || done || overlay !== null || showQuitConfirm) return;
 
       if (e.key === "Escape") {
         e.preventDefault();
@@ -306,7 +373,7 @@ export default function ReviewSession({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealed, done, isPending, sessionTotal]);
+  }, [revealed, done, isPending, sessionTotal, overlay, showQuitConfirm]);
 
   // M3 Slice 4 §7: единственное место, где revealed становится true —
   // сохраняем phase='answer', чтобы резюм точно знал, что вопрос уже
@@ -322,6 +389,35 @@ export default function ReviewSession({
       gradedIds: gradedIdsRef.current,
       index,
       phase: "answer",
+    });
+  }
+
+  // docs/moments/ROADMAP.md, этап 3 — общий хвост и у обычного последней-
+  // карточки пути, и у отложенного (после Mistakes) — вынесено, чтобы не
+  // дублировать clearReviewSession/updateReviewBest/awardPerfectBonus/
+  // getStreakInfo в двух местах.
+  // durationSec — параметр, не Date.now() внутри этой функции: react-hooks/
+  // purity не может доказать, что хелпер верхнего уровня компонента никогда
+  // не вызовется во время рендера, даже если фактически оба вызова ниже —
+  // из event-handler контекста (startTransition/onClick).
+  async function finalizeSession(finalTotal: number, isPerfectSoFar: boolean, durationSec: number) {
+    track("review_session_completed", { count: finalTotal });
+    clearReviewSession();
+    if (finalTotal > bestSessionCount) {
+      setNewRecord(true);
+      await updateReviewBest(finalTotal);
+    }
+    if (isPerfectSoFar) {
+      const bonus = await awardPerfectBonus(finalTotal, durationSec);
+      momentsRef.current = [...momentsRef.current, ...bonus.moments];
+    }
+    const streakInfo = await getStreakInfo();
+    setSessionResult({
+      moments: momentsRef.current,
+      xpEarned: xpEarnedRef.current,
+      newWordsCount: newWordsRef.current,
+      durationSec,
+      streakLongest: streakInfo.longest,
     });
   }
 
@@ -354,39 +450,100 @@ export default function ReviewSession({
       setRevealed(false);
       setNotebookStatus("idle");
       setIsEditing(false);
-      const isLastCard = index + 1 >= cards.length;
-      if (isLastCard) {
-        track("review_session_completed", { count: newTotal });
-        clearReviewSession();
-        if (newTotal > bestSessionCount) {
-          setNewRecord(true);
-          await updateReviewBest(newTotal);
-        }
-        const durationSec = Math.round((Date.now() - sessionStartRef.current) / 1000);
-        if (isPerfectSoFar) {
-          const bonus = await awardPerfectBonus(newTotal, durationSec);
+
+      // docs/moments/mockups/Combo.dc.html — серия верных подряд. Сброс на
+      // любой неверной/трудной оценке (value<2), рост на "Помню"/"Легко".
+      // Повторяем на каждой следующей пятёрке (5, 10, 15…), не только один раз.
+      // nextCombo — локальная переменная (combo state ещё не перерисован в
+      // этом замыкании), тот же приём, что уже у isPerfectSoFar/newTotal выше.
+      let nextCombo: number;
+      if (value >= 2) {
+        nextCombo = combo + 1;
+        setCombo(nextCombo);
+        if (nextCombo % COMBO_THRESHOLD === 0) {
+          const bonus = await awardComboBonus();
           momentsRef.current = [...momentsRef.current, ...bonus.moments];
+          xpEarnedRef.current += bonus.xpAwarded;
+          setComboBanner({ combo: nextCombo, xpAwarded: bonus.xpAwarded });
+          setTimeout(() => setComboBanner(null), 2600);
         }
-        const streakInfo = await getStreakInfo();
-        setSessionResult({
-          moments: momentsRef.current,
-          xpEarned: xpEarnedRef.current,
-          newWordsCount: newWordsRef.current,
-          durationSec,
-          streakLongest: streakInfo.longest,
-        });
+      } else {
+        nextCombo = 0;
+        setCombo(0);
+        // Только исходный проход копит "ошибки на повтор" — повторный
+        // (retryMistakes ниже) не зацикливает Mistakes сам на себя.
+        if (!inMistakesRoundRef.current) missedIdsRef.current.add(card.flashcardId);
+      }
+
+      const nextIndex = index + 1;
+      const isLastCard = nextIndex >= cards.length;
+
+      // docs/moments/mockups/Halfway.dc.html — ровно середина, один раз за
+      // исходный проход, не в коротких сессиях и не в повторе ошибок.
+      if (
+        !isLastCard &&
+        !inMistakesRoundRef.current &&
+        !halfwayShownRef.current &&
+        cards.length >= MIN_CARDS_FOR_HALFWAY &&
+        nextIndex === Math.ceil(cards.length / 2)
+      ) {
+        halfwayShownRef.current = true;
+        // react-hooks/refs: xpEarnedRef.current читается здесь (в обработчике
+        // события), не во время рендера — снимок кладём в state, Halfway
+        // ниже рендерится из него, а не из ref напрямую.
+        setHalfwaySnapshot({ combo: nextCombo, xpSoFar: xpEarnedRef.current });
+        setOverlay("halfway");
+      }
+
+      if (isLastCard) {
+        if (!inMistakesRoundRef.current && missedIdsRef.current.size > 0 && !mistakesSkippedRef.current) {
+          // docs/moments/mockups/Mistakes.dc.html — финализацию (бонус/
+          // рекорд/Result) откладываем до решения на экране Mistakes
+          // (retryMistakes/skipMistakes ниже). Снимок слов — в state, не
+          // read originalCardsRef.current напрямую в рендере (react-hooks/refs).
+          setMistakeWordsSnapshot(
+            originalCardsRef.current
+              .filter((c) => missedIdsRef.current.has(c.flashcardId))
+              .map((c) => ({ front: c.front, back: c.back })),
+          );
+          setOverlay("mistakes");
+        } else {
+          const durationSec = Math.round((Date.now() - sessionStartRef.current) / 1000);
+          await finalizeSession(newTotal, isPerfectSoFar, durationSec);
+        }
       } else {
         saveReviewSession({
           userId,
           deckId: sessionDeckId,
           cardIds: cards.map((c) => c.flashcardId),
           gradedIds: gradedIdsRef.current,
-          index: index + 1,
+          index: nextIndex,
           phase: "question",
         });
       }
       setIndex((i) => i + 1);
     });
+  }
+
+  // docs/moments/mockups/Mistakes.dc.html — "Исправить": второй проход
+  // только по словам, где была "Не помню"/"Трудно". reviewWord() вызывается
+  // заново для каждой карточки — это настоящая вторая попытка (новый
+  // review_log, настоящий XP), не декоративная анимация.
+  function retryMistakes() {
+    const retryCards = originalCardsRef.current.filter((c) => missedIdsRef.current.has(c.flashcardId));
+    missedIdsRef.current = new Set();
+    inMistakesRoundRef.current = true;
+    setCards(retryCards);
+    setIndex(0);
+    setRevealed(false);
+    setOverlay(null);
+  }
+
+  function skipMistakes() {
+    mistakesSkippedRef.current = true;
+    setOverlay(null);
+    const durationSec = Math.round((Date.now() - sessionStartRef.current) / 1000);
+    void finalizeSession(sessionTotal, false, durationSec);
   }
 
   // M3 Slice 4 §8: возвращает карточку в текущую сессию на то же место
@@ -442,6 +599,25 @@ export default function ReviewSession({
     setNotebookStatus(result.ok ? "done" : "error");
   }
 
+  // docs/moments/mockups/Lesson-start.dc.html — показывается один раз перед
+  // свежей (не резюмируемой) сессией, блокирует весь остальной рендер.
+  if (overlay === "lesson-start") {
+    return (
+      <LessonStartScreen
+        sessionTitle={sessionTitle}
+        newCardsCount={newCardsCount}
+        reviewCardsCount={reviewCardsCount}
+        onReady={() => setOverlay(null)}
+      />
+    );
+  }
+
+  // docs/moments/mockups/Mistakes.dc.html — после последней карточки
+  // исходного прохода, если были ошибки и их ещё не пропустили.
+  if (overlay === "mistakes") {
+    return <MistakesScreen words={mistakeWordsSnapshot} onRetry={retryMistakes} onSkip={skipMistakes} />;
+  }
+
   if (done) {
     // M3 Slice 4 §8 (found while writing e2e coverage): grading the very
     // last card sets `lastGraded` and flips `done` to true in the same
@@ -465,7 +641,10 @@ export default function ReviewSession({
           </div>
         )}
         <SessionComplete
-          count={cards.length}
+          // docs/moments/ROADMAP.md, этап 3 — originalCardsRef, не cards:
+          // retryMistakes() выше подменяет cards на подмножество ошибок для
+          // второго прохода, cards.length тут считал бы только их.
+          count={originalCardsRef.current.length}
           newRecord={newRecord}
           missionId={missionId}
           missionCorrectCount={tally[2] + tally[3]}
@@ -476,7 +655,7 @@ export default function ReviewSession({
           // SessionComplete — прямой ребёнок этого файла (не через
           // review-mode-switcher.tsx), так что новый проп не требует правок
           // вне заявленных двух файлов.
-          cards={cards.map((c) => ({ front: c.front, back: c.back }))}
+          cards={originalCardsRef.current.map((c) => ({ front: c.front, back: c.back }))}
           // docs/moments/mockups/Result.dc.html — этап 1: honest sums
           // накопленные за сессию выше, не пересчёт задним числом.
           xpEarned={sessionResult?.xpEarned ?? 0}
@@ -530,7 +709,16 @@ export default function ReviewSession({
             <span
               key={c.flashcardId}
               aria-hidden="true"
-              className={`h-1.5 w-1.5 shrink-0 rounded-full ${i <= index ? "bg-[var(--color-forest-light)]" : "bg-[var(--border-strong)]"}`}
+              // docs/moments/mockups/Combo.dc.html — "полоса прогресса
+              // становится оранжевой": точки прогресса — та же роль в этом
+              // UI, что полоса в макете, перекрашиваются тем же условием.
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                i > index
+                  ? "bg-[var(--border-strong)]"
+                  : combo >= COMBO_THRESHOLD
+                    ? "bg-[var(--ember)]"
+                    : "bg-[var(--color-forest-light)]"
+              }`}
             />
           ))}
         </div>
@@ -813,6 +1001,29 @@ export default function ReviewSession({
         <span>·</span>
         <span>Esc — выход</span>
       </p>
+
+      {comboBanner && <ComboBanner combo={comboBanner.combo} xpAwarded={comboBanner.xpAwarded} />}
+
+      {overlay === "halfway" && halfwaySnapshot && (
+        <HalfwayScreen
+          combo={halfwaySnapshot.combo}
+          xpSoFar={halfwaySnapshot.xpSoFar}
+          cardsRemaining={cards.length - (index + 1)}
+          onContinue={() => setOverlay(null)}
+        />
+      )}
+
+      {showQuitConfirm && (
+        <QuitConfirmSheet
+          cardsDone={index}
+          cardsTotal={cards.length}
+          combo={combo}
+          perfectBonusAtRisk={tally[0] + tally[1] === 0}
+          perfectBonusXp={PERFECT_SESSION_BONUS_XP}
+          onStay={() => setShowQuitConfirm(false)}
+          onLeave={() => router.push("/brain")}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,50 @@
+<!--meta {"title":"Видео с субтитрами"}-->
+<style>
+.player{position:relative;aspect-ratio:16/9;background:linear-gradient(160deg,var(--fill-ink),var(--fill-ink-edge));color:#fff;flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.player .sky{position:absolute;inset:0;background:radial-gradient(120% 80% at 30% 20%,rgba(255,255,255,.14),transparent 60%)}
+.player .pl{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.94);color:var(--fill-ink);display:flex;align-items:center;justify-content:center;border:0;cursor:pointer;position:relative}
+.player .cc{position:absolute;left:16px;right:16px;bottom:48px;text-align:center;font:600 14px/1.35 var(--font-body);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.ctl{position:absolute;left:0;right:0;bottom:0;padding:0 8px 2px;display:flex;align-items:center;gap:8px;font:700 12px/1 var(--font-body)}
+.ctl .tl{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.35);position:relative}
+.ctl .tl i{position:absolute;left:0;top:0;bottom:0;width:30%;background:var(--fill-red);border-radius:2px}
+.ctl .tl b{position:absolute;left:30%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;background:#fff}
+.ctl .sp{min-width:44px;height:40px;border-radius:8px;border:0;background:rgba(255,255,255,.18);color:#fff;font:700 12px/1 var(--font-body);cursor:pointer}
+.cue{display:flex;gap:12px;padding:10px 12px;border-radius:14px;align-items:flex-start}
+.cue .tc{font:600 12px/1.9 var(--font-mono);color:var(--text-3);flex:none;width:38px}
+.cue p{margin:0;font:400 16px/1.55 var(--font-read);color:var(--text-2)}
+.cue.now{background:var(--green-100);box-shadow:inset 3px 0 0 var(--green-400)}
+.cue.now p{color:var(--text-1)}
+.cue.now .tc{color:var(--green-text)}
+.w-new{background:var(--blue-100);border-radius:4px;padding:0 2px;box-shadow:0 0 0 2px var(--blue-400);font-weight:600}
+.w-lrn{background:var(--gold-100);border-radius:4px;padding:0 2px}
+.saved{display:flex;align-items:center;gap:12px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Library.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Life in London<small>Easy English · B1 · 30%</small></div>
+  <a class="iconbtn" href="Reader-settings.dc.html" aria-label="Настройки субтитров" style="font:700 17px/1 var(--font-read)">Aa</a>
+</header>
+<div class="player" role="region" aria-label="Видеоплеер">
+  <div class="sky"></div>
+  <button class="pl" aria-label="Воспроизвести"><i class="ic ic-play-f s32"></i></button>
+  <div class="cc">Most Londoners commute by tube every day.</div>
+  <div class="ctl"><span>2:31</span><div class="tl" role="slider" aria-label="Позиция" aria-valuenow="151" aria-valuemax="504"><i></i><b></b></div><span>8:24</span><button class="sp" aria-label="Скорость 1x">1×</button><button class="sp" aria-label="Субтитры"><i class="ic ic-subtitles s18"></i></button></div>
+</div>
+<main class="body" style="padding-top:12px;gap:4px">
+  <div class="rowx between" style="margin:0 4px 6px"><p class="eyebrow">Субтитры · EN</p><span class="xs faint">тапни слово — переведём</span></div>
+  <div class="cue"><span class="tc">2:14</span><p>London is home to almost nine million people.</p></div>
+  <div class="cue"><span class="tc">2:22</span><p>Every <span class="w-lrn">borough</span> has its own character.</p></div>
+  <div class="cue now" aria-current="true"><span class="tc">2:31</span><p>Most Londoners <span class="w-new">commute</span> by tube every day.</p></div>
+  <div class="cue"><span class="tc">2:38</span><p>You learn to <span class="w-lrn">queue</span> politely — it's a national sport.</p></div>
+  <div class="cue"><span class="tc">2:46</span><p>On weekends, the parks are full of families.</p></div>
+  <div class="cue"><span class="tc">2:53</span><p>And when it rains, everyone heads to the pub.</p></div>
+</main>
+<footer class="dock line">
+  <div class="saved">
+    <span class="sw gold"><i class="ic ic-bookmark"></i></span>
+    <div class="f1"><div class="b">Сохранено 4 слова</div><div class="xs faint">commute, borough, queue, +1</div></div>
+    <a class="btn b-sky sm fit" href="Flashcard-review.dc.html">К карточкам</a>
+  </div>
+</footer>
+</div>

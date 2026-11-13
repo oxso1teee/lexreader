@@ -1,0 +1,55 @@
+<!--meta {"title":"История занятий"}-->
+<style>
+.hscroll .chip{min-height:44px}
+.day{display:flex;align-items:baseline;justify-content:space-between;margin:8px 4px -2px}
+.day b{font:700 14px/1.2 var(--font-body)}
+.lh .xp{font:700 13.5px/1 var(--font-body);color:var(--gold-text);white-space:nowrap}
+.wk{display:grid;align-items:end;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.wk>div{display:flex;flex-direction:column;align-items:center;gap:4px;font:600 11px/1 var(--font-body);color:#fff}
+.wk i{display:block;width:100%;border-radius:6px;background:rgba(255,255,255,.9)}
+.wk i.off{background:rgba(0,0,0,.2)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Progress.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">История занятий</div>
+  <a class="iconbtn" href="Stats-detail.dc.html" aria-label="Статистика"><i class="ic ic-chart"></i></a>
+</header>
+<main class="body">
+  <section class="hero">
+    <div class="rowx between" style="align-items:flex-end">
+      <div><p class="eyebrow">Неделя 10–16 ноя</p><div class="rowx s6" style="align-items:baseline;margin-top:4px"><b class="num lg">310 XP</b><span class="b">· 7 из 7 дней</span></div></div>
+      <span class="b sm">96 мин</span>
+    </div>
+    <div class="wk" role="img" aria-label="XP по дням: пн 40, вт 55, ср 30, чт 10, пт 60, сб 45, вс 70">
+      <div><i style="height:20px"></i>Пн</div><div><i style="height:28px"></i>Вт</div><div><i style="height:15px"></i>Ср</div><div><i style="height:8px"></i>Чт</div><div><i style="height:30px"></i>Пт</div><div><i style="height:23px"></i>Сб</div><div><i style="height:36px"></i>Вс</div>
+    </div>
+  </section>
+
+  <div class="hscroll" role="tablist" aria-label="Тип занятий">
+    <button class="chip on" role="tab" aria-selected="true">Все</button>
+    <button class="chip" role="tab" aria-selected="false">Занятия</button>
+    <button class="chip" role="tab" aria-selected="false">Чтение</button>
+    <button class="chip" role="tab" aria-selected="false">Карточки</button>
+    <button class="chip" role="tab" aria-selected="false">Дуэли</button>
+  </div>
+
+  <div class="day"><b>Сегодня, 16 ноября</b><span class="xs faint">70 XP</span></div>
+  <div class="list lh">
+    <a class="row" href="Reader.dc.html"><span class="sw s-blue"><i class="ic ic-book"></i></span><div class="f1"><div class="t">The Last Lighthouse · гл. 3</div><div class="s">21:14 · 18 мин · +9 слов в «Мозг»</div></div><span class="xp">+30</span></a>
+    <a class="row" href="Review-done.dc.html"><span class="sw s-green"><i class="ic ic-cards"></i></span><div class="f1"><div class="t">Повторение · 47 карточек</div><div class="s">08:32 · 6 мин · 91% верно</div></div><span class="xp">+15</span></a>
+    <a class="row" href="Result.dc.html"><span class="sw s-gold"><i class="ic ic-puzzle"></i></span><div class="f1"><div class="t">Present Perfect vs Past Simple</div><div class="s">08:20 · 5 мин · 8 из 10</div></div><span class="xp">+25</span></a>
+  </div>
+
+  <div class="day"><b>Суббота, 15 ноября</b><span class="xs faint">45 XP</span></div>
+  <div class="list lh">
+    <a class="row" href="Duel-won.dc.html"><span class="sw s-ink"><i class="ic ic-swords"></i></span><div class="f1"><div class="t">Дуэль с Аней · победа 3:2</div><div class="s">19:05 · 4 мин</div></div><span class="xp">+20</span></a>
+    <a class="row" href="Watch.dc.html"><span class="sw s-ember"><i class="ic ic-video"></i></span><div class="f1"><div class="t">Life in London · видео</div><div class="s">18:40 · 9 мин · 4 новых слова</div></div><span class="xp">+25</span></a>
+  </div>
+
+  <div class="day"><b>Пятница, 14 ноября</b><span class="xs faint">60 XP</span></div>
+  <div class="list lh">
+    <a class="row" href="Result.dc.html"><span class="sw s-gold"><i class="ic ic-target"></i></span><div class="f1"><div class="t">Миссия дня · Travel English</div><div class="s">20:10 · 7 мин · без ошибок</div></div><span class="xp">+35</span></a>
+  </div>
+</main>
+</div>

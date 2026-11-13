@@ -1,0 +1,57 @@
+<!--meta {"title":"Сегодня — цель выполнена"}-->
+<style>
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px;text-align:center;font:600 12px/1 var(--font-body)}
+.week .d{height:34px;border-radius:12px;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center;margin-bottom:5px}
+.week .d.f{background:var(--fill-ember);color:#fff}
+.week .d.now{box-shadow:0 0 0 3px var(--surface-card),0 0 0 5px var(--orange-600)}
+.lang{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-text);font:700 11px/1 var(--font-body)}
+.ok-ring{width:44px;height:44px;border-radius:50%;background:#fff;color:var(--fill-leaf);display:flex;align-items:center;justify-content:center;flex:none}
+</style>
+<div class="app">
+<header class="top rowx between" style="padding-bottom:4px">
+  <span class="pill lvl"><span class="lang">EN</span>B1</span>
+  <div class="rowx s8">
+    <span class="pill streak" aria-label="Стрик 13 дней"><i class="ic ic-flame-f s18"></i>13</span>
+    <span class="pill xp" aria-label="1290 XP"><i class="ic ic-bolt-f s18"></i>1 290</span>
+  </div>
+</header>
+<main class="body">
+  <section class="hero">
+    <div class="rowx between" style="align-items:flex-start">
+      <div class="f1">
+        <p class="eyebrow rowx s6"><i class="ic ic-check-circle s16"></i>Цель дня выполнена</p>
+        <div class="num xl" style="margin-top:8px">50<span style="font-size:22px;opacity:.85">/50 XP</span></div>
+        <div class="sm" style="margin-top:4px">Стрик продлён — 13 дней подряд</div>
+      </div>
+      <i class="lex cool pale s88 bob" aria-hidden="true"></i>
+    </div>
+    <div class="bar lg" style="margin-top:14px;background:rgba(255,255,255,.28)" role="progressbar" aria-valuenow="50" aria-valuemax="50" aria-label="50 из 50 XP"><i style="width:100%;background:#fff"></i></div>
+    <div class="rowx s8 wrap" style="margin-top:10px;font:600 13px/1.2 var(--font-body)"><span>3 занятия</span><span>·</span><span>21 мин</span><span>·</span><span>9 новых слов</span></div>
+  </section>
+  <div class="card">
+    <div class="rowx between"><span class="b">Неделя</span><span class="xs b c-orange">Рекорд: 21 день</span></div>
+    <div class="week">
+      <div><div class="d f"><i class="ic ic-flame-f s18"></i></div><span class="faint">Пн</span></div>
+      <div><div class="d f"><i class="ic ic-flame-f s18"></i></div><span class="faint">Вт</span></div>
+      <div><div class="d f"><i class="ic ic-flame-f s18"></i></div><span class="faint">Ср</span></div>
+      <div><div class="d f now"><i class="ic ic-flame-f s18"></i></div><span class="b c-orange">Чт</span></div>
+      <div><div class="d"></div><span class="faint">Пт</span></div>
+      <div><div class="d"></div><span class="faint">Сб</span></div>
+      <div><div class="d"></div><span class="faint">Вс</span></div>
+    </div>
+  </div>
+  <div class="sect"><p class="eyebrow">Хочешь ещё?</p><span class="xs faint">необязательно</span></div>
+  <div class="list">
+    <a class="row" href="Reader.dc.html"><span class="cover c-sky" style="width:40px;height:52px;font-size:11px;padding:4px">LH</span><div class="f1"><div class="t">Почитать дальше</div><div class="s">The Last Lighthouse · глава 3</div><div class="bar sm" style="margin-top:6px"><i style="width:64%"></i></div></div><span class="v">64%</span></a>
+    <a class="row" href="Flashcard-review.dc.html"><span class="sw blue"><i class="ic ic-cards"></i></span><div class="f1"><div class="t">18 слов на повтор</div><div class="s">~3 мин · начинают забываться</div></div><i class="ic ic-chev faint s18"></i></a>
+    <a class="row" href="Daily-quests.dc.html"><span class="sw gold"><i class="ic ic-target"></i></span><div class="f1"><div class="t">Задания дня</div><div class="s">ещё одно — и сундук твой</div></div><span class="badge gold">2/3</span></a>
+  </div>
+</main>
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab on" href="Main.dc.html" aria-current="page"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="tab" href="Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a class="tab" href="Brain-home.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a class="tab" href="Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a class="tab" href="Profile.dc.html"><i class="ic ic-user"></i>Профиль</a>
+</nav>
+</div>

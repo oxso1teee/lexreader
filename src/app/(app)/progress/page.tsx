@@ -13,9 +13,11 @@ import { Share2 } from "lucide-react";
 import ActivityHeatmap from "./activity-heatmap";
 import PeriodTabs from "./period-tabs";
 import StatCard from "./stat-card";
-import StreakHero from "@/components/product/streak-hero";
+import StreakSummaryCard from "./streak-summary-card";
+import FiveWeekGrid from "./five-week-grid";
 import WeekActivityRow from "./week-activity-row";
 import LineChart from "./line-chart";
+import { getWeeklyLeaderboard } from "@/lib/leaderboard";
 import HardestWords from "./hardest-words";
 import AchievementsShelf from "./achievements-shelf";
 import PersonalRecords from "./personal-records";
@@ -115,6 +117,9 @@ export default async function ProgressPage({
     activePathState,
     { count: familiarWords },
     { count: activeWords },
+    weeklyXpQuery,
+    leaderboardRows,
+    { data: activeDuel },
   ] = await Promise.all([
     // P0-АУДИТ 3.9: счётчики слов теперь ограничены текущим изучаемым
     // языком — иначе после смены языка в цифры попадали бы чужие слова.
@@ -244,6 +249,28 @@ export default async function ProgressPage({
       .eq("owner_id", profile.id)
       .eq("language", profile.target_language)
       .eq("learning_state", "active"),
+    // Progress.dc.html — "XP за неделю": честная сумма activity_days.xp
+    // этой ISO-недели (тот же источник, что и дневная цель в xp-actions.ts),
+    // не предположение по числу сессий.
+    supabase
+      .from("activity_days")
+      .select("xp")
+      .eq("user_id", profile.id)
+      .gte("day", isoWeekStart(new Date()).toISOString().slice(0, 10)),
+    // "Рейтинг недели" — тот же RPC, что уже использует /leaderboard
+    // (src/lib/leaderboard.ts), просто читаем свою строку по isYou.
+    getWeeklyLeaderboard(supabase),
+    // "Дуэль с …" — самая недавняя активная дуэль, где участвует текущий
+    // пользователь (duels — единственная таблица дуэлей с открытым
+    // authenticated SELECT, см. комментарий в миграции 0050).
+    supabase
+      .from("duels")
+      .select("creator_id, opponent_id, creator_score, opponent_score, creator_initials, opponent_initials")
+      .or(`creator_id.eq.${profile.id},opponent_id.eq.${profile.id}`)
+      .eq("status", "active")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const sessions = sessionsQuery.data ?? [];
@@ -251,6 +278,19 @@ export default async function ProgressPage({
   const cardsCreated = flashcardsQuery.count ?? 0;
   const reviewLogs = reviewLogQuery.data ?? [];
   const answersGiven = reviewLogs.length;
+
+  // Progress.dc.html's top summary row.
+  const weeklyXp = (weeklyXpQuery.data ?? []).reduce((sum, row) => sum + row.xp, 0);
+  const myRank = leaderboardRows.find((row) => row.isYou)?.rank ?? null;
+  const duelView = activeDuel
+    ? {
+        isCreator: activeDuel.creator_id === profile.id,
+        myScore: activeDuel.creator_id === profile.id ? activeDuel.creator_score : activeDuel.opponent_score,
+        opponentScore: activeDuel.creator_id === profile.id ? activeDuel.opponent_score : activeDuel.creator_score,
+        opponentInitials:
+          (activeDuel.creator_id === profile.id ? activeDuel.opponent_initials : activeDuel.creator_initials) ?? "?",
+      }
+    : null;
 
   const effectiveChartDays =
     period === "all"
@@ -383,8 +423,58 @@ export default async function ProgressPage({
         </Link>
       )}
 
-      <StreakHero days={profile.streak_current} bestStreak={profile.streak_longest} />
+      {/* docs/moments/mockups/Progress.dc.html, этап 8 — верхний блок:
+          стрик+заморозки, 2x2 честных показателя недели, карта активности
+          за 5 недель, рейтинг недели + активная дуэль. */}
+      <StreakSummaryCard
+        days={profile.streak_current}
+        bestStreak={profile.streak_longest}
+        freezeAvailable={profile.streak_freeze_available}
+      />
       <WeekActivityRow activeDays={activeDaysThisWeek} />
+
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard value={knownWords ?? 0} label="Знаю слов" size="primary" />
+        <StatCard value={finishedTexts ?? 0} label="Прочитано текстов" />
+        <StatCard value={weeklyXp} label="XP за неделю" />
+        {/* "Минут за неделю" из макета не честно (activity_days.minutes
+            никогда не заполняется, см. комментарий в daily-quests.ts) —
+            заменено на реально посчитанное число повторений за неделю. */}
+        <StatCard value={reviewsThisWeek} label="Повторений за неделю" />
+      </div>
+
+      <div className={cardClassName({ className: "flex flex-col gap-2" })}>
+        <div className="flex items-baseline justify-between">
+          <p className="text-sm font-semibold">Последние 5 недель</p>
+          <p className="text-xs text-[var(--text-secondary)]">меньше → больше</p>
+        </div>
+        <FiveWeekGrid counts={activityCounts} />
+      </div>
+
+      <div className="flex gap-3">
+        <Link
+          href="/leaderboard"
+          className={cardClassName({ interactive: true, className: "focus-ring flex-1 flex-col gap-1.5" })}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Рейтинг недели</p>
+          <p className="font-display text-lg font-bold">{myRank ? `${myRank} место` : "—"}</p>
+        </Link>
+        {duelView && (
+          <Link
+            href="/duel"
+            className={cardClassName({ interactive: true, className: "focus-ring flex-1 flex-col gap-1.5" })}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+              Дуэль с {duelView.opponentInitials}
+            </p>
+            <p className="font-display text-lg font-bold">
+              <span className={duelView.myScore >= duelView.opponentScore ? "text-[var(--color-forest-text)]" : ""}>
+                {duelView.myScore} : {duelView.opponentScore}
+              </span>
+            </p>
+          </Link>
+        )}
+      </div>
 
       <div>
         <h2 className="text-h3 mb-2">Показатели</h2>

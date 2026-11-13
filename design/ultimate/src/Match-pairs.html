@@ -1,0 +1,45 @@
+<!--meta {"title":"Соедини пары"}-->
+<style>
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pairs .tile{min-height:56px;width:100%;font-size:15px;text-align:center;line-height:1.2;padding:8px 10px}
+.pairs .tile.en{font:600 17px/1.2 var(--font-read)}
+.pairs .tile.on{border-color:var(--blue-400);background:var(--blue-100);box-shadow:0 3px 0 0 rgba(var(--blue-600-rgb),.35)}
+.pairs .tile.ok{border-color:transparent;background:var(--green-100);color:var(--green-text);box-shadow:none;gap:6px}
+</style>
+<div class="app">
+<header class="lessonbar">
+  <a class="iconbtn" href="Quit-confirm.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="bar lg" role="progressbar" aria-valuenow="5" aria-valuemax="8" aria-label="Задание 5 из 8"><i style="width:62%"></i></div>
+  <span class="pill streak" style="padding:4px 10px;font-size:14px"><i class="ic ic-flame-f s16"></i>12</span>
+</header>
+<main class="body" style="padding-top:12px">
+  <p class="eyebrow">Слова · задание 5 из 8</p>
+  <h2 class="h2">Соедини слово и перевод</h2>
+  <div class="rowx between">
+    <span class="sm muted">Нажми слово, затем перевод</span>
+    <span class="badge gold"><i class="ic ic-timer s14"></i>0:42 · бонус</span>
+  </div>
+  <div class="pairs" style="margin-top:4px">
+    <button class="tile en ok" aria-disabled="true"><i class="ic ic-check s16"></i>beacon</button>
+    <button class="tile ok" aria-disabled="true">маяк, сигнальный огонь</button>
+    <button class="tile en on" aria-pressed="true">gale</button>
+    <button class="tile">убежище</button>
+    <button class="tile en">refuge</button>
+    <button class="tile">беспокойный</button>
+    <button class="tile en">restless</button>
+    <button class="tile">шторм, сильный ветер</button>
+    <button class="tile en">shore</button>
+    <button class="tile">берег</button>
+  </div>
+  <div class="card sm sunk rowx" style="margin-top:4px">
+    <i class="lex wink s40" aria-hidden="true"></i>
+    <div class="f1 sm"><b>beacon</b> — верно. Это слово из главы 3, ты встречал его дважды.</div>
+  </div>
+  <div class="grow"></div>
+  <div class="rowx between"><span class="b sm">Найдено пар</span><span class="num sm c-green">2 из 5</span></div>
+  <div class="bar" role="progressbar" aria-valuenow="2" aria-valuemax="5" aria-label="2 из 5 пар"><i style="width:40%"></i></div>
+</main>
+<footer class="dock">
+  <a class="link2" href="Fill-blank.dc.html">Пропустить задание</a>
+</footer>
+</div>

@@ -1,0 +1,35 @@
+<!--meta {"title":"Лимит Free"}-->
+<style>
+.bg{padding:54px 20px 0;display:flex;flex-direction:column;gap:12px}
+.lim-ic{width:72px;height:72px;border-radius:22px;align-self:center;display:flex;align-items:center;justify-content:center;background:var(--gold-100);color:var(--gold-text);position:relative}
+.lim-ic .lk{position:absolute;right:-6px;bottom:-6px;width:30px;height:30px;border-radius:50%;background:var(--fill-ember);color:#fff;display:flex;align-items:center;justify-content:center;border:3px solid var(--surface-overlay)}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center}
+.slot .cover{width:100%;height:58px;font-size:11px}
+</style>
+<div class="app">
+<div class="bg" aria-hidden="true">
+  <div class="rowx between"><span class="h1">Библиотека</span><span class="iconbtn box"><i class="ic ic-plus"></i></span></div>
+  <div class="field"><i class="ic ic-search faint"></i><span class="ph">Поиск по текстам</span></div>
+  <div class="card rowx"><span class="cover c-sky">THE LAST LIGHT­HOUSE</span><div class="f1"><div class="b">The Last Lighthouse</div><div class="xs faint">Глава 3 из 5</div><div class="bar sm" style="margin-top:6px"><i style="width:64%"></i></div></div></div>
+  <div class="card rowx"><span class="cover c-gold">TREASURE ISLAND</span><div class="f1"><div class="b">Treasure Island</div><div class="xs faint">B1 · 12 глав</div></div></div>
+  <div class="card rowx"><span class="cover c-teal">LOST IN LISBON</span><div class="f1"><div class="b">Lost in Lisbon</div><div class="xs faint">A2–B1</div></div></div>
+</div>
+<div class="scrim"></div>
+<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="lim-t">
+  <div class="lim-ic"><i class="ic ic-library s40"></i><span class="lk"><i class="ic ic-lock-f s16"></i></span></div>
+  <div class="center stack s4">
+    <h2 class="h2" id="lim-t">Лимит: 3 текста из 3</h2>
+    <p class="sm muted" style="margin:0">На Free в библиотеке помещается 3 текста. Чтобы добавить «Tech News Weekly», освободи место или перейди на Plus</p>
+  </div>
+  <div class="slots" aria-label="Занято 3 места из 3">
+    <div class="slot"><span class="cover c-sky">LIGHT­HOUSE</span><span class="xs faint">64%</span></div>
+    <div class="slot"><span class="cover c-gold">TREASURE</span><span class="xs faint">12%</span></div>
+    <div class="slot"><span class="cover c-teal">LISBON</span><span class="xs faint">прочитан</span></div>
+  </div>
+  <div class="rowx s8"><div class="bar ember" style="flex:1"><i style="width:100%"></i></div><span class="xs b c-orange">3/3</span></div>
+  <div class="banner"><i class="ic ic-info faint"></i><div>Удалишь прочитанный текст — слова из него останутся в «Мозге»</div></div>
+  <a class="btn b-sun" href="Paywall-offer.dc.html"><i class="ic ic-crown-f s18"></i>Открыть безлимит с Plus</a>
+  <a class="btn b-ghost" href="Library.dc.html"><i class="ic ic-trash s18"></i>Удалить «Lost in Lisbon»</a>
+</section>
+</div>

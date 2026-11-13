@@ -1,161 +1,170 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect } from "react";
+import Link from "next/link";
 import { categoryLabel } from "@/components/product/language-twin/badges";
 import type { PatternCategory } from "@/lib/language-twin/types";
-import type { PlacementResult, SelfReportedCefr } from "@/lib/placement/types";
-import type { PathRecommendationV2 } from "@/lib/learning-paths/recommendation";
-import type { PathSlug } from "@/lib/learning-paths/types";
-import { Button } from "@/components/ui/button";
+import type { PlacementRange, PlacementResult, SelfReportedCefr } from "@/lib/placement/types";
+import { Confetti } from "@/components/product/moments/confetti";
 import { Card } from "@/components/ui/card";
-import { confirmPathAction } from "./actions";
 import { track } from "@/lib/posthog-client";
 
-const PATH_META: Record<PathSlug, { title: string; kind: string }> = {
-  "a2-b1": { title: "A2 → B1", kind: "Фундамент грамматики" },
-  "b1-b2": { title: "B1 → B2", kind: "Фундамент грамматики" },
-  everyday: { title: "Everyday English", kind: "Тематический курс" },
-  "it-english": { title: "English for IT", kind: "Тематический курс" },
-};
+// Эталон: docs/moments/mockups/Placement-result.dc.html. Терминальное
+// действие онбординга теперь не Learning Path (confirmPathAction удалён —
+// он был только здесь) — путь /learning-paths полностью самодостаточен
+// (своя рекомендация в getCatalogAction, достижим из /library), поэтому
+// онбординг просто продолжается на Goal-pick. recommendPathFromPlacement
+// больше не вызывается здесь, сам файл recommendation.ts не тронут.
+const SCALE = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
+
+function highlightedLevels(range: PlacementRange): Set<string> {
+  switch (range) {
+    case "A1–A2":
+      return new Set(["A1", "A2"]);
+    case "A2–B1":
+      return new Set(["A2", "B1"]);
+    case "B1–B2":
+      return new Set(["B1", "B2"]);
+    case "B2+":
+      return new Set(["B2"]);
+  }
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={13} height={13} aria-hidden="true">
+      <path d="M5 12l5 5L20 7" fill="none" stroke="#fff" strokeWidth={3.6} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={13} height={13} aria-hidden="true">
+      <path d="M12 5v14M5 12h14" fill="none" stroke="var(--sun-text)" strokeWidth={3.4} strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export default function ResultView({
   isSkipped,
   result,
-  recommendation,
   hasConflict,
   selfReportedCefr,
 }: {
   isSkipped: boolean;
   result: PlacementResult | null;
-  recommendation: PathRecommendationV2;
   hasConflict: boolean;
   selfReportedCefr: SelfReportedCefr | null;
 }) {
-  const [showAlternative, setShowAlternative] = useState(false);
-  const [pending, setPending] = useState<PathSlug | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
   useEffect(() => {
-    track("recommended_path_viewed", { path_slug: recommendation.primary, has_alternative: recommendation.alternative !== null });
+    track("placement_result_viewed", { is_skipped: isSkipped, range: result?.range ?? null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function choose(pathSlug: PathSlug) {
-    setError(null);
-    setPending(pathSlug);
-    startTransition(async () => {
-      try {
-        await confirmPathAction(pathSlug);
-      } catch {
-        setError("Не удалось начать путь. Попробуй ещё раз.");
-        setPending(null);
-      }
-    });
-  }
-
-  const primary = PATH_META[recommendation.primary];
-  const alternative = recommendation.alternative ? PATH_META[recommendation.alternative] : null;
+  const lit = highlightedLevels(result?.range ?? "A2–B1");
+  const strong = result?.strongCategories.slice(0, 2) ?? [];
+  const weak = result?.weakCategories.slice(0, 2) ?? [];
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-6 py-10">
-      {!isSkipped && result ? (
-        <section className="flex flex-col gap-3">
-          <p className="text-sm font-medium text-[var(--text-secondary)]">Твой стартовый диапазон</p>
-          {/* forest-text-contrast-fix: text-forest -> --color-forest-text
-              (see progress/stat-card.tsx for the full contrast rationale). */}
-          <p className="text-4xl font-bold tracking-tight text-[var(--color-forest-text)]">{result.range}</p>
-
-          {hasConflict && selfReportedCefr && selfReportedCefr !== "unsure" && (
-            <Card className="px-4 py-3 text-sm text-[var(--text-secondary)]">
-              Несколько базовых навыков пока нестабильны. Перед более сложными темами стоит немного укрепить фундамент.
-            </Card>
-          )}
-
-          {(result.strongCategories.length > 0 || result.weakCategories.length > 0) && (
-            <div className="grid grid-cols-2 gap-3">
-              {result.strongCategories.length > 0 && (
-                <div>
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Уже получается</p>
-                  <ul className="flex flex-col gap-1 text-sm">
-                    {result.strongCategories.slice(0, 3).map((c) => (
-                      <li key={c}>{categoryLabel(c as PatternCategory)}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {result.weakCategories.length > 0 && (
-                <div>
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">Стоит укрепить</p>
-                  <ul className="flex flex-col gap-1 text-sm">
-                    {result.weakCategories.slice(0, 3).map((c) => (
-                      <li key={c}>{categoryLabel(c as PatternCategory)}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      ) : (
-        <section className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-[var(--text-secondary)]">Предварительная рекомендация</p>
-          <p className="text-lg">
-            Диагностику ты пропустил(а) — рекомендация ниже основана на твоей цели и само-оценке. Пройти диагностику
-            можно в любой момент позже.
-          </p>
-        </section>
-      )}
-
-      <section className="flex flex-col gap-3">
-        <p className="text-sm font-medium text-[var(--text-secondary)]">Рекомендуемый путь</p>
-        <div className="rounded-2xl border border-forest bg-forest/10 px-4 py-4">
-          <p className="text-lg font-semibold">{primary.title}</p>
-          <p className="text-sm text-[var(--text-secondary)]">{primary.kind}</p>
-          <Button variant="leaf" disabled={pending !== null} onClick={() => choose(recommendation.primary)} className="mt-3 w-full">
-            {pending === recommendation.primary ? "…" : `Выбрать «${primary.title}»`}
-          </Button>
+    <div className="onb-screen relative mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-10 pt-16 text-center">
+      {!isSkipped && result && (
+        <div className="relative mx-auto h-0 w-0" style={{ top: 90 }}>
+          <Confetti seed={13} count={26} />
         </div>
-
-        {alternative && !showAlternative && (
-          <button
-            type="button"
-            onClick={() => setShowAlternative(true)}
-            className="focus-ring self-start text-sm text-[var(--text-secondary)] underline underline-offset-2"
-          >
-            Смотреть альтернативу: {alternative.title}
-          </button>
-        )}
-
-        {alternative && showAlternative && (
-          <Card className="px-4 py-4">
-            <p className="text-lg font-semibold">{alternative.title}</p>
-            <p className="text-sm text-[var(--text-secondary)]">{alternative.kind}</p>
-            <Button
-              variant="ghost"
-              disabled={pending !== null}
-              onClick={() => choose(recommendation.alternative as PathSlug)}
-              /* forest-text-contrast-fix: text-forest measured ~1.9:1 in dark;
-                 --color-forest-text on the ghost fill clears AA (5.74:1 light,
-                 9.86:1 dark). Only the label is forest-tinted — ghost has no border. */
-              className="mt-3 w-full text-[var(--color-forest-text)]"
-            >
-              {pending === recommendation.alternative ? "…" : `Выбрать «${alternative.title}»`}
-            </Button>
-          </Card>
-        )}
-
-        <p className="text-xs text-[var(--text-secondary)]">
-          Активным может быть только один путь одновременно — другой всегда можно начать позже, прогресс первого
-          сохранится.
-        </p>
-      </section>
-
-      {error && (
-        <p role="alert" className="text-sm text-[var(--color-danger-text)]">
-          {error}
-        </p>
       )}
+
+      <div className="mo-breathe mx-auto">
+        <svg viewBox="0 0 128 150" width={96} height={112} aria-hidden="true">
+          <ellipse cx="64" cy="128" rx="34" ry="9" fill="rgba(0,0,0,0.06)" />
+          <path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="var(--leaf)" />
+          <path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="var(--leaf-tint)" opacity="0.9" />
+          <path d="M50 62q4-5 8 0M62 62q4-5 8 0" fill="none" stroke="var(--leaf-deep)" strokeWidth={2.6} strokeLinecap="round" />
+          <path d="M52 70q8 10 16 0z" fill="var(--leaf-deep)" />
+          <ellipse cx="90" cy="100" rx="19" ry="12" fill="var(--ember)" transform="rotate(-28 90 100)" />
+          <ellipse cx="94" cy="96" rx="8" ry="5" fill="var(--sun)" transform="rotate(-28 94 96)" opacity="0.85" />
+        </svg>
+      </div>
+
+      <p className="mo-rise mt-2 text-xs font-bold uppercase tracking-wide text-[var(--text-secondary)]">
+        {isSkipped ? "Диагностика пропущена" : "Мини-тест пройден"}
+      </p>
+      <h1 className="mo-rise mt-1.5 text-2xl font-black leading-tight" style={{ animationDelay: "0.1s" }}>
+        Твой уровень
+      </h1>
+
+      <div
+        className="mo-pop mx-auto mt-2.5 inline-block rounded-2xl px-5 py-2 text-4xl font-black text-white"
+        style={{ background: "var(--leaf)", boxShadow: "inset 0 -6px 0 0 var(--leaf-edge)" }}
+      >
+        {isSkipped ? (selfReportedCefr && selfReportedCefr !== "unsure" ? selfReportedCefr : "?") : result?.range}
+      </div>
+
+      <div className="mo-rise mt-5" role="img" aria-label={`Шкала уровней от A1 до C2, твой уровень ${result?.range ?? "неизвестен"}`}>
+        <div className="flex gap-1.5">
+          {SCALE.map((level) => {
+            const isLit = !isSkipped && lit.has(level);
+            return (
+              <span
+                key={level}
+                className="flex h-11 flex-1 items-center justify-center rounded-xl font-black"
+                style={
+                  isLit
+                    ? { background: "var(--leaf)", color: "#fff", boxShadow: "inset 0 -4px 0 0 var(--leaf-edge)" }
+                    : { background: "var(--surface-muted)", color: "var(--text-secondary)" }
+                }
+              >
+                {level}
+              </span>
+            );
+          })}
+        </div>
+        <div className="mt-1.5 flex justify-between text-xs font-semibold text-[var(--text-secondary)]">
+          <span>новичок</span>
+          <span>свободно</span>
+        </div>
+      </div>
+
+      {isSkipped ? (
+        <Card className="mo-rise mt-4 px-4 py-3 text-left text-sm text-[var(--text-secondary)]">
+          Диагностику ты пропустил(а) — выше показана твоя само-оценка. Пройти
+          диагностику можно в любой момент позже, из Settings.
+        </Card>
+      ) : (
+        <div className="mo-rise mt-4 rounded-[20px] border-2 border-[var(--border)] bg-[var(--surface)] px-4 py-1.5 text-left">
+          {hasConflict && selfReportedCefr && selfReportedCefr !== "unsure" && (
+            <p className="border-b border-[var(--border)] py-2 text-sm text-[var(--text-secondary)]">
+              Несколько базовых навыков пока нестабильны — перед более сложными темами стоит немного укрепить фундамент.
+            </p>
+          )}
+          {strong.map((c) => (
+            <div key={c} className="flex items-start gap-2.5 border-b border-[var(--border)] py-2 text-sm">
+              <span className="mt-0.5 flex h-[22px] w-[22px] flex-none items-center justify-center rounded-full" style={{ background: "var(--leaf)" }}>
+                <CheckIcon />
+              </span>
+              {categoryLabel(c as PatternCategory)}
+            </div>
+          ))}
+          {weak.map((c, i) => (
+            <div key={c} className={`flex items-start gap-2.5 py-2 text-sm ${i < weak.length - 1 ? "border-b border-[var(--border)]" : ""}`}>
+              <span className="mt-0.5 flex h-[22px] w-[22px] flex-none items-center justify-center rounded-full" style={{ background: "var(--sun-tint)" }}>
+                <PlusIcon />
+              </span>
+              Подтянем: {categoryLabel(c as PatternCategory)}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mo-rise mt-auto pt-6" style={{ animationDelay: "0.3s" }}>
+        <Link
+          href="/onboarding/goal"
+          className="focus-ring flex min-h-[54px] w-full items-center justify-center rounded-2xl px-5 font-bold text-white"
+          style={{ background: "var(--leaf)", boxShadow: "inset 0 -4px 0 0 var(--leaf-edge)" }}
+        >
+          Подобрать тексты под {isSkipped ? (selfReportedCefr && selfReportedCefr !== "unsure" ? selfReportedCefr : "твой уровень") : result?.range}
+        </Link>
+      </div>
     </div>
   );
 }

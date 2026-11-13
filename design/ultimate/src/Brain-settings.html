@@ -1,0 +1,38 @@
+<!--meta {"title":"Настройки повторения"}-->
+<style>
+.toggle{height:44px;padding:8px 0;background-clip:content-box}.toggle::after{top:11px}
+.step{display:flex;align-items:center;gap:4px;background:var(--surface-sunken);border-radius:14px;padding:2px}
+.step b{min-width:44px;text-align:center;font:700 16px/1 var(--font-display)}
+.step .iconbtn{width:44px;height:44px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Brain-home.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Настройки повторения</div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="banner info"><i class="ic ic-brain"></i><div><b>Как работает FSRS</b>Алгоритм следит, когда ты начинаешь забывать слово, и показывает его прямо перед этим. Чем лучше помнишь — тем реже повтор.</div></div>
+  <div class="sect"><p class="eyebrow">Нагрузка</p></div>
+  <div class="list">
+    <div class="row"><div class="f1"><div class="t">Новых в день</div><div class="s">+≈3 мин к повтору</div></div>
+      <div class="step"><button class="iconbtn" aria-label="Меньше"><i class="ic ic-minus"></i></button><b>10</b><button class="iconbtn" aria-label="Больше"><i class="ic ic-plus"></i></button></div></div>
+    <div class="row"><div class="f1"><div class="t">Лимит повторений</div><div class="s">лишние — на завтра</div></div>
+      <div class="step"><button class="iconbtn" aria-label="Меньше"><i class="ic ic-minus"></i></button><b>100</b><button class="iconbtn" aria-label="Больше"><i class="ic ic-plus"></i></button></div></div>
+  </div>
+  <div class="sect"><p class="eyebrow">Желаемое удержание</p><span class="xs faint">выше — чаще повторы</span></div>
+  <div class="seg" role="radiogroup"><button role="radio">85%</button><button class="on" role="radio" aria-checked="true">90%</button><button role="radio">95%</button></div>
+  <p class="hint" style="margin-top:-4px">При 90% — около 41 повторения в день. При 95% будет примерно 68.</p>
+  <div class="sect"><p class="eyebrow">Порядок карточек</p></div>
+  <div class="seg" role="radiogroup"><button class="on" role="radio" aria-checked="true">Старые</button><button role="radio">Вперемешку</button><button role="radio">Новые</button></div>
+  <div class="sect"><p class="eyebrow">Карточка</p></div>
+  <div class="list">
+    <div class="row"><span class="sw blue"><i class="ic ic-volume"></i></span><div class="f1"><div class="t">Автоозвучка слова</div><div class="s">при показе лицевой стороны</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Автоозвучка слова"></button></div>
+    <div class="row"><span class="sw blue"><i class="ic ic-quote"></i></span><div class="f1"><div class="t">Контекст на лицевой стороне</div><div class="s">фраза из текста с пропуском</div></div><button class="toggle on" role="switch" aria-checked="true" aria-label="Контекст на лицевой стороне"></button></div>
+    <div class="row"><span class="sw"><i class="ic ic-swap"></i></span><div class="f1"><div class="t">Обратные карточки</div><div class="s">русский → английский</div></div><button class="toggle" role="switch" aria-checked="false" aria-label="Обратные карточки"></button></div>
+  </div>
+  <div class="list">
+    <a class="row" href="Data-privacy.dc.html"><span class="sw green"><i class="ic ic-download"></i></span><div class="f1"><div class="t">Экспорт словаря в CSV</div><div class="s">842 слова · с примерами и статусом</div></div><i class="ic ic-chev s18 faint"></i></a>
+  </div>
+</main>
+</div>

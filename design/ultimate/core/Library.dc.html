@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>LexReader — Библиотека (концепт)</title></head>
+<body>
+<x-dc>
+<helmet>
+<script src="theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&display=swap">
+<style>
+body{margin:0;background:var(--paper-200)}
+a{color:var(--green-500)}a:hover{color:var(--green-text)}
+.app{width:390px;height:844px;position:relative;overflow:hidden;background:var(--paper-50);color:var(--ink-900);font-family:Onest,system-ui,sans-serif;box-sizing:border-box}
+.app *{box-sizing:border-box}
+.disp{font-family:Unbounded,Onest,sans-serif}
+.muted{color:rgba(var(--ink-rgb),.68)}
+.ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.card{background:var(--paper-0);border:2px solid rgba(var(--ink-rgb),.18);border-radius:18px}
+.addbtn{display:flex;align-items:center;gap:5px;padding:9px 14px 9px 11px;border-radius:999px;border:0;background:var(--fill-leaf);color:#fff;font:700 13px/1 Onest,sans-serif;box-shadow:inset 0 -3px 0 0 var(--fill-leaf-edge);cursor:pointer}
+.search{display:flex;align-items:center;gap:10px;margin:14px 16px 0;padding:11px 14px;border-radius:14px;background:var(--paper-0);border:2px solid rgba(var(--ink-rgb),.14);color:rgba(var(--ink-rgb),.62);font-size:14px}
+.eyebrow{padding:0 20px;margin:20px 0 8px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(var(--ink-rgb),.62)}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:0 16px 8px;position:relative}
+.cover{width:42px;height:54px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff}
+.meta{flex:1;min-width:0}
+.ttl{font-weight:700;font-size:14.5px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{display:flex;align-items:center;gap:5px;font-size:12px;margin-top:3px;color:rgba(var(--ink-rgb),.6)}
+.bar{height:5px;border-radius:99px;background:var(--paper-100);margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--fill-leaf)}
+.pct{font-size:12px;font-weight:700;color:rgba(var(--ink-rgb),.62);flex:none;min-width:30px;text-align:right}
+.done-tag{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--green-500)}
+.stats{display:flex;gap:10px;margin:12px 16px 0}
+.stat{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-size:19px;font-weight:800}
+.stat span{font-size:12px;color:rgba(var(--ink-rgb),.6)}
+.chips{display:flex;gap:8px;margin:16px 0 0;padding:0 20px;overflow-x:auto}
+.chip{flex:none;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:2px solid rgba(var(--ink-rgb),.14);background:var(--paper-0);font:700 13px/1 Onest,sans-serif;color:rgba(var(--ink-rgb),.6);white-space:nowrap}
+.chip.on{border-color:var(--green-400);background:var(--green-100);color:var(--green-text)}
+.feat-scroll{display:flex;gap:12px;margin-top:10px;padding:0 20px;overflow-x:auto}
+.feat-card{flex:none;width:118px;text-decoration:none;color:inherit}
+.feat-cover{width:118px;height:150px;border-radius:12px;display:flex;align-items:flex-end;padding:9px;color:#fff;font:700 11px/1.2 Unbounded,sans-serif;box-shadow:inset 0 -30px 24px -10px rgba(0,0,0,.35)}
+.feat-lvl{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--paper-100);color:rgba(var(--ink-rgb),.7)}
+.feat-ttl{font-size:12.5px;font-weight:700;margin-top:6px;line-height:1.25}
+.scroll{position:absolute;inset:0 0 84px 0;overflow-y:auto}
+.chips,.feat-scroll{position:relative}
+.fade-r{position:relative}
+.fade-r::after{content:"";position:absolute;right:0;top:0;bottom:0;width:28px;background:linear-gradient(90deg,transparent,var(--paper-50));pointer-events:none}
+.tabbar{position:absolute;left:16px;right:16px;bottom:16px;display:flex;background:var(--paper-0);border:2px solid rgba(var(--ink-rgb),.18);border-radius:20px;padding:6px 4px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;font:600 11px/1 Onest,sans-serif;color:rgba(var(--ink-rgb),.68);text-decoration:none;background:none;border:0;border-radius:14px;cursor:pointer}
+.tab .ico{width:24px;height:24px}
+.tab.on{color:var(--ink-900);background:var(--green-100)}
+.tab.on .ico{color:var(--green-500)}
+</style>
+<link rel="stylesheet" href="design-system.css">
+</helmet>
+<div class="app">
+<div class="scroll">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 56px 20px 0">
+  <div class="disp" style="font-size: 22px; font-weight: 700">Библиотека</div>
+  <a class="addbtn" href="Import-hub.dc.html" style="min-height:40px;text-decoration:none"><svg class="ico" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke-width: 3"><path d="M12 5v14M5 12h14"></path></svg>Добавить</a>
+</div>
+<div class="stats">
+  <a class="card stat" href="Words-learned.dc.html" style="text-decoration:none;color:inherit"><b>816</b><span>слов знаешь</span></a>
+  <a class="card stat" href="Collections.dc.html" style="text-decoration:none;color:inherit"><b>4</b><span>текста в библиотеке</span></a>
+</div>
+
+<div class="search">
+  <svg class="ico" viewBox="0 0 24 24" style="width: 18px; height: 18px"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+  Поиск по библиотеке
+</div>
+
+<div class="fade-r">
+<div class="chips" role="tablist" aria-label="Темы">
+  <span class="chip on" role="tab" aria-selected="true">Всё</span>
+  <span class="chip" role="tab" aria-selected="false"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.5 4 6 4 9s-1.5 6.5-4 9c-2.5-2.5-4-6-4-9s1.5-6.5 4-9z"></path></svg> Путешествия</span>
+  <span class="chip" role="tab" aria-selected="false"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><rect x="4" y="4" width="16" height="11" rx="1.5"></rect><path d="M2 19h20"></path></svg> Технологии</span>
+  <span class="chip" role="tab" aria-selected="false"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><path d="M12 3l2.6 5.8 6.2.6-4.7 4.2 1.4 6.2L12 16.9 6.5 19.8l1.4-6.2-4.7-4.2 6.2-.6z"></path></svg> Культура</span>
+  <span class="chip" role="tab" aria-selected="false"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8 9h8M8 13h8M8 17h5"></path></svg> Новости</span>
+</div>
+</div>
+
+<div class="eyebrow" style="margin-top: 18px">Подборка для тебя · B1</div>
+<div class="fade-r">
+<div class="feat-scroll">
+  <a href="Text-detail.dc.html" class="feat-card">
+    <div class="feat-cover" style="background: linear-gradient(180deg, transparent 40%, #000), var(--blue-500)">Treasure Island</div>
+    <span class="feat-lvl">B1</span>
+    <div class="feat-ttl">Treasure Island</div>
+  </a>
+  <a href="Text-detail.dc.html" class="feat-card">
+    <div class="feat-cover" style="background: linear-gradient(180deg, transparent 40%, #000), var(--gold-600)">Travel English Basics</div>
+    <span class="feat-lvl">A2–B1</span>
+    <div class="feat-ttl">Travel English Basics</div>
+  </a>
+  <a href="Text-detail.dc.html" class="feat-card">
+    <div class="feat-cover" style="background: linear-gradient(180deg, transparent 40%, #000), var(--green-600)">Tech News Weekly</div>
+    <span class="feat-lvl">B1–B2</span>
+    <div class="feat-ttl">Tech News Weekly</div>
+  </a>
+</div>
+</div>
+
+<div class="eyebrow">Читаю сейчас</div>
+
+<a href="Reader.dc.html" class="card row" style="text-decoration: none; color: inherit">
+  <div class="cover" style="background: var(--fill-sky); align-items: flex-end; padding: 6px; font: 700 8px/1.1 Unbounded, sans-serif" aria-hidden="true">THE LAST LIGHT­HOUSE</div>
+  <div class="meta">
+    <div class="ttl">The Last Lighthouse</div>
+    <div class="sub"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg> Текст · глава 3 из 5</div>
+    <div class="bar"><i style="width: 64%"></i></div>
+  </div>
+  <div class="pct">64%</div>
+</a>
+
+<a href="Watch.dc.html" class="card row" style="text-decoration: none; color: inherit">
+  <div class="cover" style="background: var(--ink-900)" aria-hidden="true">
+    <svg class="ico" viewBox="0 0 24 24" style="width: 20px; height: 20px; color: #fff; stroke-width: 2.4"><path d="M8 5v14l11-7z" fill="#fff" stroke="none"></path></svg>
+  </div>
+  <div class="meta">
+    <div class="ttl">Life in London</div>
+    <div class="sub"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><path d="M8 5l11 7-11 7z"></path></svg> Видео · 6 мин осталось</div>
+    <div class="bar"><i style="width: 30%; background: var(--ink-900)"></i></div>
+  </div>
+  <div class="pct">30%</div>
+</a>
+
+<div class="eyebrow">Моя библиотека</div>
+
+<div class="card row">
+  <div class="cover" style="background: var(--gold-500); align-items: flex-end; padding: 6px; font: 700 8px/1.1 Unbounded, sans-serif; color: #4d3800" aria-hidden="true">ROBINSON CRUSOE</div>
+  <div class="meta">
+    <div class="ttl">Robinson Crusoe — Ch. 1</div>
+    <div class="sub"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg> Текст · добавил сам · 23 апр</div>
+  </div>
+  <div class="done-tag"><svg class="ico" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke-width: 3"><path d="M5 12l5 5L20 7"></path></svg>Готово</div>
+</div>
+
+<div class="card row">
+  <div class="cover" style="background: var(--ink-900)" aria-hidden="true">
+    <svg class="ico" viewBox="0 0 24 24" style="width: 20px; height: 20px; color: #fff; stroke-width: 2.4"><path d="M8 5v14l11-7z" fill="#fff" stroke="none"></path></svg>
+  </div>
+  <div class="meta">
+    <div class="ttl">Videos about language</div>
+    <div class="sub"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><path d="M8 5l11 7-11 7z"></path></svg> Видео · серия · 4 части</div>
+  </div>
+  <svg class="ico" viewBox="0 0 24 24" style="width: 18px; height: 18px; color:rgba(var(--ink-rgb),.62)"><path d="M9 18l6-6-6-6"></path></svg>
+</div>
+
+<div class="card row">
+  <div class="cover" style="background: var(--fill-leaf); align-items: flex-end; padding: 6px; font: 700 8px/1.1 Unbounded, sans-serif" aria-hidden="true">WELCOME</div>
+  <div class="meta">
+    <div class="ttl">Welcome to LexReader!</div>
+    <div class="sub"><svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg> Текст · стартовый · 5 апр</div>
+  </div>
+  <div class="done-tag"><svg class="ico" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke-width: 3"><path d="M5 12l5 5L20 7"></path></svg>Готово</div>
+</div>
+
+<div style="height: 12px"></div>
+</div>
+
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab" href="Main.dc.html"><svg class="ico" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Сегодня</a>
+  <a class="tab on" href="Library.dc.html" aria-current="page"><svg class="ico" viewBox="0 0 24 24"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"></path><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"></path></svg>Библиотека</a>
+  <a class="tab" href="Brain-home.dc.html"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="14" rx="2"></rect><path d="M7 2h12a2 2 0 0 1 2 2v12"></path></svg>Практика</a>
+  <a class="tab" href="Progress.dc.html"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>Прогресс</a>
+  <a class="tab" href="Profile.dc.html"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>Профиль</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

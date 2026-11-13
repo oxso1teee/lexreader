@@ -43,6 +43,10 @@
   /* Border */
   --border: rgba(26, 26, 26, 0.1);
   --border-strong: rgba(26, 26, 26, 0.18);
+  /* Граница интерактивных контролов (поле, чекбокс, трек переключателя):
+     WCAG 1.4.11 требует 3:1 к фону; --border-strong (0.18) для этого слишком
+     бледная, она — для карточек и разделителей. */
+  --border-input: rgba(26, 26, 26, 0.5);
 
   /* Raw palette primitives (redesign/duolingo-flat) — exact values from
      the approved direction brief. Two-layer token architecture: these are
@@ -84,12 +88,12 @@
   --sky: #1cb0f6;
   --sky-edge: #1a94ce;
   --sky-tint: #ddf4ff;
-  --sky-text: #0c7c9c;
+  --sky-text: #0b7391;
 
   --ember: #ff9500;
   --ember-edge: #db7a00;
   --ember-tint: #ffe8c2;
-  --ember-text: #c2410c;
+  --ember-text: #b23a08;
 
   --sun: #ffc700;
   --sun-edge: #e0a500;
@@ -156,14 +160,76 @@
   --container-sidebar: 240px;
   --container-sidebar-compact: 72px;
   --container-dashboard: 1280px;
+  /* Phase 1 (Ultimate Design System bridge). Ширина контента страницы:
+     reading — формы/читалка/настройки (одна колонка), content — списки и
+     дашборды средней плотности, wide = --container-dashboard. */
+  --container-reading: 40rem;
+  --container-content: 56rem;
+
+  /* ---- Ultimate Design System → app: недостающие семантические слои ----
+     Полная таблица соответствия «токен макета → токен приложения» живёт в
+     src/lib/ui/token-map.ts (её читает тест) и в
+     docs/product/lexreader-foundation-implementation.md. Принцип: словарь
+     приложения (--leaf/--sky/--ember/--sun/--danger, --surface*, --border*,
+     --text-secondary) остаётся ЕДИНСТВЕННЫМ; --paper-N, --ink-N и --green-N
+     макетов в приложение не переносятся, у каждого есть семантический
+     эквивалент ниже или выше по файлу.
+
+     -fill — заливка под БЕЛЫЙ текст (кнопка, плашка, hero). В отличие от
+     базового --sky/--ember (яркие, нужны для иконок, рамок, графиков и
+     «тёмной» подсветки) -fill остаётся глубоким в обеих темах: белый на
+     #1cb0f6 даёт ~2.4:1, на #0b79b0 — 5.1:1. Для --leaf и --danger это
+     уже было сделано раньше (см. «phase 8/9 fix» выше), поэтому отдельных
+     -fill у них нет — --leaf и --danger и есть заливки. */
+  --sky-fill: #0b79b0;
+  --sky-fill-edge: #075a85;
+  --ember-fill: #c2410c;
+  --ember-fill-edge: #9a330a;
+  /* ink — «ИИ / planned»: тёмно-зелёная заливка + жёлтый акцент. */
+  --ink-fill: #1f2a22;
+  --ink-fill-edge: #0f1611;
+  --ink-fill-text: #ffd43d;
+
+  /* Ступени текста: secondary (подписи, 0.68 — axe-проверено выше),
+     tertiary (мета-информация, подсказки), disabled (не читаемый
+     контент — исключён из проверки контраста по WCAG 1.4.3). */
+  --text-tertiary: rgba(26, 26, 26, 0.64);
+  --text-disabled: rgba(26, 26, 26, 0.4);
+  --surface-sunken: var(--surface-muted);
+
+  /* Тени — только у плавающих слоёв (диалог, меню, toast, tooltip).
+     Карточки остаются плоскими (рамка 2px), нажимаемое — нижняя кромка. */
+  --shadow-float: 0 2px 4px rgba(26, 22, 14, 0.08), 0 16px 32px -12px rgba(26, 22, 14, 0.24);
+  --shadow-sheet: 0 -8px 40px -8px rgba(26, 22, 14, 0.28);
+  --scrim: rgba(26, 22, 14, 0.48);
+
+  /* Форма: радиусы по роли. Tailwind-шкала rounded-* не трогается (её
+     используют ~сотни существующих классов) — роль даёт новые утилиты
+     rounded-control/-btn/-card/-sheet. */
+  --radius-control: 12px;
+  --radius-btn: 16px;
+  --radius-card: 20px;
+  --radius-sheet: 28px;
+
+  /* Движение и слои. */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1.3);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 350ms;
+  --z-nav: 10;
+  --z-sheet: 20;
+  --z-modal: 30;
+  --z-toast: 40;
 }
 
 :root[data-theme="dark"] {
-  --surface-elevated: #262330;
-  --surface-muted: #1c1a24;
-  --text-secondary: rgba(240, 236, 227, 0.68);
-  --border: rgba(240, 236, 227, 0.12);
-  --border-strong: rgba(240, 236, 227, 0.22);
+  --surface-elevated: #26262d;
+  --surface-muted: #23232a;
+  --text-secondary: rgba(243, 241, 236, 0.74);
+  --border: rgba(243, 241, 236, 0.12);
+  --border-strong: rgba(243, 241, 236, 0.22);
+  --border-input: rgba(243, 241, 236, 0.5);
 
   /* Dark-mode primitives — brighter/cleaner than their light counterparts
      (same "readable against a dark surface" logic already used by the old
@@ -205,6 +271,26 @@
   --danger-edge: #d11f1f;
   --danger-tint: #3a1414;
   --danger-text: #f87171;
+
+  /* Ultimate Design System: нейтральная тёмная лестница поверхностей
+     (app #131316 → card #1c1c20 → muted #23232a → elevated #26262d)
+     вместо прежней тёплой/фиолетовой (#14120f/#201d29) — отдельная
+     система, не инверсия светлой. --background/--card заданы в
+     globals.css. */
+  --sky-fill: #1479ad;
+  --sky-fill-edge: #0a557c;
+  --ember-fill: #c2410c;
+  --ember-fill-edge: #8f2f08;
+  --ink-fill: #24352a;
+  --ink-fill-edge: #111a14;
+  /* Светлее базового --color-accent-blue: на тёмных поверхностях #2563eb даёт
+     ~3.3:1, #60a5fa — 6.7:1. */
+  --focus-ring: #60a5fa;
+  --text-tertiary: rgba(243, 241, 236, 0.64);
+  --text-disabled: rgba(243, 241, 236, 0.4);
+  --shadow-float: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 32px -12px rgba(0, 0, 0, 0.7);
+  --shadow-sheet: 0 -8px 40px -8px rgba(0, 0, 0, 0.7);
+  --scrim: rgba(0, 0, 0, 0.62);
 }
 
 @theme inline {
@@ -214,6 +300,7 @@
   --color-text-secondary: var(--text-secondary);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-border-input: var(--border-input);
   --color-primary: var(--color-primary);
   --color-primary-foreground: var(--color-primary-foreground);
   --color-success: var(--color-success);
@@ -240,6 +327,18 @@
   --color-sun-edge: var(--sun-edge);
   --color-sun-tint: var(--sun-tint);
   --color-sun-text: var(--sun-text);
+  --color-sky-fill: var(--sky-fill);
+  --color-ember-fill: var(--ember-fill);
+  --color-ink-fill: var(--ink-fill);
+  --color-ink-fill-text: var(--ink-fill-text);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-text-tertiary: var(--text-tertiary);
+  --radius-control: var(--radius-control);
+  --radius-btn: var(--radius-btn);
+  --radius-card: var(--radius-card);
+  --radius-sheet: var(--radius-sheet);
+  --shadow-float: var(--shadow-float);
+  --shadow-sheet: var(--shadow-sheet);
   /* Reader mockup alignment — отдельный токен для ТЕЛА читаемого текста.
      Самореференсный алиас (--font-reading: var(--font-reading)) —
      next/font/google подключает Source Serif 4 scoped внутри

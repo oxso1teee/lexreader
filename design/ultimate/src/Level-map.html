@@ -1,0 +1,65 @@
+<!--meta {"title":"Карта уровней"}-->
+<style>
+.app .rowx.top{padding:0;flex:initial}
+.lvl{display:flex;gap:14px;align-items:stretch}
+.lvl .rail{display:flex;flex-direction:column;align-items:center;flex:none;width:56px}
+.lvl .rail::after{content:"";flex:1;width:4px;border-radius:2px;background:var(--green-400);margin-top:6px;min-height:14px}
+.lvl.last .rail::after{display:none}
+.lvl.fut .rail::after{background:var(--paper-300)}
+.lvl.cur .rail::after{background:linear-gradient(var(--green-400) 64%,var(--paper-300) 64%)}
+.bdg{width:56px;height:56px;border-radius:18px;display:flex;align-items:center;justify-content:center;font:700 18px/1 var(--font-display)}
+.bdg.done{background:var(--fill-leaf);color:#fff;box-shadow:inset 0 -4px 0 0 var(--fill-leaf-edge)}
+.bdg.cur{background:var(--fill-sky);color:#fff;box-shadow:inset 0 -4px 0 0 var(--fill-sky-edge),0 0 0 4px var(--blue-100)}
+.bdg.fut{background:var(--surface-sunken);color:var(--text-3)}
+.lvl .f1{padding-bottom:14px}
+.off{background:var(--surface-sunken);border-color:transparent;color:var(--text-2)}
+.off .xs,.off .s{color:var(--text-2)}
+.lvl.off{background:none}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Progress.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Карта уровней<small>CEFR · от A1 до C1</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="lvl">
+    <div class="rail"><span class="bdg done">A1</span></div>
+    <div class="f1"><div class="rowx between"><span class="h3">Начальный</span><span class="badge green">100%</span></div><div class="xs faint">Пройден по тесту уровня · март</div></div>
+  </div>
+  <div class="lvl">
+    <div class="rail"><span class="bdg done">A2</span></div>
+    <div class="f1"><div class="rowx between"><span class="h3">Элементарный</span><span class="badge green">100%</span></div><div class="xs faint">Пройден · 2 раздела, 18 навыков</div></div>
+  </div>
+  <div class="lvl cur">
+    <div class="rail"><span class="bdg cur">B1</span></div>
+    <div class="f1">
+      <section class="card t-blue" style="padding:14px">
+        <div class="rowx between"><span class="h3">Средний · ты здесь</span><span class="num sm c-blue">64%</span></div>
+        <div class="bar blue" style="margin-top:8px"><i style="width:64%"></i></div>
+        <p class="xs b c-blue" style="margin:12px 0 6px;text-transform:uppercase;letter-spacing:.06em">Что умеешь на B1</p>
+        <div class="stack s4 sm">
+          <div class="rowx s8 top"><i class="ic ic-check s16 c-green" style="margin-top:2px"></i><span>Читать адаптированные книги — «The Last Lighthouse»</span></div>
+          <div class="rowx s8 top"><i class="ic ic-check s16 c-green" style="margin-top:2px"></i><span>Рассказывать о поездках в прошедшем времени</span></div>
+          <div class="rowx s8 top"><i class="ic ic-check s16 c-green" style="margin-top:2px"></i><span>Понимать видео с субтитрами — «Life in London»</span></div>
+        </div>
+        <div class="card sm rowx" style="margin-top:12px">
+          <span class="sw blue sm"><i class="ic ic-cards s18"></i></span>
+          <div class="f1 sm"><b>842</b> слова · до B2 ещё <b style="white-space:nowrap">~1&nbsp;160</b></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div class="lvl fut off">
+    <div class="rail"><span class="bdg fut">B2</span></div>
+    <div class="f1"><div class="rowx between"><span class="h3">Выше среднего</span><i class="ic ic-lock faint s18"></i></div><div class="xs faint">Свободное чтение новостей и сериалов · ~2 000 слов</div></div>
+  </div>
+  <div class="lvl fut last off">
+    <div class="rail"><span class="bdg fut">C1</span></div>
+    <div class="f1"><div class="rowx between"><span class="h3">Продвинутый</span><i class="ic ic-lock faint s18"></i></div><div class="xs faint">Оригинальная литература и работа на английском</div></div>
+  </div>
+</main>
+<footer class="dock line">
+  <a class="btn b-ghost" href="Placement-question.dc.html"><i class="ic ic-refresh s18"></i>Пересдать тест уровня</a>
+</footer>
+</div>

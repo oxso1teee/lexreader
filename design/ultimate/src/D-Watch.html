@@ -1,0 +1,99 @@
+<!--meta {"title":"Видео · desktop","w":1280,"h":800}-->
+<style>
+.dhead{display:flex;align-items:center;gap:12px;padding:20px 28px 0;flex:none}
+.wgrid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;padding:16px 28px 24px}
+.vcol{display:flex;flex-direction:column;gap:14px;min-width:0}
+.player{aspect-ratio:16/9;border-radius:var(--r-lg);overflow:hidden;position:relative;background:linear-gradient(160deg,var(--fill-sky-edge),var(--fill-ink) 70%);color:#fff;display:flex;flex-direction:column;justify-content:flex-end}
+.scene{position:absolute;inset:0}
+.ctrl{position:relative;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,0,0,.55)}
+.ctrl .iconbtn{color:#fff}
+.ctrl .bar{flex:1;background:rgba(255,255,255,.3)}
+.sub{font:500 24px/1.45 var(--font-read);text-align:center;padding:16px 24px}
+.sub .w{border-radius:6px;padding:0 4px;cursor:pointer}
+.tr{background:var(--surface-card);border:var(--stroke);border-radius:var(--r-lg);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.tr .lines{flex:1;overflow-y:auto;scrollbar-width:none;padding:4px 8px}
+.tr .lines::-webkit-scrollbar{display:none}
+.ln{display:flex;gap:10px;padding:9px 8px;border-radius:12px;min-height:44px}
+.ln .tc{font:600 12px/1.6 var(--font-mono);color:var(--text-3);flex:none;width:40px}
+.ln p{margin:0;font:400 14.5px/1.5 var(--font-read)}
+.ln.cur{background:var(--green-100)}
+.ln.cur .tc{color:var(--green-text)}
+.kbd{font:700 11px/1 var(--font-mono);padding:4px 6px;border-radius:6px;border:var(--stroke-soft);background:var(--surface-sunken);color:var(--text-2)}
+.sidecard{box-shadow:none}
+</style>
+<div class="app desk">
+<aside class="side" aria-label="Основная навигация">
+  <div class="logo"><i class="lex happy s40"></i>LexReader</div>
+  <a href="D-Today.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="on" aria-current="page" href="D-Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a href="D-Practice.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a href="D-Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a href="D-Settings.dc.html"><i class="ic ic-user"></i>Профиль</a>
+  <div class="card sm mta sidecard">
+    <div class="rowx s8"><span class="sw s-ember sm"><i class="ic ic-flame-f s18"></i></span><div class="f1"><div class="b sm">12 дней подряд</div><div class="xs faint">рекорд 21 · 1 заморозка</div></div></div>
+    <div class="rowx between" style="margin-top:10px"><span class="xs muted">Сегодня 30 / 50 XP</span><span class="xs b c-gold">1 240 XP</span></div>
+    <div class="bar sm gold" style="margin-top:6px"><i style="width:60%"></i></div>
+  </div>
+</aside>
+<div class="main">
+  <header class="dhead">
+    <a class="iconbtn box" href="D-Library.dc.html" aria-label="Назад в библиотеку"><i class="ic ic-back"></i></a>
+    <div class="f1"><div class="crumbs">Библиотека <i class="ic ic-chev s14"></i> Видео</div><div class="h2" style="margin-top:4px">Life in London</div></div>
+    <span class="cefr">B1</span><span class="badge blue"><i class="ic ic-subtitles s14"></i>Субтитры EN · RU</span>
+    <a class="btn b-ghost sm fit" href="Share-card.dc.html"><i class="ic ic-share2 s18"></i>Поделиться</a>
+  </header>
+  <div class="wgrid">
+    <section class="vcol">
+      <div class="player" role="img" aria-label="Кадр видео: улица Лондона, автобус">
+        <svg class="scene" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect x="40" y="120" width="70" height="200" fill="rgba(255,255,255,.10)"/><rect x="120" y="80" width="90" height="240" fill="rgba(255,255,255,.14)"/><rect x="225" y="150" width="60" height="170" fill="rgba(255,255,255,.08)"/>
+          <rect x="300" y="60" width="26" height="260" fill="rgba(255,255,255,.18)"/><polygon points="300,60 313,30 326,60" fill="rgba(255,255,255,.18)"/><circle cx="313" cy="95" r="10" fill="rgba(255,213,61,.7)"/>
+          <rect x="430" y="110" width="110" height="210" fill="rgba(255,255,255,.12)"/><rect x="550" y="140" width="70" height="180" fill="rgba(255,255,255,.08)"/>
+          <rect x="350" y="230" width="170" height="78" rx="12" fill="rgba(212,40,40,.85)"/><rect x="362" y="242" width="146" height="24" rx="4" fill="rgba(255,255,255,.55)"/><circle cx="385" cy="312" r="11" fill="rgba(0,0,0,.6)"/><circle cx="485" cy="312" r="11" fill="rgba(0,0,0,.6)"/>
+          <rect x="0" y="318" width="640" height="42" fill="rgba(0,0,0,.35)"/>
+        </svg>
+        <div class="ctrl">
+          <button class="iconbtn" aria-label="Пауза"><i class="ic ic-pause s24"></i></button>
+          <button class="iconbtn" aria-label="Назад на 5 секунд"><i class="ic ic-undo"></i></button>
+          <span class="sm b" style="color:#fff">2:41 / 8:30</span>
+          <div class="bar sm" role="progressbar" aria-label="Просмотрено 30%"><i style="width:32%;background:var(--green-400)"></i></div>
+          <span class="badge ink">0.9×</span>
+          <button class="iconbtn" aria-label="Громкость"><i class="ic ic-volume"></i></button>
+          <button class="iconbtn" aria-label="На весь экран"><i class="ic ic-external"></i></button>
+        </div>
+      </div>
+      <div class="card" style="padding:0">
+        <p class="sub">Most Londoners would never <span class="w hl">commute</span> by car — the Tube is <span class="w hl-b">crowded</span>, but it’s <span class="w hl-g">reliable</span>.</p>
+        <div class="rowx between" style="padding:10px 16px;border-top:var(--stroke-soft)">
+          <span class="sm muted">Большинство лондонцев никогда не ездят на работу на машине — метро переполнено, но надёжно.</span>
+        </div>
+      </div>
+      <div class="rowx between">
+        <span class="xs faint rowx s8" style="white-space:nowrap"><span class="kbd">Пробел</span> пауза <span class="kbd">←</span><span class="kbd">→</span> реплика <span class="kbd">R</span> повтор</span>
+        <a class="btn b-leaf sm fit" href="Chapter-done.dc.html" style="min-width:200px">Завершить просмотр</a>
+      </div>
+    </section>
+    <aside class="tr" aria-label="Расшифровка">
+      <div style="padding:14px 14px 8px">
+        <div class="rowx between"><div class="h3">Расшифровка</div><span class="xs faint">64 реплики</span></div>
+        <div class="field" style="min-height:44px;margin-top:10px"><i class="ic ic-search s18 faint"></i><span class="ph sm">Найти в расшифровке</span></div>
+      </div>
+      <div class="lines">
+        <div class="ln"><span class="tc">2:18</span><p>London wakes up early, long before the shops open.</p></div>
+        <div class="ln"><span class="tc">2:24</span><p>By seven, the streets are already full of people.</p></div>
+        <div class="ln"><span class="tc">2:31</span><p>Some of them have travelled for over an hour.</p></div>
+        <div class="ln cur" aria-current="true"><span class="tc">2:38</span><p>Most Londoners would never <b>commute</b> by car — the Tube is crowded, but it’s reliable.</p></div>
+        <div class="ln"><span class="tc">2:46</span><p>A monthly pass costs more than in most cities.</p></div>
+        <div class="ln"><span class="tc">2:52</span><p>Still, people say they can’t imagine living anywhere else.</p></div>
+        <div class="ln"><span class="tc">2:59</span><p>On weekends, the parks become the city’s living room.</p></div>
+        <div class="ln"><span class="tc">3:06</span><p>Families bring picnics, even when the weather is grey.</p></div>
+      </div>
+      <a class="rowx" href="Deck-detail.dc.html" style="padding:12px 14px;border-top:var(--stroke-soft);min-height:56px">
+        <span class="sw blue sm"><i class="ic ic-cards s18"></i></span>
+        <div class="f1"><div class="b sm">Сохранено 4 слова</div><div class="xs faint">commute, crowded, reliable, pass</div></div>
+        <i class="ic ic-chev faint"></i>
+      </a>
+    </aside>
+  </div>
+</div>
+</div>

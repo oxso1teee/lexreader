@@ -1,0 +1,57 @@
+<!--meta {"title":"Каталог материалов","planned":true}-->
+<style>
+.app .topic{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;min-height:112px;border-radius:var(--r-lg);padding:14px;color:#fff;overflow:hidden;box-shadow:inset 0 -5px 0 0 rgba(0,0,0,.22)}
+.topic .sw{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.2);color:#fff}
+.topic b{font:700 15px/1.2 var(--font-display)}
+.topic span{font:600 12px/1.2 var(--font-body)}
+.app .topic.fill-sun{color:var(--fill-ink)}.topic.fill-sun .sw{background:rgba(0,0,0,.14);color:var(--fill-ink)}
+.pop{width:124px}
+.pop .cover{width:124px;height:150px;font-size:13px;padding:10px;border-radius:14px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Library.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Каталог<small>готовые материалы под твой уровень</small></div>
+  <a class="iconbtn" href="Collections.dc.html" aria-label="Мои коллекции"><i class="ic ic-folder s24"></i></a>
+</header>
+<main class="body">
+  <a class="field" href="Search-results.dc.html" aria-label="Поиск по каталогу"><i class="ic ic-search faint"></i><span class="ph">Название, автор или тема</span></a>
+  <div class="seg" role="tablist" aria-label="Формат">
+    <span class="on" role="tab" aria-selected="true">Все</span><span role="tab">Тексты</span><span role="tab">Видео</span>
+  </div>
+  <div class="hscroll" aria-label="Уровень">
+    <span class="chip">A1</span><span class="chip">A2</span><span class="chip on"><i class="ic ic-check s16"></i>B1</span><span class="chip">B2</span><span class="chip">C1</span>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Темы</p><span class="xs faint">128 материалов</span></div>
+  <div class="grid2">
+    <a class="topic fill-sky" href="Genre.dc.html"><span class="sw sm"><i class="ic ic-compass s18"></i></span><b>Путешествия</b><span>24 материала</span></a>
+    <a class="topic fill-ink" href="Genre.dc.html"><span class="sw sm"><i class="ic ic-laptop s18"></i></span><b>Технологии</b><span>19 материалов</span></a>
+    <a class="topic fill-ember" href="Genre.dc.html"><span class="sw sm"><i class="ic ic-globe s18"></i></span><b>Культура</b><span>21 материал</span></a>
+    <a class="topic fill-red" href="Genre.dc.html"><span class="sw sm"><i class="ic ic-tv s18"></i></span><b>Новости</b><span>16 материалов</span></a>
+    <a class="topic fill-leaf" href="Genre.dc.html"><span class="sw sm"><i class="ic ic-book s18"></i></span><b>Классика</b><span>31 материал</span></a>
+    <a class="topic fill-sun" href="Genre.dc.html"><span class="sw sm"><i class="ic ic-bag s18"></i></span><b>Бизнес</b><span>17 материалов</span></a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Популярное на B1</p><a href="Genre.dc.html">Смотреть все</a></div>
+  <div class="hscroll">
+    <a class="pop stack s8" href="Text-detail.dc.html"><span class="cover c-sky">Treasure Island</span><div><div class="b sm">Treasure Island</div><div class="xs faint">Текст · 42 мин · <span class="c-green b">88% знаешь</span></div></div></a>
+    <a class="pop stack s8" href="Text-detail.dc.html"><span class="cover c-ink video">Life in London</span><div><div class="b sm">Life in London</div><div class="xs faint">Видео · 8:24 · 91% знаешь</div></div></a>
+    <a class="pop stack s8" href="Text-detail.dc.html"><span class="cover c-ember">A Week in Kyoto</span><div><div class="b sm">A Week in Kyoto</div><div class="xs faint">Текст · 18 мин · 85% знаешь</div></div></a>
+    <a class="pop stack s8" href="Text-detail.dc.html"><span class="cover c-teal">Lost in Lisbon</span><div><div class="b sm">Lost in Lisbon</div><div class="xs faint">Текст · 15 мин · 90% знаешь</div></div></a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Новое на этой неделе</p></div>
+  <div class="list">
+    <a class="row" href="Text-detail.dc.html"><span class="cover c-gold">Tech News Weekly</span><div class="f1"><div class="t">Tech News Weekly #42</div><div class="s">Технологии · 6 мин · 14 новых слов</div></div><span class="cefr">B1–B2</span></a>
+    <a class="row" href="Text-detail.dc.html"><span class="cover c-green">Travel English Basics</span><div class="f1"><div class="t">Travel English Basics</div><div class="s">Путешествия · 12 мин · 9 новых слов</div></div><span class="cefr">A2–B1</span></a>
+  </div>
+</main>
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab" href="Main.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="tab on" href="Library.dc.html" aria-current="page"><i class="ic ic-library"></i>Библиотека</a>
+  <a class="tab" href="Brain-home.dc.html"><i class="ic ic-cards"></i>Практика</a>
+  <a class="tab" href="Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a class="tab" href="Profile.dc.html"><i class="ic ic-user"></i>Профиль</a>
+</nav>
+</div>

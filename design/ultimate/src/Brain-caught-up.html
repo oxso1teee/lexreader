@@ -1,0 +1,64 @@
+<!--meta {"title":"Практика — всё повторено"}-->
+<style>
+.fc7{display:flex;align-items:flex-end;gap:6px;height:88px}
+.fc7>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.fc7 i{display:block;width:100%;border-radius:6px 6px 3px 3px;background:var(--blue-400)}
+.fc7 .today i{background:var(--green-400)}
+.fc7 b{font:700 11px/1 var(--font-body);color:var(--text-2)}
+.fc7 small{font:600 11px/1 var(--font-body);color:var(--text-3)}
+</style>
+<div class="app">
+<header class="pagehead">
+  <h1>Практика</h1>
+  <div class="rowx s8">
+    <a class="iconbtn box" href="Brain-stats.dc.html" aria-label="Статистика памяти"><i class="ic ic-chart"></i></a>
+    <a class="iconbtn box" href="Brain-settings.dc.html" aria-label="Настройки повторения"><i class="ic ic-sliders"></i></a>
+  </div>
+</header>
+<main class="body">
+  <section class="card lg t-blue">
+    <div class="rowx top">
+      <i class="lex cool s88" aria-hidden="true"></i>
+      <div class="f1">
+        <p class="eyebrow c-blue">На сегодня всё</p>
+        <div class="h2" style="margin-top:6px">47 из 47 повторено</div>
+        <p class="sm muted" style="margin:6px 0 0">Следующие 31 карточка — завтра в 9:00. Отдыхай, память работает сама.</p>
+      </div>
+    </div>
+    <div class="rowx s8" style="margin-top:14px"><span class="badge blue"><i class="ic ic-check s14"></i>точность 89%</span><span class="badge gold"><i class="ic ic-bolt s14"></i>+18 XP</span><span class="badge green"><i class="ic ic-flame s14"></i>12 дней</span></div>
+  </section>
+
+  <section class="card">
+    <div class="rowx between"><div class="h3">Ближайшие 7 дней</div><span class="xs faint">карточек в день</span></div>
+    <div class="fc7" style="margin-top:12px" role="img" aria-label="Прогноз: сегодня 0, завтра 31, ср 18, чт 42, пт 24, сб 9, вс 27">
+      <div class="today"><b>0</b><i style="height:4px"></i><small>Сегодня</small></div>
+      <div><b>31</b><i style="height:46px"></i><small>Вт</small></div>
+      <div><b>18</b><i style="height:27px"></i><small>Ср</small></div>
+      <div><b>42</b><i style="height:62px"></i><small>Чт</small></div>
+      <div><b>24</b><i style="height:36px"></i><small>Пт</small></div>
+      <div><b>9</b><i style="height:14px"></i><small>Сб</small></div>
+      <div><b>27</b><i style="height:40px"></i><small>Вс</small></div>
+    </div>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Пока ждёшь</p></div>
+  <div class="list">
+    <a class="row" href="Library.dc.html"><span class="sw green"><i class="ic ic-book"></i></span><div class="f1"><div class="t">Почитать и набрать новых слов</div><div class="s">«The Last Lighthouse» · глава 3, 64%</div></div><i class="ic ic-chev s18 faint"></i></a>
+    <a class="row" href="Hard-words.dc.html"><span class="sw orange"><i class="ic ic-flame"></i></span><div class="f1"><div class="t">Потренировать трудные слова</div><div class="s">6 слов · 2 мин · вне графика</div></div><i class="ic ic-chev s18 faint"></i></a>
+    <a class="row" href="Review-modes.dc.html"><span class="sw blue"><i class="ic ic-headphones"></i></span><div class="f1"><div class="t">Прогнать выученные на слух</div><div class="s">218 слов «Знаю» · по 10 за раз</div></div><i class="ic ic-chev s18 faint"></i></a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Колоды</p><a href="Deck-import.dc.html">+ Новая</a></div>
+  <div class="list">
+    <a class="row" href="Deck-detail.dc.html"><span class="sw s-blue"><i class="ic ic-book"></i></span><div class="f1"><div class="t">Из чтения</div><div class="s">438 слов · пополняется сама</div></div><span class="badge green">готово</span></a>
+    <a class="row" href="Deck-detail.dc.html"><span class="sw s-gold"><i class="ic ic-compass"></i></span><div class="f1"><div class="t">Путешествия</div><div class="s">64 карточки</div></div><span class="badge green">готово</span></a>
+  </div>
+</main>
+<nav class="tabbar" aria-label="Основная навигация">
+  <a class="tab" href="Main.dc.html"><i class="ic ic-home"></i>Сегодня</a>
+  <a class="tab" href="Library.dc.html"><i class="ic ic-library"></i>Библиотека</a>
+  <a class="tab on" href="Brain-home.dc.html" aria-current="page"><i class="ic ic-cards"></i>Практика</a>
+  <a class="tab" href="Progress.dc.html"><i class="ic ic-chart"></i>Прогресс</a>
+  <a class="tab" href="Profile.dc.html"><i class="ic ic-user"></i>Профиль</a>
+</nav>
+</div>

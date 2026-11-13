@@ -1,0 +1,35 @@
+<!--meta {"title":"Повтори фразу","planned":true}-->
+<style>
+.app .micbig{width:96px;height:96px;border-radius:50%;background:var(--fill-red);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -5px 0 0 var(--fill-red-edge),0 0 0 10px var(--red-100);border:0;cursor:pointer}
+.wave{display:flex;align-items:center;gap:4px;height:40px;justify-content:center}
+.wave i{width:4px;border-radius:2px;background:var(--red-400);height:var(--h)}
+</style>
+<div class="app">
+<header class="lessonbar">
+  <a class="iconbtn" href="Quit-confirm.dc.html" aria-label="Закрыть"><i class="ic ic-close s24"></i></a>
+  <div class="bar lg" role="progressbar" aria-valuenow="8" aria-valuemax="8" aria-label="Задание 8 из 8"><i style="width:100%"></i></div>
+  <span class="pill streak" style="padding:4px 10px;font-size:14px"><i class="ic ic-flame-f s16"></i>12</span>
+</header>
+<main class="body" style="padding-top:12px">
+  <div class="banner ai"><i class="ic ic-spark2"></i><div><b>Концепт будущей функции</b>Распознавания речи в приложении пока нет.</div></div>
+  <p class="eyebrow">Говорение · задание 8 из 8</p>
+  <h2 class="h2">Повтори фразу вслух</h2>
+  <section class="card center" style="padding:20px 16px">
+    <p class="read" style="font-size:22px;line-height:1.4;margin:0">The keeper was <span class="hl">reluctant</span> to leave the shore.</p>
+    <p class="sm muted" style="margin:8px 0 0">Смотритель не хотел покидать берег.</p>
+    <p class="xs faint" style="margin:4px 0 0">/ðə ˈkiːpə wəz rɪˈlʌktənt tə liːv ðə ʃɔː/</p>
+    <button class="btn b-ghost sm fit" style="margin:14px auto 0"><i class="ic ic-volume s18"></i>Прослушать образец</button>
+  </section>
+  <div class="grow center" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+    <div class="wave" role="img" aria-label="Запись идёт">
+      <i style="--h:8px"></i><i style="--h:18px"></i><i style="--h:30px"></i><i style="--h:40px"></i><i style="--h:22px"></i><i style="--h:34px"></i><i style="--h:14px"></i><i style="--h:28px"></i><i style="--h:38px"></i><i style="--h:16px"></i><i style="--h:24px"></i><i style="--h:8px"></i>
+    </div>
+    <button class="micbig" aria-label="Остановить запись"><i class="ic ic-stop s40"></i></button>
+    <div class="rowx s8"><span class="badge red"><i class="ic ic-mic s14"></i>Запись</span><span class="num sm" aria-live="polite">0:03</span></div>
+    <p class="sm muted" style="margin:0;max-width:280px">Говори спокойно и чётко. Нажми, когда закончишь — сравним с образцом.</p>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-ghost" href="Result.dc.html" style="font-size:14.5px!important;padding-left:10px;padding-right:10px">Пропустить — сейчас не могу говорить</a>
+</footer>
+</div>

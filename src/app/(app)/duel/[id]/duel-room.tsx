@@ -2,13 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Check, PartyPopper, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Check, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { track } from "@/lib/posthog-client";
-import { describeDuelError, DUEL_ROUND_TIME_LIMIT_MS, type DuelState } from "@/lib/duel";
-import { dealNextDuelRoundAction, createDuelAction } from "../actions";
+import { describeDuelError, DUEL_ROUND_TIME_LIMIT_MS, type DuelState, type DuelClaimResult } from "@/lib/duel";
+import { dealNextDuelRoundAction, createDuelAction, claimDuelResultAction } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DuelInviteScreen } from "@/components/product/moments/screens/duel-invite";
+import { DuelWonScreen } from "@/components/product/moments/screens/duel-won";
 
 // docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
 // "Живые дуэли по словарю 1 на 1". Живое состояние: postgres_changes на
@@ -44,10 +47,14 @@ export default function DuelRoom({
   initialState: DuelState | null;
   inviteUrl: string;
 }) {
+  const router = useRouter();
   const [state, setState] = useState<DuelState | null>(initialState);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  // docs/moments/ROADMAP.md, этап 6 — Duel-invite/Duel-won.
+  const [inviteDismissed, setInviteDismissed] = useState(false);
+  const [claimResult, setClaimResult] = useState<DuelClaimResult | null>(null);
   // Lazy initializer -- runs exactly once, not on every render (matches
   // useRef's "create once" intent without reading a ref's .current during
   // render, which the stricter react-hooks/refs rule now flags).
@@ -155,6 +162,16 @@ export default function DuelRoom({
     await refetch();
   }
 
+  // Idempotent on the server (claim_duel_result's *_xp_awarded guard) —
+  // безопасно вызывать при каждом маунте finished-состояния, второй раз
+  // просто вернёт xpToAward: 0 для уже выданной стороны.
+  useEffect(() => {
+    if (state?.status !== "finished" || claimResult) return;
+    void claimDuelResultAction(duelId).then((res) => {
+      if (res.ok && res.result) setClaimResult(res.result);
+    });
+  }, [state?.status, duelId, claimResult]);
+
   async function handleCopyLink() {
     await navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
@@ -192,13 +209,18 @@ export default function DuelRoom({
         </p>
       )}
 
-      {!state.isParticipant && state.status === "waiting" && (
+      {!state.isParticipant && state.status === "waiting" && !inviteDismissed && (
+        <DuelInviteScreen state={state} busy={busy} onAccept={handleJoin} onDecline={() => setInviteDismissed(true)} />
+      )}
+      {!state.isParticipant && state.status === "waiting" && inviteDismissed && (
         <Card as="section" className="p-6 text-center">
-          <p className="text-h3 mb-1">{state.creatorInitials} приглашает тебя на дуэль по словарю</p>
-          <p className="text-body-sm mb-4 text-[var(--text-secondary)]">{state.roundCount} раундов, одинаковые слова для обоих.</p>
-          <Button variant="leaf" disabled={busy} onClick={handleJoin}>
-            {busy ? "…" : "Присоединиться"}
-          </Button>
+          <p className="text-body-sm text-[var(--text-secondary)]">
+            Приглашение ждёт тебя —{" "}
+            <button type="button" className="focus-ring font-semibold text-[var(--color-forest-text)]" onClick={() => setInviteDismissed(false)}>
+              посмотреть
+            </button>
+            .
+          </p>
         </Card>
       )}
 
@@ -235,31 +257,17 @@ export default function DuelRoom({
         </>
       )}
 
-      {state.status === "finished" && (
+      {state.status === "finished" && claimResult && (
+        <DuelWonScreen
+          state={state}
+          result={claimResult}
+          onRematch={() => void createDuelAction()}
+          onClose={() => router.push("/progress")}
+        />
+      )}
+      {state.status === "finished" && !claimResult && (
         <Card as="section" className="p-6 text-center">
-          <p className="text-h3 mb-1 flex items-center justify-center gap-1.5">
-            {state.isDraw ? (
-              "Ничья!"
-            ) : state.winnerIsMe ? (
-              <>
-                <PartyPopper aria-hidden="true" className="h-5 w-5" />
-                Ты выиграл!
-              </>
-            ) : (
-              "Соперник выиграл"
-            )}
-          </p>
-          {scoreRow}
-          <div className="mt-4 flex flex-col items-center gap-2">
-            <form action={createDuelAction}>
-              <Button type="submit" variant="leaf">
-                Играть ещё раз
-              </Button>
-            </form>
-            <Link href="/progress" className="focus-ring text-body-sm text-[var(--color-forest-text)]">
-              К прогрессу
-            </Link>
-          </div>
+          <p className="text-body-sm text-[var(--text-secondary)]">Считаем итоги…</p>
         </Card>
       )}
     </div>

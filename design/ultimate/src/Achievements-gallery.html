@@ -1,0 +1,60 @@
+<!--meta {"title":"Достижения"}-->
+<style>
+.medal{width:72px;height:80px;margin:0 auto;display:flex;align-items:center;justify-content:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--m,var(--fill-sky));color:#fff;position:relative}
+.medal::after{content:"";position:absolute;inset:6px;clip-path:inherit;border:0;background:rgba(255,255,255,.14);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);z-index:0}
+.medal .ic{position:relative;z-index:1}
+.medal .lv{position:absolute;bottom:12px;left:0;right:0;text-align:center;font:700 11px/1 var(--font-display);z-index:1;letter-spacing:.04em}
+.medal.m-sun{--m:var(--fill-sun);color:var(--fill-ink)}.medal.m-leaf{--m:var(--fill-leaf)}.medal.m-ember{--m:var(--fill-ember)}.medal.m-ink{--m:var(--fill-ink);color:var(--gold-400)}
+.medal.m-off{--m:var(--surface-sunken);color:var(--text-3)}
+.ach{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:12px 6px 10px;min-height:44px}
+.ach .t{font:700 12.5px/1.2 var(--font-body)}
+.ach .s{font:500 11px/1.25 var(--font-body);color:var(--text-3)}
+.ach .bar{width:100%;margin-top:2px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Profile.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Достижения<small>Сергей · уровень 7</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="card lg rowx" style="gap:16px">
+    <div class="medal m-sun" style="width:84px;height:94px;flex:none"><i class="ic ic-trophy s40"></i></div>
+    <div class="f1">
+      <div class="rowx s6" style="align-items:baseline"><b class="num lg">9</b><span class="b muted">из 24</span></div>
+      <div class="bar gold" style="margin:8px 0" role="progressbar" aria-valuenow="9" aria-valuemax="24" aria-label="9 из 24 достижений"><i style="width:37.5%"></i></div>
+      <div class="xs muted">Последнее · 9 ноября</div><div class="b sm c-blue">Книжный червь · ур. 2</div>
+    </div>
+  </section>
+
+  <div class="seg" role="tablist">
+    <button class="on" role="tab" aria-selected="true">Все</button>
+    <button role="tab" aria-selected="false">Получены</button>
+    <button role="tab" aria-selected="false">В процессе</button>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Получены</p><span class="xs faint">9</span></div>
+  <div class="grid3">
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal"><i class="ic ic-book s28"></i><span class="lv">УР. 2</span></div><div class="t">Книжный червь</div><div class="s">10 глав</div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-ember"><i class="ic ic-flame-f s28"></i><span class="lv">УР. 1</span></div><div class="t">Огонёк</div><div class="s">стрик 7 дней</div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-leaf"><i class="ic ic-brain s28"></i><span class="lv">УР. 3</span></div><div class="t">Память</div><div class="s">500 слов</div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-sun"><i class="ic ic-bolt-f s28"></i></div><div class="t">Тысячник</div><div class="s">1 000 XP</div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-ink"><i class="ic ic-swords s28"></i></div><div class="t">Дуэлянт</div><div class="s">первая победа</div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal"><i class="ic ic-tv s28"></i></div><div class="t">Киноман</div><div class="s">5 видео</div></a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">В процессе</p><span class="xs faint">6</span></div>
+  <div class="grid3">
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-off"><i class="ic ic-flame s28"></i></div><div class="t">Неделя огня</div><div class="s">12 / 30 дней</div><div class="bar sm ember"><i style="width:40%"></i></div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-off"><i class="ic ic-brain s28"></i></div><div class="t">Словарь</div><div class="s">842 / 1 000</div><div class="bar sm"><i style="width:84%"></i></div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-off"><i class="ic ic-trophy s28"></i></div><div class="t">Призёр</div><div class="s">топ-3 лиги</div><div class="bar sm gold"><i style="width:60%"></i></div></a>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Закрыты</p><span class="xs faint">9</span></div>
+  <div class="grid3">
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-off lock"><i class="ic ic-lock s28"></i></div><div class="t">Полиглот</div><div class="s">уровень B2</div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-off lock"><i class="ic ic-lock s28"></i></div><div class="t">Марафон</div><div class="s">стрик 100</div></a>
+    <a class="card p0 ach" href="Achievement-detail.dc.html"><div class="medal m-off lock"><i class="ic ic-lock s28"></i></div><div class="t">Библиотека</div><div class="s">25 текстов</div></a>
+  </div>
+</main>
+</div>

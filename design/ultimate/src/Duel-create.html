@@ -1,0 +1,54 @@
+<!--meta {"title":"Новая дуэль"}-->
+<style>
+.vs{display:flex;align-items:center;justify-content:space-between;padding:4px 8px}
+.vs .p{display:flex;flex-direction:column;align-items:center;gap:8px;width:96px;font:700 14px/1.2 var(--font-body)}
+.vs .avatar{box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 0 0 4px #fff}
+.vs .vsb{width:48px;height:48px;border-radius:50%;background:#fff;color:var(--fill-sky-edge);display:flex;align-items:center;justify-content:center;font:700 16px/1 var(--font-display)}
+.empty-av{width:88px;height:88px;border-radius:50%;border:3px dashed rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center}
+.empty-av .spin{border-color:rgba(255,255,255,.3);border-top-color:#fff}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Main.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Новая дуэль<small>1 на 1 по ссылке</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="hero sky">
+    <div class="vs">
+      <div class="p"><span class="avatar me xl" style="box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 0 0 4px #fff">С</span>Ты</div>
+      <span class="vsb">VS</span>
+      <div class="p"><span class="empty-av"><span class="spin"></span></span>Соперник</div>
+    </div>
+    <div class="center" style="margin-top:14px">
+      <div class="h3">Ждём соперника…</div>
+      <div class="sm" style="margin-top:4px">Дуэль начнётся, как только друг откроет ссылку. Ссылка действует 24 ч</div>
+    </div>
+  </section>
+
+  <div>
+    <span class="label">Слова для дуэли</span>
+    <div class="rowx s8 wrap">
+      <span class="chip on"><i class="ic ic-book s16"></i>The Last Lighthouse</span>
+      <span class="chip"><i class="ic ic-compass s16"></i>Путешествия</span>
+      <span class="chip"><i class="ic ic-flame s16"></i>Трудные слова</span>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="stat"><b class="num sm">10</b><span>раундов</span></div>
+    <div class="stat"><b class="num sm">10 сек</b><span>на ответ</span></div>
+    <div class="stat t-gold"><b class="num sm c-gold">+25 XP</b><span>победителю</span></div>
+  </div>
+
+  <div>
+    <span class="label">Ссылка-приглашение</span>
+    <div class="field" style="padding-right:4px"><i class="ic ic-link faint"></i><span class="f1 mono" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">lexreader.app/d/kx41-lighthouse</span><button class="iconbtn" aria-label="Скопировать ссылку"><i class="ic ic-copy"></i></button></div>
+    <p class="hint">Слова: reluctant, refuge, beacon, gale и ещё 6 из главы 3</p>
+  </div>
+</main>
+<footer class="dock">
+  <a class="btn b-sky" href="Duel-invite.dc.html"><i class="ic ic-share2"></i>Поделиться ссылкой</a>
+  <a class="link2" href="Main.dc.html">Отменить дуэль</a>
+</footer>
+</div>

@@ -1,0 +1,64 @@
+<!--meta {"title":"Магазин","planned":true}-->
+<style>
+.item{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:12px 8px 10px}
+.item .pic{width:100%;height:76px;border-radius:14px;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.item .t{font:700 13px/1.2 var(--font-body)}
+.price{display:inline-flex;align-items:center;gap:4px}
+.item .btn{width:100%;margin-top:2px}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Profile.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Магазин</div>
+  <span class="pill xp" style="font-size:14px;padding:6px 10px;margin-right:6px" aria-label="Баланс: 640 монет"><i class="ic ic-coins s18"></i>640</span>
+</header>
+<main class="body">
+  <section class="hero sun rowx" style="padding:16px 18px 20px">
+    <div class="f1">
+      <p class="eyebrow">Монеты</p>
+      <div class="rowx s8" style="align-items:baseline;margin-top:4px"><b class="num xl">640</b><span class="h3">на счету</span></div>
+      <div class="sm b" style="margin-top:4px">+20 за каждый день стрика, +50 за сундук</div>
+    </div>
+    <i class="lex joy s88 bob" aria-hidden="true"></i>
+  </section>
+
+  <div class="sect"><p class="eyebrow">Полезное</p></div>
+  <div class="list">
+    <div class="row">
+      <span class="sw lg s-blue"><i class="ic ic-snow s28"></i></span>
+      <div class="f1"><div class="t">Заморозка стрика</div><div class="s">спасёт 12 дней, если пропустишь · есть 1 из 2</div></div>
+      <a class="btn b-sky sm fit" href="Purchase-success.dc.html"><i class="ic ic-coins s16"></i>200</a>
+    </div>
+    <div class="row">
+      <span class="sw lg s-gold"><i class="ic ic-bolt-f s28"></i></span>
+      <div class="f1"><div class="t">Двойной опыт на час</div><div class="s">все XP ×2 в течение 60 минут</div></div>
+      <a class="btn b-sun sm fit" href="Double-XP.dc.html"><i class="ic ic-coins s16"></i>150</a>
+    </div>
+  </div>
+
+  <div class="sect"><p class="eyebrow">Для Lex</p><a href="Mascot-closet.dc.html">Гардероб</a></div>
+  <div class="grid3">
+    <div class="card p0 item">
+      <div class="pic" style="background:var(--green-100)"><i class="lex happy s56" aria-hidden="true"></i><svg width="44" height="14" viewBox="0 0 44 14" aria-hidden="true" style="position:absolute;bottom:14px"><rect x="2" y="2" width="40" height="10" rx="5" fill="var(--fill-ember)"/><rect x="28" y="4" width="8" height="10" rx="2" fill="var(--fill-ember-edge)"/></svg></div>
+      <div class="t">Шарф</div>
+      <a class="btn b-leaf sm" href="Purchase-success.dc.html"><span class="price"><i class="ic ic-coins s16"></i>300</span></a>
+    </div>
+    <div class="card p0 item">
+      <div class="pic" style="background:var(--blue-100)"><i class="lex wink s56" aria-hidden="true"></i><svg width="40" height="20" viewBox="0 0 40 20" aria-hidden="true" style="position:absolute;top:2px"><path d="M4 18 C6 2 34 2 36 18 Z" fill="var(--fill-sky)"/><rect x="0" y="15" width="40" height="5" rx="2.5" fill="var(--fill-sky-edge)"/><circle cx="20" cy="4" r="3.5" fill="var(--gold-400)"/></svg></div>
+      <div class="t">Шапка</div>
+      <a class="btn b-leaf sm" href="Purchase-success.dc.html"><span class="price"><i class="ic ic-coins s16"></i>450</span></a>
+    </div>
+    <div class="card p0 item">
+      <div class="pic"><i class="lex happy s56" aria-hidden="true"></i><svg width="40" height="14" viewBox="0 0 40 14" aria-hidden="true" style="position:absolute;top:38px"><circle cx="10" cy="7" r="6.5" fill="var(--fill-sun)" stroke="var(--fill-ink)" stroke-width="2"/><circle cx="30" cy="7" r="6.5" fill="var(--fill-sun)" stroke="var(--fill-ink)" stroke-width="2"/><rect x="16" y="5.5" width="8" height="2.5" fill="var(--fill-ink)"/></svg></div>
+      <div class="t">Очки «Звезда»</div>
+      <div class="btn sm" aria-disabled="true" style="--f:var(--surface-sunken);--e:var(--paper-300);--l:var(--text-2);cursor:default"><span class="price"><i class="ic ic-coins s16"></i>900</span></div>
+      <div class="xs c-red b">не хватает 260</div>
+    </div>
+  </div>
+  <a class="card sm t-gold rowx" href="Daily-quests.dc.html">
+    <span class="sw s-gold sm"><i class="ic ic-target s18"></i></span>
+    <div class="f1"><div class="b sm">Заработать ещё монет</div><div class="xs muted">задания дня дают до 60 монет</div></div>
+    <i class="ic ic-chev s18"></i>
+  </a>
+</main>
+</div>

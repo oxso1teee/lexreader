@@ -20,9 +20,21 @@ export interface Profile {
   /** Понедельник ISO-недели, за которую уже начислен бонус Perfect-week —
    *  сторож от повторного начисления. */
   perfect_week_awarded_week: string | null;
+  /** docs/moments/ROADMAP.md, этап 5 — сторож от повторного открытия
+   *  сундука daily-quests в тот же UTC-день. */
+  daily_quest_chest_claimed_date: string | null;
+  /** Double-XP: активен, пока now() < xp_boost_until. */
+  xp_boost_until: string | null;
   review_best_session_count: number;
   completed_first_win: boolean;
   preferred_notify_hour: number | null;
+  /** docs/moments/ROADMAP.md, этап 7 — обязательство из Streak-commit
+   *  (7/14/30/50 дней), подсвечивается на /streak как "твоя цель", пока
+   *  не достигнуто. Веса STREAK_MILESTONES не меняет. */
+  streak_goal_days: number | null;
+  /** docs/moments/ROADMAP.md, этап 7 — сторож Rate-app: не чаще раза в
+   *  120 дней, только нативная сборка. */
+  last_rate_prompt_at: string | null;
   xp: number;
   created_at: string;
   reader_settings: Record<string, unknown>;
@@ -57,6 +69,9 @@ export interface TextRow {
   youtube_duration_seconds: number | null;
   transcript_source: TranscriptSourceTag | null;
   processing_status: "pending" | "processing" | "ready" | "failed";
+  /** docs/moments/ROADMAP.md, этап 7 — First-text: системный (owner_id
+   *  null) стартовый текст, ровно один на язык (0056_onboarding_system.sql). */
+  is_starter: boolean;
 }
 
 export type TranscriptSourceTag =

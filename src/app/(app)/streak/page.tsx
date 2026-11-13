@@ -81,7 +81,13 @@ export default async function StreakCalendarPage({
 
   const thisWeekStart = isoDate(isoWeekStart(new Date()));
   const freezeUsedThisWeek = profile.streak_freeze_week === thisWeekStart && !profile.streak_freeze_available;
-  const nextMilestone = STREAK_MILESTONES.find((ms) => ms > profile.streak_current) ?? null;
+  // docs/moments/ROADMAP.md, этап 7 — Streak-commit: если пользователь
+  // взял на себя обязательство (streak_goal_days) и ещё не выполнил его,
+  // оно подсвечивается как "твоя цель" раньше следующей фиксированной
+  // вехи STREAK_MILESTONES (которые остаются неизменной шкалой наград).
+  const nextFixedMilestone = STREAK_MILESTONES.find((ms) => ms > profile.streak_current) ?? null;
+  const ownGoalPending = profile.streak_goal_days && profile.streak_goal_days > profile.streak_current;
+  const nextMilestone = ownGoalPending ? profile.streak_goal_days : nextFixedMilestone;
   const prevMilestone = [...STREAK_MILESTONES].reverse().find((ms) => ms <= profile.streak_current) ?? 0;
   const milestoneProgress = nextMilestone
     ? Math.min(1, (profile.streak_current - prevMilestone) / (nextMilestone - prevMilestone))
@@ -213,7 +219,7 @@ export default async function StreakCalendarPage({
       {nextMilestone && (
         <div className={cardClassName({ className: "p-3.5" })}>
           <div className="flex justify-between text-sm font-bold">
-            <span>До рубежа {nextMilestone} дней</span>
+            <span>{ownGoalPending ? `До твоей цели · ${nextMilestone} дней` : `До рубежа ${nextMilestone} дней`}</span>
             <span style={{ color: "var(--ember-text)" }}>
               {profile.streak_current}/{nextMilestone}
             </span>

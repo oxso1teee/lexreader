@@ -1,0 +1,40 @@
+<!--meta {"title":"Импорт обрабатывается"}-->
+<style>
+.ring{position:relative;width:200px;height:200px;margin:4px auto 0}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.st{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;position:relative}
+.st+.st::before{content:"";position:absolute;left:14px;right:14px;top:0;border-top:var(--stroke-soft)}
+.st .ix{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.st .ix.done{background:var(--fill-leaf);color:#fff}
+.st .ix.wait{background:var(--surface-sunken);color:var(--text-3)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Library.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Готовим видео<small>Life in London · 8:24</small></div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <section class="card lg center">
+    <div class="ring" role="img" aria-label="Готово 62%">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="43" fill="none" stroke="var(--progress-track)" stroke-width="9"/><circle cx="50" cy="50" r="43" fill="none" stroke="var(--blue-400)" stroke-width="9" stroke-linecap="round" stroke-dasharray="167.5 270"/></svg>
+      <div class="c"><i class="lex think s56 bob" aria-hidden="true"></i><b class="num lg">62%</b></div>
+    </div>
+    <div class="h3" style="margin-top:10px">Распознаём речь</div>
+    <p class="sm muted" style="margin:4px 0 0">Осталось около 2 минут</p>
+  </section>
+
+  <div class="list" role="list" aria-label="Шаги импорта">
+    <div class="st" role="listitem"><span class="ix done"><i class="ic ic-check s18"></i></span><div class="f1"><div class="b">Скачали аудио</div><div class="xs faint">8:24 · 7,6 МБ</div></div><span class="xs b c-green">готово</span></div>
+    <div class="st" role="listitem"><span class="ix" style="background:var(--blue-100)"><span class="spin sm" style="border-top-color:var(--blue-400)"></span></span><div class="f1"><div class="b">Распознаём речь</div><div class="xs faint">локально, без отправки наружу</div><div class="bar sm blue" style="margin-top:6px"><i style="width:62%"></i></div></div><span class="xs b c-blue">идёт</span></div>
+    <div class="st" role="listitem"><span class="ix wait"><i class="ic ic-text s18"></i></span><div class="f1"><div class="b">Размечаем слова</div><div class="xs faint">сверим с твоими 842 словами</div></div><span class="xs faint">ждёт</span></div>
+    <div class="st" role="listitem"><span class="ix wait"><i class="ic ic-library s18"></i></span><div class="f1"><div class="b">Добавляем в библиотеку</div><div class="xs faint">в «Читаю сейчас»</div></div><span class="xs faint">ждёт</span></div>
+  </div>
+
+  <div class="banner info"><i class="ic ic-bell"></i><div><b>Можно закрыть экран</b>Пришлём уведомление, когда видео будет готово.</div></div>
+</main>
+<footer class="dock line">
+  <a class="btn b-ghost" href="Library.dc.html">В библиотеку</a>
+</footer>
+</div>

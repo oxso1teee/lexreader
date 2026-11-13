@@ -1,0 +1,41 @@
+<!--meta {"title":"Дневная цель"}-->
+<style>
+.opt .ti{flex:1;min-width:0}
+.opt .ti small{display:block;font:500 12.5px/1.3 var(--font-body);color:var(--text-3);margin-top:2px}
+.opt .xpv{font:700 18px/1 var(--font-display);white-space:nowrap}
+.opt.on .xpv{color:var(--blue-text)}
+</style>
+<div class="app">
+<header class="hdr">
+  <a class="iconbtn" href="Profile.dc.html" aria-label="Назад"><i class="ic ic-back s24"></i></a>
+  <div class="ttl">Дневная цель</div>
+  <span class="gap"></span>
+</header>
+<main class="body">
+  <div class="rowx" style="gap:14px;padding:4px 4px 2px">
+    <i class="lex think s88" aria-hidden="true"></i>
+    <div class="say f1">Сколько XP набирать в день? Сейчас у тебя <b>50</b> — в среднем ты делаешь <b>44</b>.</div>
+  </div>
+
+  <div class="stack s8" role="radiogroup" aria-label="Дневная цель">
+    <button class="opt" role="radio" aria-checked="false"><span class="sw green sm"><i class="ic ic-sprout s18"></i></span><span class="ti">Лёгкая<small>≈ 5 мин в день</small></span><span class="xpv">20 XP</span></button>
+    <button class="opt on" role="radio" aria-checked="true"><span class="sw s-blue sm"><i class="ic ic-leaf s18"></i></span><span class="ti">Обычная<small>≈ 10–15 мин в день · сейчас</small></span><span class="xpv">50 XP</span></button>
+    <button class="opt" role="radio" aria-checked="false"><span class="sw orange sm"><i class="ic ic-flame s18"></i></span><span class="ti">Серьёзная<small>≈ 25 мин в день</small></span><span class="xpv">100 XP</span></button>
+    <button class="opt" role="radio" aria-checked="false"><span class="sw red sm"><i class="ic ic-bolt s18"></i></span><span class="ti">Интенсив<small>≈ 40 мин в день</small></span><span class="xpv">150 XP</span></button>
+  </div>
+
+  <section class="card t-blue">
+    <p class="eyebrow c-blue">Прогноз на месяц при 50 XP</p>
+    <div class="grid3" style="margin-top:10px">
+      <div><b class="num">≈260</b><div class="xs muted">новых слов</div></div>
+      <div><b class="num">≈6</b><div class="xs muted">глав книги</div></div>
+      <div><b class="num">1 500</b><div class="xs muted">XP</div></div>
+    </div>
+  </section>
+
+  <div class="banner warn"><i class="ic ic-flame"></i><div><b>Стрик считается по цели</b>День засчитается, только если наберёшь выбранные XP. С целью 100 твои 12 дней было бы сложнее удержать.</div></div>
+</main>
+<footer class="dock">
+  <a class="btn b-leaf" href="Profile.dc.html">Сохранить</a>
+</footer>
+</div>
