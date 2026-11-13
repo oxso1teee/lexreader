@@ -30,7 +30,7 @@ test("orphaned auth user (no profiles row) recovers via the onboarding form inst
 
   try {
     await page.goto("/onboarding");
-    await page.getByRole("button", { name: "Далее" }).click();
+    await page.getByRole("button", { name: "Начать бесплатно" }).click();
     await page.getByRole("button", { name: "Для жизни" }).click();
     await page.getByRole("button", { name: "Далее" }).click();
     await page.getByRole("button", { name: "Английский" }).click();

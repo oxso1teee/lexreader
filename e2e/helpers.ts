@@ -25,7 +25,8 @@ export async function signUpFreshAccount(page: Page): Promise<string> {
   const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
   await page.goto("/onboarding");
-  await page.getByRole("button", { name: "Далее" }).click();
+  // Шаг 0 визарда — Splash (stage 7) с одной кнопкой; «Далее» там нет.
+  await page.getByRole("button", { name: "Начать бесплатно" }).click();
   await page.getByRole("button", { name: "Для жизни" }).click();
   await page.getByRole("button", { name: "Далее" }).click();
   await page.getByRole("button", { name: "Английский" }).click();
@@ -87,6 +88,19 @@ export async function getSystemTextIdByTitle(title: string): Promise<string> {
   const { data, error } = await supabase.from("texts").select("id").eq("title", title).single();
   if (error || !data) throw new Error(`Seeded text "${title}" not found — check supabase/seed.sql`);
   return data.id;
+}
+
+// Кнопки клиентских компонентов приходят в SSR-HTML видимыми и «кликабельными»
+// для Playwright раньше, чем React навесил обработчики (гидратация). Клик в
+// это окно молча теряется: ни ошибки, ни реакции (в Match-режиме live-region
+// остаётся пустым). Под нагрузкой окно растёт. Ждём не паузу, а сам факт
+// гидратации — React кладёт `__reactProps$…` на DOM-узел, когда подключает его.
+export async function waitForHydration(locator: Locator): Promise<void> {
+  await expect
+    .poll(() => locator.first().evaluate((el) => Object.keys(el).some((k) => k.startsWith("__reactProps"))), {
+      message: "элемент не гидратирован: клик до гидратации теряется",
+    })
+    .toBe(true);
 }
 
 // e2e/reading.spec.ts's Library→Reader click flaked repeatedly on CI's
