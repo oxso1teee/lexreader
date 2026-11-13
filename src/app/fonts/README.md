@@ -21,11 +21,35 @@ Each family keeps its upstream copyright and license text next to the binary: `O
 `OFL-Unbounded.txt`, `OFL-GeistMono.txt`, `OFL-SourceSerif4.txt`. The copyright (`name` ID 0) and license
 (IDs 13/14) strings are preserved inside the woff2 files. The OFL allows bundling and redistribution with
 software; the fonts are not sold on their own.
+`OFL-SourceSerif4.txt` is Adobe's original `LICENSE.md` from `adobe-fonts/source-serif`, byte for byte
+(it carries the copyright line with the Reserved Font Name and Adobe's trademark statement).
+The other three files are the `OFL.txt` copies from `google/fonts`.
 
 **Reserved Font Name.** Onest, Unbounded and Geist Mono declare none. **Source Serif 4 declares the
-Reserved Font Name "Source"**, and a subset is a Modified Version (OFL 1.1, section 3), so
-`ReadingSerif4-Variable.woff2` is renamed *Reading Serif 4* (family, full, PostScript and unique-ID names).
-The original copyright notice is untouched. Do not call this file "Source Serif" anywhere user-visible.
+Reserved Font Name "Source"** and claims "Source" as a trademark. The subset is a Modified Version (OFL 1.1:
+deleting components and changing formats both count), and section 3 forbids a Modified Version to use the
+Reserved Font Name as its primary font name, so `ReadingSerif4-Variable.woff2` is renamed *Reading Serif 4*:
+family (1, 16, 21), unique ID (3), full name (4), PostScript name (6) and the variations PostScript prefix (25).
+`scripts/fonts/build_fonts.py` fails if any other name record still contains "Source". The word stays only in
+the copyright notice (0) and Adobe's trademark statement (7) — they must stay. The JS identifier (and thus
+the generated CSS family name) is `readingSerif`. Do not call this file "Source Serif" anywhere user-visible,
+and do not use the authors' names to promote the product (OFL section 4; naming the origin as an acknowledgement is allowed).
+
+### OFL 1.1 requirements — status of this repository
+
+| Requirement | Status |
+|---|---|
+| 1. Fonts not sold by themselves | Bundled in the app only. |
+| 2. Copyright notice + license accompany every copy | Embedded in each woff2 (name IDs 0, 13, 14) and as a stand-alone file next to it. |
+| 3. No Modified Version under the Reserved Font Name | Done for the primary and all identifying name records (see above). Only Source Serif 4 has an RFN. |
+| 4. No promotion with the authors' names | Credits only. |
+| 5. Distributed entirely under the OFL | The repository has no root license file; these files are covered by the OFL texts above. If a repo-wide license is ever added, exclude `src/app/fonts/`. |
+| Trademark ("Source", Adobe) | Not licensed by the OFL; the name is not used as a mark here. No trademark search was done for "Reading Serif". |
+| Official OFL FAQ (subsetting, web fonts) | **Not checked against the primary source** (not reachable when this was written). |
+
+This is a technical review against the license text, not legal advice. Whether the rename is sufficient
+for the product is a decision for the owner (or counsel); the safest alternatives are written permission
+from Adobe, or an OFL serif without a Reserved Font Name.
 
 ## What was done to the upstream files
 

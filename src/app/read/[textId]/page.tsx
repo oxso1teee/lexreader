@@ -22,7 +22,7 @@ import Reader from "./reader";
 // src/app/fonts/README.md). Файл — подмножество Source Serif 4, переименованное
 // в «Reading Serif 4»: у Source Serif 4 Reserved Font Name «Source» (OFL 1.1).
 // fallback — Times New Roman, как у next/font/google для serif-шрифтов.
-const sourceSerif = localFont({
+const readingSerif = localFont({
   src: "../../fonts/ReadingSerif4-Variable.woff2",
   weight: "200 900",
   variable: "--font-reading",
@@ -161,7 +161,7 @@ export default async function ReadPage({
     : null;
 
   return (
-    <div className={sourceSerif.variable}>
+    <div className={readingSerif.variable}>
       <Reader
         textId={text.id}
         title={text.title}

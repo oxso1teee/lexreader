@@ -62,14 +62,27 @@ def union_codepoints(key):
 
 
 def rename_without_rfn(font):
-    """Family / full / PostScript / unique names must not contain the Reserved Font Name 'Source'."""
+    """Rename every name record that identifies the font so that the Reserved Font Name 'Source' is gone.
+
+    Covered: family (1, 16, 21), unique ID (3), full name (4), PostScript name (6) and the variations
+    PostScript name prefix (25). Only the copyright (0) and the trademark notice (7) may keep the word:
+    OFL 1.1 requires the copyright notice to stay, and nameID 7 is Adobe's trademark statement.
+    The check below fails the build if any other record still contains it.
+    """
     repl = [("Source Serif 4", "Reading Serif 4"), ("SourceSerif4", "ReadingSerif4"), ("SourceSerif", "ReadingSerif")]
     for rec in font["name"].names:
-        if rec.nameID in (1, 3, 4, 6, 16, 21):
+        if rec.nameID in (1, 3, 4, 6, 16, 21, 25):
             text = rec.toUnicode()
             for old, new in repl:
                 text = text.replace(old, new)
             rec.string = text
+    leftovers = [
+        (rec.nameID, rec.toUnicode())
+        for rec in font["name"].names
+        if rec.nameID not in (0, 7) and "source" in rec.toUnicode().lower()
+    ]
+    if leftovers:
+        raise SystemExit(f"Reserved Font Name 'Source' still present in name records: {leftovers}")
 
 
 os.makedirs(OUT, exist_ok=True)
