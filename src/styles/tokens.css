@@ -242,7 +242,7 @@
   --color-sun-text: var(--sun-text);
   /* Reader mockup alignment — отдельный токен для ТЕЛА читаемого текста.
      Самореференсный алиас (--font-reading: var(--font-reading)) —
-     next/font/google подключает Source Serif 4 scoped внутри
+     next/font/local подключает Source Serif 4 scoped внутри
      src/app/read/[textId]/page.tsx, не в корневом layout.tsx — переменная
      в области видимости только там, где реально нужна; вне её значение
      проваливается на Georgia/serif. */
