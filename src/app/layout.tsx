@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Unbounded, Onest } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
 import RegisterServiceWorker from "./register-service-worker";
@@ -8,25 +8,42 @@ import { THEME_INIT_SCRIPT } from "./theme-init-script";
 import { siteUrl } from "@/lib/site-url";
 import { MomentProvider } from "@/components/product/moments/moment-provider";
 
-const geistMono = Geist_Mono({
+// Шрифты self-host (next/font/local), а не next/font/google: Google Fonts API
+// периодически отвечает URL-ами вида fonts.gstatic.com/l/font?kit=…&skey=…
+// (без расширения), на которых `next build` падает и в Turbopack, и в webpack
+// — случайные красные сборки в CI/Vercel. Происхождение файлов, лицензии OFL
+// и пересборка — в src/app/fonts/README.md. Объявленные веса, CSS-переменные
+// и fallback-метрики те же, что были у next/font/google.
+const geistMono = localFont({
+  src: "./fonts/GeistMono-Variable.woff2",
+  weight: "100 900",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 // redesign/duolingo-flat: display/heading font (Unbounded, bold/geometric)
 // + body font (Onest) — replaces Geist Sans (removed: grepped for
 // --font-geist-sans/font-sans usage outside globals.css's own token
-// mapping, found none). cyrillic subset required — app UI is Russian-first.
-const unbounded = Unbounded({
+// mapping, found none). Cyrillic coverage required — app UI is Russian-first.
+// Каждый вес — отдельный @font-face на один и тот же variable-файл, как раньше
+// у next/font/google (там тоже по @font-face на вес).
+const unbounded = localFont({
+  src: [
+    { path: "./fonts/Unbounded-Variable.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/Unbounded-Variable.woff2", weight: "900", style: "normal" },
+  ],
   variable: "--font-unbounded",
-  weight: ["700", "900"],
-  subsets: ["latin", "cyrillic"],
+  display: "swap",
 });
 
-const onest = Onest({
+const onest = localFont({
+  src: [
+    { path: "./fonts/Onest-Variable.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Onest-Variable.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/Onest-Variable.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-onest",
-  weight: ["400", "600", "700"],
-  subsets: ["latin", "cyrillic"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
