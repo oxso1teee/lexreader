@@ -1,22 +1,32 @@
+import { unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getDueCount } from "@/lib/brain-stats";
 import { decidePrimaryAction, dueCountBucket, greetingForHour } from "@/lib/today";
 import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
 import { categoryLabel, reasonLabel } from "@/components/product/language-twin/badges";
-import { getOrGenerateActiveMissions, getMissionsCompletedThisWeek } from "@/lib/missions/persist";
+import { getOrGenerateActiveMissions } from "@/lib/missions/persist";
 import { pickHeroMission } from "@/lib/missions/ranking";
 import { findMatchingMissionForSkill } from "@/lib/learning-paths/mission-match";
 import { getActivePathStateAction } from "../learning-paths/actions";
-import { isoWeekStart } from "@/lib/iso-week";
 import { messages } from "@/lib/i18n";
-import { weekMarks } from "@/lib/week-marks";
+import { log } from "@/lib/log";
 import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
-import TodayView from "@/components/product/today/v7/today-view";
+import type { WeekdayMark } from "@/lib/moments/types";
 import TodayEveningGate from "@/components/product/today/v7/today-evening-gate";
-import { getDailyQuestsSnapshot } from "@/lib/daily-quests";
+import DashboardView from "@/components/product/dashboard/dashboard-view";
+import { getDailyQuestsSnapshot, type DailyQuestsSnapshot } from "@/lib/daily-quests";
 import { DailyQuestsCard } from "@/components/product/quests/daily-quests-card";
 import { DoubleXpChip } from "@/components/product/quests/double-xp-chip";
+import { computeFirstSteps, shouldShowFirstSteps } from "@/lib/dashboard/first-steps";
+import { dailyGoalProgress } from "@/lib/dashboard/goal";
+import { firstNameFromMetadata, learningGoalLabel } from "@/lib/dashboard/identity";
+import { accountAgeDays, dashboardMode } from "@/lib/dashboard/mode";
+import { countSavedWords, countSavedWordsSince } from "@/lib/dashboard/queries";
+import { streakDisplay } from "@/lib/dashboard/streak";
+import { countSince, lastActivityLabel, readingMinutesSince, summarizeToday } from "@/lib/dashboard/today-summary";
+import { buildWantMore } from "@/lib/dashboard/want-more";
+import { todayColumn } from "@/lib/dashboard/week";
 import InstallBanner from "./install-banner";
 import TodayAnalytics from "./today-analytics";
 import type { MissionRow, MissionType } from "@/lib/missions/types";
@@ -28,12 +38,7 @@ const SEVERITY_WEIGHT: Record<"high" | "medium" | "low", number> = { high: 3, me
 
 const GRAMMAR_RUNNER_TYPES = new Set<MissionType>(["grammar_pattern", "correction", "diagnostic_followup", "maintenance"]);
 
-// Ex-hero-mission-card.tsx: честный заголовок из реальных полей миссии,
-// без выдуманных под-тем (мокап называет несуществующую категорию
-// "Present Continuous Sprint" — мы такую не отслеживаем). Логика не
-// менялась, просто переехала сюда вместе с остальной hero-card-раскладкой
-// (HeroMissionCard/PrimaryActionCard больше не существуют по отдельности —
-// см. hero-card.tsx).
+// Честный заголовок из реальных полей миссии, без выдуманных под-тем.
 const TARGETED_HEADLINE: Partial<Record<MissionType, string>> = {
   vocab_activation: "Активация слов",
   review_recovery: "Повторение слов",
@@ -45,10 +50,6 @@ function heroHeadline(mission: MissionRow): string {
     return `Спринт: ${categoryLabel(mission.skill_category)}`;
   }
   return TARGETED_HEADLINE[mission.mission_type] ?? mission.title;
-}
-
-function isoDate(d: Date | string): string {
-  return new Date(d).toISOString().slice(0, 10);
 }
 
 // Today-evening.dc.html — "Спасти стрик · N мин": то же число минут, что уже
@@ -65,54 +66,58 @@ function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 86_400_000);
 }
 
+// День активности — по UTC, как у activity_days, vocabulary.ts и daily-quests.
 function todayStartUtc(): string {
   const now = new Date();
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
 }
 
-// M3 Slice 1 — редизайн Today (docs/ui/unified-ui-slice-1-plan.md,
-// docs/ui/current-ui-audit.md §3): один primary CTA вместо нескольких
-// конкурирующих карточек равного веса. PremiumCard/WelcomeCard/tip-карточка
-// сюда намеренно не переносятся — "no unrelated upgrade banner" прямо
-// входит в acceptance criteria этого слайса; /pricing и Stripe-flow не
-// удаляются, просто больше не занимают место на главном экране. Route
-// остаётся /home — только композиция страницы меняется.
+// /home — главный экран «Сегодня» (Phase 2, WP2). Страница считает данные из
+// реальных таблиц и отдаёт готовую модель в DashboardView; решение «что
+// предложить первым» (миссия > повтор > чтение > добавить материал) и
+// приоритеты Learning Paths остались прежними — меняется только раскладка и
+// состояния: first-day (чек-лист первых шагов), regular, goal-done.
 //
-// M3 Slice 7 (Today v2, docs/ui/m3-slice7-today-v2-plan.md): the primary CTA
-// slot now prefers a real active Mission (pickHeroMission) over the generic
-// review/continue/add-material action — that fallback logic itself is
-// unchanged and still renders exactly as before when no mission exists.
-//
-// Композиция под точный визуальный референс (docs/release-2026-08-26/12_...
-// уже смерджен, это следующий слой поверх него): вся decision-логика ниже
-// (decidePrimaryAction/pickHeroMission/getDueCount/streak/continueReading/
-// missions) не тронута — меняется только то, как результат раскладывается
-// по экрану. StreakHero (отдельная крупная карточка-огонь) убрана с этого
-// экрана — тот же streak_current теперь первая плитка в StatStrip, второго
-// места для него в референсе нет (Progress по-прежнему показывает свой
-// собственный StreakHero, тот файл не тронут).
-//
-// redesign/duolingo-flat phase 6: та же логика, новая раскладка — hero-ряд
-// (HeroCard + панель с маскотом) и bento-сетка из Card (6 колонок на
-// desktop, 2 на мобильном). StatStrip разложен по ячейкам bento; streak
-// теперь и чипом в hero, и тёплой ячейкой в сетке.
+// Необязательные блоки (миссии, путь, задания, неделя, счётчики слов) не
+// должны ронять всю страницу: сбой такого блока логируется, блок
+// подменяется пустым значением, а вверху появляется предупреждение. Профиль
+// и авторизация обязательны — их ошибка по-прежнему уходит в error.tsx.
 export default async function HomePage() {
   const profile = await requireProfile();
   const supabase = await createClient();
+  const now = new Date();
   const sevenDaysAgo = daysAgo(7).toISOString();
+  const todayStartIso = todayStartUtc();
+  const todayStartMs = new Date(todayStartIso).getTime();
+
+  const failed: string[] = [];
+  function settled<T>(label: string, promise: PromiseLike<T>, fallback: T): Promise<T> {
+    return Promise.resolve(promise).catch((error: unknown) => {
+      // redirect()/notFound() и запросные API Next сигналят служебными
+      // исключениями — их нельзя проглатывать (docs: unstable_rethrow).
+      unstable_rethrow(error);
+      failed.push(label);
+      log.error({ kind: "home_block", message: `${label}: ${error instanceof Error ? error.message : "unknown"}` });
+      return fallback;
+    });
+  }
+  const fallbackWeek: WeekdayMark[] = Array.from({ length: 7 }, (_, i) => (i === todayColumn(now) ? "today" : "empty"));
 
   const [
     dueCount,
-    { data: continueRows },
+    continueResult,
     missions,
     twinSettings,
-    { count: pendingRecommendationsCount },
-    missionWeekStats,
-    { data: activitySessions },
-    { data: activityReviews },
-    { data: activityDayToday },
+    pendingResult,
+    sessionsResult,
+    reviewsResult,
+    dayResult,
     activePathState,
     dailyQuestsSnapshot,
+    savedWords,
+    savedWordsToday,
+    streakWeek,
+    userResult,
   ] = await Promise.all([
     getDueCount(supabase, profile.id, profile.target_language),
     supabase
@@ -124,14 +129,13 @@ export default async function HomePage() {
       .lt("percent_read", 96)
       .order("last_read_at", { ascending: false })
       .limit(1),
-    getOrGenerateActiveMissions(supabase, profile.id, profile.target_language),
+    settled<MissionRow[]>("Миссии", getOrGenerateActiveMissions(supabase, profile.id, profile.target_language), []),
     getOrCreateSettingsSafe(supabase, profile.id),
     supabase
       .from("language_recommendations")
       .select("id", { count: "exact", head: true })
       .eq("user_id", profile.id)
       .eq("status", "pending"),
-    getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date()).toISOString()),
     supabase
       .from("reading_sessions")
       .select("started_at, ended_at")
@@ -143,14 +147,24 @@ export default async function HomePage() {
       .eq("flashcards.owner_id", profile.id)
       .eq("flashcards.language", profile.target_language)
       .gte("reviewed_at", sevenDaysAgo),
-    // docs/moments/ROADMAP.md, этап 1 — плитка цели дня теперь в XP
-    // (activity_days), не в новых словах (vocabulary_items).
-    supabase.from("activity_days").select("xp").eq("user_id", profile.id).eq("day", todayStartUtc().slice(0, 10)).maybeSingle(),
-    getActivePathStateAction(),
-    getDailyQuestsSnapshot(supabase, profile.id, profile.target_language),
+    // Цель дня считается в XP (activity_days), не в новых словах.
+    supabase.from("activity_days").select("xp").eq("user_id", profile.id).eq("day", todayStartIso.slice(0, 10)).maybeSingle(),
+    settled("Учебный путь", getActivePathStateAction(), null),
+    settled<DailyQuestsSnapshot | null>(
+      "Задания дня",
+      getDailyQuestsSnapshot(supabase, profile.id, profile.target_language),
+      null,
+    ),
+    settled("Сохранённые слова", countSavedWords(supabase, profile.id, profile.target_language), 0),
+    settled("Слова за сегодня", countSavedWordsSince(supabase, profile.id, profile.target_language, todayStartIso), 0),
+    settled("Неделя", fetchStreakWeekMarks(supabase, profile.id, now), fallbackWeek),
+    supabase.auth.getUser(),
   ]);
 
-  const continuingRow = continueRows?.[0] as
+  if (continueResult.error) failed.push("Продолжить чтение");
+  if (dayResult.error) failed.push("Прогресс за день");
+
+  const continuingRow = continueResult.data?.[0] as
     | {
         percent_read: number;
         texts:
@@ -164,23 +178,19 @@ export default async function HomePage() {
   const continueReading = continueTextRaw
     ? { textId: continueTextRaw.id, title: continueTextRaw.title, percentRead: continuingRow!.percent_read }
     : null;
-  // Phase 7: только для обложки ContinueLearningCard ("video"-мотив) —
+  // Только для обложки карточки «Продолжить» (мотив «video»);
   // decidePrimaryAction получает прежнюю форму continueReading.
   const continueIsVideo = Boolean(continueTextRaw?.youtube_video_id);
 
   const primaryAction = decidePrimaryAction({ dueCount, continueReading });
-  // Профиль имени не хранит; берём из входа через Google/Apple, если есть.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
-  const fullName = [meta.given_name, meta.full_name, meta.name].find((v): v is string => typeof v === "string" && v.trim().length > 0);
-  const firstName = fullName?.trim().split(/\s+/)[0] ?? null;
-  const greeting = greetingForHour(new Date().getHours());
 
-  // Today v2 §4: the hero mission's reason line comes from real fields only
-  // — the pattern's own evidence_count when one exists, otherwise the same
-  // reasonLabel() already used on Mission Details. Never a fabricated count.
+  // Профиль имени не хранит: оно есть только у входивших через Google/Apple.
+  const user = userResult.data.user;
+  const firstName = firstNameFromMetadata(user?.user_metadata);
+  const serverGreeting = greetingForHour(now.getHours());
+
+  // Причина миссии — только из реальных полей: evidence_count паттерна или
+  // тот же reasonLabel(), что и на странице миссии. Числа не выдумываем.
   const heroMission = pickHeroMission(missions);
   let heroReasonText: string | null = null;
   if (heroMission) {
@@ -197,10 +207,7 @@ export default async function HomePage() {
     }
   }
 
-  // Единая форма props для HeroCard — та же decidePrimaryAction/
-  // pickHeroMission-развилка, что была раньше (миссия > повтор > чтение >
-  // добавить материал), просто приводится к одной форме вместо двух
-  // разных компонентов (HeroMissionCard/PrimaryActionCard, см. hero-card.tsx).
+  // Единая форма данных для hero — миссия > повтор > чтение > добавить материал.
   const heroCardData = heroMission
     ? {
         eyebrow: "Твой следующий шаг",
@@ -241,11 +248,8 @@ export default async function HomePage() {
             meta: [] as string[],
           };
 
-  // Today v2 §4: compact "Мой английский" — up to 2 real patterns, gated on
-  // the same enabled flag Language Twin itself uses (getLanguageTwinEntryState
-  // does the identical check) so a disabled profile never leaks pattern data
-  // here even though this reads language_error_patterns directly instead of
-  // going through that helper (which only ever exposes one focus pattern).
+  // «Мой английский»: до двух реальных паттернов, только при включённом
+  // Language Twin (тот же флаг, что использует сам Language Twin).
   let topPatterns: Pick<PatternRow, "category" | "title" | "status">[] = [];
   if (twinSettings?.enabled) {
     const { data: patternsData } = await supabase
@@ -258,68 +262,84 @@ export default async function HomePage() {
       .slice(0, 2);
   }
 
-  // M3 Slice 8 §11: Today's hero stays authoritative — Learning Paths never
-  // competes with it, only attributes or adds a slim secondary card. Case 1:
-  // the hero mission already matches the active Path's current focus skill
-  // -> small "Из твоего пути" attribution, no ranking changes. Case 2: no
-  // hero relevant to the Path -> one compact secondary card, never a second
-  // dashboard section.
+  // Learning Paths не спорят с hero: либо подпись «Из твоего пути», если миссия
+  // совпала с фокусом пути, либо один компактный блок продолжения.
   const focusSkill = activePathState?.focusSkill ?? null;
   const heroMatchesPath = Boolean(
     heroMission && focusSkill && findMatchingMissionForSkill([heroMission], focusSkill)?.id === heroMission.id,
   );
   const pathLevelLabel = activePathState ? `${activePathState.path.levelFrom} → ${activePathState.path.levelTo}` : null;
-  const showPathSecondaryCard = Boolean(activePathState && focusSkill && !heroMatchesPath);
+  const showPathCard = Boolean(activePathState && focusSkill && !heroMatchesPath);
 
-  const activeDaysThisWeek = new Set([
-    ...(activitySessions ?? []).map((s) => isoDate(s.started_at)),
-    ...(activityReviews ?? []).map((r) => isoDate(r.reviewed_at)),
-  ]).size;
+  // Данные дня: цель, серия, режим экрана.
+  const activitySessions = sessionsResult.data ?? [];
+  const activityReviews = reviewsResult.data ?? [];
+  const xpToday = dayResult.data?.xp ?? 0;
+  const goal = dailyGoalProgress(xpToday, profile.daily_xp_goal);
+  const streak = streakDisplay(
+    {
+      streakCurrent: profile.streak_current,
+      lastActiveDate: profile.last_active_date,
+      freezeAvailable: profile.streak_freeze_available,
+      freezeWeek: profile.streak_freeze_week,
+    },
+    now,
+  );
 
-  // redesign/duolingo-flat phase 6: те же метрики, что раньше жили в
-  // StatStrip, разложены по ячейкам bento. Минуты чтения — единственное
-  // новое число, и оно тоже реальное: сумма ended_at − started_at по
-  // сессиям, начатым сегодня (reader.tsx/watch-player.tsx пишут их через
-  // finishReading(), только для завершённых сессий). Граница "сегодня" —
-  // UTC-полночь, как у newWordsToday выше.
-  const todayStart = new Date(todayStartUtc()).getTime();
-  const readingMinutesToday = (activitySessions ?? []).reduce((sum, s) => {
-    const started = new Date(s.started_at).getTime();
-    if (started < todayStart || !s.ended_at) return sum;
-    return sum + Math.max(0, Math.round((new Date(s.ended_at).getTime() - started) / 60_000));
-  }, 0);
-  const weekHint =
-    activeDaysThisWeek > 0 || missionWeekStats.completed > 0
-      ? [
-          `${t.weekProgress.activeDays}: ${activeDaysThisWeek}`,
-          ...(missionWeekStats.completed > 0 ? [`${t.weekProgress.missionsCompleted}: ${missionWeekStats.completed}`] : []),
-        ].join(" · ")
-      : undefined;
+  // Первые шаги: окна «за 7 дней» покрывают всю историю молодого аккаунта.
+  const firstSteps = computeFirstSteps({
+    hasRead: activitySessions.length > 0 || continueReading !== null,
+    savedWords,
+    hasReviewed: activityReviews.length > 0,
+    dueCount,
+  });
+  const showFirstSteps = shouldShowFirstSteps(firstSteps, accountAgeDays(profile.created_at, now));
+  const mode = dashboardMode({
+    goalDone: goal.done,
+    xp: profile.xp,
+    firstStepsVisible: showFirstSteps,
+    firstStepsDone: firstSteps.doneCount,
+  });
 
-  const activeDates = [
-    ...(activitySessions ?? []).map((s) => isoDate(s.started_at)),
-    ...(activityReviews ?? []).map((r) => isoDate(r.reviewed_at)),
-  ];
-  const marks = weekMarks(activeDates);
-  // docs/moments/ROADMAP.md, этап 2 — Today-evening: та же неделя, что
-  // Streak-30/Freeze-used (реальная активность + freeze_used), не недельные
-  // "marks" выше (та же суть, но из другого источника и без заморозки).
-  const streakWeek = await fetchStreakWeekMarks(supabase, profile.id);
-  const xpToday = activityDayToday?.xp ?? 0;
-  const xpGoal = profile.daily_xp_goal;
-  const langCode = profile.target_language.slice(0, 2).toUpperCase();
   const level = profile.level ?? profile.self_reported_cefr;
-  void readingMinutesToday;
-  void weekHint;
+  const langCode = profile.target_language.slice(0, 2).toUpperCase();
 
-  // docs/moments/mockups/Main.dc.html — раскладка 1:1 с макетом v7. Решения
-  // «что показать» выше не менялись; ниже макета — карточки, которых нет на
-  // макете, но которые несут реальную функциональность (путь, рекомендации,
-  // «Мой английский», быстрые действия) — их не убираем.
+  const hero = {
+    eyebrow: heroCardData.eyebrow,
+    title: heroCardData.title,
+    // Подзаголовок нужен только там, где meta пуста (добавить материал):
+    // у миссии, повтора и чтения те же сведения уже стоят в meta.
+    subtitle: heroCardData.actionType === "add_material" ? heroCardData.subtitle : undefined,
+    meta: heroCardData.meta,
+    ctaLabel: heroCardData.ctaLabel,
+    href: heroCardData.href,
+    actionType: heroCardData.actionType,
+    footnote: heroMatchesPath && pathLevelLabel ? `Из твоего пути: ${pathLevelLabel}` : undefined,
+  };
+
+  const summary = summarizeToday({
+    readingMinutes: readingMinutesSince(activitySessions, todayStartMs),
+    reviews: countSince(
+      activityReviews.map((r) => r.reviewed_at as string),
+      todayStartMs,
+    ),
+    newWords: savedWordsToday,
+  });
+
+  const questsCard =
+    dailyQuestsSnapshot && !(dailyQuestsSnapshot.allComplete && dailyQuestsSnapshot.chestClaimedToday) ? (
+      <DailyQuestsCard
+        defs={dailyQuestsSnapshot.defs}
+        progress={dailyQuestsSnapshot.progress}
+        allComplete={dailyQuestsSnapshot.allComplete}
+        chestClaimedToday={dailyQuestsSnapshot.chestClaimedToday}
+      />
+    ) : null;
+
   return (
     <TodayEveningGate
       xpToday={xpToday}
-      streak={profile.streak_current}
+      streak={streak.value}
       streakLongest={profile.streak_longest}
       xp={profile.xp}
       langCode={langCode}
@@ -329,22 +349,8 @@ export default async function HomePage() {
       reviewHref={heroCardData.href}
       reviewMinutesHint={extractMinutesHint(heroCardData.meta)}
     >
-      {profile.xp_boost_until && (
-        <div className="mx-auto flex max-w-md justify-end px-5 pt-3">
-          <DoubleXpChip boostUntil={profile.xp_boost_until} />
-        </div>
-      )}
-      {!(dailyQuestsSnapshot.allComplete && dailyQuestsSnapshot.chestClaimedToday) && (
-        <div className="mx-auto w-full max-w-md px-5 pt-3">
-          <DailyQuestsCard
-            defs={dailyQuestsSnapshot.defs}
-            progress={dailyQuestsSnapshot.progress}
-            allComplete={dailyQuestsSnapshot.allComplete}
-            chestClaimedToday={dailyQuestsSnapshot.chestClaimedToday}
-          />
-        </div>
-      )}
-      <TodayView
+      <DashboardView
+        mode={mode}
         analytics={
           <TodayAnalytics
             dueCountBucket={dueCountBucket(dueCount)}
@@ -353,29 +359,56 @@ export default async function HomePage() {
           />
         }
         installBanner={<InstallBanner />}
+        boostChip={profile.xp_boost_until ? <DoubleXpChip boostUntil={profile.xp_boost_until} /> : null}
+        questsCard={questsCard}
+        notices={failed}
+        serverGreeting={serverGreeting}
+        firstName={firstName}
+        email={user?.email ?? null}
         langCode={langCode}
         level={level}
-        streak={profile.streak_current}
-        streakLongest={profile.streak_longest}
         xp={profile.xp}
-        greeting={greeting}
-        firstName={firstName}
-        xpToday={xpToday}
-        xpGoal={xpGoal}
+        streak={{ value: streak.value, longest: profile.streak_longest, state: streak.state }}
+        goal={goal}
+        summary={summary}
         dueCount={dueCount}
-        marks={marks}
-        hero={{
-          ...heroCardData,
-          footnote: heroMatchesPath && pathLevelLabel ? `Из твоего пути: ${pathLevelLabel}` : undefined,
-        }}
+        week={streakWeek}
+        todayColumn={todayColumn(now)}
+        learningGoal={learningGoalLabel(profile.primary_goal)}
+        pathLabel={pathLevelLabel}
+        hero={hero}
         continueReading={continueReading}
         continueIsVideo={continueIsVideo}
-        pathCard={
-          showPathSecondaryCard && activePathState && focusSkill
-            ? { href: `/learning-paths/${activePathState.path.slug}`, label: pathLevelLabel ?? "", title: focusSkill.title }
+        lastActivity={lastActivityLabel(profile.last_active_date, now)}
+        path={
+          showPathCard && activePathState && focusSkill
+            ? {
+                href: `/learning-paths/${activePathState.path.slug}`,
+                label: pathLevelLabel ?? "",
+                title: focusSkill.title,
+                percent: activePathState.contentProgressPercent,
+              }
             : null
         }
-        pendingRecommendationsCount={pendingRecommendationsCount ?? 0}
+        showPathInvite={!activePathState && mode !== "first-day" && !failed.includes("Учебный путь")}
+        firstSteps={showFirstSteps ? firstSteps : null}
+        wantMore={
+          mode === "goal-done"
+            ? buildWantMore({
+                hero: {
+                  eyebrow: heroCardData.eyebrow,
+                  title: heroCardData.title,
+                  subtitle: heroCardData.meta.length > 0 ? heroCardData.meta.join(" · ") : heroCardData.subtitle,
+                  ctaLabel: heroCardData.ctaLabel,
+                  href: heroCardData.href,
+                  actionType: heroCardData.actionType,
+                },
+                continueReading,
+                dueCount,
+              })
+            : []
+        }
+        pendingRecommendationsCount={pendingResult.count ?? 0}
         topPatterns={topPatterns}
       />
     </TodayEveningGate>

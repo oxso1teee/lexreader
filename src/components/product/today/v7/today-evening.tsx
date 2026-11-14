@@ -72,7 +72,7 @@ export default function TodayEveningView({
           <span
             aria-label={`Стрик ${streak} дней, сегодня ещё не продлён`}
             className="td-chip"
-            style={{ background: "#fff", border: "2px dashed var(--ember)", color: "var(--ember-text)", animation: "mo-stepring 1.6s ease-out infinite" }}
+            style={{ background: "var(--surface)", border: "2px dashed var(--ember)", color: "var(--ember-text)", animation: "mo-stepring 1.6s ease-out infinite" }}
           >
             <FlameIcon size={20} />
             {streak}
@@ -86,7 +86,7 @@ export default function TodayEveningView({
 
       <div
         className="mo-rise"
-        style={{ position: "relative", margin: "14px 16px 0", borderRadius: 24, background: "var(--ember-text)", color: "#fff", padding: "22px 20px 20px", boxShadow: "inset 0 -6px 0 0 #9a330a", overflow: "hidden" }}
+        style={{ position: "relative", margin: "14px 16px 0", borderRadius: 24, background: "var(--ember-fill)", color: "#fff", padding: "22px 20px 20px", boxShadow: "inset 0 -6px 0 0 var(--ember-fill-edge)", overflow: "hidden" }}
       >
         <div className="mo-flick" style={{ position: "absolute", right: 14, top: 10, opacity: 0.95 }}>
           <svg viewBox="0 0 24 24" width="96" height="96" aria-hidden="true">
@@ -94,7 +94,7 @@ export default function TodayEveningView({
             <path d="M12 12c.6 2 3 3 3 5.5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3.5.2 1 .7 1.5 1.2 1.5 0-1.5-.4-2.5.3-3.5z" fill="var(--sun)" />
           </svg>
         </div>
-        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", opacity: 0.9 }}>Стрик под угрозой</div>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>Стрик под угрозой</div>
         <div className="td-disp" style={{ fontSize: 26, lineHeight: 1.15, fontWeight: 900, marginTop: 8, maxWidth: 220 }}>
           {streak} {daysWord(streak)} сгорят в полночь
         </div>
@@ -108,7 +108,7 @@ export default function TodayEveningView({
         <div style={{ fontSize: 14, marginTop: 4, opacity: 0.92 }}>Одно короткое занятие сохранит серию</div>
         <ButtonLink
           href={reviewHref}
-          style={{ marginTop: 16, width: "100%", ["--btn-fill" as string]: "#fff", ["--btn-edge" as string]: "#ffd9a3", ["--btn-label" as string]: "var(--ember-text)" }}
+          style={{ marginTop: 16, width: "100%", ["--btn-fill" as string]: "#fff", ["--btn-edge" as string]: "#ffd9a3", ["--btn-label" as string]: "var(--ember-fill)" }}
         >
           Спасти стрик{reviewMinutesHint ? ` · ${reviewMinutesHint} мин` : ""}
         </ButtonLink>

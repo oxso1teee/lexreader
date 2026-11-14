@@ -77,6 +77,9 @@ test("Today shows the add-material empty state for a brand-new account (no revie
   await page.goto("/home");
   await expect(page.getByRole("link", { name: "Добавить материал" })).toHaveAttribute("href", "/library/new");
   await expect(page.getByText("Пока нет материала в процессе")).toBeVisible();
+  // Today-new: у аккаунта без единого действия — чек-лист первых шагов, 0 из 3.
+  await expect(page.getByRole("heading", { level: 2, name: "Первые шаги" })).toBeVisible();
+  await expect(page.getByText("0 из 3", { exact: true })).toBeVisible();
 });
 
 test("mobile navigation is visible and desktop sidebar is hidden at 390px", async ({ page }) => {
