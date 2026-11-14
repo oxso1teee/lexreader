@@ -118,6 +118,14 @@ export default function LessonComplete({
           label={`Пройдено ${doneOfLessons(completion.path.doneLessons, completion.path.totalLessons)}`}
         />
         <p className="m-0 text-xs text-[var(--text-secondary)]">{doneOfLessons(completion.path.doneLessons, completion.path.totalLessons)}</p>
+        {completion.xpAwarded === 0 && completion.xpAlreadyEarned && completion.xpClaimedVia && (
+          <p className="m-0 flex items-center gap-2 text-xs text-[var(--text-secondary)]" data-testid="xp-source-note">
+            <Target aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {completion.xpClaimedVia === "check"
+              ? "Награда за этот навык уже получена за проверку знаний — она одна на навык."
+              : "Награда за этот навык уже получена за урок — она одна на навык."}
+          </p>
+        )}
         {!completion.passed && completion.xpAwarded === 0 && !completion.xpAlreadyEarned && (
           <p className="m-0 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
             <Target aria-hidden="true" className="h-4 w-4 shrink-0" />

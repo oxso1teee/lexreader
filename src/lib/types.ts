@@ -8,6 +8,11 @@ export interface Profile {
    *  5/10/15/20 минут занятия), заменяет daily_word_goal как основную
    *  метрику на главном экране; daily_word_goal сохранён для совместимости. */
   daily_xp_goal: number;
+  /** Iteration 6 (0059) — IANA-пояс пользователя; null = UTC. День цели, серии и заданий считается по нему. */
+  timezone: string | null;
+  /** Iteration 6 (0059) — тип дневной цели; для 'xp' размер — daily_xp_goal, для остальных — daily_goal_target. */
+  daily_goal_type: "xp" | "lessons" | "exercises" | "reading_minutes" | "words";
+  daily_goal_target: number | null;
   streak_current: number;
   streak_longest: number;
   last_active_date: string | null;
@@ -21,7 +26,7 @@ export interface Profile {
    *  сторож от повторного начисления. */
   perfect_week_awarded_week: string | null;
   /** docs/moments/ROADMAP.md, этап 5 — сторож от повторного открытия
-   *  сундука daily-quests в тот же UTC-день. */
+   *  сундука daily-quests в тот же день пользователя. */
   daily_quest_chest_claimed_date: string | null;
   /** Double-XP: активен, пока now() < xp_boost_until. */
   xp_boost_until: string | null;

@@ -44,6 +44,8 @@ export interface DashboardViewProps {
   installBanner?: ReactNode;
   boostChip?: ReactNode;
   questsCard?: ReactNode;
+  /** Уровень и последние достижения (RewardsSummaryCard). */
+  rewardsCard?: ReactNode;
   /** Названия блоков, которые не удалось загрузить; пусто — всё в порядке. */
   notices?: string[];
 
@@ -186,8 +188,9 @@ export default function DashboardView(props: DashboardViewProps) {
           <div className="order-1">
             {goalDone ? (
               <GoalDoneHero
-                xpToday={goal.xpToday}
-                xpGoal={goal.xpGoal}
+                current={goal.current}
+                target={goal.target}
+                unit={goal.unitMany}
                 streakLine={streakExtendedLine(streak.state, streak.value)}
                 summary={props.summary}
               />
@@ -239,6 +242,8 @@ export default function DashboardView(props: DashboardViewProps) {
           </div>
 
           {props.questsCard && <div className="order-6 empty:hidden">{props.questsCard}</div>}
+
+          {props.rewardsCard && <div className="order-6 empty:hidden">{props.rewardsCard}</div>}
 
           {props.pendingRecommendationsCount > 0 && (
             <div className="order-7">

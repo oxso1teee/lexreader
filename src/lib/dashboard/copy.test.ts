@@ -37,3 +37,13 @@ test("weekNote(): серии нет сейчас, но рекорд был — �
 test("weekNote(): живая серия без рекорда (не должно случаться) — подписи нет", () => {
   assert.equal(weekNote({ streakState: "alive", streakLongest: 0 }), null);
 });
+
+test("greetingSubline(): остаток называется в единицах выбранной цели", async () => {
+  const { goalProgressFor } = await import("./goal.ts");
+  const activity = { xp: 10, readingMinutes: 4, reviewedWords: 12, lessons: 0, exercises: 3 };
+  assert.equal(greetingSubline("regular", goalProgressFor({ type: "reading_minutes", target: 10 }, activity, 50)), "Ещё 6 мин до цели дня");
+  assert.equal(greetingSubline("regular", goalProgressFor({ type: "lessons", target: 2 }, activity, 50)), "Ещё 2 урока до цели дня");
+  assert.equal(greetingSubline("regular", goalProgressFor({ type: "lessons", target: 3 }, { ...activity, lessons: 2 }, 50)), "Ещё 1 урок до цели дня", "форма единицы — по остатку, не по размеру цели");
+  assert.equal(greetingSubline("regular", goalProgressFor({ type: "words", target: 20 }, activity, 50)), "Ещё 8 слов до цели дня");
+  assert.equal(greetingSubline("regular", goalProgressFor({ type: "exercises", target: 10 }, activity, 50)), "Ещё 7 упражнений до цели дня");
+});

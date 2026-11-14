@@ -128,8 +128,8 @@ test("claimXp: право на XP — одно на навык: вторая п�
   assert.equal(await store.claimXp(lesson.id, 20), true);
   assert.equal(await store.claimXp(check.id, 20), false);
   assert.equal(db.rows("lesson_attempts").filter((r) => r.xp_claimed_at !== null).length, 1);
-  assert.equal(await store.hasXpClaim(address), true);
-  assert.equal(await store.hasXpClaim({ ...address, skillKey: "grammar.past_simple" }), false);
+  assert.equal(await store.xpClaimSource(address), "lesson", "награду занял урок — по нему и объясняем её источник");
+  assert.equal(await store.xpClaimSource({ ...address, skillKey: "grammar.past_simple" }), null);
 });
 
 test("claimXp: другая ошибка БД пробрасывается", async () => {
@@ -192,7 +192,7 @@ test("releaseXpClaim: освобождает право только у заве
   await store.releaseXpClaim(done.id);
   assert.equal(db.rows("lesson_attempts")[0].xp_claimed_at, null);
   assert.equal(db.rows("lesson_attempts")[0].xp_awarded, 0);
-  assert.equal(await store.hasXpClaim(address), false);
+  assert.equal(await store.xpClaimSource(address), null);
   assert.equal(await store.claimXp(done.id, 20), true, "право можно занять снова");
 });
 

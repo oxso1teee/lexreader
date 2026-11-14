@@ -5,11 +5,11 @@ import type { DailyGoalProgress } from "@/lib/dashboard/goal";
 import { pluralRu } from "@/lib/plural-ru";
 
 // Две плитки под hero: прогресс цели дня и очередь повторения. Обе — ссылки;
-// числа берутся из реальных данных (activity_days.xp, srs_state).
+// числа берутся из реальных данных (активность дня по выбранной цели, srs_state).
 export function GoalTile({ goal }: { goal: DailyGoalProgress }) {
   const Icon = goal.done ? Check : Zap;
   return (
-    <CardLink href="/progress" className="dash-tile">
+    <CardLink href="/rewards" className="dash-tile">
       {/* Кольцо — наглядная часть ссылки: значение уже названо текстом рядом. */}
       <div aria-hidden="true" className="inline-flex shrink-0">
         <ProgressRing
@@ -17,16 +17,16 @@ export function GoalTile({ goal }: { goal: DailyGoalProgress }) {
           tone="sun"
           size={56}
           stroke={6}
-          label={`Цель дня: ${goal.xpToday} из ${goal.xpGoal} XP`}
+          label={`Цель дня: ${goal.current} из ${goal.target} ${goal.unitMany}`}
         >
           <Icon aria-hidden="true" className="h-5 w-5 text-[var(--sun-text)]" />
         </ProgressRing>
       </div>
       <div className="min-w-0">
         <div className="dash-tile-value">
-          {goal.xpToday}/{goal.xpGoal}
+          {goal.current}/{goal.target}
         </div>
-        <div className="dash-tile-label">{goal.done ? "Цель дня выполнена" : "XP сегодня"}</div>
+        <div className="dash-tile-label">{goal.done ? "Цель дня выполнена" : goal.tileLabel}</div>
       </div>
     </CardLink>
   );

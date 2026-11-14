@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ACHIEVEMENTS } from "@/lib/achievements";
+import { pluralRu } from "@/lib/plural-ru";
 import type { AchievementMoment } from "@/lib/moments/types";
 import { MomentScreen } from "../moment-screen";
 
@@ -125,7 +126,7 @@ export function AchievementScreen({ moment, onClose }: { moment: AchievementMome
             </div>
           ))}
           <div className="mo-muted" style={{ fontSize: 13, flex: 1, textAlign: "right" }}>
-            Ещё {others.length} {others.length === 1 ? "достижение" : "достижения"}
+            Ещё {others.length} {pluralRu(others.length, "достижение", "достижения", "достижений")}
             <br />в профиле
           </div>
         </div>

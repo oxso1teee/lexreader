@@ -4,7 +4,7 @@ import { CURRICULA, findSkill, getAllSkills } from "../learning-paths/curriculum
 import { emptySkillProgress } from "../learning-paths/progress-engine.ts";
 import type { SkillProgressRow } from "../learning-paths/types.ts";
 import type { UnitDoneMoment } from "../moments/types.ts";
-import { LESSON_BASE_XP, LESSON_PERFECT_BONUS_XP } from "./scoring.ts";
+import { LESSON_BASE_XP, LESSON_PERFECT_BONUS_XP, lessonXp } from "./scoring.ts";
 import { advanceStep, finishSession, startSession, submitAnswer } from "./service.ts";
 import { buildLessonPlan } from "./plan.ts";
 import { createHarness, MemoryAttemptStore, type Harness } from "./testing/memory.ts";
@@ -552,16 +552,52 @@ test("finish: сбой записи флага первой победы про�
   assert.equal(retry.data.xpAwarded, LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP, "экран показывает уже начисленное");
 });
 
-test("finish: сбой освобождения права не дублирует XP (ошибка, а не повторное начисление)", async () => {
+test("finish: сбой освобождения права после неудачного начисления — повтор доводит начисление, XP ровно один раз", async () => {
   const h = createHarness(address);
   const session = await playThrough(h, lessonPlan, "lesson", right);
   h.rewards.failNextGrant = true;
   h.store.failNext("releaseXpClaim");
   const failed = await finishSession(h.deps, session.attemptId);
   assert.deepEqual(failed.ok ? null : failed.code, "storage_failed");
+  assert.equal(h.rewards.xpGrants.length, 0);
+  assert.notEqual(h.store.rows[0].xpClaimedAt, null, "право осталось занятым этой попыткой");
+
   const retry = await finishSession(h.deps, session.attemptId);
   assert.ok(retry.ok);
-  assert.equal(h.rewards.xpGrants.length, 0, "право осталось занятым — повторного начисления нет (лучше потерять, чем удвоить)");
+  assert.equal(retry.data.xpAwarded, LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP, "начисление доведено повтором, а не потеряно");
+  assert.equal(h.rewards.xpGrants.length, 1);
+  assert.ok(h.store.rows[0].finalizedAt);
+});
+
+test("finish: сбой процесса СРАЗУ ПОСЛЕ начисления (до записи результата) — повтор не начисляет второй раз и показывает прежнюю сумму", async () => {
+  const h = createHarness(address);
+  const session = await playThrough(h, lessonPlan, "lesson", right);
+  h.rewards.crashAfterGrant = true;
+  const crashed = await finishSession(h.deps, session.attemptId);
+  assert.deepEqual(crashed.ok ? null : crashed.code, "storage_failed");
+  assert.equal(h.rewards.xpGrants.length, 1, "XP уже начислен в журнале");
+  assert.equal(h.store.rows[0].finalizedAt, null);
+
+  const retry = await finishSession(h.deps, session.attemptId);
+  assert.ok(retry.ok);
+  assert.equal(retry.data.xpAwarded, LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP);
+  assert.equal(retry.data.xpPending, false);
+  assert.equal(h.rewards.xpGrants.length, 1, "повторного начисления нет");
+  assert.ok(h.store.rows[0].finalizedAt);
+});
+
+test("finish: сбой записи суммы после начисления — повтор берёт сумму из журнала, XP один раз", async () => {
+  const h = createHarness(address);
+  const session = await playThrough(h, lessonPlan, "lesson", right);
+  h.store.failNext("setXpAwarded");
+  const failed = await finishSession(h.deps, session.attemptId);
+  assert.deepEqual(failed.ok ? null : failed.code, "storage_failed");
+  assert.equal(h.rewards.xpGrants.length, 1);
+
+  const retry = await finishSession(h.deps, session.attemptId);
+  assert.ok(retry.ok);
+  assert.equal(h.rewards.xpGrants.length, 1);
+  assert.equal(retry.data.xpAwarded, LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP);
 });
 
 test("finish: реально начисленный XP (например, ×2 по Double-XP) показывается и сохраняется", async () => {
@@ -700,4 +736,115 @@ test("MemoryAttemptStore: держит те же ограничения, что 
   assert.equal(a.id, b.id, "вторая открытая попытка не создаётся");
   const c = await store.create({ ...address, mode: "check", stepsTotal: 3, signature: "s" });
   assert.notEqual(a.id, c.id, "а другой режим — отдельная попытка");
+});
+
+// ---------- ХАРАКТЕРИЗАЦИЯ (ждёт продуктового решения) ----------
+// Награда за навык одна на (пользователь, путь, версия, навык) — уникальный индекс в БД, и
+// занять её может любая зачтённая попытка: и урок, и быстрая проверка знаний. Эти тесты
+// фиксируют ТЕКУЩЕЕ поведение, чтобы решение «менять или нет» принималось по фактам.
+// Если правило изменят, обновить тесты вместе с ним.
+
+function stepCounts(plan: LessonPlan) {
+  const exercises = plan.steps.filter((s) => s.kind === "exercise").length;
+  return { steps: plan.steps.length, exercises, content: plan.steps.length - exercises };
+}
+
+test("ХАРАКТЕРИЗАЦИЯ: проверка знаний до урока забирает XP навыка — последующий урок XP не даёт", async () => {
+  const h = createHarness(address);
+  const check = await playThrough(h, checkPlan, "check", right);
+  const checkDone = await finishSession(h.deps, check.attemptId);
+  assert.ok(checkDone.ok && checkDone.data.passed);
+  assert.equal(checkDone.data.xpAwarded, LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP, "проверка без ошибок даёт полную награду навыка");
+
+  const lesson = await playThrough(h, lessonPlan, "lesson", right);
+  const lessonDone = await finishSession(h.deps, lesson.attemptId);
+  assert.ok(lessonDone.ok && lessonDone.data.passed);
+  assert.equal(lessonDone.data.xpAwarded, 0, "урок после проверки награды не даёт");
+  assert.equal(lessonDone.data.xpAlreadyEarned, true, "экран говорит «XP за этот урок уже получен»");
+  assert.deepEqual(h.rewards.xpGrants, [LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP], "за навык выдана ровно одна награда");
+});
+
+test("ХАРАКТЕРИЗАЦИЯ: урок до проверки — проверка XP не даёт; обратный порядок симметричен", async () => {
+  const h = createHarness(address);
+  const lesson = await playThrough(h, lessonPlan, "lesson", right);
+  assert.ok((await finishSession(h.deps, lesson.attemptId)).ok);
+  const check = await playThrough(h, checkPlan, "check", right);
+  const checkDone = await finishSession(h.deps, check.attemptId);
+  assert.ok(checkDone.ok);
+  assert.equal(checkDone.data.xpAwarded, 0);
+  assert.equal(h.rewards.xpGrants.length, 1);
+});
+
+test("ХАРАКТЕРИЗАЦИЯ: проваленная проверка право на XP не занимает — урок после неё награду даёт", async () => {
+  const h = createHarness(address);
+  const check = await playThrough(h, checkPlan, "check", (exercise, index) => (index < 2 ? wrong(exercise) : right(exercise)));
+  const checkDone = await finishSession(h.deps, check.attemptId);
+  assert.ok(checkDone.ok);
+  assert.equal(checkDone.data.passed, false);
+  assert.equal(checkDone.data.xpAwarded, 0);
+  const lesson = await playThrough(h, lessonPlan, "lesson", right);
+  const lessonDone = await finishSession(h.deps, lesson.attemptId);
+  assert.ok(lessonDone.ok);
+  assert.equal(lessonDone.data.xpAwarded, LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP);
+});
+
+test("ХАРАКТЕРИЗАЦИЯ: проверка короче урока, а награда та же — это самый дешёвый способ получить XP навыка", () => {
+  const lessonSize = stepCounts(lessonPlan);
+  const checkSize = stepCounts(checkPlan);
+  assert.ok(checkSize.steps < lessonSize.steps, `проверка ${checkSize.steps} шагов против ${lessonSize.steps} у урока`);
+  assert.equal(checkSize.content, 0, "в проверке нет обучающего материала");
+  assert.ok(lessonSize.content > 0);
+  // награда зависит только от доли верных ответов (lessonXp), режим в формуле не участвует
+  assert.equal(lessonXp(checkSize.exercises, checkSize.exercises), LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP);
+  assert.equal(lessonXp(lessonSize.exercises, lessonSize.exercises), LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP);
+  console.log(`# проверка: ${checkSize.exercises} упражнений; урок: ${lessonSize.exercises} упражнений и ${lessonSize.content} шагов материала`);
+});
+
+// ---------- награда за навык одна: экран знает, чем она получена ----------
+
+test("xpClaimedVia: награда получена только что — режим этой попытки; позже — режим той, что её заняла", async () => {
+  const h = createHarness(address);
+  const check = await playThrough(h, checkPlan, "check", right);
+  const checkDone = await finishSession(h.deps, check.attemptId);
+  assert.ok(checkDone.ok);
+  assert.equal(checkDone.data.xpAwarded, LESSON_BASE_XP + LESSON_PERFECT_BONUS_XP);
+  assert.equal(checkDone.data.xpClaimedVia, "check", "награда получена проверкой");
+
+  const lesson = await playThrough(h, lessonPlan, "lesson", right);
+  const lessonDone = await finishSession(h.deps, lesson.attemptId);
+  assert.ok(lessonDone.ok);
+  assert.equal(lessonDone.data.xpAwarded, 0);
+  assert.equal(lessonDone.data.xpAlreadyEarned, true);
+  assert.equal(lessonDone.data.xpClaimedVia, "check", "урок после проверки: экран объясняет, что награда уже получена за проверку");
+  assert.equal(await h.store.xpClaimSource(address), "check");
+});
+
+test("xpClaimedVia: урок первым — награда за урок; проверка после него говорит то же; не зачтённая попытка и ожидание начисления — null", async () => {
+  const h = createHarness(address);
+  const lesson = await playThrough(h, lessonPlan, "lesson", right);
+  const lessonDone = await finishSession(h.deps, lesson.attemptId);
+  assert.ok(lessonDone.ok);
+  assert.equal(lessonDone.data.xpClaimedVia, "lesson");
+  const check = await playThrough(h, checkPlan, "check", right);
+  const checkDone = await finishSession(h.deps, check.attemptId);
+  assert.ok(checkDone.ok);
+  assert.equal(checkDone.data.xpClaimedVia, "lesson");
+
+  const fresh = createHarness(address);
+  const failedCheck = await playThrough(fresh, checkPlan, "check", (exercise, index) => (index < 3 ? wrong(exercise) : right(exercise)));
+  const failedDone = await finishSession(fresh.deps, failedCheck.attemptId);
+  assert.ok(failedDone.ok);
+  assert.equal(failedDone.data.xpAlreadyEarned, false);
+  assert.equal(failedDone.data.xpClaimedVia, null, "ничего не получено — объяснять нечего");
+});
+
+test("xpClaimedVia: XP ждёт повтора (сбой начисления) — источник не объявляется, пока награда не получена", async () => {
+  const h = createHarness(address);
+  h.rewards.failNextGrant = true;
+  const lesson = await playThrough(h, lessonPlan, "lesson", right);
+  const done = await finishSession(h.deps, lesson.attemptId);
+  assert.ok(done.ok);
+  assert.equal(done.data.xpPending, true);
+  assert.equal(done.data.xpAlreadyEarned, false);
+  assert.equal(done.data.xpClaimedVia, null);
 });

@@ -271,16 +271,19 @@ export async function finishSession(deps: ServiceDeps, attemptId: string): Promi
       const unitDone = await progress.afterChange(newlyCompleted);
       if (unitDone) moments.push(unitDone);
 
-      if (evaluation.passed && attempt.xpClaimedAt === null) {
+      if (evaluation.passed) {
         const amount = lessonXp(evaluation.correct, evaluation.total);
-        if (await deps.store.claimXp(attempt.id, amount)) {
-          // Право занимается ДО начисления: два параллельных завершения не удвоят
-          // награду. Если начислить не вышло (grantXp вернул null — по контракту это
-          // «ничего не записано»), право освобождается, и повторное завершение
-          // попробует снова. Сбой процесса прямо между claim и addXp оставляет
-          // право занятым без XP — осознанный выбор «лучше потерять, чем удвоить»
-          // (тот же приём, что у наград дуэлей: флаг в БД + addXp на TS-стороне).
-          const grant = await deps.rewards.grantXp(amount);
+        // Право на XP за навык: либо уже у этой попытки (прошлое завершение упало
+        // между занятием права и начислением), либо занимаем его сейчас — атомарно,
+        // до начисления, чтобы два параллельных завершения не удвоили награду.
+        const holdsClaim = attempt.xpClaimedAt !== null || (await deps.store.claimXp(attempt.id, amount));
+        if (holdsClaim) {
+          // Начисление идёт с ключом = id попытки (журнал XP, миграция 0059): повторный
+          // вызов безопасен — если XP уже начислен, вернётся прежняя сумма, а не вторая награда.
+          // Поэтому сбой процесса между claim и начислением больше не теряет XP: следующее
+          // завершение доведёт начисление. Если начислить не вышло (null — по контракту
+          // «ничего не записано»), право освобождается и экран предлагает повторить.
+          const grant = await deps.rewards.grantXp(amount, attempt.id);
           if (grant) {
             xpAwarded = grant.awarded;
             moments = [...moments, ...grant.moments];
@@ -304,7 +307,9 @@ export async function finishSession(deps: ServiceDeps, attemptId: string): Promi
       if (!xpPending) await deps.store.markFinalized(attempt.id);
     }
 
-    const alreadyEarned = xpPending ? false : xpAwarded > 0 || (await deps.store.hasXpClaim(address));
+    // Награда за навык одна — за урок или за проверку знаний. Откуда она взялась, экран говорит прямо.
+    const xpClaimedVia: LessonMode | null = xpPending ? null : xpAwarded > 0 ? attempt.mode : await deps.store.xpClaimSource(address);
+    const alreadyEarned = xpClaimedVia !== null;
     const map = buildPathMap(path, await progress.loadPathRows());
     const lesson = map.units.flatMap((unit) => unit.lessons).find((node) => node.key === skill.key);
     const unit = map.units.find((u) => u.lessons.some((node) => node.key === skill.key));
@@ -323,6 +328,7 @@ export async function finishSession(deps: ServiceDeps, attemptId: string): Promi
       incorrectCount: evaluation.incorrect,
       xpAwarded,
       xpAlreadyEarned: alreadyEarned,
+      xpClaimedVia,
       xpPending,
       lessonCompleted: lesson?.state === "done",
       firstWin,

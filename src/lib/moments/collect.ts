@@ -1,4 +1,4 @@
-import type { Moment, WeekdayMark } from "./types.ts";
+import type { GoalDoneTarget, Moment, WeekdayMark } from "./types.ts";
 import { levelForXp, xpForLevel } from "../level.ts";
 import { STREAK_MILESTONES } from "../streak-engine.ts";
 
@@ -27,6 +27,9 @@ export interface CollectMomentsInput {
     /** Заполнено только когда repairStarted. */
     streakBeforeBreak: number | null;
   } | null;
+  /** Цель дня не в XP только что выполнена этим действием (результат mark_goal_met()).
+   *  Для цели в XP момент строится из xp выше — здесь всегда null/отсутствует. */
+  goalDone?: { goal: GoalDoneTarget; xpToday: number; xpGoal: number; minutesHint: number } | null;
   /** Пн..Вс текущей ISO-недели по activity_days.goal_met — для Goal-done. */
   goalWeek: WeekdayMark[];
   /** Пн..Вс по реальной активности + freeze_used (а не по цели дня) — для
@@ -53,6 +56,19 @@ export interface CollectMomentsInput {
 
 export function collectMoments(input: CollectMomentsInput): Moment[] {
   const moments: Moment[] = [];
+
+  // Выполнена цель дня не в XP — тот же момент и тот же id, что у XP-цели, с описанием цели.
+  if (input.goalDone) {
+    moments.push({
+      kind: "goal_done",
+      id: `goal_done:${input.today}`,
+      xpToday: input.goalDone.xpToday,
+      xpGoal: input.goalDone.xpGoal,
+      minutesHint: input.goalDone.minutesHint,
+      week: input.goalWeek,
+      goal: input.goalDone.goal,
+    });
+  }
 
   if (input.xp) {
     const { before, after, goal, minutesHint } = input.xp;

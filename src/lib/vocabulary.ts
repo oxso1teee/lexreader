@@ -1,7 +1,7 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { getPlan, FREE_DAILY_WORD_LIMIT } from "@/lib/subscription";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
-import { addXp } from "@/lib/xp-actions";
+import { awardXp, toAddXpResult } from "@/lib/xp/award";
 import { recordEvidence } from "@/lib/language-twin/evidence";
 import { escapeIlike } from "./ilike";
 import { findOrCreateFlashcard, type ContextSourceType, type VocabularySourceType } from "./vocabulary/save";
@@ -290,8 +290,9 @@ export async function saveVocabularyItem(
   // Раздел 5.2 промта: точка входа общая для читалки/ручного добавления/
   // "отправить в тетрадь" из Мозга — сюда стекается почти весь прогресс по
   // словарю, поэтому проверка достижений живёт именно здесь.
+  // Ключ — id нового слова: XP за слово даётся ровно один раз.
+  const xpResult = toAddXpResult(await awardXp(userId, { source: "word_saved", ref: created.id }));
   await checkAndAwardAchievements(supabase, userId, input.language);
-  const xpResult = await addXp(supabase, userId, 2);
 
   // M3 Slice 5: только новое слово, не повторный просмотр — иначе повторные
   // подсказки одного и того же слова засоряли бы Evidence Explorer дублями.

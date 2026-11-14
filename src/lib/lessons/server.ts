@@ -12,18 +12,21 @@ import {
 } from "@/lib/learning-paths/persist";
 import type { Skill } from "@/lib/learning-paths/types";
 import { minutesHintForGoal } from "@/lib/daily-goal";
+import { checkAchievementsForUser } from "@/lib/achievements-actions";
+import { goalDoneInfo } from "@/lib/goals/goal-sync";
+import { syncGoalProgressFor } from "@/lib/goals/goal-sync-server";
 import { log } from "@/lib/log";
 import { collectMoments } from "@/lib/moments/collect";
 import type { Moment } from "@/lib/moments/types";
 import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
 import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import { touchStreak } from "@/lib/streak";
-import { addXp, todayUtcIso } from "@/lib/xp-actions";
+import { awardXp } from "@/lib/xp/award";
 import type { LessonErrorCode } from "./errors";
 import { buildLessonPlan, hasCheckMode } from "./plan";
 import type { AttemptStore, ProgressPort, RewardPort, ServiceDeps } from "./ports";
 import { createSupabaseAttemptStore } from "./supabase-store";
-import type { AttemptRecord, SkillAddress } from "./types";
+import type { AttemptRecord, LessonMode, SkillAddress } from "./types";
 
 // Серверная сборка сервиса уроков: настоящие реализации портов поверх
 // Supabase и существующих систем приложения (прогресс пути, XP, серия, моменты).
@@ -59,28 +62,45 @@ function createProgressPort(supabase: SupabaseServerClient, userId: string, addr
   };
 }
 
-// Награда — те же addXp/touchStreak/collectMoments, что у чтения и повторения
+// Награда — те же awardXp/touchStreak/collectMoments, что у чтения и повторения
 // (не отдельная система). Серия и момент «цель дня» идут вместе с XP: урок —
 // такая же настоящая активность, как глава или сессия повторения.
 //
 // Контракт grantXp (см. ports.ts): null означает «XP не начислен, ничего не
 // записано» — только тогда сервис освобождает право на награду и допускает
-// повтор. addXp сам не бросает исключений и возвращает null лишь когда запись
-// не началась (профиль не найден / ошибка до записи), поэтому всё, что идёт
-// ПОСЛЕ успешного addXp (сборка моментов), обёрнуто отдельно: её сбой не должен
-// превратить уже начисленный XP в null — повтор начислил бы его дважды.
+// повтор. awardXp — одна транзакция в БД: при сбое не записано ничего, поэтому
+// null достоверен; всё, что идёт ПОСЛЕ успешного начисления (сборка моментов),
+// обёрнуто отдельно: её сбой не должен превратить уже начисленный XP в null.
 function createRewardPort(supabase: SupabaseServerClient, userId: string): RewardPort {
   return {
-    async grantXp(amount) {
+    async grantXp(amount, ref) {
       const streak = await touchStreak(supabase, userId).catch((error: unknown) => {
         log.error({ kind: "lesson_streak", message: error instanceof Error ? error.message : "unknown" });
         return null;
       });
-      const xp = await addXp(supabase, userId, amount);
-      if (!xp) return null;
+      const outcome = await awardXp(userId, { source: "lesson_complete", ref, amount });
+      if (outcome.status !== "awarded" && outcome.status !== "duplicate") return null;
+      // Зачтённый урок — прогресс целей «уроки» и «упражнения», которые XP не меняют: отметка
+      // «цель выполнена» ставится по фактам (для цели в XP её уже поставил award_xp). Делаем и
+      // на повторе (duplicate): если первая попытка упала до этого шага, отметка поставится сейчас.
+      const goalSync = await syncGoalProgressFor(supabase, userId);
+      const goalDone = goalDoneInfo(goalSync);
+      // Тот же ключ уже начислен (повтор после сбоя, параллельное завершение): это
+      // успех — XP у пользователя есть; моменты начисления не повторяем, а момент цели —
+      // только если именно этот вызов закрыл цель.
+      if (outcome.status === "duplicate") {
+        const moments = goalDone
+          ? collectMoments({ xp: null, goalDone, streak: null, goalWeek: await fetchGoalWeekMarks(supabase, userId).catch(() => []), streakWeek: [], newAchievementIds: [], wordMastered: null, today: goalSync?.day ?? "" })
+          : [];
+        return { awarded: outcome.awarded, moments };
+      }
+      const xp = outcome.result;
 
       let moments: Moment[] = [];
       try {
+        // Урок мог дать достижение (первый урок, 5/25 уроков, веха XP): проверяем
+        // после начисления и отдаём в моменты вместе с остальными.
+        const newAchievementIds = await checkAchievementsForUser(supabase, userId);
         const [goalWeek, streakWeek] = await Promise.all([
           fetchGoalWeekMarks(supabase, userId),
           streak ? fetchStreakWeekMarks(supabase, userId) : Promise.resolve([]),
@@ -93,12 +113,13 @@ function createRewardPort(supabase: SupabaseServerClient, userId: string): Rewar
               goal: xp.goal,
               minutesHint: minutesHintForGoal(xp.goal),
             },
+            goalDone,
             streak,
             goalWeek,
             streakWeek,
-            newAchievementIds: [],
+            newAchievementIds,
             wordMastered: null,
-            today: todayUtcIso(),
+            today: xp.day,
           }),
           ...(streak?.friendStreaks ?? []),
         ];
@@ -181,8 +202,10 @@ export interface LessonOverview {
   open: { stepIndex: number; stepsTotal: number } | null;
   /** Результат последней завершённой попытки. */
   last: { passed: boolean; correctCount: number; incorrectCount: number; mode: AttemptRecord["mode"] } | null;
-  /** XP за урок уже получен. */
+  /** XP за навык уже получен. */
   xpEarned: boolean;
+  /** Чем получен: уроком или проверкой знаний (награда одна на навык). */
+  xpEarnedVia: LessonMode | null;
 }
 
 /** Данные для карточки «Начать/Продолжить урок». Ошибка чтения (например, не
@@ -195,10 +218,10 @@ export async function getLessonOverview(address: SkillAddress, skill: Skill): Pr
   if (!context.ok) return null;
   const { store } = context.context.deps;
   try {
-    const [open, last, xpEarned] = await Promise.all([
+    const [open, last, xpEarnedVia] = await Promise.all([
       store.findOpen(address, "lesson"),
       store.findLatestCompleted(address),
-      store.hasXpClaim(address),
+      store.xpClaimSource(address),
     ]);
     const resumable = open && open.signature === plan.signature && open.stepsTotal === plan.steps.length ? open : null;
     return {
@@ -209,7 +232,8 @@ export async function getLessonOverview(address: SkillAddress, skill: Skill): Pr
       last: last
         ? { passed: last.passed === true, correctCount: last.correctCount, incorrectCount: last.incorrectCount, mode: last.mode }
         : null,
-      xpEarned,
+      xpEarned: xpEarnedVia !== null,
+      xpEarnedVia,
     };
   } catch (error) {
     log.error({ kind: "lesson_overview", message: error instanceof Error ? error.message : "unknown" });

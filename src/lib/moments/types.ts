@@ -5,6 +5,17 @@
 
 export type WeekdayMark = "done" | "today" | "empty" | "freeze";
 
+/** Цель дня НЕ в XP (уроки, упражнения, чтение, слова): что именно выполнено. */
+export interface GoalDoneTarget {
+  type: string;
+  current: number;
+  target: number;
+  /** Единица для оборота «N из M …»: «уроков», «слов», «мин». */
+  unit: string;
+  /** Подпись под числом: «уроков сегодня». */
+  label: string;
+}
+
 export interface GoalDoneMoment {
   kind: "goal_done";
   id: string;
@@ -13,6 +24,8 @@ export interface GoalDoneMoment {
   minutesHint: number;
   /** Пн..Вс текущей ISO-недели. */
   week: WeekdayMark[];
+  /** Есть — выполнена цель не в XP; нет — цель в XP (xpToday/xpGoal). */
+  goal?: GoalDoneTarget;
 }
 
 export interface StreakUpMoment {

@@ -15,17 +15,8 @@ import type { LessonMode, LessonPlan, StoredAnswer } from "./types.ts";
 
 // ---------- Награда ----------
 
-// Продуктовое решение (можно оспорить): урок — самое «тяжёлое» действие после
-// дуэли, поэтому награда выше, чем за чтение главы (10) и заметно выше, чем за
-// карточку (1). Бонус — за урок без единой ошибки. Награда выдаётся один раз
-// на навык за всё время: повторные прохождения — практика без XP.
-export const LESSON_BASE_XP = 15;
-export const LESSON_PERFECT_BONUS_XP = 5;
-
-export function lessonXp(correct: number, total: number): number {
-  const perfect = total > 0 && correct === total;
-  return LESSON_BASE_XP + (perfect ? LESSON_PERFECT_BONUS_XP : 0);
-}
+// Размер награды — в xp-rules.ts (на него же опирается каталог источников XP).
+export { LESSON_BASE_XP, LESSON_PERFECT_BONUS_XP, lessonXp } from "./xp-rules.ts";
 
 // ---------- Оценка ----------
 

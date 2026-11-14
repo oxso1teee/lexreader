@@ -239,17 +239,20 @@ export function createSupabaseAttemptStore(options: { read: Db; write: Db; userI
       if (error) fail("release xp claim", error);
     },
 
-    async hasXpClaim(address) {
-      const { count, error } = await read
+    async xpClaimSource(address) {
+      // Уникальный индекс гарантирует не больше одной такой строки на навык.
+      const { data, error } = await read
         .from(TABLE)
-        .select("id", { count: "exact", head: true })
+        .select("mode")
         .eq("user_id", userId)
         .eq("path_slug", address.pathSlug)
         .eq("path_version", address.pathVersion)
         .eq("skill_key", address.skillKey)
-        .not("xp_claimed_at", "is", null);
+        .not("xp_claimed_at", "is", null)
+        .limit(1);
       if (error) fail("read xp claim", error);
-      return (count ?? 0) > 0;
+      const mode = (data?.[0] as { mode: string } | undefined)?.mode;
+      return mode === "lesson" || mode === "check" ? mode : null;
     },
 
     async markFinalized(attemptId) {

@@ -462,9 +462,12 @@ const STATIC_SCREENS = [
   "Complete-check-failed",
   "Complete-first-win",
   "Complete-xp-pending",
+  "Complete-xp-via-lesson",
+  "Complete-xp-via-check",
   "Start-card-new",
   "Start-card-resume",
   "Start-card-done",
+  "Start-card-done-check",
 ] as const;
 
 test.describe("статичные состояния", () => {
@@ -492,8 +495,27 @@ test.describe("статичные состояния", () => {
     await expect(page.getByRole("link", { name: "Продолжить · шаг 5 из 10" })).toBeVisible();
     await open(page, "Start-card-done");
     await expect(page.getByRole("link", { name: "Пройти ещё раз" })).toBeVisible();
-    await expect(page.getByText("XP за этот урок уже получен")).toBeVisible();
+    await expect(page.getByText("XP за этот навык уже получен за урок — повторное прохождение это практика.")).toBeVisible();
     await expect(page.getByText("Последний результат: 6 из 7 верно.")).toBeVisible();
+    await open(page, "Start-card-new");
+    await expect(page.getByText(/Награда за навык одна — её можно получить за урок или за проверку знаний\./)).toBeVisible();
+  });
+
+  test("награда за навык одна: экраны говорят, чем она получена — уроком или проверкой знаний", async ({ page }) => {
+    await open(page, "Start-card-done-check");
+    await expect(page.getByText("XP за этот навык уже получен за проверку знаний — награда одна на навык, урок можно пройти как практику.")).toBeVisible();
+    await expect(page.getByText("XP за этот навык уже получен за урок")).toHaveCount(0);
+
+    await open(page, "Complete-xp-via-check");
+    await expect(page.locator(".ls-stat", { hasText: "XP" }).locator("dd")).toHaveText("уже получено");
+    await expect(page.getByTestId("xp-source-note")).toHaveText("Награда за этот навык уже получена за проверку знаний — она одна на навык.");
+
+    await open(page, "Complete-xp-via-lesson");
+    await expect(page.getByTestId("xp-source-note")).toHaveText("Награда за этот навык уже получена за урок — она одна на навык.");
+
+    // когда XP начислен только что, пояснение не нужно
+    await open(page, "Complete-perfect");
+    await expect(page.getByTestId("xp-source-note")).toHaveCount(0);
   });
 });
 

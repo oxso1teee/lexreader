@@ -18,8 +18,14 @@ import DashboardView from "@/components/product/dashboard/dashboard-view";
 import { getDailyQuestsSnapshot, type DailyQuestsSnapshot } from "@/lib/daily-quests";
 import { DailyQuestsCard } from "@/components/product/quests/daily-quests-card";
 import { DoubleXpChip } from "@/components/product/quests/double-xp-chip";
+import { RewardsSummaryCard } from "@/components/product/dashboard/rewards-summary-card";
+import { loadRecentAchievements, type RecentAchievement } from "@/lib/rewards/achievements-view";
 import { computeFirstSteps, shouldShowFirstSteps } from "@/lib/dashboard/first-steps";
-import { dailyGoalProgress } from "@/lib/dashboard/goal";
+import { goalProgressFor } from "@/lib/dashboard/goal";
+import { loadDailyActivity, type DailyActivity } from "@/lib/goals/activity";
+import { NO_PENDING_XP, loadPendingXp } from "@/lib/xp/rollout";
+import { resolveGoalConfig } from "@/lib/goals/config";
+import { userClock } from "@/lib/user-day";
 import { firstNameFromMetadata, learningGoalLabel } from "@/lib/dashboard/identity";
 import { accountAgeDays, dashboardMode } from "@/lib/dashboard/mode";
 import { countSavedWords, countSavedWordsSince } from "@/lib/dashboard/queries";
@@ -66,12 +72,6 @@ function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 86_400_000);
 }
 
-// День активности — по UTC, как у activity_days, vocabulary.ts и daily-quests.
-function todayStartUtc(): string {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
-}
-
 // /home — главный экран «Сегодня» (Phase 2, WP2). Страница считает данные из
 // реальных таблиц и отдаёт готовую модель в DashboardView; решение «что
 // предложить первым» (миссия > повтор > чтение > добавить материал) и
@@ -87,7 +87,10 @@ export default async function HomePage() {
   const supabase = await createClient();
   const now = new Date();
   const sevenDaysAgo = daysAgo(7).toISOString();
-  const todayStartIso = todayStartUtc();
+  // День пользователя — по его часовому поясу (profiles.timezone; нет пояса — UTC,
+  // как было раньше). Цель, серия, неделя и задания считают «сегодня» одинаково.
+  const clock = userClock(profile.timezone, now);
+  const todayStartIso = clock.todayWindow.startIso;
   const todayStartMs = new Date(todayStartIso).getTime();
 
   const failed: string[] = [];
@@ -101,7 +104,17 @@ export default async function HomePage() {
       return fallback;
     });
   }
-  const fallbackWeek: WeekdayMark[] = Array.from({ length: 7 }, (_, i) => (i === todayColumn(now) ? "today" : "empty"));
+  const fallbackWeek: WeekdayMark[] = Array.from({ length: 7 }, (_, i) => (i === todayColumn(clock.wall) ? "today" : "empty"));
+  // Активность дня грузится один раз: из неё считаются и цель дня, и задания.
+  const activityPromise = settled<DailyActivity | null>(
+    "Прогресс за день",
+    loadDailyActivity(supabase, profile.id, profile.target_language, clock.today, clock.timezone),
+    null,
+  );
+
+  // Общий XP: счётчик профиля плюс события журнала, ещё не перенесённые в него (только пока идёт
+  // выкладка, см. lib/xp/rollout.ts; в обычной работе запрос не выполняется).
+  const pendingXpPromise = settled("XP в журнале", loadPendingXp(supabase, profile.id), NO_PENDING_XP);
 
   const [
     dueCount,
@@ -111,12 +124,13 @@ export default async function HomePage() {
     pendingResult,
     sessionsResult,
     reviewsResult,
-    dayResult,
+    dayActivity,
     activePathState,
     dailyQuestsSnapshot,
     savedWords,
     savedWordsToday,
     streakWeek,
+    recentAchievements,
     userResult,
   ] = await Promise.all([
     getDueCount(supabase, profile.id, profile.target_language),
@@ -147,22 +161,23 @@ export default async function HomePage() {
       .eq("flashcards.owner_id", profile.id)
       .eq("flashcards.language", profile.target_language)
       .gte("reviewed_at", sevenDaysAgo),
-    // Цель дня считается в XP (activity_days), не в новых словах.
-    supabase.from("activity_days").select("xp").eq("user_id", profile.id).eq("day", todayStartIso.slice(0, 10)).maybeSingle(),
+    activityPromise,
     settled("Учебный путь", getActivePathStateAction(), null),
     settled<DailyQuestsSnapshot | null>(
       "Задания дня",
-      getDailyQuestsSnapshot(supabase, profile.id, profile.target_language),
+      activityPromise.then((activity) =>
+        activity ? getDailyQuestsSnapshot(supabase, profile.id, profile.target_language, { clock, activity }) : null,
+      ),
       null,
     ),
     settled("Сохранённые слова", countSavedWords(supabase, profile.id, profile.target_language), 0),
     settled("Слова за сегодня", countSavedWordsSince(supabase, profile.id, profile.target_language, todayStartIso), 0),
-    settled("Неделя", fetchStreakWeekMarks(supabase, profile.id, now), fallbackWeek),
+    settled("Неделя", fetchStreakWeekMarks(supabase, profile.id, clock.wall), fallbackWeek),
+    settled<RecentAchievement[]>("Достижения", loadRecentAchievements(supabase, profile.id), []),
     supabase.auth.getUser(),
   ]);
 
   if (continueResult.error) failed.push("Продолжить чтение");
-  if (dayResult.error) failed.push("Прогресс за день");
 
   const continuingRow = continueResult.data?.[0] as
     | {
@@ -274,8 +289,13 @@ export default async function HomePage() {
   // Данные дня: цель, серия, режим экрана.
   const activitySessions = sessionsResult.data ?? [];
   const activityReviews = reviewsResult.data ?? [];
-  const xpToday = dayResult.data?.xp ?? 0;
-  const goal = dailyGoalProgress(xpToday, profile.daily_xp_goal);
+  const totalXp = profile.xp + (await pendingXpPromise).total;
+  const xpToday = dayActivity?.xp ?? 0;
+  const goal = goalProgressFor(
+    resolveGoalConfig(profile),
+    dayActivity ?? { xp: 0, readingMinutes: 0, reviewedWords: 0, lessons: 0, exercises: 0 },
+    profile.daily_xp_goal,
+  );
   const streak = streakDisplay(
     {
       streakCurrent: profile.streak_current,
@@ -283,7 +303,7 @@ export default async function HomePage() {
       freezeAvailable: profile.streak_freeze_available,
       freezeWeek: profile.streak_freeze_week,
     },
-    now,
+    clock.wall,
   );
 
   // Первые шаги: окна «за 7 дней» покрывают всю историю молодого аккаунта.
@@ -296,7 +316,7 @@ export default async function HomePage() {
   const showFirstSteps = shouldShowFirstSteps(firstSteps, accountAgeDays(profile.created_at, now));
   const mode = dashboardMode({
     goalDone: goal.done,
-    xp: profile.xp,
+    xp: totalXp,
     firstStepsVisible: showFirstSteps,
     firstStepsDone: firstSteps.doneCount,
   });
@@ -329,8 +349,7 @@ export default async function HomePage() {
   const questsCard =
     dailyQuestsSnapshot && !(dailyQuestsSnapshot.allComplete && dailyQuestsSnapshot.chestClaimedToday) ? (
       <DailyQuestsCard
-        defs={dailyQuestsSnapshot.defs}
-        progress={dailyQuestsSnapshot.progress}
+        items={dailyQuestsSnapshot.items}
         allComplete={dailyQuestsSnapshot.allComplete}
         chestClaimedToday={dailyQuestsSnapshot.chestClaimedToday}
       />
@@ -341,7 +360,7 @@ export default async function HomePage() {
       xpToday={xpToday}
       streak={streak.value}
       streakLongest={profile.streak_longest}
-      xp={profile.xp}
+      xp={totalXp}
       langCode={langCode}
       level={level}
       week={streakWeek}
@@ -361,25 +380,26 @@ export default async function HomePage() {
         installBanner={<InstallBanner />}
         boostChip={profile.xp_boost_until ? <DoubleXpChip boostUntil={profile.xp_boost_until} /> : null}
         questsCard={questsCard}
+        rewardsCard={<RewardsSummaryCard xp={totalXp} recent={recentAchievements} />}
         notices={failed}
         serverGreeting={serverGreeting}
         firstName={firstName}
         email={user?.email ?? null}
         langCode={langCode}
         level={level}
-        xp={profile.xp}
+        xp={totalXp}
         streak={{ value: streak.value, longest: profile.streak_longest, state: streak.state }}
         goal={goal}
         summary={summary}
         dueCount={dueCount}
         week={streakWeek}
-        todayColumn={todayColumn(now)}
+        todayColumn={todayColumn(clock.wall)}
         learningGoal={learningGoalLabel(profile.primary_goal)}
         pathLabel={pathLevelLabel}
         hero={hero}
         continueReading={continueReading}
         continueIsVideo={continueIsVideo}
-        lastActivity={lastActivityLabel(profile.last_active_date, now)}
+        lastActivity={lastActivityLabel(profile.last_active_date, clock.wall)}
         path={
           showPathCard && activePathState && focusSkill
             ? {

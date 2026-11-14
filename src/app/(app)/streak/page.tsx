@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { cardClassName } from "@/components/ui/card";
 import { STREAK_MILESTONES } from "@/lib/streak-engine";
-import { isoWeekStart } from "@/lib/iso-week";
+import { userClock } from "@/lib/user-day";
 
 // docs/moments/mockups/Streak-calendar.dc.html, reference/Streak-calendar.png
 // — этап 2 (docs/moments/ROADMAP.md). Карточка "До сундука «Две недели»" из
@@ -22,13 +22,14 @@ const MONTH_NAMES_PREPOSITIONAL = [
 ];
 const WEEKDAY_HEADERS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
-function parseMonthParam(m: string | undefined): Date {
+function parseMonthParam(m: string | undefined, fallbackDay: string): Date {
   if (m && /^\d{4}-\d{2}$/.test(m)) {
     const [y, mo] = m.split("-").map(Number);
     return new Date(Date.UTC(y, mo - 1, 1));
   }
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  // Месяц по умолчанию — месяц локального «сегодня» пользователя.
+  const [y, mo] = fallbackDay.split("-").map(Number);
+  return new Date(Date.UTC(y, mo - 1, 1));
 }
 
 function monthParam(d: Date): string {
@@ -52,11 +53,14 @@ export default async function StreakCalendarPage({
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const monthStart = parseMonthParam(m);
+  const clock = userClock(profile.timezone);
+  const monthStart = parseMonthParam(m, clock.today);
   const monthEnd = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0));
   const daysInMonth = monthEnd.getUTCDate();
-  const todayIso = isoDate(new Date());
-  const thisMonthIso = monthParam(new Date());
+  // «Сегодня», месяц по умолчанию и неделя — по календарю пользователя (profiles.timezone):
+  // так же, как день серии пишет touchStreak().
+  const todayIso = clock.today;
+  const thisMonthIso = todayIso.slice(0, 7);
   const isCurrentMonth = monthParam(monthStart) === thisMonthIso;
 
   const { data: rows } = await supabase
@@ -79,7 +83,7 @@ export default async function StreakCalendarPage({
   }
   while (cells.length % 7 !== 0) cells.push({ label: "", day: null });
 
-  const thisWeekStart = isoDate(isoWeekStart(new Date()));
+  const thisWeekStart = clock.weekStart;
   const freezeUsedThisWeek = profile.streak_freeze_week === thisWeekStart && !profile.streak_freeze_available;
   // docs/moments/ROADMAP.md, этап 7 — Streak-commit: если пользователь
   // взял на себя обязательство (streak_goal_days) и ещё не выполнил его,

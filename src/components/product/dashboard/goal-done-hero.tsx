@@ -5,13 +5,16 @@ import { Lex } from "@/components/product/mascot/lex";
 // итогом дня. Строки серии и итогов приходят готовыми и только из реальных
 // данных; если их нет — просто не показываются.
 export default function GoalDoneHero({
-  xpToday,
-  xpGoal,
+  current,
+  target,
+  unit,
   streakLine,
   summary,
 }: {
-  xpToday: number;
-  xpGoal: number;
+  current: number;
+  target: number;
+  /** Единица цели для оборота «N из M …»: «XP», «мин», «слов»… */
+  unit: string;
   streakLine: string | null;
   summary: string[];
 }) {
@@ -23,8 +26,10 @@ export default function GoalDoneHero({
           Цель дня выполнена
         </h2>
         <p className="dash-hero-num">
-          {xpToday}
-          <small>/{xpGoal} XP</small>
+          {current}
+          <small>
+            /{target} {unit}
+          </small>
         </p>
         {streakLine && <p className="dash-hero-sub">{streakLine}</p>}
         <div
@@ -33,7 +38,7 @@ export default function GoalDoneHero({
           aria-valuenow={100}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label={`Цель дня: ${xpToday} из ${xpGoal} XP`}
+          aria-label={`Цель дня: ${current} из ${target} ${unit}`}
         >
           <span />
         </div>

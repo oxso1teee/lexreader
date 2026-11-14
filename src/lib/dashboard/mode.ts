@@ -4,7 +4,7 @@
 export type DashboardMode = "first-day" | "regular" | "goal-done";
 
 export interface DashboardModeInput {
-  /** XP за сегодня достиг profiles.daily_xp_goal. */
+  /** Выбранная цель дня (XP, уроки, упражнения, чтение или слова) выполнена. */
   goalDone: boolean;
   /** Накопленный XP профиля (profiles.xp). */
   xp: number;

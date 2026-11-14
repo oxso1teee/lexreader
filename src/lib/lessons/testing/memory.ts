@@ -26,9 +26,10 @@ type StoreOp =
   | "saveProgress"
   | "markCompleted"
   | "claimXp"
+  | "setXpAwarded"
   | "releaseXpClaim"
   | "markFinalized"
-  | "hasXpClaim";
+  | "xpClaimSource";
 
 export class MemoryAttemptStore implements AttemptStore {
   readonly userId: string;
@@ -158,6 +159,7 @@ export class MemoryAttemptStore implements AttemptStore {
   }
 
   async setXpAwarded(attemptId: string, amount: number): Promise<void> {
+    this.hit("setXpAwarded");
     const row = this.own().find((r) => r.id === attemptId && r.xpClaimedAt !== null);
     if (row) row.xpAwarded = amount;
   }
@@ -171,9 +173,9 @@ export class MemoryAttemptStore implements AttemptStore {
     }
   }
 
-  async hasXpClaim(address: SkillAddress): Promise<boolean> {
-    this.hit("hasXpClaim");
-    return this.own().some((r) => this.same(r, address) && r.xpClaimedAt !== null);
+  async xpClaimSource(address: SkillAddress): Promise<LessonMode | null> {
+    this.hit("xpClaimSource");
+    return this.own().find((r) => this.same(r, address) && r.xpClaimedAt !== null)?.mode ?? null;
   }
 
   async markFinalized(attemptId: string): Promise<void> {
@@ -229,6 +231,8 @@ export class MemoryProgress implements ProgressPort {
 export class MemoryRewards implements RewardPort {
   /** Реально начисленные суммы (успешные grantXp). */
   xpGrants: number[] = [];
+  /** Журнал по ключам идемпотентности — как xp_events: тот же ключ второй раз не начисляется. */
+  private granted = new Map<string, number>();
   /** Сколько раз grantXp вернул null (XP не начислен). */
   failedGrants = 0;
   firstWinSet = false;
@@ -239,14 +243,25 @@ export class MemoryRewards implements RewardPort {
   /** Следующий markFirstWin бросит исключение (одноразово). */
   failNextFirstWin = false;
 
-  async grantXp(amount: number): Promise<XpGrant | null> {
+  /** Начисление прошло, но процесс «упал» сразу после него (до записи результата). */
+  crashAfterGrant = false;
+
+  async grantXp(amount: number, ref: string): Promise<XpGrant | null> {
     if (this.failNextGrant || this.grantResult === "fail") {
       this.failNextGrant = false;
       this.failedGrants++;
       return null;
     }
+    const previous = this.granted.get(ref);
+    if (previous !== undefined) return { awarded: previous, moments: [] };
+    const result = this.grantResult ?? { awarded: amount, moments: [] };
+    this.granted.set(ref, result.awarded);
     this.xpGrants.push(amount);
-    return this.grantResult ?? { awarded: amount, moments: [] };
+    if (this.crashAfterGrant) {
+      this.crashAfterGrant = false;
+      throw new Error("injected crash after grant");
+    }
+    return result;
   }
 
   async markFirstWin(): Promise<boolean> {

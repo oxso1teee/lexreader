@@ -22,7 +22,12 @@ function plural(n: number, one: string, few: string, many: string) {
 
 export function GoalDoneScreen({ moment, onClose }: { moment: GoalDoneMoment; onClose: () => void }) {
   const p = useProgress({ delay: 200, duration: 1300 });
-  const xp = useCountUp(moment.xpToday, { delay: 200, duration: 1300 });
+  // Цель не в XP (уроки, упражнения, чтение, слова) — показываем её числа, а не XP.
+  const goal = moment.goal;
+  const shown = goal ? goal.current : moment.xpToday;
+  const target = goal ? goal.target : moment.xpGoal;
+  const caption = goal ? goal.label : "XP сегодня";
+  const xp = useCountUp(shown, { delay: 200, duration: 1300 });
   const doneDays = moment.week.filter((d) => d === "done" || d === "today").length;
   const daysSoFar = moment.week.findIndex((d) => d === "today") + 1 || doneDays;
 
@@ -40,7 +45,7 @@ export function GoalDoneScreen({ moment, onClose }: { moment: GoalDoneMoment; on
       <div style={{ position: "relative", height: 330, marginTop: 70, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Confetti seed={9} delay={1.5} style={{ left: "50%", top: "50%" }} />
         <div className="mo-ringpulse" style={{ animationDelay: "1.55s" }}>
-          <svg viewBox="0 0 220 220" width="240" height="240" role="img" aria-label={`Цель дня: ${moment.xpToday} из ${moment.xpGoal} XP`}>
+          <svg viewBox="0 0 220 220" width="240" height="240" role="img" aria-label={goal ? `Цель дня: ${goal.current} из ${goal.target} ${goal.unit}` : `Цель дня: ${moment.xpToday} из ${moment.xpGoal} XP`}>
             <circle cx="110" cy="110" r={R1} fill="none" stroke="var(--sun-tint)" strokeWidth="22" />
             <circle
               cx="110"
@@ -89,10 +94,10 @@ export function GoalDoneScreen({ moment, onClose }: { moment: GoalDoneMoment; on
             </svg>
           </div>
           <div className="mo-disp" style={{ fontSize: 26, fontWeight: 900, marginTop: 8, color: "var(--sun-text)" }}>
-            {xp}/{moment.xpGoal}
+            {xp}/{target}
           </div>
           <div className="mo-muted" style={{ fontSize: 13, fontWeight: 600 }}>
-            XP сегодня
+            {caption}
           </div>
         </div>
       </div>
@@ -102,7 +107,7 @@ export function GoalDoneScreen({ moment, onClose }: { moment: GoalDoneMoment; on
           Цель дня выполнена!
         </h2>
         <p className="mo-muted mo-rise" style={{ margin: "10px 0 0", fontSize: 16, animationDelay: "1.75s" }}>
-          Завтра цель та же: {moment.xpGoal} XP, около {moment.minutesHint} минут
+          {goal ? `Завтра цель та же: ${goal.target} ${goal.unit}` : `Завтра цель та же: ${moment.xpGoal} XP, около ${moment.minutesHint} минут`}
         </p>
       </div>
 

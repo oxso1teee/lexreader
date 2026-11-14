@@ -33,6 +33,7 @@ const COMPLETION_BASE: LessonCompletionDto = {
   incorrectCount: 1,
   xpAwarded: 15,
   xpAlreadyEarned: true,
+  xpClaimedVia: "lesson",
   xpPending: false,
   lessonCompleted: true,
   firstWin: false,
@@ -53,6 +54,7 @@ const COMPLETION_FIXTURES: Record<string, LessonCompletionDto> = {
     incorrectCount: 5,
     xpAwarded: 0,
     xpAlreadyEarned: false,
+    xpClaimedVia: null,
     lessonCompleted: false,
     nextLesson: null,
   },
@@ -66,19 +68,28 @@ const COMPLETION_FIXTURES: Record<string, LessonCompletionDto> = {
     incorrectCount: 2,
     xpAwarded: 0,
     xpAlreadyEarned: false,
+    xpClaimedVia: null,
     lessonCompleted: false,
     nextLesson: null,
   },
-  "Complete-first-win": { ...COMPLETION_BASE, firstWin: true, xpAlreadyEarned: false },
-  "Complete-xp-pending": { ...COMPLETION_BASE, xpAwarded: 0, xpAlreadyEarned: false, xpPending: true },
+  "Complete-first-win": { ...COMPLETION_BASE, firstWin: true, xpAlreadyEarned: false, xpClaimedVia: null },
+  "Complete-xp-pending": { ...COMPLETION_BASE, xpAwarded: 0, xpAlreadyEarned: false, xpClaimedVia: null, xpPending: true },
+  // Награда за навык уже получена другой попыткой: экран говорит чем — уроком или проверкой знаний.
+  "Complete-xp-via-lesson": { ...COMPLETION_BASE, xpAwarded: 0, xpAlreadyEarned: true, xpClaimedVia: "lesson" },
+  "Complete-xp-via-check": { ...COMPLETION_BASE, xpAwarded: 0, xpAlreadyEarned: true, xpClaimedVia: "check" },
 };
 
-const OVERVIEW_BASE: LessonOverview = { stepCount: 10, exerciseCount: 7, hasCheck: true, open: null, last: null, xpEarned: false };
+const OVERVIEW_BASE: LessonOverview = { stepCount: 10, exerciseCount: 7, hasCheck: true, open: null, last: null, xpEarned: false, xpEarnedVia: null };
 const OVERVIEWS: Record<string, { overview: LessonOverview; completed: boolean }> = {
   "Start-card-new": { overview: OVERVIEW_BASE, completed: false },
   "Start-card-resume": { overview: { ...OVERVIEW_BASE, open: { stepIndex: 4, stepsTotal: 10 } }, completed: false },
   "Start-card-done": {
-    overview: { ...OVERVIEW_BASE, xpEarned: true, last: { passed: true, correctCount: 6, incorrectCount: 1, mode: "lesson" } },
+    overview: { ...OVERVIEW_BASE, xpEarned: true, xpEarnedVia: "lesson", last: { passed: true, correctCount: 6, incorrectCount: 1, mode: "lesson" } },
+    completed: true,
+  },
+  // Навык засчитан быстрой проверкой, награда получена за неё; урок можно пройти как практику.
+  "Start-card-done-check": {
+    overview: { ...OVERVIEW_BASE, xpEarned: true, xpEarnedVia: "check", last: { passed: true, correctCount: 5, incorrectCount: 0, mode: "check" } },
     completed: true,
   },
 };

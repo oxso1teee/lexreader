@@ -11,6 +11,16 @@ export const MOMENT_FIXTURES: Record<string, Moment> = {
     minutesHint: 10,
     week: ["done", "done", "done", "today", "empty", "empty", "empty"],
   },
+  // Цель дня не в XP (Iteration 6): выполнены 2 урока из 2.
+  "Goal-done-lessons": {
+    kind: "goal_done",
+    id: "fixture-goal-done-lessons",
+    xpToday: 35,
+    xpGoal: 50,
+    minutesHint: 10,
+    week: ["done", "done", "done", "today", "empty", "empty", "empty"],
+    goal: { type: "lessons", current: 2, target: 2, unit: "уроков", label: "уроков сегодня" },
+  },
   "Streak-up": {
     kind: "streak_up",
     id: "fixture-streak-up",

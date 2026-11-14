@@ -3,10 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { sendPush, type PushSubscriptionRow } from "@/lib/push";
 import { computePreferredHour } from "@/lib/notify-timing";
 import { log } from "@/lib/log";
-
-function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
+import { userClock } from "@/lib/user-day";
 
 // docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 9: тёплая формулировка
 // вместо общего "N карточек" — если есть незаконченное чтение, упоминаем его
@@ -65,7 +62,6 @@ export async function GET(request: Request) {
   const supabase = createServiceClient();
   const now = new Date().toISOString();
   const currentHour = new Date().getUTCHours();
-  const yesterday = isoDate(new Date(Date.now() - 86_400_000));
 
   const { data: subs } = await supabase
     .from("push_subscriptions")
@@ -88,7 +84,7 @@ export async function GET(request: Request) {
     // максимум один пуш в сутки, только в его "обычный" час.
     const { data: profile } = await supabase
       .from("profiles")
-      .select("last_active_date, preferred_notify_hour")
+      .select("last_active_date, preferred_notify_hour, timezone")
       .eq("id", ownerId)
       .maybeSingle();
     if (!profile) continue;
@@ -119,7 +115,8 @@ export async function GET(request: Request) {
       continue; // повторение важнее напоминания о стрике — не дублировать пуш
     }
 
-    if (profile.last_active_date === yesterday) {
+    // «Вчера» — по календарю самого пользователя: last_active_date пишется по его часовому поясу.
+    if (profile.last_active_date === userClock(profile.timezone).yesterday) {
       await sendToAll(supabase, ownerSubs, {
         title: "LexReader",
         body: "Не теряй стрик 🔥 — зайди сегодня, чтобы не сбросить счётчик",

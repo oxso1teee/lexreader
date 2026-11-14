@@ -1,57 +1,71 @@
-import { Flame, Award, BookOpen, Zap, type LucideIcon } from "lucide-react";
+import {
+  Award,
+  BookOpen,
+  CalendarCheck,
+  Flame,
+  Gift,
+  GraduationCap,
+  Library,
+  Repeat,
+  Star,
+  Target,
+  Trophy,
+  Type,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+import { ACHIEVEMENT_DEFS, isAchievementEarned, type AchievementDef, type AchievementStats } from "./achievements-catalog.ts";
+
+export {
+  ACHIEVEMENT_CATEGORIES,
+  buildAchievementViews,
+  type AchievementCategory,
+  type AchievementStats,
+  type AchievementView,
+} from "./achievements-catalog.ts";
 
 // docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 5.2: каталог достижений —
-// фиксированный список в коде (не таблица), чтобы не городить конструктор
-// произвольных ачивок заранее. Факт получения хранится в user_achievements.
-//
-// redesign/duolingo-flat phase 2: icon был emoji-строкой — единая иконочная
-// система (lucide-react).
+// фиксированный список в коде (не таблица). Условия и категории — в
+// achievements-catalog.ts (чистый модуль, покрыт тестами); здесь к ним
+// добавляются иконки (redesign/duolingo-flat phase 2: единая иконочная система,
+// lucide-react).
 
-export interface AchievementStats {
-  totalWords: number;
-  finishedTexts: number;
-  currentStreak: number;
-  bestSessionCount: number;
-}
-
-export interface Achievement {
-  id: string;
+export interface Achievement extends AchievementDef {
   icon: LucideIcon;
-  title: string;
-  description: string;
-  check: (s: AchievementStats) => boolean;
+  check: (s: Partial<AchievementStats>) => boolean;
 }
 
-export const ACHIEVEMENTS: Achievement[] = [
-  {
-    id: "streak_7",
-    icon: Flame,
-    title: "Неделя подряд",
-    description: "7 дней подряд в приложении",
-    check: (s) => s.currentStreak >= 7,
-  },
-  {
-    id: "words_100",
-    icon: Award,
-    title: "Сто слов",
-    description: "100 сохранённых слов",
-    check: (s) => s.totalWords >= 100,
-  },
-  {
-    id: "first_book",
-    icon: BookOpen,
-    title: "Первая книга",
-    description: "Дочитан первый текст до конца",
-    check: (s) => s.finishedTexts >= 1,
-  },
-  {
-    id: "perfect_session",
-    icon: Zap,
-    title: "Идеальная сессия",
-    description: "Личный рекорд повторения — 20+ карточек за раз",
-    check: (s) => s.bestSessionCount >= 20,
-  },
-];
+const ICONS: Readonly<Record<string, LucideIcon>> = {
+  first_lesson: GraduationCap,
+  lessons_5: GraduationCap,
+  lessons_25: GraduationCap,
+  first_book: BookOpen,
+  books_5: Library,
+  books_20: Library,
+  words_10: Type,
+  words_100: Award,
+  words_500: Award,
+  reviews_100: Repeat,
+  perfect_session: Zap,
+  streak_3: Flame,
+  streak_7: Flame,
+  streak_30: Flame,
+  streak_100: Flame,
+  goal_days_7: Target,
+  goal_days_30: Target,
+  perfect_week: CalendarCheck,
+  xp_100: Star,
+  xp_500: Star,
+  xp_1000: Trophy,
+  xp_5000: Trophy,
+  first_chest: Gift,
+};
+
+export const ACHIEVEMENTS: Achievement[] = ACHIEVEMENT_DEFS.map((def) => ({
+  ...def,
+  icon: ICONS[def.id] ?? Award,
+  check: (s) => isAchievementEarned(def, s),
+}));
 
 // Задача из раздела 5.3: один тип квеста ("слов за неделю"), без движка
 // произвольных квестов — расширять только когда реально понадобится второй тип.

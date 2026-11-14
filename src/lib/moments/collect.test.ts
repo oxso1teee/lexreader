@@ -176,3 +176,21 @@ test("collectMoments(): a single action can fire several moments at once, in pri
     ["goal_done", "level_up", "streak_up", "achievement"],
   );
 });
+
+test("collectMoments(): выполненная цель не в XP даёт тот же goal_done с описанием цели, XP-момент для неё подавлен", () => {
+  const goal = { type: "lessons", current: 2, target: 2, unit: "уроков", label: "уроков сегодня" };
+  const moments = collectMoments({
+    ...base(),
+    // award_xp для не-XP цели возвращает goal = 0 — XP-переход не должен праздновать чужую цель
+    xp: { before: { total: 100, today: 40 }, after: { total: 125, today: 65 }, goal: 0, minutesHint: 10 },
+    goalDone: { goal, xpToday: 65, xpGoal: 50, minutesHint: 10 },
+  });
+  const done = moments.filter((m) => m.kind === "goal_done");
+  assert.equal(done.length, 1, "ровно один момент цели");
+  assert.deepEqual(done[0], { kind: "goal_done", id: "goal_done:2026-10-17", xpToday: 65, xpGoal: 50, minutesHint: 10, week: [...WEEK], goal });
+});
+
+test("collectMoments(): без goalDone цель не в XP момента не создаёт", () => {
+  const moments = collectMoments({ ...base(), xp: { before: { total: 100, today: 40 }, after: { total: 125, today: 65 }, goal: 0, minutesHint: 10 } });
+  assert.equal(moments.find((m) => m.kind === "goal_done"), undefined);
+});

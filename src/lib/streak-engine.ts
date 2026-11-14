@@ -56,7 +56,11 @@ export function computeStreakUpdate(
   twoDaysAgo: string,
   thisWeekStart: string,
 ): StreakUpdate | null {
-  if (profile.lastActiveDate === today) return null;
+  // Уже засчитан сегодня — или дата последней активности в «будущем» относительно
+  // сегодняшней локальной даты (пользователь сменил пояс на западный: локальный
+  // день оказался раньше сохранённого). И то и другое — не новый день: серия не
+  // растёт повторно и не обрывается из-за смены пояса.
+  if (profile.lastActiveDate !== null && profile.lastActiveDate >= today) return null;
 
   const freezeAvailableNow = profile.freezeWeek !== thisWeekStart ? true : profile.freezeAvailable;
   const repairActive =

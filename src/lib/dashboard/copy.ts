@@ -11,7 +11,7 @@ import type { StreakState } from "./streak.ts";
 export function greetingSubline(mode: DashboardMode, goal: DailyGoalProgress): string {
   if (mode === "goal-done") return "Цель дня выполнена";
   if (mode === "first-day") return "Первый день — начнём с малого";
-  return goal.remaining > 0 ? `Ещё ${goal.remaining} XP до цели дня` : "Цель дня выполнена";
+  return goal.remaining > 0 ? `Ещё ${goal.remainingLabel} до цели дня` : "Цель дня выполнена";
 }
 
 /** «Серия продлена…» — только когда серия реально продлена сегодня. */

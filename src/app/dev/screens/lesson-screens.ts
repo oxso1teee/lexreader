@@ -14,9 +14,12 @@ export const STATIC_LESSON_SCREENS = [
   "Complete-check-failed",
   "Complete-first-win",
   "Complete-xp-pending",
+  "Complete-xp-via-lesson",
+  "Complete-xp-via-check",
   "Start-card-new",
   "Start-card-resume",
   "Start-card-done",
+  "Start-card-done-check",
 ] as const;
 export type StaticLessonScreen = (typeof STATIC_LESSON_SCREENS)[number];
 

@@ -12,9 +12,11 @@ import {
   getCurrentStreak,
   awardPerfectBonus,
   awardComboBonus,
+  getComboState,
   getStreakInfo,
 } from "./actions";
 import { PERFECT_SESSION_BONUS_XP } from "./constants";
+import { COMBO_SIZE, PERFECT_MIN_CARDS, SESSION_GAP_MS } from "@/lib/xp/review-bonuses";
 import { updateFlashcard, type UpdateCardState } from "../actions";
 import { reviewSrsState, type SrsParams } from "@/lib/srs";
 import { reviewFsrsCard, type FsrsStateRow } from "@/lib/fsrs";
@@ -31,8 +33,10 @@ import { MistakesScreen } from "./screens/mistakes";
 import { QuitConfirmSheet } from "./screens/quit-confirm";
 
 // docs/moments/ROADMAP.md, этап 3 — на сколько верных подряд загорается
-// Combo (и повторяется на каждой следующей пятёрке).
-const COMBO_THRESHOLD = 5;
+// Combo (и повторяется на каждой следующей пятёрке). Правило серии — одно с сервером, который
+// выдаёт бонус по журналу повторений (xp/review-bonuses.ts): серия идёт внутри СЕССИИ, пауза между
+// карточками дольше SESSION_GAP_MS (15 минут) начинает новую; ошибка и «Трудно» обрывают серию.
+const COMBO_THRESHOLD = COMBO_SIZE;
 // Для совсем короткой сессии "середина" не несёт смысла (Halfway.dc.html
 // рассчитан на многозадачное занятие) — тот же порог, что уже есть у
 // multiple-choice-mode.tsx для показа предупреждения о нехватке карточек.
@@ -231,6 +235,25 @@ export default function ReviewSession({
   useEffect(() => {
     sessionStartRef.current = Date.now();
   }, []);
+  // Серия «верных подряд» продолжается между открытиями экрана, пока пауза не дольше SESSION_GAP_MS:
+  // при открытии берём состояние с сервера (журнал повторений), а не начинаем с нуля — иначе
+  // после обновления страницы серия в интерфейсе и выплата по журналу разошлись бы.
+  useEffect(() => {
+    let cancelled = false;
+    getComboState()
+      .then((state) => {
+        // Если пользователь уже оценил карточку, пока ответ шёл, счётчик ведёт сам grade().
+        if (cancelled || lastGradedAtRef.current !== null) return;
+        lastGradedAtRef.current = state.lastAtMs;
+        setCombo(state.run);
+      })
+      .catch(() => {
+        /* без состояния серия начнётся с нуля — безопасно: сервер платит по журналу */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const momentsRef = useRef<Moment[]>([]);
   const xpEarnedRef = useRef(0);
   const newWordsRef = useRef(0);
@@ -263,6 +286,8 @@ export default function ReviewSession({
   // прогресса, проп Quit-confirm) — react-hooks/refs запрещает читать
   // .current во время рендера.
   const [combo, setCombo] = useState(0);
+  // Время последней оценки (мс): по нему замечаем паузу дольше SESSION_GAP_MS, после которой серия начинается заново.
+  const lastGradedAtRef = useRef<number | null>(null);
   const [comboBanner, setComboBanner] = useState<{ combo: number; xpAwarded: number } | null>(null);
   const [halfwaySnapshot, setHalfwaySnapshot] = useState<{ combo: number; xpSoFar: number } | null>(null);
   const [mistakeWordsSnapshot, setMistakeWordsSnapshot] = useState<{ front: string; back: string }[]>([]);
@@ -404,11 +429,12 @@ export default function ReviewSession({
     track("review_session_completed", { count: finalTotal });
     clearReviewSession();
     if (finalTotal > bestSessionCount) {
-      setNewRecord(true);
-      await updateReviewBest(finalTotal);
+      // рекорд подтверждает сервер по журналу повторений; плашка — только если он записал новое значение
+      const best = await updateReviewBest();
+      if (best.isNewRecord) setNewRecord(true);
     }
     if (isPerfectSoFar) {
-      const bonus = await awardPerfectBonus(finalTotal, durationSec);
+      const bonus = await awardPerfectBonus();
       momentsRef.current = [...momentsRef.current, ...bonus.moments];
     }
     const streakInfo = await getStreakInfo();
@@ -430,6 +456,11 @@ export default function ReviewSession({
     }
     startTransition(async () => {
       const { reviewLogId, moments, xpAwarded, isNewCard } = await reviewWord(card.flashcardId, value, "cards");
+      // Пауза дольше SESSION_GAP_MS между оценками — новая сессия: счётчик серии начинается с нуля,
+      // как это делает сервер, считая выплаты по журналу.
+      const gradedAt = Date.now();
+      const comboBase = lastGradedAtRef.current !== null && gradedAt - lastGradedAtRef.current > SESSION_GAP_MS ? 0 : combo;
+      lastGradedAtRef.current = gradedAt;
       track("review_card_graded", { grade: value });
       gradedIdsRef.current = [...gradedIdsRef.current, card.flashcardId];
       setLastGraded(
@@ -458,7 +489,7 @@ export default function ReviewSession({
       // этом замыкании), тот же приём, что уже у isPerfectSoFar/newTotal выше.
       let nextCombo: number;
       if (value >= 2) {
-        nextCombo = combo + 1;
+        nextCombo = comboBase + 1;
         setCombo(nextCombo);
         if (nextCombo % COMBO_THRESHOLD === 0) {
           const bonus = await awardComboBonus();
@@ -1018,7 +1049,8 @@ export default function ReviewSession({
           cardsDone={index}
           cardsTotal={cards.length}
           combo={combo}
-          perfectBonusAtRisk={tally[0] + tally[1] === 0}
+          // бонус «идеальная сессия» даётся от PERFECT_MIN_CARDS карточек — в короткой сессии терять нечего
+          perfectBonusAtRisk={tally[0] + tally[1] === 0 && cards.length >= PERFECT_MIN_CARDS}
           perfectBonusXp={PERFECT_SESSION_BONUS_XP}
           onStay={() => setShowQuitConfirm(false)}
           onLeave={() => router.push("/brain")}

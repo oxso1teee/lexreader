@@ -55,6 +55,8 @@ export interface LessonCompletionDto {
   xpAwarded: number;
   /** XP за этот навык уже был получен раньше. */
   xpAlreadyEarned: boolean;
+  /** Чем получена награда за навык: уроком или проверкой знаний (null — не получена). Награда одна на навык. */
+  xpClaimedVia: LessonMode | null;
   /** Урок засчитан, но начислить XP не удалось: право на награду сохранено, повторный
    *  вызов завершения начислит её (кнопка «Повторить начисление»). */
   xpPending: boolean;

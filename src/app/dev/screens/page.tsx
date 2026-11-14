@@ -5,6 +5,8 @@ import DashboardView, { type DashboardViewProps } from "@/components/product/das
 import TodayEveningView from "@/components/product/today/v7/today-evening";
 import MobileBottomNav from "@/components/product/app-shell/mobile-bottom-nav";
 import { DailyQuestsCard } from "@/components/product/quests/daily-quests-card";
+import { RewardsSummaryCard } from "@/components/product/dashboard/rewards-summary-card";
+import { buildQuestItems } from "@/lib/daily-quests";
 import {
   DASHBOARD_EMPTY_FIXTURE,
   DASHBOARD_FIRST_DAY_FIXTURE,
@@ -13,6 +15,8 @@ import {
   TODAY_EVENING_FIXTURE,
 } from "@/lib/screen-fixtures";
 import { LessonGalleryScreen } from "./lesson-gallery";
+import RewardsGalleryScreen from "./rewards-gallery";
+import { REWARDS_SCREENS, isRewardsScreen } from "./rewards-screens";
 import { LESSON_SCREENS, isLessonScreen } from "./lesson-screens";
 import { PATH_SCREENS, PathGalleryScreen, isPathScreen } from "./path-gallery";
 import { Stage3GalleryScreen } from "./stage3-gallery";
@@ -44,12 +48,15 @@ function dashboardFixtureFor(s: string | undefined): DashboardViewProps | null {
 // Три задания дня, как на макете Daily-quests: два выполнены, одно в процессе.
 const QUESTS_CARD = (
   <DailyQuestsCard
-    defs={[
-      { questType: "read_minutes", target: 10 },
-      { questType: "review_words", target: 15 },
-      { questType: "combo_streak", target: 5 },
-    ]}
-    progress={{ read_minutes: 10, review_words: 15, combo_streak: 2 }}
+    items={buildQuestItems(
+      [
+        { questType: "read_minutes", target: 10 },
+        { questType: "review_words", target: 15 },
+        { questType: "combo_streak", target: 5 },
+      ],
+      { read_minutes: 10, review_words: 15, combo_streak: 2, earn_xp: 0, complete_lessons: 0, answer_exercises: 0 },
+      { day: "2026-11-14", today: "2026-11-14", claimed: false },
+    )}
     allComplete={false}
     chestClaimedToday={false}
   />
@@ -72,6 +79,7 @@ const SCREENS = [
   "Offline",
   ...PATH_SCREENS,
   ...LESSON_SCREENS,
+  ...REWARDS_SCREENS,
 ] as const;
 
 export default async function DevScreensPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
@@ -83,7 +91,11 @@ export default async function DevScreensPage({ searchParams }: { searchParams: P
   if (dashboard) {
     return (
       <AppShell planLabel={null}>
-        <DashboardView {...dashboard} questsCard={s === "Today-empty" ? null : QUESTS_CARD} />
+        <DashboardView
+          {...dashboard}
+          questsCard={s === "Today-empty" ? null : QUESTS_CARD}
+          rewardsCard={<RewardsSummaryCard xp={dashboard.xp} recent={s === "Today-new" || s === "Today-empty" ? [] : [{ id: "streak_7", earnedAt: "2026-11-12T10:00:00Z" }, { id: "first_book", earnedAt: "2026-11-09T10:00:00Z" }]} />}
+        />
       </AppShell>
     );
   }
@@ -120,6 +132,15 @@ export default async function DevScreensPage({ searchParams }: { searchParams: P
     return (
       <AppShell planLabel={null}>
         <LessonGalleryScreen s={s} />
+      </AppShell>
+    );
+  }
+
+  // Экран наград (итерация 6) — внутри настоящей оболочки.
+  if (isRewardsScreen(s)) {
+    return (
+      <AppShell planLabel={null}>
+        <RewardsGalleryScreen s={s} />
       </AppShell>
     );
   }

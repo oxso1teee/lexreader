@@ -11,7 +11,7 @@ import {
   DEFAULT_DUEL_ROUND_COUNT,
   type DuelClaimResult,
 } from "@/lib/duel";
-import { addXp } from "@/lib/xp-actions";
+import { awardXp } from "@/lib/xp/award";
 
 // docs/release-2026-08-22/10_VAU_NOVYE_FICHI_I_DIZAYN.md раздел C, Тир 3 —
 // "Живые дуэли по словарю 1 на 1". Только два действия идут через Server
@@ -94,9 +94,9 @@ export interface ClaimDuelResultResponse {
 // docs/moments/ROADMAP.md, этап 6 — Duel-won. claim_duel_result()
 // (0055_duels_rewards_and_friend_streaks.sql) считает win-streak/
 // speed-margin и защищает от повторного начисления, но само начисление XP
-// живёт в TS (addXp — activity_days/Double-XP boost, не переносим это в
-// SQL). Идемпотентна: второй вызов после уже выданного XP вернёт
-// xpToAward: 0 из RPC, addXp просто не вызывается повторно.
+// живёт в TS (awardXp — единый журнал XP, Double-XP, дневные цели).
+// Идемпотентна дважды: RPC возвращает xpToAward: 0 после выданного XP, а
+// awardXp с ключом duelId не начислит повторно, даже если RPC вернул сумму.
 export async function claimDuelResultAction(duelId: string): Promise<ClaimDuelResultResponse> {
   const supabase = await createClient();
   const { data: user } = await supabase.auth.getUser();
@@ -108,8 +108,10 @@ export async function claimDuelResultAction(duelId: string): Promise<ClaimDuelRe
   const raw = data as { xpToAward: number; winStreak: number; speedMarginSec: number; scoreMe: number; scoreOpponent: number };
   let xpAwarded = 0;
   if (raw.xpToAward > 0) {
-    const xpResult = await addXp(supabase, user.user.id, raw.xpToAward);
-    xpAwarded = xpResult?.awarded ?? 0;
+    // Ключ — id дуэли: повторный вызов (или параллельный) не начислит победу дважды,
+    // даже если флаг в claim_duel_result() уже был выставлен до сбоя начисления.
+    const outcome = await awardXp(user.user.id, { source: "duel_win", ref: duelId, amount: raw.xpToAward });
+    xpAwarded = outcome.status === "awarded" ? outcome.result.awarded : 0;
   }
 
   return {

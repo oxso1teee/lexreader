@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { requireProfile } from "@/lib/auth";
 import { touchStreak } from "@/lib/streak";
 import { reviewSrsState } from "@/lib/srs";
@@ -10,7 +11,28 @@ import { getFsrsFlags } from "@/lib/fsrs-flags";
 import { getSrsParams, getSrsSettings } from "@/lib/srs-settings";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { checkAndAwardAchievements } from "@/lib/achievements-actions";
-import { addXp, todayUtcIso } from "@/lib/xp-actions";
+import { goalDoneInfo } from "@/lib/goals/goal-sync";
+import { syncGoalProgressFor } from "@/lib/goals/goal-sync-server";
+import { todayUtcIso } from "@/lib/xp-actions";
+import { awardXp, toAddXpResult } from "@/lib/xp/award";
+import {
+  activeComboState,
+  comboBlockRefs,
+  countReviewsInWindow,
+  isSameLocalDay,
+  isUndoable,
+  loadAwardedRefs,
+  loadLatestReviewId,
+  loadRecentReviews,
+  nextUnawardedBlock,
+  reviewSlotDay,
+  reviewSlotRef,
+  safeSession,
+  type ComboState,
+  perfectSession,
+} from "@/lib/xp/review-bonuses";
+import { getUserClock } from "@/lib/user-clock-server";
+import { log } from "@/lib/log";
 import { getOrCreateSettingsSafe } from "@/lib/language-twin/settings";
 import { recomputeLanguageTwin } from "@/lib/language-twin/recompute";
 import type { PatternCategory, PatternStatus, Trend } from "@/lib/language-twin/types";
@@ -25,10 +47,6 @@ import { checkOvertaken } from "@/lib/moments/overtaken";
 import { maybeFirstWinMoments } from "@/lib/moments/first-win";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
-// docs/moments/mockups/Perfect.dc.html — "+10 XP бонус за чистое занятие".
-// Настоящее начисление (addXp), не декоративное число. В constants.ts, не
-// здесь: "use server"-файлы могут экспортировать только async-функции.
-import { PERFECT_SESSION_BONUS_XP } from "./constants";
 
 export interface ReviewWordResult {
   reviewLogId: string | null;
@@ -232,13 +250,32 @@ export async function reviewWord(
           }
         : {}),
     })
-    .select("id")
+    .select("id, reviewed_at")
     .single();
   if (logError) throw new Error("Не удалось сохранить ответ.");
 
   const streakTransition = await touchStreak(supabase, user.id);
+  // Ключ XP — МЕСТО оценки в журнале («день:номер оценки за этот день»), а не id строки.
+  // Строка может быть удалена отменой (undoLastGrade), а место освобождается: новая оценка
+  // встаёт на тот же номер, ключ тот же, повторного начисления нет. Журнал XP только
+  // пополняется (без отрицательных событий), поэтому profiles.xp, activity_days.xp и сумма
+  // журнала остаются равными при любых отменах и гонках. Если место определить не удалось,
+  // XP не выдаётся (лучше недодать 1 XP, чем выдать без защиты от повтора).
+  // День и номер считаются по метке времени ЗАПИСАННОЙ строки (её ставит БД): оценка, записанная до
+  // полуночи, остаётся местом прошлого дня, даже если приложение дошло до начисления уже после неё.
+  const slotClock = await getUserClock(supabase, user.id);
+  const slot = reviewSlotDay(slotClock.timezone, (logRow as { reviewed_at: string }).reviewed_at);
+  const position = await countReviewsInWindow(supabase, user.id, slot.window).catch((error: unknown) => {
+    log.error({ kind: "review_slot", message: error instanceof Error ? error.message : "unknown" });
+    return null;
+  });
+  const xpResult = position === null || position < 1 ? null : toAddXpResult(await awardXp(user.id, { source: "review_card", ref: reviewSlotRef(slot.day, position) }));
+  // Цель дня не в XP («слов за день» и т.п.): оценка карточки меняет её прогресс, а XP — нет,
+  // поэтому отметку «цель выполнена» ставим по фактам здесь (для XP-цели это уже сделал award_xp).
+  const goalSync = await syncGoalProgressFor(supabase, user.id);
+  const goalDone = goalDoneInfo(goalSync);
+  // Достижения проверяются ПОСЛЕ начисления: вехи XP видят уже обновлённый итог.
   const newAchievementIds = await checkAndAwardAchievements(supabase, user.id, cardLanguage);
-  const xpResult = await addXp(supabase, user.id, 1);
   // M3 Slice 10 (brief §27): the scheduler write above already succeeded and is what matters —
   // this supplemental derived-state recompute must never turn a successful review into a thrown
   // error, so it's a fire-and-forget call into a function that swallows its own failures.
@@ -250,9 +287,10 @@ export async function reviewWord(
   // только когда они реально нужны: недели (goal_done/streak_up) стоят двух
   // лишних запросов на почти каждое ревью, но слова-мастер — только на самом
   // переходе в "maintenance", не на каждой карточке.
-  const goalWeek = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
+  const goalWeek = xpResult || goalDone ? await fetchGoalWeekMarks(supabase, user.id) : [];
   const streakWeek = streakTransition ? await fetchStreakWeekMarks(supabase, user.id) : [];
-  const perfectWeek = xpResult ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
+  // Идеальная неделя смотрит на goal_met — проверяем после того, как отметка за сегодня поставлена.
+  const perfectWeek = xpResult || goalSync?.justCompleted ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
   const overtaken = xpResult ? await checkOvertaken(supabase, user.id) : [];
 
   let wordMastered: CollectMomentsInput["wordMastered"] = null;
@@ -291,12 +329,13 @@ export async function reviewWord(
           minutesHint: minutesHintForGoal(xpResult.goal),
         }
       : null,
+    goalDone,
     streak: streakTransition,
     goalWeek,
     streakWeek,
     newAchievementIds,
     wordMastered,
-    today: todayUtcIso(),
+    today: xpResult?.day ?? goalSync?.day ?? todayUtcIso(),
   });
 
   return {
@@ -309,19 +348,31 @@ export async function reviewWord(
   };
 }
 
-export async function awardPerfectBonus(cardCount: number, durationSec: number): Promise<{ moments: Moment[] }> {
+export async function awardPerfectBonus(): Promise<{ moments: Moment[] }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { moments: [] };
 
-  const xpResult = await addXp(supabase, user.id, PERFECT_SESSION_BONUS_XP);
+  // Действие НЕ принимает параметров: что считать сессией и сколько в ней карточек, решает
+  // сервер по журналу повторений и своим константам (xp/review-bonuses.ts). Раньше клиент
+  // присылал размер сессии N, и награду можно было получить за любые N верных подряд в
+  // конце сессии с ошибками, а новый вызов после каждых пяти карточек давал её снова.
+  // Server action — публичный POST: лишние аргументы, которые пришлёт злоумышленник,
+  // функцией не читаются.
+  const recent = await loadRecentReviews(supabase, user.id).catch(() => null);
+  const sessionRows = recent ? safeSession(recent) : null;
+  const session = sessionRows ? perfectSession(sessionRows) : null;
+  if (!session) return { moments: [] };
+  const ref = session.ref;
+
+  const xpResult = toAddXpResult(await awardXp(user.id, { source: "perfect_session", ref }));
   if (!xpResult) return { moments: [] };
 
   const goalWeek = await fetchGoalWeekMarks(supabase, user.id);
   // Бонус — это тоже XP: сам способен довести до цели дня или уровня, те же
-  // правила, что и у обычного addXp в reviewWord выше.
+  // правила, что и у обычного начисления в reviewWord выше.
   const extraMoments = collectMoments({
     xp: {
       before: { total: xpResult.total.before, today: xpResult.today.before },
@@ -334,14 +385,14 @@ export async function awardPerfectBonus(cardCount: number, durationSec: number):
     streakWeek: [],
     newAchievementIds: [],
     wordMastered: null,
-    today: todayUtcIso(),
+    today: xpResult.day,
   });
 
   const perfectMoment: Moment = {
     kind: "perfect",
-    id: `perfect:${Date.now()}`,
-    cardCount,
-    durationSec,
+    id: `perfect:${ref}`,
+    cardCount: session.cardCount,
+    durationSec: session.durationSec,
     bonusXp: xpResult.awarded,
   };
 
@@ -354,7 +405,21 @@ export async function awardPerfectBonus(cardCount: number, durationSec: number):
 // показывается сразу в review-session.tsx (не через очередь MomentProvider),
 // но XP всё равно может довести до цели дня/уровня — те же extraMoments,
 // что и у awardPerfectBonus, уходят в общую очередь сессии.
-const COMBO_BONUS_XP = 5;
+/** Состояние серии для интерфейса: сколько верных подряд в текущей сессии и когда была последняя оценка. */
+export async function getComboState(): Promise<ComboState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { run: 0, lastAtMs: null };
+  try {
+    const recent = await loadRecentReviews(supabase, user.id);
+    const session = safeSession(recent);
+    return session ? activeComboState(session, Date.now()) : { run: 0, lastAtMs: null };
+  } catch {
+    return { run: 0, lastAtMs: null };
+  }
+}
 
 export async function awardComboBonus(): Promise<{ xpAwarded: number; moments: Moment[] }> {
   const supabase = await createClient();
@@ -363,7 +428,23 @@ export async function awardComboBonus(): Promise<{ xpAwarded: number; moments: M
   } = await supabase.auth.getUser();
   if (!user) return { xpAwarded: 0, moments: [] };
 
-  const xpResult = await addXp(supabase, user.id, COMBO_BONUS_XP);
+  // Бонус доказывается журналом: за каждые 5 верных подряд ВНУТРИ СЕССИИ (пауза между карточками
+  // не дольше 15 минут — то же правило, что в интерфейсе) — один блок, оплачивается один раз
+  // (ключ — первая оценка сессии и позиция карточки, закрывшей блок). Без реальных новых карточек
+  // повторный вызов ничего не даёт.
+  let ref: string | null;
+  try {
+    const recent = await loadRecentReviews(supabase, user.id);
+    const session = safeSession(recent);
+    const blocks = session ? comboBlockRefs(session) : [];
+    const awarded = await loadAwardedRefs(supabase, user.id, "combo_bonus", blocks);
+    ref = nextUnawardedBlock(blocks, awarded);
+  } catch {
+    return { xpAwarded: 0, moments: [] };
+  }
+  if (!ref) return { xpAwarded: 0, moments: [] };
+
+  const xpResult = toAddXpResult(await awardXp(user.id, { source: "combo_bonus", ref }));
   if (!xpResult) return { xpAwarded: 0, moments: [] };
 
   const goalWeek = await fetchGoalWeekMarks(supabase, user.id);
@@ -379,7 +460,7 @@ export async function awardComboBonus(): Promise<{ xpAwarded: number; moments: M
     streakWeek: [],
     newAchievementIds: [],
     wordMastered: null,
-    today: todayUtcIso(),
+    today: xpResult.day,
   });
 
   return { xpAwarded: xpResult.awarded, moments };
@@ -486,7 +567,7 @@ export async function undoLastGrade(reviewLogId: string): Promise<UndoResult> {
   const { data: logRow, error: fetchError } = await supabase
     .from("review_log")
     .select(
-      "id, flashcard_id, previous_legacy_state_json, previous_state_json, flashcards!inner(owner_id)",
+      "id, flashcard_id, reviewed_at, previous_legacy_state_json, previous_state_json, flashcards!inner(owner_id)",
     )
     .eq("id", reviewLogId)
     .maybeSingle();
@@ -497,15 +578,18 @@ export async function undoLastGrade(reviewLogId: string): Promise<UndoResult> {
     return { ok: false, error: "Нет доступа." };
   }
 
-  const { data: mostRecent } = await supabase
-    .from("review_log")
-    .select("id")
-    .eq("flashcard_id", logRow.flashcard_id)
-    .order("reviewed_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (!mostRecent || mostRecent.id !== reviewLogId) {
+  // Отменить можно только САМУЮ последнюю оценку пользователя (как и в интерфейсе, где доступна
+  // лишь последняя). Раньше хватало, чтобы оценка была последней у своей карточки — то есть можно
+  // было выдернуть строку из середины сессии, сдвинув места и ключи наград за серию. Освободившееся
+  // место займёт следующая оценка с тем же ключом XP, повторной выплаты нет.
+  const latestId = await loadLatestReviewId(supabase, user.id).catch(() => null);
+  if (!isUndoable(latestId, reviewLogId)) {
     return { ok: false, error: "Уже есть более новая оценка — отменить нельзя." };
+  }
+  // Только в тот же локальный день: иначе повторная оценка заняла бы место НОВОГО дня и получила бы XP ещё раз.
+  const undoClock = await getUserClock(supabase, user.id);
+  if (!isSameLocalDay(undoClock.timezone, (logRow as { reviewed_at: string }).reviewed_at, new Date())) {
+    return { ok: false, error: "Оценка относится к прошлому дню — отменить её нельзя." };
   }
 
   if (!logRow.previous_legacy_state_json) {
@@ -578,16 +662,32 @@ export async function sendCardToNotebook(front: string, back: string): Promise<U
   return result;
 }
 
-// docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 6.2: вызывается один раз
-// по завершении сессии, только если счётчик реально побил сохранённый
-// рекорд (проверка на клиенте до вызова — здесь просто безусловная запись).
-export async function updateReviewBest(count: number): Promise<void> {
+// docs/IMPLEMENTATION_PROMPT_2026-07-28.md, раздел 6.2: вызывается по завершении сессии,
+// когда интерфейс считает, что рекорд побит. Размер сессии определяет СЕРВЕР по журналу
+// повторений (то же правило паузы, что у combo и идеальной сессии), а не число от клиента:
+// review_best_session_count питает достижения и экран прогресса, а server action — публичный
+// POST, любой аргумент мог прислать кто угодно. Запись — сервисной ролью (поле закрыто для
+// клиентской, миграция 0060) и только если значение выросло.
+export async function updateReviewBest(): Promise<{ isNewRecord: boolean }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase.from("profiles").update({ review_best_session_count: count }).eq("id", user.id);
+  if (!user) return { isNewRecord: false };
+  const recent = await loadRecentReviews(supabase, user.id).catch(() => null);
+  const session = recent ? safeSession(recent) : null;
+  if (!session || session.length === 0) return { isNewRecord: false };
+  const { data, error } = await createServiceClient()
+    .from("profiles")
+    .update({ review_best_session_count: session.length })
+    .eq("id", user.id)
+    .lt("review_best_session_count", session.length)
+    .select("id");
+  if (error) {
+    log.error({ kind: "review_best", message: error.message });
+    return { isNewRecord: false };
+  }
+  return { isNewRecord: (data?.length ?? 0) > 0 };
 }
 
 export interface LanguageTwinSessionUpdate {

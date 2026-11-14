@@ -1,5 +1,6 @@
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { isoWeekStart } from "@/lib/iso-week";
+import { getUserClock } from "@/lib/user-clock-server";
 import { goalWeekMarks } from "./week";
 import type { WeekdayMark } from "./types";
 
@@ -9,8 +10,10 @@ import type { WeekdayMark } from "./types";
 export async function fetchGoalWeekMarks(
   supabase: SupabaseServerClient,
   userId: string,
-  now: Date = new Date(),
+  now?: Date,
 ): Promise<WeekdayMark[]> {
+  // now — «настенные часы» пользователя (UserClock.wall); не передан — по поясу профиля.
+  now ??= (await getUserClock(supabase, userId)).wall;
   const monday = isoWeekStart(now).toISOString().slice(0, 10);
   const { data } = await supabase
     .from("activity_days")
