@@ -1,46 +1,34 @@
 import { redirect } from "next/navigation";
-import PathCard from "@/components/product/learning-paths/path-card";
+import CatalogView from "@/components/product/learning-paths/catalog-view";
+import { pathHref } from "@/lib/learning-paths/routes";
 import LearningPathsSubHeader from "./sub-header";
 import LearningPathsViewTracker from "./analytics";
-import { getCatalogAction, getActivePathStateAction } from "./actions";
+import { getCatalogAction } from "./actions";
 
 // M3 Slice 8 — Path Catalog (plan doc's screen A).
-// docs/moments/ROADMAP.md, этап 8 — нижняя вкладка "Учиться" теперь ведёт
-// сюда напрямую (Path.dc.html): при активном пути сразу редиректим на его
-// карту ([pathSlug]/page.tsx -> PathMap), каталог остаётся только для
-// выбора пути, когда активного нет.
-export default async function LearningPathsCatalogPage() {
-  const activeState = await getActivePathStateAction();
-  if (activeState) redirect(`/learning-paths/${activeState.path.slug}`);
-
+// Нижняя вкладка «Учиться» ведёт сюда: при активном пути сразу открываем его
+// карту ([pathSlug]/page.tsx), каталог остаётся для выбора пути. Чтобы сменить
+// путь, не ставя активный на паузу, карта ссылается сюда с ?all=1 — тогда
+// каталог показывается и при активном пути.
+export default async function LearningPathsCatalogPage({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
+  const { all } = await searchParams;
   const { entries, recommendation } = await getCatalogAction();
-  const recommendedPath = recommendation ? entries.find((e) => e.path.slug === recommendation.pathSlug) : null;
+  const active = entries.find((entry) => entry.enrollment?.status === "active") ?? null;
+  if (active && all !== "1") redirect(pathHref(active.path.slug));
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
-      <LearningPathsViewTracker event="learning_paths_viewed" />
-      <LearningPathsSubHeader
-        title="Пути обучения"
-        description="Структурированные курсы поверх твоего профиля «Мой английский» — грамматика по порядку, а не случайные упражнения."
-        backHref="/library"
-        backLabel="К библиотеке"
-      />
-
-      {recommendation && recommendedPath && (
-        <div className="flex flex-col gap-1 rounded-2xl border border-[var(--color-forest-text)]/30 bg-[var(--color-forest-text)]/5 p-4">
-          <span className="text-xs font-semibold text-[var(--color-forest-text)]">
-            {recommendation.lowConfidence ? "Возможная рекомендация" : "Рекомендуем тебе"}
-          </span>
-          <p className="text-sm font-medium">{recommendedPath.path.title}</p>
-          <p className="text-xs text-[var(--text-secondary)]">{recommendation.reason}</p>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-3">
-        {entries.map(({ path, enrollment }) => (
-          <PathCard key={path.slug} path={path} enrollment={enrollment} />
-        ))}
-      </div>
-    </div>
+    <CatalogView
+      entries={entries}
+      recommendation={recommendation}
+      analytics={<LearningPathsViewTracker event="learning_paths_viewed" />}
+      header={
+        <LearningPathsSubHeader
+          title="Пути обучения"
+          description="Структурированные курсы поверх твоего профиля «Мой английский» — грамматика по порядку, а не случайные упражнения."
+          backHref={active ? pathHref(active.path.slug) : "/library"}
+          backLabel={active ? "К моему пути" : "К библиотеке"}
+        />
+      }
+    />
   );
 }

@@ -12,6 +12,7 @@ import {
   DASHBOARD_REGULAR_FIXTURE,
   TODAY_EVENING_FIXTURE,
 } from "@/lib/screen-fixtures";
+import { PATH_SCREENS, PathGalleryScreen, isPathScreen } from "./path-gallery";
 import { Stage3GalleryScreen } from "./stage3-gallery";
 import { Stage6GalleryScreen } from "./stage6-gallery";
 import { Stage7GalleryScreen } from "./stage7-gallery";
@@ -67,6 +68,7 @@ const SCREENS = [
   "Duel-won",
   "Splash",
   "Offline",
+  ...PATH_SCREENS,
 ] as const;
 
 export default async function DevScreensPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
@@ -104,6 +106,10 @@ export default async function DevScreensPage({ searchParams }: { searchParams: P
 
   if (s === "Splash" || s === "Offline") {
     return <Stage7GalleryScreen s={s} />;
+  }
+
+  if (isPathScreen(s)) {
+    return <PathGalleryScreen s={s} />;
   }
 
   return (

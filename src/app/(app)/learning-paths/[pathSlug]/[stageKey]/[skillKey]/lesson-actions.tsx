@@ -27,7 +27,7 @@ export default function CompleteLessonButton({
 
   if (alreadyCompleted) {
     return (
-      <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-success-text)]">
+      <span className="inline-flex items-center gap-1 text-sm font-bold text-[var(--leaf-text)]">
         <Check aria-hidden="true" className="h-4 w-4" /> Урок изучен
       </span>
     );
@@ -43,8 +43,8 @@ export default function CompleteLessonButton({
   }
 
   return (
-    <Button variant="leaf" onClick={handleClick} disabled={isPending} className="self-start">
-      {isPending ? "…" : "Отметить как изученное"}
+    <Button variant="leaf" onClick={handleClick} loading={isPending} className="self-start">
+      Отметить как изученное
     </Button>
   );
 }

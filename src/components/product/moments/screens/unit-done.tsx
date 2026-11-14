@@ -36,7 +36,7 @@ export function UnitDoneScreen({ moment, onClose }: { moment: UnitDoneMoment; on
           </text>
         </svg>
         <p className="mo-rise" style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.85, marginTop: 18 }}>
-          Этап {moment.stageIndex} из {moment.stagesTotal} пройден
+          Раздел {moment.stageIndex} из {moment.stagesTotal} пройден
         </p>
         <h2 className="mo-disp mo-rise" style={{ margin: "8px 24px 0", fontSize: 26, lineHeight: 1.2, fontWeight: 900 }}>
           {moment.pathTitle}
@@ -51,7 +51,7 @@ export function UnitDoneScreen({ moment, onClose }: { moment: UnitDoneMoment; on
       {moment.nextStageTitle && (
         <div className="mo-rise" style={{ margin: "12px 20px 0", borderRadius: 18, background: "#fff", color: "#1a1a1a", padding: "12px 14px" }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--sky-text)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Открыт следующий этап
+            Открыт следующий раздел
           </div>
           <div style={{ fontWeight: 700, fontSize: 16, marginTop: 2 }}>{moment.nextStageTitle}</div>
         </div>

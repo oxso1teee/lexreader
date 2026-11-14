@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { getAllPaths, getPath, isValidSkillForPath, findStageForSkill, findSkill } from "@/lib/learning-paths/curriculum/index.ts";
+import { getAllPaths, getAllSkills, getPath, isValidSkillForPath, findStageForSkill, findSkill } from "@/lib/learning-paths/curriculum/index.ts";
 import {
   applyKnowledgeCheckResult,
   applyLessonCompletion,
@@ -11,14 +11,14 @@ import {
   courseProgressPercent,
   countSkillsByStatus,
   findCurrentFocusSkill,
-  isPathComplete,
   scoreKnowledgeCheck,
-  stageStatus,
   type KnowledgeCheckOutcome,
 } from "@/lib/learning-paths/progress-engine.ts";
+import { buildPathMap, isLessonOpen, lessonContext, type LessonContext, type PathMap, type UnitNode } from "@/lib/learning-paths/path-map.ts";
 import { captureServerEvent } from "@/lib/posthog-server";
 import {
   getActiveEnrollment,
+  getCompletedLessonRefs,
   getEnrollments,
   getOrCreateSkillProgress,
   getSkillProgressForPath,
@@ -47,6 +47,8 @@ function revalidateLearningPaths() {
 export interface CatalogEntry {
   path: LearningPath;
   enrollment: EnrollmentRow | null;
+  /** Пройдено уроков из всех — у каждого пути, активен он или нет. */
+  progress: { done: number; total: number };
 }
 
 export interface CatalogState {
@@ -57,12 +59,19 @@ export interface CatalogState {
 export async function getCatalogAction(): Promise<CatalogState> {
   const profile = await requireProfile();
   const supabase = await createClient();
-  const [enrollments, twinProfile] = await Promise.all([
+  const [enrollments, twinProfile, completed] = await Promise.all([
     getEnrollments(supabase, profile.id),
     supabase.from("language_twin_profiles").select("behavioral_level_range").eq("user_id", profile.id).maybeSingle(),
+    getCompletedLessonRefs(supabase, profile.id),
   ]);
   const byPathSlug = new Map(enrollments.map((e) => [e.path_slug, e]));
-  const entries = getAllPaths().map((path) => ({ path, enrollment: byPathSlug.get(path.slug) ?? null }));
+  const entries = getAllPaths().map((path) => {
+    const lessonKeys = new Set(getAllSkills(path).map((skill) => skill.key));
+    const done = completed.filter(
+      (ref) => ref.path_slug === path.slug && ref.path_version === path.version && lessonKeys.has(ref.skill_key),
+    ).length;
+    return { path, enrollment: byPathSlug.get(path.slug) ?? null, progress: { done, total: lessonKeys.size } };
+  });
 
   // No recommendation banner once the user already has an active path —
   // it's already decided, showing one would just be noise (plan doc's
@@ -73,19 +82,34 @@ export async function getCatalogAction(): Promise<CatalogState> {
   return { entries, recommendation };
 }
 
-export interface PathDetailsState extends CatalogEntry {
+export interface PathMapState {
+  path: LearningPath;
+  enrollment: EnrollmentRow | null;
   otherActivePath: LearningPath | null;
+  /** Разделы, модули и уроки пути с состояниями «пройден / текущий / закрыт». */
+  map: PathMap;
 }
 
-export async function getPathDetailsAction(pathSlug: PathSlug): Promise<PathDetailsState | null> {
+// Карта пути: зачисление + сохранённый прогресс по урокам (две выборки с
+// owner-RLS, параллельно). Прогресс есть и у пути без зачисления (например,
+// пройденного раньше), поэтому карта строится всегда.
+export async function getPathMapAction(pathSlug: PathSlug): Promise<PathMapState | null> {
   const path = getPath(pathSlug);
   if (!path) return null;
   const profile = await requireProfile();
   const supabase = await createClient();
-  const enrollments = await getEnrollments(supabase, profile.id);
+  const [enrollments, rows] = await Promise.all([
+    getEnrollments(supabase, profile.id),
+    getSkillProgressForPath(supabase, profile.id, path.slug, path.version),
+  ]);
   const enrollment = enrollments.find((e) => e.path_slug === pathSlug) ?? null;
   const otherActive = enrollments.find((e) => e.status === "active" && e.path_slug !== pathSlug) ?? null;
-  return { path, enrollment, otherActivePath: otherActive ? getPath(otherActive.path_slug) : null };
+  return {
+    path,
+    enrollment,
+    otherActivePath: otherActive ? getPath(otherActive.path_slug) : null,
+    map: buildPathMap(path, rows),
+  };
 }
 
 export async function startPathAction(pathSlug: PathSlug): Promise<EnrollmentRow | null> {
@@ -142,8 +166,10 @@ export async function getActivePathStateAction(): Promise<ActivePathState | null
 export interface StageState {
   path: LearningPath;
   stage: Stage;
+  /** Зачисление именно в этот путь (активное, на паузе, пройдено) или null. */
   enrollment: EnrollmentRow | null;
-  progressRows: SkillProgressRow[];
+  map: PathMap;
+  unit: UnitNode;
 }
 
 export async function getStageStateAction(pathSlug: PathSlug, stageKey: string): Promise<StageState | null> {
@@ -152,11 +178,14 @@ export async function getStageStateAction(pathSlug: PathSlug, stageKey: string):
   if (!path || !stage) return null;
   const profile = await requireProfile();
   const supabase = await createClient();
-  const [enrollment, progressRows] = await Promise.all([
-    getActiveEnrollment(supabase, profile.id),
+  const [enrollments, progressRows] = await Promise.all([
+    getEnrollments(supabase, profile.id),
     getSkillProgressForPath(supabase, profile.id, path.slug, path.version),
   ]);
-  return { path, stage, enrollment: enrollment?.path_slug === pathSlug ? enrollment : null, progressRows };
+  const map = buildPathMap(path, progressRows);
+  const unit = map.units.find((u) => u.key === stage.key);
+  if (!unit) return null;
+  return { path, stage, enrollment: enrollments.find((e) => e.path_slug === path.slug) ?? null, map, unit };
 }
 
 export interface SkillState {
@@ -164,10 +193,15 @@ export interface SkillState {
   stage: Stage;
   skill: Skill;
   progress: SkillProgressRow | null;
+  /** Раздел, модуль, позиция в разделе, соседние уроки и состояние урока. */
+  context: LessonContext;
   languageTwinSignal: SkillLanguageTwinSignal | null;
   matchingMissionId: string | null;
 }
 
+// Страница урока читает прогресс, а не создаёт его: строка user_skill_progress
+// появляется при первом действии (урок пройден, проверка, практика), а не от
+// самого просмотра — иначе одно открытие закрытого урока «начинало» бы его.
 export async function getSkillStateAction(pathSlug: PathSlug, skillKey: string): Promise<SkillState | null> {
   const path = getPath(pathSlug);
   if (!path || !isValidSkillForPath(pathSlug, skillKey)) return null;
@@ -177,61 +211,68 @@ export async function getSkillStateAction(pathSlug: PathSlug, skillKey: string):
 
   const profile = await requireProfile();
   const supabase = await createClient();
-  const [progress, languageTwinSignal, missions] = await Promise.all([
-    getOrCreateSkillProgress(supabase, profile.id, path.slug, path.version, skillKey),
+  const rows = await getSkillProgressForPath(supabase, profile.id, path.slug, path.version);
+  const context = lessonContext(buildPathMap(path, rows), skillKey);
+  if (!context) return null;
+  const progress = rows.find((row) => row.skill_key === skillKey) ?? null;
+
+  // Закрытый урок не показывает содержимого, обогащать нечем — и незачем
+  // генерировать миссии ради страницы, которой пользоваться нельзя.
+  if (context.lesson.state === "locked") {
+    return { path, stage, skill, progress, context, languageTwinSignal: null, matchingMissionId: null };
+  }
+
+  const [languageTwinSignal, missions] = await Promise.all([
     getSkillLanguageTwinSignal(supabase, profile.id, skill.category),
     getOrGenerateActiveMissions(supabase, profile.id, profile.target_language),
   ]);
   const matchingMission = findMatchingMissionForSkill(missions, skill);
-  return { path, stage, skill, progress, languageTwinSignal, matchingMissionId: matchingMission?.id ?? null };
+  return { path, stage, skill, progress, context, languageTwinSignal, matchingMissionId: matchingMission?.id ?? null };
 }
 
-// Advances the enrollment's current_stage_key/current_module_key to track
-// wherever the user is actually working — used after a lesson/knowledge
-// check completion, never a separate user-facing action (plan doc's active
-// CTA rule: this is bookkeeping, not something a button claims to do).
-async function advanceCurrentPosition(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, path: LearningPath, skillKey: string) {
-  const stage = findStageForSkill(path, skillKey);
-  if (!stage) return;
-  const mod = stage.modules.find((m) => m.skills.some((s) => s.key === skillKey));
-  await setCurrentStage(supabase, userId, path.slug, stage.key, mod?.key ?? null);
-}
-
-async function maybeCompletePathAndAdvance(
+// Вызывается после каждого изменения прогресса по уроку: переносит сохранённую
+// позицию зачисления (current_stage_key/current_module_key) на следующий урок,
+// отдаёт «раздел пройден» и закрывает путь, когда пройден последний урок —
+// отдельным действием пользователя это не бывает (plan doc's active CTA rule:
+// это учёт, а не то, что обещает кнопка). `newlyCompleted` — этим вызовом урок
+// впервые засчитан: события и экран «раздел пройден» повторно не отправляются
+// при пересдаче проверки или повторном нажатии.
+async function afterProgressChange(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   path: LearningPath,
   skillKey: string,
+  newlyCompleted: boolean,
 ): Promise<UnitDoneMoment | null> {
-  await advanceCurrentPosition(supabase, userId, path, skillKey);
   const rows = await getSkillProgressForPath(supabase, userId, path.slug, path.version);
+  const map = buildPathMap(path, rows);
 
-  // stage_completed only fires on the transition into "completed" (not on
-  // every subsequent visit) — the containing stage was just re-checked, so
-  // comparing this skill against the OTHER skills already in `rows` is
-  // enough to know whether it just tipped the stage over.
-  const stage = findStageForSkill(path, skillKey);
+  const lastUnit = map.units[map.units.length - 1];
+  await setCurrentStage(supabase, userId, path.slug, map.next ? map.next.unit.key : lastUnit.key, map.next ? map.next.module.key : null);
+
+  if (!newlyCompleted) return null;
+
   let unitDone: UnitDoneMoment | null = null;
-  if (stage && stageStatus(stage, rows, null) === "completed") {
-    captureServerEvent(userId, "stage_completed", { path_slug: path.slug, stage_key: stage.key });
-    // docs/moments/ROADMAP.md, этап 4 — Unit-done. stageIndex/nextStageTitle
-    // из реального порядка path.stages (curriculum, не из БД) — тот же
-    // массив, что уже рисует [pathSlug]/page.tsx и path-map.tsx.
-    const stageIndex = path.stages.findIndex((s) => s.key === stage.key);
-    const nextStage = path.stages[stageIndex + 1] ?? null;
+  const unit = map.units.find((u) => u.lessons.some((lesson) => lesson.key === skillKey));
+  if (unit?.state === "done") {
+    captureServerEvent(userId, "stage_completed", { path_slug: path.slug, stage_key: unit.key });
+    // docs/moments/ROADMAP.md, этап 4 — Unit-done. Номер раздела и следующий
+    // раздел — из реального порядка курса (curriculum, не из БД), тот же
+    // массив, что рисует карта пути.
+    const nextUnit = map.units[unit.number] ?? null;
     unitDone = {
       kind: "unit_done",
-      id: `unit-done-${userId}-${path.slug}-${stage.key}`,
+      id: `unit-done-${userId}-${path.slug}-${unit.key}`,
       pathTitle: path.title,
-      stageTitle: stage.title,
-      stageIndex: stageIndex + 1,
-      stagesTotal: path.stages.length,
-      skillsInStage: stage.modules.flatMap((m) => m.skills).length,
-      nextStageTitle: nextStage?.title ?? null,
+      stageTitle: unit.title,
+      stageIndex: unit.number,
+      stagesTotal: map.totalUnits,
+      skillsInStage: unit.total,
+      nextStageTitle: nextUnit?.title ?? null,
     };
   }
 
-  if (isPathComplete(path, rows)) {
+  if (map.complete) {
     await markPathCompleted(supabase, userId, path.slug);
     captureServerEvent(userId, "learning_path_completed", { path_slug: path.slug });
   }
@@ -251,10 +292,19 @@ export async function completeLessonAction(pathSlug: PathSlug, skillKey: string)
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const progress = await getOrCreateSkillProgress(supabase, profile.id, path.slug, path.version, skillKey);
+  // Замок проверяется и на сервере, а не только в интерфейсе: закрытый урок
+  // нельзя засчитать самодельным запросом.
+  const rows = await getSkillProgressForPath(supabase, profile.id, path.slug, path.version);
+  if (!isLessonOpen(buildPathMap(path, rows), skillKey)) return null;
+
+  // Уже пройденный урок — ничего не меняем и не празднуем второй раз.
+  const existing = rows.find((row) => row.skill_key === skillKey) ?? null;
+  if (existing?.content_completed_at) return { progress: existing, unitDoneMoment: null };
+
+  const progress = existing ?? (await getOrCreateSkillProgress(supabase, profile.id, path.slug, path.version, skillKey));
   const patch = applyLessonCompletion(progress, new Date().toISOString());
   const updated = await applySkillProgressPatch(supabase, profile.id, progress.id, patch);
-  const unitDoneMoment = await maybeCompletePathAndAdvance(supabase, profile.id, path, skillKey);
+  const unitDoneMoment = await afterProgressChange(supabase, profile.id, path, skillKey, true);
 
   revalidateLearningPaths();
   return { progress: updated ?? progress, unitDoneMoment };
@@ -285,7 +335,11 @@ export async function submitKnowledgeCheckAction(pathSlug: PathSlug, skillKey: s
   const outcome = scoreKnowledgeCheck(correct, total);
   const patch = applyKnowledgeCheckResult(progress, outcome, new Date().toISOString());
   const updated = await applySkillProgressPatch(supabase, profile.id, progress.id, patch);
-  await maybeCompletePathAndAdvance(supabase, profile.id, path, skillKey);
+  // Проверка знаний работает и на закрытом уроке: результат от 80% засчитывает
+  // урок сразу (так можно пропустить тему, которую уже знаешь) — поэтому замок
+  // здесь намеренно не проверяется.
+  const newlyCompleted = !progress.content_completed_at && Boolean(patch.content_completed_at);
+  await afterProgressChange(supabase, profile.id, path, skillKey, newlyCompleted);
 
   let firstWinJustCompleted = false;
   if (!profile.completed_first_win) {

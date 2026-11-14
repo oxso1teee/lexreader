@@ -16,11 +16,14 @@ export function StartPathButton({
   label,
   switchingFrom,
   analyticsEvent,
+  className,
 }: {
   pathSlug: PathSlug;
   label: string;
   switchingFrom?: string | null;
   analyticsEvent: "learning_path_started" | "learning_path_resumed" | "learning_path_switched";
+  /** Например lp-hero-cta — белая кнопка на зелёном hero. */
+  className?: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -37,8 +40,8 @@ export function StartPathButton({
   }
 
   return (
-    <Button variant="leaf" onClick={handleClick} disabled={isPending} className="self-start">
-      {isPending ? "…" : label}
+    <Button variant="leaf" onClick={handleClick} loading={isPending} className={className ?? "self-start"}>
+      {label}
     </Button>
   );
 }
@@ -56,8 +59,8 @@ export function PausePathButton({ pathSlug }: { pathSlug: PathSlug }) {
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleClick} disabled={isPending} className="self-start">
-      {isPending ? "…" : "Поставить на паузу"}
+    <Button variant="ghost" size="sm" onClick={handleClick} loading={isPending} className="self-start">
+      Поставить на паузу
     </Button>
   );
 }

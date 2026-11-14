@@ -230,7 +230,9 @@ export default async function ProgressPage({
     // so /home and /progress can never quietly report different numbers for
     // the same "completed this week" stat.
     getMissionsCompletedThisWeek(supabase, profile.id, isoWeekStart(new Date()).toISOString()),
-    getActivePathStateAction(),
+    // Чтение прогресса пути теперь бросает при ошибке запроса (persist.ts);
+    // карточка пути здесь второстепенная — не роняем из-за неё всю страницу.
+    getActivePathStateAction().catch(() => null),
     // M3 Slice 10 (task #280): learning_state is evidence-based (state-engine.ts) — a genuinely
     // different, more honest signal than the vocabulary_items.level counts above, which only
     // reflect a reading tap, never a real recall attempt. Two counts only (not all 5 states):
