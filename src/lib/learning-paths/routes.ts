@@ -24,3 +24,8 @@ export function lessonHref(slug: PathSlug, lesson: Pick<LessonNode, "unitKey" | 
 export function checkHref(slug: PathSlug, lesson: Pick<LessonNode, "unitKey" | "key">): string {
   return `${lessonHref(slug, lesson)}/check`;
 }
+
+/** Плеер урока: пошаговое прохождение (материал → упражнения → результат). */
+export function playHref(slug: PathSlug, lesson: Pick<LessonNode, "unitKey" | "key">): string {
+  return `${lessonHref(slug, lesson)}/play`;
+}

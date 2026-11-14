@@ -5,7 +5,9 @@ import CatalogView from "@/components/product/learning-paths/catalog-view";
 import LessonView, { lessonSubtitle } from "@/components/product/learning-paths/lesson-view";
 import PathView from "@/components/product/learning-paths/path-view";
 import UnitView from "@/components/product/learning-paths/unit-view";
+import { ExercisesRequiredNote } from "@/components/product/lessons/lesson-start-card";
 import { buttonClassName } from "@/components/ui/button";
+import { lessonRequiresExercises } from "@/lib/lessons/plan";
 import { getAllSkills } from "@/lib/learning-paths/curriculum/index.ts";
 import { PATHS_ALL_HREF, pathHref, unitHref } from "@/lib/learning-paths/routes";
 import {
@@ -145,6 +147,9 @@ function PathScreenBody({ s }: { s: PathScreen }) {
             <span className="inline-flex items-center gap-1 text-sm font-bold text-[var(--leaf-text)]">
               <Check aria-hidden="true" className="h-4 w-4" /> Урок изучен
             </span>
+          ) : lessonRequiresExercises(skill) ? (
+            // Как на боевой странице: урок с упражнениями одним кликом не засчитывается.
+            <ExercisesRequiredNote />
           ) : (
             fakeButton("Отметить как изученное", "self-start")
           )

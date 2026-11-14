@@ -13,7 +13,7 @@ import {
 } from "./copy.ts";
 import { LESSON_KIND_LABEL, lessonKind } from "./lesson-kind.ts";
 import { getAllPaths, getAllSkills } from "./curriculum/index.ts";
-import { PATHS_ALL_HREF, PATHS_CATALOG_HREF, checkHref, lessonHref, pathHref, unitHref } from "./routes.ts";
+import { PATHS_ALL_HREF, PATHS_CATALOG_HREF, checkHref, lessonHref, pathHref, playHref, unitHref } from "./routes.ts";
 
 test("routes: addresses match the app router (/learning-paths/[pathSlug]/[stageKey]/[skillKey]/check)", () => {
   const lesson = { unitKey: "core-sentence-building", key: "grammar.articles" };
@@ -23,6 +23,7 @@ test("routes: addresses match the app router (/learning-paths/[pathSlug]/[stageK
   assert.equal(unitHref("a2-b1", "core-sentence-building"), "/learning-paths/a2-b1/core-sentence-building");
   assert.equal(lessonHref("a2-b1", lesson), "/learning-paths/a2-b1/core-sentence-building/grammar.articles");
   assert.equal(checkHref("a2-b1", lesson), "/learning-paths/a2-b1/core-sentence-building/grammar.articles/check");
+  assert.equal(playHref("a2-b1", lesson), "/learning-paths/a2-b1/core-sentence-building/grammar.articles/play");
 });
 
 test("lessonsCount / modulesCount: Russian plural forms", () => {

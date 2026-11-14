@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cx } from "@/lib/ui/cx";
 
@@ -20,6 +20,12 @@ import { cx } from "@/lib/ui/cx";
 //     options={[{ value: "travel", label: "Путешествия", description: "Отели, кафе, дорога", icon: <Compass />, tone: "sun" }]} />
 export type ChoiceTone = "neutral" | "leaf" | "sky" | "sun" | "ember" | "danger";
 
+/** Результат проверки (уроки и упражнения): карточка верного ответа или выбранного
+ *  неверного. Несёт иконку И подпись — состояние не передаётся одним цветом. */
+export type ChoiceState = "correct" | "incorrect";
+
+const STATE_LABEL: Record<ChoiceState, string> = { correct: "Верно", incorrect: "Неверно" };
+
 export interface ChoiceOption {
   value: string;
   label: string;
@@ -28,6 +34,7 @@ export interface ChoiceOption {
   icon?: ReactNode;
   tone?: ChoiceTone;
   disabled?: boolean;
+  state?: ChoiceState;
 }
 
 export function ChoiceCard({
@@ -40,6 +47,7 @@ export function ChoiceCard({
   keyHint,
   checked,
   disabled,
+  state,
   onChange,
   className,
 }: {
@@ -53,6 +61,7 @@ export function ChoiceCard({
   keyHint?: string;
   checked: boolean;
   disabled?: boolean;
+  state?: ChoiceState;
   onChange: (value: string) => void;
   className?: string;
 }) {
@@ -60,7 +69,7 @@ export function ChoiceCard({
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
   return (
-    <label className={cx("choice-card", className)}>
+    <label className={cx("choice-card", className)} data-state={state}>
       <input
         type="radio"
         className="choice-card-input"
@@ -92,7 +101,14 @@ export function ChoiceCard({
           </span>
         ) : null}
       </span>
-      <Check aria-hidden="true" className="choice-card-check" />
+      {state ? (
+        <span className="choice-card-state">
+          {state === "correct" ? <Check aria-hidden="true" className="h-4 w-4" /> : <X aria-hidden="true" className="h-4 w-4" />}
+          {STATE_LABEL[state]}
+        </span>
+      ) : (
+        <Check aria-hidden="true" className="choice-card-check" />
+      )}
     </label>
   );
 }
@@ -157,6 +173,7 @@ export function ChoiceGroup({
           keyHint={numbered ? String(index + 1) : undefined}
           checked={current === option.value}
           disabled={option.disabled}
+          state={option.state}
           onChange={select}
         />
       ))}

@@ -12,6 +12,8 @@ import {
   DASHBOARD_REGULAR_FIXTURE,
   TODAY_EVENING_FIXTURE,
 } from "@/lib/screen-fixtures";
+import { LessonGalleryScreen } from "./lesson-gallery";
+import { LESSON_SCREENS, isLessonScreen } from "./lesson-screens";
 import { PATH_SCREENS, PathGalleryScreen, isPathScreen } from "./path-gallery";
 import { Stage3GalleryScreen } from "./stage3-gallery";
 import { Stage6GalleryScreen } from "./stage6-gallery";
@@ -69,6 +71,7 @@ const SCREENS = [
   "Splash",
   "Offline",
   ...PATH_SCREENS,
+  ...LESSON_SCREENS,
 ] as const;
 
 export default async function DevScreensPage({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
@@ -110,6 +113,15 @@ export default async function DevScreensPage({ searchParams }: { searchParams: P
 
   if (isPathScreen(s)) {
     return <PathGalleryScreen s={s} />;
+  }
+
+  // Плеер уроков (итерация 5) — внутри настоящей оболочки, как на боевой странице.
+  if (isLessonScreen(s)) {
+    return (
+      <AppShell planLabel={null}>
+        <LessonGalleryScreen s={s} />
+      </AppShell>
+    );
   }
 
   return (

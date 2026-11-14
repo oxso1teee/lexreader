@@ -130,7 +130,9 @@ test.describe("урок", () => {
     await expect(steps.locator('[aria-current="step"]')).toHaveAttribute("aria-label", /Урок 3: Сравнительная степень — текущий/);
     await expect(page.getByRole("heading", { level: 2, name: "Примеры" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Частые ошибки" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Отметить как изученное" })).toBeVisible();
+    // у урока есть упражнения — одним кликом «изучено» его не засчитать, только через плеер/проверку
+    await expect(page.getByRole("button", { name: "Отметить как изученное" })).toHaveCount(0);
+    await expect(page.getByText("Этот урок засчитывается после упражнений")).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Практика" })).toBeVisible();
     const nav = page.getByRole("navigation", { name: "Соседние уроки" });
     await expect(nav.getByRole("link", { name: /Предыдущий урок.*Предлоги/ })).toBeVisible();

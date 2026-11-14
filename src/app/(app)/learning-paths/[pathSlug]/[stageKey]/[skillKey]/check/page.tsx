@@ -1,44 +1,42 @@
 import { notFound } from "next/navigation";
+import LessonPlayer from "@/components/product/lessons/lesson-player";
 import { getPath } from "@/lib/learning-paths/curriculum/index.ts";
-import { buildGrammarQuestionSet } from "@/lib/missions/grammar-bank";
-import type { PathSlug } from "@/lib/learning-paths/types";
-import LearningPathsSubHeader from "../../../../sub-header";
+import { checkHref, lessonHref, pathHref } from "@/lib/learning-paths/routes";
+import { hasCheckMode } from "@/lib/lessons/plan";
 import LearningPathsViewTracker from "../../../../analytics";
 import { getSkillStateAction } from "../../../../actions";
-import CheckRunner from "./check-runner";
 
-const QUESTION_COUNT = 5;
-
+// Быстрая проверка знаний: те же вопросы банка, что и раньше, но теперь на
+// общем движке упражнений — ответы проверяет сервер (клиент больше не знает
+// правильных ответов и не присылает «сколько верно»), прогресс сохраняется
+// после каждого вопроса, XP — через ту же систему, что и урок.
 export default async function LearningPathKnowledgeCheckPage({
   params,
 }: {
   params: Promise<{ pathSlug: string; stageKey: string; skillKey: string }>;
 }) {
   const { pathSlug: slugParam, stageKey, skillKey } = await params;
-  const path = getPath(slugParam as PathSlug);
+  const path = getPath(slugParam);
   if (!path) notFound();
   const pathSlug = path.slug;
 
   const state = await getSkillStateAction(pathSlug, skillKey);
   if (!state || state.stage.key !== stageKey) notFound();
-  const { skill, stage } = state;
-  if (!skill.category) notFound();
-
-  // Fixed seed per skill (not per attempt): the same 5 questions every time
-  // — deterministic, no LLM, no illusion of an ever-growing question bank
-  // (plan doc's Knowledge Check requirements).
-  const questions = buildGrammarQuestionSet(skill.category, QUESTION_COUNT, skill.key, skill.subTopic);
-  if (questions.length === 0) notFound();
+  const { skill, context } = state;
+  if (!hasCheckMode(skill)) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4">
+    <div className="lp page-content">
       <LearningPathsViewTracker event="knowledge_check_started" props={{ path_slug: pathSlug, skill_key: skill.key }} />
-      <LearningPathsSubHeader
-        title={`Проверка: ${skill.title}`}
-        backHref={`/learning-paths/${pathSlug}/${stage.key}/${skill.key}`}
-        backLabel={skill.title}
+      <LessonPlayer
+        pathSlug={pathSlug}
+        mode="check"
+        skill={{ key: skill.key, title: skill.title, lesson: skill.lesson }}
+        subtitle={`Проверка знаний · ${skill.title}`}
+        lessonUrl={lessonHref(pathSlug, context.lesson)}
+        pathUrl={pathHref(pathSlug)}
+        loginUrl={`/login?reason=expired&next=${encodeURIComponent(checkHref(pathSlug, context.lesson))}`}
       />
-      <CheckRunner pathSlug={pathSlug} skillKey={skill.key} questions={questions} />
     </div>
   );
 }

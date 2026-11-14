@@ -4,27 +4,23 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { getAllPaths, getAllSkills, getPath, isValidSkillForPath, findStageForSkill, findSkill } from "@/lib/learning-paths/curriculum/index.ts";
+import { afterProgressChange } from "@/lib/learning-paths/after-progress.ts";
+import { lessonRequiresExercises } from "@/lib/lessons/plan";
 import {
-  applyKnowledgeCheckResult,
   applyLessonCompletion,
   applyPracticeEvidence,
   courseProgressPercent,
   countSkillsByStatus,
   findCurrentFocusSkill,
-  scoreKnowledgeCheck,
-  type KnowledgeCheckOutcome,
 } from "@/lib/learning-paths/progress-engine.ts";
 import { buildPathMap, isLessonOpen, lessonContext, type LessonContext, type PathMap, type UnitNode } from "@/lib/learning-paths/path-map.ts";
-import { captureServerEvent } from "@/lib/posthog-server";
 import {
   getActiveEnrollment,
   getCompletedLessonRefs,
   getEnrollments,
   getOrCreateSkillProgress,
   getSkillProgressForPath,
-  markPathCompleted,
   pausePath,
-  setCurrentStage,
   startOrResumePath,
   applySkillProgressPatch,
 } from "@/lib/learning-paths/persist.ts";
@@ -230,56 +226,6 @@ export async function getSkillStateAction(pathSlug: PathSlug, skillKey: string):
   return { path, stage, skill, progress, context, languageTwinSignal, matchingMissionId: matchingMission?.id ?? null };
 }
 
-// Вызывается после каждого изменения прогресса по уроку: переносит сохранённую
-// позицию зачисления (current_stage_key/current_module_key) на следующий урок,
-// отдаёт «раздел пройден» и закрывает путь, когда пройден последний урок —
-// отдельным действием пользователя это не бывает (plan doc's active CTA rule:
-// это учёт, а не то, что обещает кнопка). `newlyCompleted` — этим вызовом урок
-// впервые засчитан: события и экран «раздел пройден» повторно не отправляются
-// при пересдаче проверки или повторном нажатии.
-async function afterProgressChange(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  path: LearningPath,
-  skillKey: string,
-  newlyCompleted: boolean,
-): Promise<UnitDoneMoment | null> {
-  const rows = await getSkillProgressForPath(supabase, userId, path.slug, path.version);
-  const map = buildPathMap(path, rows);
-
-  const lastUnit = map.units[map.units.length - 1];
-  await setCurrentStage(supabase, userId, path.slug, map.next ? map.next.unit.key : lastUnit.key, map.next ? map.next.module.key : null);
-
-  if (!newlyCompleted) return null;
-
-  let unitDone: UnitDoneMoment | null = null;
-  const unit = map.units.find((u) => u.lessons.some((lesson) => lesson.key === skillKey));
-  if (unit?.state === "done") {
-    captureServerEvent(userId, "stage_completed", { path_slug: path.slug, stage_key: unit.key });
-    // docs/moments/ROADMAP.md, этап 4 — Unit-done. Номер раздела и следующий
-    // раздел — из реального порядка курса (curriculum, не из БД), тот же
-    // массив, что рисует карта пути.
-    const nextUnit = map.units[unit.number] ?? null;
-    unitDone = {
-      kind: "unit_done",
-      id: `unit-done-${userId}-${path.slug}-${unit.key}`,
-      pathTitle: path.title,
-      stageTitle: unit.title,
-      stageIndex: unit.number,
-      stagesTotal: map.totalUnits,
-      skillsInStage: unit.total,
-      nextStageTitle: nextUnit?.title ?? null,
-    };
-  }
-
-  if (map.complete) {
-    await markPathCompleted(supabase, userId, path.slug);
-    captureServerEvent(userId, "learning_path_completed", { path_slug: path.slug });
-  }
-
-  return unitDone;
-}
-
 export interface CompleteLessonResult {
   progress: SkillProgressRow | null;
   unitDoneMoment: UnitDoneMoment | null;
@@ -289,6 +235,12 @@ export async function completeLessonAction(pathSlug: PathSlug, skillKey: string)
   if (!isValidSkillForPath(pathSlug, skillKey)) return null;
   const path = getPath(pathSlug);
   if (!path) return null;
+  // Урок с упражнениями засчитывается только через плеер или проверку знаний,
+  // где ответы проверяет сервер. Ручное «изучено» остаётся для уроков, где
+  // проверять нечего (чтение): иначе одним запросом можно было бы пропустить
+  // все упражнения и открыть следующий урок.
+  const skill = findSkill(path, skillKey);
+  if (!skill || lessonRequiresExercises(skill)) return null;
   const profile = await requireProfile();
   const supabase = await createClient();
 
@@ -308,50 +260,6 @@ export async function completeLessonAction(pathSlug: PathSlug, skillKey: string)
 
   revalidateLearningPaths();
   return { progress: updated ?? progress, unitDoneMoment };
-}
-
-export interface KnowledgeCheckSubmitResult {
-  outcome: KnowledgeCheckOutcome;
-  progress: SkillProgressRow;
-  /** M3 Slice 9 (plan doc §16/§17) — true exactly once, the first time any
-   *  Knowledge Check completes for an account that hadn't won yet. Not
-   *  onboarding-specific plumbing: any real completed Knowledge Check
-   *  counts, matching "no fake onboarding-only exercise". */
-  firstWinJustCompleted: boolean;
-}
-
-// Server-side scoring (never trust a client-computed score/bucket): the
-// caller sends raw correct/total counts from the deterministic Grammar
-// Runner question set, this function is the only place the strong/mixed/
-// weak bucket and the resulting status transition are decided.
-export async function submitKnowledgeCheckAction(pathSlug: PathSlug, skillKey: string, correct: number, total: number): Promise<KnowledgeCheckSubmitResult | null> {
-  if (!isValidSkillForPath(pathSlug, skillKey)) return null;
-  const path = getPath(pathSlug);
-  if (!path) return null;
-  const profile = await requireProfile();
-  const supabase = await createClient();
-
-  const progress = await getOrCreateSkillProgress(supabase, profile.id, path.slug, path.version, skillKey);
-  const outcome = scoreKnowledgeCheck(correct, total);
-  const patch = applyKnowledgeCheckResult(progress, outcome, new Date().toISOString());
-  const updated = await applySkillProgressPatch(supabase, profile.id, progress.id, patch);
-  // Проверка знаний работает и на закрытом уроке: результат от 80% засчитывает
-  // урок сразу (так можно пропустить тему, которую уже знаешь) — поэтому замок
-  // здесь намеренно не проверяется.
-  const newlyCompleted = !progress.content_completed_at && Boolean(patch.content_completed_at);
-  await afterProgressChange(supabase, profile.id, path, skillKey, newlyCompleted);
-
-  let firstWinJustCompleted = false;
-  if (!profile.completed_first_win) {
-    await supabase.from("profiles").update({ completed_first_win: true }).eq("id", profile.id);
-    firstWinJustCompleted = true;
-    captureServerEvent(profile.id, "onboarding_first_win_completed", { path_slug: pathSlug, skill_key: skillKey });
-    captureServerEvent(profile.id, "onboarding_completed", { path_slug: pathSlug });
-  }
-
-  revalidateLearningPaths();
-  revalidatePath("/language-twin");
-  return { outcome, progress: updated ?? progress, firstWinJustCompleted };
 }
 
 // Called after a real Mission/Practice session that touched this skill's

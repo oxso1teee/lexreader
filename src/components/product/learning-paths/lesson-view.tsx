@@ -29,6 +29,7 @@ export default function LessonView({
   header,
   analytics,
   completeAction,
+  startCard,
 }: {
   pathSlug: PathSlug;
   skill: Skill;
@@ -41,6 +42,8 @@ export default function LessonView({
   header: ReactNode;
   analytics?: ReactNode;
   completeAction: ReactNode;
+  /** Вход в плеер урока (итерация 5). Необязателен: галерея /dev/screens и закрытый урок рисуют страницу без него. */
+  startCard?: ReactNode;
 }) {
   const { lesson, unit, prev, next, current } = context;
 
@@ -66,6 +69,8 @@ export default function LessonView({
         <SkillStatusBadge status={progress?.status ?? "not_started"} />
         {languageTwinSignal && <ConfidenceBadge level={languageTwinSignal.confidence} />}
       </div>
+
+      {startCard}
 
       <LessonBody content={skill.lesson}>{completeAction}</LessonBody>
 

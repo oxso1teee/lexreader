@@ -890,6 +890,46 @@
     display: block;
   }
 
+  /* Результат проверки (ChoiceOption.state): отвеченный вопрос урока. Выбранная
+     карточка после ответа остаётся "checked", поэтому состояние перекрывает и
+     её вид, и приглушение disabled. Класс удвоен намеренно: исходные правила
+     :has(.choice-card-input:checked|:disabled) весят (0,3,0), и без этого
+     состояние проигрывало бы им. */
+  .choice-card.choice-card[data-state="correct"],
+  .choice-card.choice-card[data-state="incorrect"] {
+    opacity: 1;
+    cursor: default;
+  }
+  .choice-card.choice-card[data-state="correct"] {
+    border-color: var(--leaf);
+    background-color: var(--leaf-tint);
+    box-shadow: 0 3px 0 0 var(--leaf-edge);
+  }
+  .choice-card.choice-card[data-state="incorrect"] {
+    border-color: var(--danger);
+    background-color: var(--danger-tint);
+    box-shadow: 0 3px 0 0 var(--danger-edge);
+  }
+  .choice-card.choice-card[data-state] .choice-card-key {
+    border-color: currentColor;
+    background-color: transparent;
+    color: var(--text-secondary);
+  }
+  .choice-card-state {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .choice-card[data-state="correct"] .choice-card-state {
+    color: var(--leaf-text);
+  }
+  .choice-card[data-state="incorrect"] .choice-card-state {
+    color: var(--danger-text);
+  }
+
   /* ---------- Alert ---------- */
   .alert {
     display: flex;
