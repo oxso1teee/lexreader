@@ -140,6 +140,7 @@ export default function Reader({
   const pages = useMemo(() => paginate(sentences), [sentences]);
 
   const [levels, setLevels] = useState(wordLevels);
+  const lookupMemoRef = useRef(new Map<string, { wordTranslation: string; sentenceTranslation: string | null }>());
   // Reading Engine R1: подсветка по словоформе — «walked» берёт уровень сохранённого «walk»,
   // а точное совпадение (если слово сохранено именно в этой форме) всегда приоритетнее.
   const formIndex = useMemo(() => createFormIndex(levels, sourceLang), [levels, sourceLang]);
@@ -237,13 +238,21 @@ export default function Reader({
     track("word_panel_opened", { is_phrase: isPhrase });
 
     try {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word: text, sentence, sourceLang, targetLang }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Ошибка перевода");
+      // Reading Engine R3: повторный тап того же слова в том же предложении берём из памяти
+      // сессии — без запроса к серверу и без расхода лимита перевода.
+      const memoKey = `${sourceLang}:${targetLang}:${text.toLowerCase()}:${sentence}`;
+      let data = lookupMemoRef.current.get(memoKey);
+      if (!data) {
+        const res = await fetch("/api/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ word: text, sentence, sourceLang, targetLang }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error ?? "Ошибка перевода");
+        data = { wordTranslation: json.wordTranslation, sentenceTranslation: json.sentenceTranslation ?? null };
+        lookupMemoRef.current.set(memoKey, data);
+      }
 
       if (isPhrase) {
         setPopup({

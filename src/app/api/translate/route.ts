@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { TranslationQuotaError } from "@/lib/translate";
-import { checkRateLimit, cachedTranslate } from "@/lib/translate-request";
+import { checkRateLimit, cachedTranslate, peekCachedTranslation } from "@/lib/translate-request";
 import { log } from "@/lib/log";
 import { captureServerException } from "@/lib/posthog-server";
 
@@ -15,8 +15,28 @@ export async function POST(request: Request) {
   }
 
   const { word, sentence, sourceLang, targetLang } = await request.json();
-  if (!word || !sourceLang || !targetLang) {
+  if (
+    typeof word !== "string" ||
+    !word.trim() ||
+    typeof sourceLang !== "string" ||
+    typeof targetLang !== "string" ||
+    !sourceLang ||
+    !targetLang ||
+    (sentence != null && typeof sentence !== "string")
+  ) {
     return NextResponse.json({ error: "Некорректный запрос" }, { status: 400 });
+  }
+
+  // Reading Engine R3: если всё уже в общем кэше, внешний сервис не нужен — такой ответ не расходует
+  // лимит запросов (он защищает квоту MyMemory) и в метриках идёт как "cached".
+  const cacheStartedAt = Date.now();
+  const [cachedWord, cachedSentence] = await Promise.all([
+    peekCachedTranslation(supabase, word, sourceLang, targetLang),
+    sentence ? peekCachedTranslation(supabase, sentence, sourceLang, targetLang) : Promise.resolve(null),
+  ]);
+  if (cachedWord !== null && (!sentence || cachedSentence !== null)) {
+    log.translation({ outcome: "cached", latencyMs: Date.now() - cacheStartedAt, sourceLang, targetLang });
+    return NextResponse.json({ wordTranslation: cachedWord, sentenceTranslation: sentence ? cachedSentence : null });
   }
 
   const withinLimit = await checkRateLimit(user.id);
