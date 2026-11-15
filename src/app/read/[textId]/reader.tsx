@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Check, Keyboard, X } from "lucide-react";
 import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
+import { createFormIndex } from "@/lib/lemma";
 import { WORD_LEVELS } from "@/lib/types";
 import { log } from "@/lib/log";
 import { track } from "@/lib/posthog-client";
@@ -136,6 +137,9 @@ export default function Reader({
   const pages = useMemo(() => paginate(sentences), [sentences]);
 
   const [levels, setLevels] = useState(wordLevels);
+  // Reading Engine R1: подсветка по словоформе — «walked» берёт уровень сохранённого «walk»,
+  // а точное совпадение (если слово сохранено именно в этой форме) всегда приоритетнее.
+  const formIndex = useMemo(() => createFormIndex(levels, sourceLang), [levels, sourceLang]);
   const [pageIndex, setPageIndex] = useState(() =>
     Math.min(Math.max(initialPageIndex, 0), pages.length - 1),
   );
@@ -840,7 +844,7 @@ export default function Reader({
                     {pageTokens[localIdx].map((tok, ti) => {
                       if (!tok.isWord) return <span key={ti}>{tok.text}</span>;
 
-                      const info = levels[tok.text.toLowerCase()];
+                      const info = formIndex.find(tok.text)?.value;
                       const levelColor = info ? WORD_LEVELS[info.level]?.color : undefined;
                       const selected = isTokenSelected(si, ti);
 

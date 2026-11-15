@@ -5,6 +5,7 @@ import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 import type { LearningState } from "@/lib/vocabulary-list";
 import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
+import { createFormIndex } from "@/lib/lemma";
 import { hasSavedReaderPrefs, parseReaderPrefs } from "./reader-prefs";
 import Reader from "./reader";
 
@@ -136,8 +137,10 @@ export default async function ReadPage({
   let statsLearning = 0;
   let statsFamiliar = 0;
   let statsKnown = 0;
+  // Reading Engine R1: словоформы («walked») считаются по сохранённому слову («walk»).
+  const formIndex = createFormIndex(wordLevels, text.language);
   for (const word of uniqueTokens) {
-    const saved = wordLevels[word];
+    const saved = formIndex.find(word)?.value;
     if (!saved) continue;
     if (saved.level >= 4) statsKnown++;
     else if (saved.level === 3) statsFamiliar++;

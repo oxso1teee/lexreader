@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeTextFamiliarity } from "./text-familiarity.ts";
+import { computeTextFamiliarity, excerptWithNewWords } from "./text-familiarity.ts";
 
 const BODY = "The old keeper climbed the winding stairs. She was reluctant to leave the light.";
 
@@ -28,4 +28,25 @@ test("empty body -> zero counts, no division by zero", () => {
   const r = computeTextFamiliarity("", ["old"]);
   assert.equal(r.uniqueWordCount, 0);
   assert.equal(r.percentFamiliar, 0);
+});
+
+test("inflected forms of a known word count as known (R1)", () => {
+  const r = computeTextFamiliarity("She walked home. They walk and walking is fun. Cities grow.", ["walk", "city"]);
+  // walked / walk / walking → одно знакомое «walk»; cities → city
+  assert.equal(r.knownWordCount, 4);
+});
+
+test("a saved inflected form makes its base known", () => {
+  const r = computeTextFamiliarity("I study at night.", ["studies"]);
+  assert.equal(r.knownWordCount, 1);
+});
+
+test("forms are not matched for other languages", () => {
+  const r = computeTextFamiliarity("walked", ["walk"], "de");
+  assert.equal(r.knownWordCount, 0);
+});
+
+test("excerpt does not mark an inflected form of a known word as new", () => {
+  const out = excerptWithNewWords("The keepers climbed stairs.", ["keeper", "climb"], 140, 5);
+  assert.ok(out.every((t) => !t.isNew || (t.text !== "keepers" && t.text !== "climbed")));
 });
