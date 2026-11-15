@@ -9,6 +9,7 @@ export { Badge, type BadgeTone } from "./badge";
 export { Button, ButtonLink, buttonClassName, type ButtonSize, type ButtonVariant } from "./button";
 export { Card, CardLink, cardClassName, type CardTone } from "./card";
 export { Checkbox, Radio, RadioGroup, Switch, type RadioOption } from "./choice";
+export { ChoiceCard, ChoiceGroup, type ChoiceOption, type ChoiceTone } from "./choice-group";
 export { Dialog, Drawer } from "./dialog";
 export { DropdownMenu, type MenuItem } from "./dropdown-menu";
 export { Input, Select, Textarea } from "./field";

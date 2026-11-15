@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { authAttemptKey, authRateLimitConfig } from "./auth-rate-limit-config.ts";
+import { attemptsLeftAfterFailure, authAttemptKey, authRateLimitConfig } from "./auth-rate-limit-config.ts";
 
 const env = process.env as Record<string, string | undefined>;
 
@@ -77,4 +77,34 @@ test("authRateLimitConfig(): invalid/non-positive overrides fall back to default
   withEnv({ AUTH_RATE_LIMIT_MAX_ATTEMPTS: "-3" }, () => {
     assert.equal(authRateLimitConfig().maxAttempts, 5);
   });
+});
+
+test("authAttemptKey(): вход по ссылке получает свой бакет и не съедает попытки входа/сброса", () => {
+  const email = "test@example.com";
+  const magicKey = authAttemptKey("magic-link", email);
+  assert.equal(magicKey, "magic-link:test@example.com");
+  assert.notEqual(magicKey, authAttemptKey("login", email));
+  assert.notEqual(magicKey, authAttemptKey("reset-password", email));
+});
+
+test("attemptsLeftAfterFailure(): после k-й неудачи осталось limit − k; 0 — следующая попытка заблокирована", () => {
+  // Лимит 5: в окне уже 0 неудач → эта первая → осталось 4 (как в макете Login).
+  assert.equal(attemptsLeftAfterFailure(5, 0), 4);
+  assert.equal(attemptsLeftAfterFailure(5, 1), 3);
+  assert.equal(attemptsLeftAfterFailure(5, 3), 1);
+  assert.equal(attemptsLeftAfterFailure(5, 4), 0);
+});
+
+test("attemptsLeftAfterFailure(): никогда не уходит в минус (счётчик уже за лимитом)", () => {
+  assert.equal(attemptsLeftAfterFailure(5, 5), 0);
+  assert.equal(attemptsLeftAfterFailure(5, 99), 0);
+});
+
+test("attemptsLeftAfterFailure(): согласован с условием блокировки isAuthAttemptAllowed (count >= limit)", () => {
+  const limit = authRateLimitConfig().maxAttempts;
+  for (let failuresBefore = 0; failuresBefore < limit; failuresBefore++) {
+    const left = attemptsLeftAfterFailure(limit, failuresBefore);
+    // Блокировка включается ровно тогда, когда после неудачи count (= before+1) достиг limit.
+    assert.equal(left === 0, failuresBefore + 1 >= limit, `failuresBefore=${failuresBefore}`);
+  }
 });

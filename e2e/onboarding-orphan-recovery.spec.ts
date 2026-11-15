@@ -31,17 +31,17 @@ test("orphaned auth user (no profiles row) recovers via the onboarding form inst
   try {
     await page.goto("/onboarding");
     await page.getByRole("button", { name: "Начать бесплатно" }).click();
-    await page.getByRole("button", { name: "Для жизни" }).click();
+    await page.getByRole("radio", { name: "Для жизни" }).check();
     await page.getByRole("button", { name: "Далее" }).click();
-    await page.getByRole("button", { name: "Английский" }).click();
+    await page.getByRole("radio", { name: "Английский" }).check();
     await page.getByRole("button", { name: "Далее" }).click();
-    await page.getByRole("button", { name: "Русский" }).click();
+    await page.getByRole("radio", { name: "Русский" }).check();
     await page.getByRole("button", { name: "Далее" }).click();
-    await page.getByRole("button", { name: "A2", exact: true }).click();
+    await page.getByRole("radio", { name: "A2", exact: true }).check();
     await page.getByRole("button", { name: "Далее" }).click();
 
-    await page.getByPlaceholder("Email").fill(email);
-    await page.getByPlaceholder("Пароль (мин. 6 символов)").fill(password);
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Пароль", { exact: true }).fill(password);
     await page.getByRole("button", { name: "Создать аккаунт и начать" }).click();
 
     // The regression: before the fix, this hit "already registered" and

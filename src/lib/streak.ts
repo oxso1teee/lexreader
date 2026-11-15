@@ -1,19 +1,9 @@
-import type { SupabaseServerClient } from "@/lib/supabase/server";
-import { isoWeekStart as isoWeekStartDate } from "./iso-week.ts";
+import type { SupabaseServerClient } from "./supabase/server.ts";
+import { createServiceClient } from "./supabase/service.ts";
+import { userClock } from "./user-day.ts";
 import { computeStreakUpdate, type StreakProfileSnapshot } from "./streak-engine.ts";
 import type { FriendStreakRow } from "./friend-streaks.ts";
 import type { FriendStreakMoment } from "./moments/types.ts";
-
-function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-// src/lib/iso-week.ts — общая точка правды для "начало ISO-недели"
-// (понедельник); здесь нужен именно date-only срез (streak_freeze_week —
-// date-колонка), остальные потребители берут полный ISO-timestamp.
-function isoWeekStart(d: Date): string {
-  return isoDate(isoWeekStartDate(d));
-}
 
 export interface StreakTransition {
   before: number;
@@ -88,17 +78,15 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "streak_current, streak_longest, last_active_date, streak_freeze_available, streak_freeze_week, streak_before_break, streak_repair_until",
+      "streak_current, streak_longest, last_active_date, streak_freeze_available, streak_freeze_week, streak_before_break, streak_repair_until, timezone",
     )
     .eq("id", userId)
     .single();
   if (!profile) return null;
 
-  const now = new Date();
-  const today = isoDate(now);
-  const yesterday = isoDate(new Date(now.getTime() - 86_400_000));
-  const twoDaysAgo = isoDate(new Date(now.getTime() - 2 * 86_400_000));
-  const thisWeekStart = isoWeekStart(now);
+  // День серии — по календарю пользователя (profiles.timezone; пока пояс не
+  // известен — UTC, как и раньше), а не по UTC-суткам сервера.
+  const { today, yesterday, twoDaysAgo, weekStart: thisWeekStart } = userClock(profile.timezone);
 
   const snapshot: StreakProfileSnapshot = {
     streakCurrent: profile.streak_current,
@@ -116,8 +104,13 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
     return { before: profile.streak_current, after: profile.streak_current, ...NO_CHANGE, friendStreaks };
   }
 
+  // Поля серии и заморозки принадлежат серверу: клиентской роли запись закрыта (миграция 0060),
+  // иначе серию, заморозки и восстановление серии можно было бы выставить запросом из браузера.
+  // Пишем сервисной ролью; userId — из серверной сессии вызывающего, а новое значение считает
+  // computeStreakUpdate по реальной дате и профилю, а не приходит от клиента.
+  const service = createServiceClient();
   await Promise.all([
-    supabase
+    service
       .from("profiles")
       .update({
         streak_current: update.streakCurrent,
@@ -132,9 +125,10 @@ export async function touchStreak(supabase: SupabaseServerClient, userId: string
     // Freeze-used-экран: день, который заморозка спасла, нужно реально
     // отметить (иначе Streak-30/Streak-calendar/Today-evening не отличат
     // его от просто пропущенного). Строка почти наверняка ещё не существует
-    // (в тот день не было XP) — upsert создаёт её.
+    // (в тот день не было XP) — upsert создаёт её. Запись в activity_days закрыта для
+    // клиентской роли (миграция 0060), поэтому — сервисной; userId из серверной сессии.
     update.frozenDay
-      ? supabase.from("activity_days").upsert({ user_id: userId, day: update.frozenDay, freeze_used: true }, { onConflict: "user_id,day" })
+      ? service.from("activity_days").upsert({ user_id: userId, day: update.frozenDay, freeze_used: true }, { onConflict: "user_id,day" })
       : Promise.resolve(null),
   ]);
 

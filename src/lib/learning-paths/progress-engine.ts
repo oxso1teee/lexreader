@@ -132,13 +132,18 @@ export function countSkillsByStatus(path: LearningPath, progressRows: SkillProgr
 }
 
 // The single "what's next" skill (plan doc §11's Active Path Home /
-// recommended-next-action): first skill in curriculum order that hasn't
-// reached confident/maintenance yet. Curriculum order never changes based
-// on Language Twin signal (plan doc §7's "don't reorder the course").
+// recommended-next-action): first skill in curriculum order whose lesson
+// isn't completed yet — the same lesson buildPathMap() (path-map.ts) marks
+// "current" and the only one not behind a lock. It used to be "first skill
+// not yet confident", which dead-ended the path: a skill whose lesson was
+// done but whose Knowledge Check wasn't passed (or never existed —
+// category: null) stayed "next" forever while everything after it looked
+// locked. Mastery is a separate axis now (status/confidence). Curriculum
+// order never changes based on Language Twin signal (plan doc §7's "don't
+// reorder the course").
 export function findCurrentFocusSkill(path: LearningPath, progressRows: SkillProgressRow[]): Skill | null {
   const byKey = new Map(progressRows.map((row) => [row.skill_key, row]));
-  const mastered: SkillStatus[] = ["confident", "maintenance"];
-  return getAllSkills(path).find((skill) => !mastered.includes(byKey.get(skill.key)?.status ?? "not_started")) ?? null;
+  return getAllSkills(path).find((skill) => !byKey.get(skill.key)?.content_completed_at) ?? null;
 }
 
 export type StageStatus = "completed" | "current" | "upcoming";

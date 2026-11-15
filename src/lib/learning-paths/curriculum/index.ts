@@ -16,8 +16,11 @@ export const CURRICULA: Record<PathSlug, LearningPath> = {
   "it-english": IT_ENGLISH_V1,
 };
 
-export function getPath(slug: PathSlug): LearningPath | null {
-  return CURRICULA[slug] ?? null;
+// slug приходит и из URL, и из server actions (то есть от клиента): обычный
+// CURRICULA[slug] для "constructor"/"__proto__"/"toString" вернул бы
+// прототипное значение вместо null, поэтому ключ проверяется как собственный.
+export function getPath(slug: string): LearningPath | null {
+  return Object.prototype.hasOwnProperty.call(CURRICULA, slug) ? CURRICULA[slug as PathSlug] : null;
 }
 
 export function getAllPaths(): LearningPath[] {
@@ -44,7 +47,7 @@ export function totalSkillCount(path: LearningPath): number {
 // path_slug/skill_key pair actually exist" — every server action that
 // touches enrollment/progress calls this before trusting client input,
 // never trusts a client-supplied skill_key on its own.
-export function isValidSkillForPath(slug: PathSlug, skillKey: string): boolean {
+export function isValidSkillForPath(slug: string, skillKey: string): boolean {
   const path = getPath(slug);
   if (!path) return false;
   return findSkill(path, skillKey) !== null;

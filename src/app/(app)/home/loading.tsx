@@ -1,39 +1,52 @@
-// Next.js route-level Suspense fallback for /home — page-specific skeleton
-// matching the Today layout shape (HeroCard + StatStrip + sections).
-// Respects prefers-reduced-motion via global rule in tokens.css.
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Suspense-fallback маршрута /home: повторяет форму нового экрана «Сегодня»
+// (пилюли, приветствие, hero, две плитки, неделя, продолжение), чтобы
+// контент не прыгал при появлении. Те же контейнерные классы .dash-*, поэтому
+// на широком экране скелетон тоже встаёт в две колонки. Смысл «идёт
+// загрузка» несёт контейнер (role="status"); сами полоски скрыты от
+// скринридеров, анимацию гасит глобальный prefers-reduced-motion.
 export default function HomeLoading() {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-4 md:max-w-3xl md:gap-5 md:px-0 md:py-8">
-      {/* Analytics placeholder */}
-      <div className="h-4 w-24 animate-pulse rounded bg-[var(--surface-muted)]" />
-      {/* Greeting row */}
-      <div className="h-6 w-32 animate-pulse rounded bg-[var(--surface-muted)]" />
-      {/* Install banner placeholder */}
-      <div className="h-10 w-full animate-pulse rounded-2xl bg-[var(--surface-muted)]" />
-      {/* Hero card skeleton */}
-      <div className="flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 animate-pulse">
-        <div className="h-3 w-24 animate-pulse rounded bg-[var(--surface-muted)]" />
-        <div className="h-6 w-48 animate-pulse rounded bg-[var(--surface-muted)]" />
-        <div className="h-4 w-36 animate-pulse rounded bg-[var(--surface-muted)]" />
-        <div className="mt-2 h-10 w-32 animate-pulse rounded-full bg-[var(--surface-muted)]" />
-        <div className="mt-2 h-2 w-full animate-pulse rounded-full bg-[var(--surface-muted)]" style={{ width: "60%" }} />
-      </div>
-      {/* Path secondary card placeholder */}
-      <div className="h-16 w-full animate-pulse rounded-2xl bg-[var(--surface-muted)]" />
-      {/* Summary section */}
-      <div className="flex flex-col gap-2 animate-pulse">
-        <div className="h-5 w-20 animate-pulse rounded bg-[var(--surface-muted)]" />
-        <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-[var(--surface-muted)]" />
-          ))}
+    <div className="dash page-wide" role="status" aria-busy="true" aria-label="Загружаем главный экран">
+      <div className="dash-top">
+        <div className="dash-pills">
+          <Skeleton width={96} height={44} className="!rounded-full" />
+          <div className="dash-pills-end">
+            <Skeleton width={64} height={44} className="!rounded-full" />
+            <Skeleton width={84} height={44} className="!rounded-full" />
+            <Skeleton width={44} height={44} circle />
+          </div>
         </div>
-        <div className="h-16 w-full animate-pulse rounded-2xl bg-[var(--surface-muted)]" />
+        <div className="dash-greet">
+          <Skeleton width={56} height={66} className="shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <Skeleton width="60%" height={24} />
+            <Skeleton width="40%" height={14} />
+          </div>
+        </div>
       </div>
-      {/* My English section placeholder */}
-      <div className="h-24 w-full animate-pulse rounded-2xl bg-[var(--surface-muted)]" />
-      {/* Coming soon card */}
-      <div className="h-16 w-full animate-pulse rounded-2xl bg-[var(--surface-muted)]" />
+
+      <div className="dash-cols">
+        <div className="dash-main">
+          <div className="order-1">
+            <Skeleton height={196} className="!rounded-3xl" />
+          </div>
+          <div className="dash-tiles order-2">
+            <Skeleton height={84} className="!rounded-[20px]" />
+            <Skeleton height={84} className="!rounded-[20px]" />
+          </div>
+          <div className="order-5">
+            <Skeleton height={96} className="!rounded-[20px]" />
+          </div>
+        </div>
+        <div className="dash-aside">
+          <div className="order-4">
+            <Skeleton height={132} className="!rounded-[20px]" />
+          </div>
+        </div>
+      </div>
+      <span className="sr-only">Загрузка…</span>
     </div>
   );
 }

@@ -7,6 +7,8 @@ export { authAttemptKey, authRateLimitConfig };
 export interface AuthAttemptCheck {
   allowed: boolean;
   retryAfterSeconds?: number;
+  /** Наибольшее число попыток в окне среди идентификаторов (email/IP) — основа для «осталось N попыток». */
+  attemptsInWindow?: number;
 }
 
 // P0-AUTH-04: троттлинг попыток — по email и по IP отдельно (в своём бакете
@@ -17,6 +19,7 @@ export async function isAuthAttemptAllowed(action: AuthAction, identifiers: stri
   const supabase = createServiceClient();
   const { maxAttempts: limit, windowMs: window } = authRateLimitConfig();
   const windowStart = new Date(Date.now() - window).toISOString();
+  let attemptsInWindow = 0;
 
   for (const raw of identifiers) {
     const key = authAttemptKey(action, raw);
@@ -28,6 +31,7 @@ export async function isAuthAttemptAllowed(action: AuthAction, identifiers: stri
       .eq("identifier", key)
       .gte("attempted_at", windowStart);
 
+    attemptsInWindow = Math.max(attemptsInWindow, count ?? 0);
     if ((count ?? 0) >= limit) {
       // В обычной работе счётчик не растёт после блокировки (logAuthAttempt
       // для этого action больше не вызывается), так что самая старая запись
@@ -47,7 +51,7 @@ export async function isAuthAttemptAllowed(action: AuthAction, identifiers: stri
     }
   }
 
-  return { allowed: true };
+  return { allowed: true, attemptsInWindow };
 }
 
 export async function logAuthAttempt(action: AuthAction, identifiers: string[]): Promise<void> {

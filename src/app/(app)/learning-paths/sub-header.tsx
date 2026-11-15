@@ -25,7 +25,7 @@ export default function LearningPathsSubHeader({
         <span className="text-xs font-medium text-[var(--text-secondary)]">Мой путь</span>
         <Link
           href={backHref}
-          className="focus-ring self-start text-sm font-medium text-[var(--color-forest-text)] underline-offset-2 hover:underline"
+          className="focus-ring inline-flex min-h-11 items-center self-start text-sm font-bold text-[var(--leaf-text)] underline-offset-2 hover:underline"
         >
           ← {backLabel}
         </Link>

@@ -1,9 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { useState, useTransition } from "react";
+import { AuthBody, AuthDock } from "@/components/product/auth/auth-screen";
+import { categoryLabel } from "@/components/product/language-twin/badges";
+import { Lex } from "@/components/product/mascot/lex";
+import { LexSay, StepFrame, StepShell } from "@/components/product/onboarding/step-shell";
+import { Alert, Button, Card, ChoiceGroup } from "@/components/ui";
+import type { PatternCategory } from "@/lib/language-twin/types";
+import { splitAtGap } from "@/lib/placement/prompt-gap";
+import { pluralRu } from "@/lib/plural-ru";
+import { cx } from "@/lib/ui/cx";
 import { startPlacementAction, submitPlacementAnswerAction, skipPlacementAction } from "./actions";
 
 export interface PublicPlacementQuestion {
@@ -14,10 +22,36 @@ export interface PublicPlacementQuestion {
   options: string[];
 }
 
-// Placement question mockup alignment — the tier badge that used to render
-// here (Базовый/Средний/Продвинутый) is gone from the question screen (not
-// in the reference, and the eyebrow's question-number already places you),
-// so this label lookup has no remaining call site.
+// Тест уровня в макетах Placement-question: полоса прогресса «Вопрос N из M»,
+// Lex с подсказкой, предложение с пропуском-плиткой, пронумерованные варианты
+// (цифры 1…N работают как клавиши, пока фокус в группе), «Далее» в доке.
+//
+// Намеренно НЕ перенесено из макета: «уровень B1» в подписи (уровень вопроса —
+// это подсказка о сложности, её прятали и раньше), «вопросы подстраиваются под
+// тебя» (тест не адаптивный — фиксированный список) и кнопка «Не знаю» (в
+// ответах такого варианта нет, и scoring его не знает).
+
+function GapSentence({ before, after, answer }: { before: string; after: string; answer: string | null }) {
+  return (
+    <p lang="en" className="text-[1.125rem] leading-[1.9] [font-family:var(--font-reading,Georgia,serif)]">
+      {before}
+      <span
+        role={answer ? undefined : "img"}
+        aria-label={answer ? undefined : "пропуск"}
+        className={cx(
+          "mx-0.5 inline-flex min-h-[2.125rem] min-w-[5.25rem] items-center justify-center rounded-xl border-2 border-[var(--sky)] bg-[var(--sky-tint)] px-3 align-middle font-sans",
+          answer ? "text-[1rem] font-semibold" : "border-dashed",
+        )}
+      >
+        {answer ?? " "}
+      </span>
+      {after}
+    </p>
+  );
+}
+
+const SECONDARY_ACTION =
+  "min-h-11 text-sm font-bold text-[var(--text-secondary)] underline underline-offset-2 hover:text-[var(--foreground)] disabled:opacity-50";
 
 export default function PlacementRunner({
   questions,
@@ -92,44 +126,44 @@ export default function PlacementRunner({
 
   if (phase === "intro") {
     return (
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-4 px-6 py-10">
-        <h1 className="text-3xl font-semibold tracking-tight">Короткая проверка уровня</h1>
-        <p className="text-[var(--text-secondary)]">
-          10 коротких вопросов · около 3 минут. Это не официальный экзамен — просто поможет точнее подобрать курс.
-          Отвечай как чувствуешь, без подсказок.
-        </p>
-        <Card className="px-4 py-3 text-sm text-[var(--text-secondary)]">
-          Во время теста не показываем «верно/неверно» по каждому вопросу — результат увидишь в конце, целиком.
-        </Card>
-        {error && (
-          <p role="alert" className="text-sm text-[var(--color-danger-text)]">
-            {error}
-          </p>
-        )}
-        <div className="mt-2 flex flex-col gap-3">
-          <Button variant="leaf" disabled={isPending} onClick={begin}>
-            {isPending ? "Начинаем…" : isRetake ? "Обновить диагностику" : "Начать проверку"}
-          </Button>
-          {isRetake ? (
-            <button
-              type="button"
-              onClick={() => router.push("/language-twin")}
-              className="focus-ring text-sm text-[var(--text-secondary)] underline underline-offset-2"
-            >
-              Отмена
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={skip}
-              className="focus-ring text-sm text-[var(--text-secondary)] underline underline-offset-2 disabled:opacity-50"
-            >
-              Пропустить диагностику
-            </button>
-          )}
-        </div>
-      </div>
+      <StepFrame>
+        <main className="flex flex-1 flex-col md:flex-none">
+          <AuthBody className="items-center justify-center pt-8 text-center">
+            <Lex mood="think" size={88} bob />
+            <h1 className="font-display text-[1.625rem] leading-tight font-bold">Короткая проверка уровня</h1>
+            <p className="text-[0.9375rem] text-[var(--text-secondary)]">
+              {questions.length} {pluralRu(questions.length, "короткий вопрос", "коротких вопроса", "коротких вопросов")} ·
+              около 3 минут. Это не официальный экзамен — просто поможет точнее подобрать курс. Отвечай как чувствуешь,
+              без подсказок.
+            </p>
+            <Card tone="sunken" className="flex items-start gap-3 text-left text-sm">
+              <Info aria-hidden="true" className="mt-px h-[18px] w-[18px] flex-none text-[var(--sky-text)]" />
+              <p>
+                Во время теста не показываем «верно/неверно» по каждому вопросу — результат увидишь в конце, целиком.
+              </p>
+            </Card>
+            {error && (
+              <Alert tone="error" live="assertive" className="w-full text-left">
+                {error}
+              </Alert>
+            )}
+          </AuthBody>
+          <AuthDock>
+            <Button block loading={isPending} onClick={begin}>
+              {isRetake ? "Обновить диагностику" : "Начать проверку"}
+            </Button>
+            {isRetake ? (
+              <button type="button" onClick={() => router.push("/language-twin")} className={SECONDARY_ACTION}>
+                Отмена
+              </button>
+            ) : (
+              <button type="button" disabled={isPending} onClick={skip} className={SECONDARY_ACTION}>
+                Пропустить диагностику
+              </button>
+            )}
+          </AuthDock>
+        </main>
+      </StepFrame>
     );
   }
 
@@ -141,74 +175,73 @@ export default function PlacementRunner({
     return null;
   }
 
+  const gap = splitAtGap(q.prompt);
+  const instruction = gap ? "Какой вариант подходит?" : q.prompt;
+  const answer = selected === null ? null : (q.options[selected] ?? null);
+  const isLast = index + 1 >= questions.length;
+
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-10">
-      {/* Placement question mockup alignment — progress pills (left) and
-          Skip/Cancel (right) combined into one row; the tier badge
-          (TIER_LABEL) is dropped, not present in the reference and the
-          question number below already identifies where we are. */}
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex gap-1">
-          {questions.map((_, i) => (
-            <span
-              key={i}
-              className={`h-[3px] w-[13px] rounded-full ${i <= index ? "bg-[var(--color-forest-light)]" : "bg-[var(--border)]"}`}
-            />
-          ))}
+    <StepShell
+      step={index + 1}
+      total={questions.length}
+      tone="sky"
+      label={`Вопрос ${index + 1} из ${questions.length}`}
+    >
+      <AuthBody>
+        <LexSay mood="think">
+          Отвечай как чувствуешь — это не экзамен. «Верно/неверно» не показываем: результат увидишь в конце, целиком.
+        </LexSay>
+
+        <div>
+          {/* aria-live: при смене вопроса скринридер объявляет номер и тему
+              (раньше это делала отдельная строка «Вопрос N из M»). */}
+          <p
+            aria-live="polite"
+            className="text-[0.71875rem] font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]"
+          >
+            <span className="sr-only">
+              Вопрос {index + 1} из {questions.length}.{" "}
+            </span>
+            Грамматика · {categoryLabel(q.category as PatternCategory)}
+          </p>
+          <h1 className="mt-1.5 font-display text-[1.375rem] leading-tight font-bold">{instruction}</h1>
         </div>
+
+        {gap && (
+          <Card as="section" aria-label="Предложение" className="px-4 py-[1.125rem]">
+            <GapSentence before={gap.before} after={gap.after} answer={answer} />
+          </Card>
+        )}
+
+        <ChoiceGroup
+          legend={instruction}
+          name="placement-answer"
+          numbered
+          value={selected === null ? "" : String(selected)}
+          onValueChange={(value) => setSelected(Number(value))}
+          options={q.options.map((option, i) => ({ value: String(i), label: option, disabled: isPending }))}
+        />
+
+        {error && (
+          <Alert tone="error" live="assertive">
+            {error}
+          </Alert>
+        )}
+      </AuthBody>
+
+      <AuthDock>
+        <Button block disabled={selected === null} loading={isPending} onClick={submit}>
+          {isLast ? "Завершить" : "Далее"}
+        </Button>
         <button
           type="button"
           disabled={isPending}
           onClick={() => (isRetake ? router.push("/language-twin") : skip())}
-          className="focus-ring text-[10.5px] text-[var(--text-secondary)] underline underline-offset-2 disabled:opacity-50"
+          className={SECONDARY_ACTION}
         >
-          {isRetake ? "Отмена" : "Пропустить"}
+          {isRetake ? "Отмена" : "Пропустить диагностику"}
         </button>
-      </div>
-
-      {/* Replaces the old standalone "Вопрос N из M" line -- same real
-          numbers, just folded into one eyebrow above the question.
-          aria-live carried over from that line so screen readers still get
-          an announcement each time the index changes. */}
-      <p className="mb-4 font-mono text-[10.5px] text-[var(--text-secondary)]" aria-live="polite">
-        Короткая проверка уровня · вопрос {index + 1} из {questions.length}
-      </p>
-
-      <h2 className="mb-4 text-[15.5px] font-bold leading-snug">{q.prompt}</h2>
-
-      <div className="flex flex-col gap-2">
-        {q.options.map((opt, i) => (
-          <button
-            key={i}
-            type="button"
-            disabled={isPending}
-            onClick={() => setSelected(i)}
-            className={`rounded-2xl border px-4 py-3 text-left text-[13px] transition-colors disabled:opacity-60 ${
-              selected === i
-                ? "border-forest bg-forest/15 text-[var(--color-forest-text)]"
-                : "border-[var(--border-strong)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]"
-            }`}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-
-      <p className="mt-3 text-center text-[10.5px] text-[var(--text-secondary)]">
-        Без подсказок «верно/неверно» — так результат честнее. Увидишь его целиком на следующем экране.
-      </p>
-
-      {error && (
-        <p role="alert" className="mt-3 text-sm text-[var(--color-danger-text)]">
-          {error}
-        </p>
-      )}
-
-      <div className="mt-6">
-        <Button variant="leaf" disabled={selected === null || isPending} onClick={submit} className="w-full">
-          {isPending ? "…" : index + 1 >= questions.length ? "Завершить" : "Далее"}
-        </Button>
-      </div>
-    </div>
+      </AuthDock>
+    </StepShell>
   );
 }

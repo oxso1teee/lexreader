@@ -10,12 +10,18 @@ import { getPath } from "./curriculum/index.ts";
 // resolved `userId` from a real session — RLS is the backstop, not the only
 // line of defense (plan doc §13).
 
+// Чтения, от которых зависят карта и замки (зачисления, прогресс по урокам),
+// при ошибке запроса бросают исключение, а не возвращают []: пустой список
+// экран показал бы как «0% пройдено, все уроки закрыты» — ложные данные вместо
+// ошибки. Исключение ловит app/(app)/error.tsx («Попробовать снова»); на
+// главной блок пути обёрнут в settled() и деградирует в предупреждение.
 export async function getEnrollments(supabase: SupabaseServerClient, userId: string): Promise<EnrollmentRow[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("learning_path_enrollments")
     .select("*")
     .eq("user_id", userId)
     .order("last_activity_at", { ascending: false });
+  if (error) throw new Error(`Не удалось загрузить пути: ${error.message}`);
   return (data ?? []) as EnrollmentRow[];
 }
 
@@ -131,13 +137,28 @@ export async function getSkillProgressForPath(
   pathSlug: PathSlug,
   pathVersion: number,
 ): Promise<SkillProgressRow[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_skill_progress")
     .select("*")
     .eq("user_id", userId)
     .eq("path_slug", pathSlug)
     .eq("path_version", pathVersion);
+  if (error) throw new Error(`Не удалось загрузить прогресс: ${error.message}`);
   return (data ?? []) as SkillProgressRow[];
+}
+
+// Каталогу нужно «пройдено N из M» по каждому пути — один запрос на все пути
+// пользователя вместо запроса на путь. Только ключи пройденных уроков.
+export type CompletedLessonRef = Pick<SkillProgressRow, "path_slug" | "path_version" | "skill_key">;
+
+export async function getCompletedLessonRefs(supabase: SupabaseServerClient, userId: string): Promise<CompletedLessonRef[]> {
+  const { data, error } = await supabase
+    .from("user_skill_progress")
+    .select("path_slug, path_version, skill_key")
+    .eq("user_id", userId)
+    .not("content_completed_at", "is", null);
+  if (error) throw new Error(`Не удалось загрузить прогресс: ${error.message}`);
+  return (data ?? []) as CompletedLessonRef[];
 }
 
 export async function getSkillProgressRow(

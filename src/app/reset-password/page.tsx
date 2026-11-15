@@ -1,19 +1,14 @@
-import Link from "next/link";
 import ResetRequestForm from "./reset-request-form";
 
-export default function ResetPasswordPage() {
-  return (
-    <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-6 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Сброс пароля</h1>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Введи email, привязанный к аккаунту — пришлём ссылку для сброса пароля.
-        </p>
-      </div>
-      <ResetRequestForm />
-      <Link href="/login" className="text-sm text-[var(--text-secondary)] underline hover:text-foreground">
-        ← Назад ко входу
-      </Link>
-    </div>
-  );
+export const metadata = { title: "Восстановление пароля · LexReader" };
+
+// ?error=link — сюда возвращает /auth/callback и страница нового пароля,
+// когда ссылка из письма устарела или открыта не в том браузере.
+export default async function ResetPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { error } = await searchParams;
+  return <ResetRequestForm linkFailed={(Array.isArray(error) ? error[0] : error) === "link"} />;
 }

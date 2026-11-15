@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { SESSION_HINT_COOKIE, SESSION_HINT_OPTIONS } from "./lib/auth/session-hint";
 
 export async function proxy(request: NextRequest) {
   // M3 Slice 9 — forwards the requested pathname so the (app) layout can
@@ -38,7 +39,20 @@ export async function proxy(request: NextRequest) {
 
   // Refreshes the session cookie if expired — required for Server Components,
   // which cannot write cookies themselves.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // «Здесь уже входили» (lib/auth/session-hint.ts): по этой куке requireProfile
+  // отличает вернувшегося с истёкшей сессией от нового посетителя. Только
+  // GET-навигации: выход — POST и сам стирает куку, перезапись в том же ответе
+  // оставила бы подсказку у вышедшего человека.
+  if (user && request.method === "GET" && !request.cookies.has(SESSION_HINT_COOKIE)) {
+    response.cookies.set(SESSION_HINT_COOKIE, "1", {
+      ...SESSION_HINT_OPTIONS,
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
 
   return response;
 }

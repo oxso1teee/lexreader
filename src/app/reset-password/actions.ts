@@ -2,20 +2,18 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { isAuthAttemptAllowed, logAuthAttempt } from "@/lib/auth-rate-limit";
+import { isPlausibleEmail } from "@/lib/auth/email";
+import type { EmailLinkState } from "@/lib/auth/types";
 import { siteUrl } from "@/lib/site-url";
 
-export interface ResetRequestState {
-  submitted?: boolean;
-  error?: string;
-  retryAfterSeconds?: number;
-}
+export type ResetRequestState = EmailLinkState;
 
 export async function requestPasswordReset(
   _prevState: ResetRequestState,
   formData: FormData,
 ): Promise<ResetRequestState> {
   const email = String(formData.get("email") ?? "").trim();
-  if (!email) return { error: "Введи email." };
+  if (!isPlausibleEmail(email)) return { error: "Введи email — отправим на него ссылку для нового пароля." };
 
   const attempt = await isAuthAttemptAllowed("reset-password", [email]);
   if (!attempt.allowed) {
@@ -30,5 +28,5 @@ export async function requestPasswordReset(
 
   // Один и тот же ответ независимо от того, существует ли такой email —
   // не даём проверять существование аккаунтов перебором.
-  return { submitted: true };
+  return { sent: true, email };
 }

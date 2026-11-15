@@ -2,37 +2,36 @@
 
 import Link from "next/link";
 import { Check } from "lucide-react";
-import type { DailyQuestDef, DailyQuestProgress } from "@/lib/daily-quests";
+import { questTitle, type DailyQuestItem, type DailyQuestType } from "@/lib/daily-quests-model";
+import { QUEST_ICON } from "./quest-icons";
 
 // docs/moments/mockups/Daily-quests.dc.html, reference/Daily-quests.png.
-// Карточка на главной: 3 задания дня с прогрессом. Когда все три
-// выполнены и сундук ещё не забран — верхний баннер + "Открыть сундук"
-// (ссылка на /quests/chest, где реально начисляется награда).
-const QUEST_LABEL: Record<DailyQuestDef["questType"], (target: number) => string> = {
-  read_minutes: (n) => `Прочитать ${n} минут`,
-  review_words: (n) => `Повторить ${n} слов`,
-  combo_streak: (n) => `${n} верных подряд`,
-};
-
-const QUEST_ICON_BG: Record<DailyQuestDef["questType"], string> = {
+// Карточка на главной: задания дня с прогрессом. Когда все выполнены и сундук
+// ещё не забран — верхний баннер + "Открыть сундук" (ссылка на /quests/chest,
+// где реально начисляется награда). Полный список и прошлые дни — /quests.
+const QUEST_ICON_BG: Readonly<Record<DailyQuestType, string>> = {
   read_minutes: "var(--leaf-tint)",
   review_words: "var(--sky-tint)",
   combo_streak: "var(--sun-tint)",
+  earn_xp: "var(--sun-tint)",
+  complete_lessons: "var(--leaf-tint)",
+  answer_exercises: "var(--sky-tint)",
 };
-const QUEST_ICON_FG: Record<DailyQuestDef["questType"], string> = {
+const QUEST_ICON_FG: Readonly<Record<DailyQuestType, string>> = {
   read_minutes: "var(--leaf-text)",
   review_words: "var(--sky-text)",
   combo_streak: "var(--sun-text)",
+  earn_xp: "var(--sun-text)",
+  complete_lessons: "var(--leaf-text)",
+  answer_exercises: "var(--sky-text)",
 };
 
 export function DailyQuestsCard({
-  defs,
-  progress,
+  items,
   allComplete,
   chestClaimedToday,
 }: {
-  defs: DailyQuestDef[];
-  progress: DailyQuestProgress;
+  items: DailyQuestItem[];
   allComplete: boolean;
   chestClaimedToday: boolean;
 }) {
@@ -54,9 +53,8 @@ export function DailyQuestsCard({
         </div>
       )}
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {defs.map((d, i) => {
-          const current = Math.min(progress[d.questType], d.target);
-          const done = current >= d.target;
+        {items.map((d, i) => {
+          const { current, done } = d;
           return (
             <div
               key={d.questType}
@@ -65,7 +63,7 @@ export function DailyQuestsCard({
                 alignItems: "center",
                 gap: 12,
                 padding: "12px 14px",
-                borderBottom: i < defs.length - 1 ? "2px solid var(--border)" : undefined,
+                borderBottom: i < items.length - 1 ? "2px solid var(--border)" : undefined,
               }}
             >
               <div
@@ -82,11 +80,11 @@ export function DailyQuestsCard({
                   fontWeight: 900,
                 }}
               >
-                {d.questType === "combo_streak" ? "🔥" : d.questType === "read_minutes" ? "📖" : "🗂"}
+                <span aria-hidden="true">{QUEST_ICON[d.questType]}</span>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 14 }}>
-                  <span>{QUEST_LABEL[d.questType](d.target)}</span>
+                  <span>{questTitle(d.questType, d.target)}</span>
                   <span style={{ color: "var(--sun-text)", fontVariantNumeric: "tabular-nums" }}>
                     {current}/{d.target}
                   </span>

@@ -7,3 +7,9 @@ export function formatRetryLabel(secondsLeft: number): string {
   const seconds = secondsLeft % 60;
   return minutes > 0 ? `${minutes} мин ${String(seconds).padStart(2, "0")} сек` : `${seconds} сек`;
 }
+
+// «0:42» — обратный отсчёт до повторной отправки письма (Magic-link-sent).
+export function formatCountdown(secondsLeft: number): string {
+  const safe = Math.max(0, Math.floor(secondsLeft));
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
+}

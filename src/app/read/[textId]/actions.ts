@@ -2,11 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { checkAchievementsForUser } from "@/lib/achievements-actions";
+import { goalDoneInfo } from "@/lib/goals/goal-sync";
+import { syncGoalProgressFor } from "@/lib/goals/goal-sync-server";
 import { touchStreak } from "@/lib/streak";
 import { KNOWN_LEVEL, syncStatusAndLevel } from "@/lib/word-level";
 import { saveVocabularyItem, type UpsertWordResult } from "@/lib/vocabulary";
 import { findOrCreateFlashcard } from "@/lib/vocabulary/save";
-import { addXp, todayUtcIso } from "@/lib/xp-actions";
+import { todayUtcIso } from "@/lib/xp-actions";
+import { awardXp, toAddXpResult } from "@/lib/xp/award";
+import { DAY_REF } from "@/lib/xp/sources";
 import { recordEvidence } from "@/lib/language-twin/evidence";
 import { collectMoments } from "@/lib/moments/collect";
 import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
@@ -208,17 +213,23 @@ export async function finishReading(input: {
   if (error) throw new Error("Не удалось сохранить сессию чтения.");
 
   const streakTransition = await touchStreak(supabase, user.id);
-  const xpResult = await addXp(supabase, user.id, 10);
+  // Один раз на текст в локальный день пользователя (ключ с «{day}»): повторные
+  // заходы в тот же текст XP не накручивают.
+  const xpResult = toAddXpResult(await awardXp(user.id, { source: "reading_session", ref: `${input.textId}:${DAY_REF}` }));
   revalidatePath("/progress");
 
   // docs/moments/ROADMAP.md, этап 1/2 — те же goal_done/streak_up/level_up/
   // freeze_used/earn_back/streak_milestone/perfect_week, что и после сессии
-  // повторения (review/actions.ts); achievement/word_mastered здесь не
-  // проверяются — чтение само по себе не меняет ни одну из их реальных
-  // метрик (слова/карточки проверяются в upsertWord/reviewWord).
-  const goalWeek = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
+  // повторения (review/actions.ts); word_mastered здесь не проверяется — чтение
+  // само по себе не меняет его метрику (карточки проверяются в reviewWord).
+  // Минуты чтения — прогресс цели «чтение» (для цели в XP отметку уже поставил award_xp).
+  const goalSync = await syncGoalProgressFor(supabase, user.id);
+  const goalDone = goalDoneInfo(goalSync);
+  // Дочитанный текст и вехи XP могут дать достижение (первая книга, 1000 XP…).
+  const newAchievementIds = await checkAchievementsForUser(supabase, user.id);
+  const goalWeek = xpResult || goalDone ? await fetchGoalWeekMarks(supabase, user.id) : [];
   const streakWeek = streakTransition ? await fetchStreakWeekMarks(supabase, user.id) : [];
-  const perfectWeek = xpResult ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
+  const perfectWeek = xpResult || goalSync?.justCompleted ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
   const overtaken = xpResult ? await checkOvertaken(supabase, user.id) : [];
   const moments = collectMoments({
     xp: xpResult
@@ -229,12 +240,13 @@ export async function finishReading(input: {
           minutesHint: minutesHintForGoal(xpResult.goal),
         }
       : null,
+    goalDone,
     streak: streakTransition,
     goalWeek,
     streakWeek,
-    newAchievementIds: [],
+    newAchievementIds,
     wordMastered: null,
-    today: todayUtcIso(),
+    today: xpResult?.day ?? goalSync?.day ?? todayUtcIso(),
   });
 
   // docs/moments/ROADMAP.md, этап 6 — Friend-streak, см. комментарий в

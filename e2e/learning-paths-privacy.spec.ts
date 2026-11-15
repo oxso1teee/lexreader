@@ -19,8 +19,12 @@ test("analytics: Learning Paths track()/captureServerEvent() calls never pass le
   const filesToScan = [
     "src/app/(app)/learning-paths/path-actions.tsx",
     "src/app/(app)/learning-paths/[pathSlug]/[stageKey]/[skillKey]/lesson-actions.tsx",
-    "src/app/(app)/learning-paths/[pathSlug]/[stageKey]/[skillKey]/check/check-runner.tsx",
     "src/app/(app)/learning-paths/actions.ts",
+    // stage_completed / learning_path_completed: код вынесен из actions.ts в общий модуль.
+    "src/lib/learning-paths/after-progress.ts",
+    // Итерация 5: серверные действия плеера уроков (события lesson_*, knowledge_check_*).
+    "src/app/(app)/learning-paths/lesson-session-actions.ts",
+    "src/components/product/lessons/lesson-player.tsx",
   ];
 
   let totalCalls = 0;
@@ -43,6 +47,7 @@ test("analytics: LearningPathsViewTracker props never pass lesson content, only 
     "src/app/(app)/learning-paths/[pathSlug]/[stageKey]/page.tsx",
     "src/app/(app)/learning-paths/[pathSlug]/[stageKey]/[skillKey]/page.tsx",
     "src/app/(app)/learning-paths/[pathSlug]/[stageKey]/[skillKey]/check/page.tsx",
+    "src/app/(app)/learning-paths/[pathSlug]/[stageKey]/[skillKey]/play/page.tsx",
   ];
 
   let totalCalls = 0;

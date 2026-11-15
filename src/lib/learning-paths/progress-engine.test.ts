@@ -151,13 +151,23 @@ test("findCurrentFocusSkill: with no progress, the very first curriculum skill",
   assert.equal(focus?.key, firstSkillKey);
 });
 
-test("findCurrentFocusSkill: skips confident/maintenance skills, returns null when the whole path is mastered", () => {
+test("findCurrentFocusSkill: skips skills whose lesson is completed, returns null when every lesson is done", () => {
   const allSkills = getAllSkills(path);
-  const rows = allSkills.map((s) => baseProgress({ skill_key: s.key, status: "confident" }));
+  const rows = allSkills.map((s) => baseProgress({ skill_key: s.key, status: "confident", content_completed_at: NOW }));
   assert.equal(findCurrentFocusSkill(path, rows), null);
 
-  const partialRows = [baseProgress({ skill_key: firstSkillKey, status: "confident" })];
+  const partialRows = [baseProgress({ skill_key: firstSkillKey, status: "confident", content_completed_at: NOW })];
   assert.equal(findCurrentFocusSkill(path, partialRows)?.key, allSkills[1].key);
+});
+
+test("findCurrentFocusSkill: a finished lesson moves focus on even without a passed check; mastery alone does not", () => {
+  const allSkills = getAllSkills(path);
+  // lesson read, Knowledge Check never passed (or the skill has none) — focus still moves to the next lesson
+  const lessonOnly = [baseProgress({ skill_key: firstSkillKey, status: "introduced", content_completed_at: NOW })];
+  assert.equal(findCurrentFocusSkill(path, lessonOnly)?.key, allSkills[1].key);
+  // a status without a completed lesson (e.g. practice evidence) does not skip the lesson
+  const practiceOnly = [baseProgress({ skill_key: firstSkillKey, status: "improving", evidence_count: 3 })];
+  assert.equal(findCurrentFocusSkill(path, practiceOnly)?.key, firstSkillKey);
 });
 
 test("isPathComplete: false until every skill has content_completed_at, true once they all do", () => {

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CURRICULA, getAllPaths, getAllSkills, isValidSkillForPath } from "./index.ts";
+import { CURRICULA, getAllPaths, getAllSkills, getPath, isValidSkillForPath } from "./index.ts";
 import { buildGrammarQuestionSet, GRAMMAR_RUNNER_CATEGORIES } from "../../missions/grammar-bank.ts";
 
 // M3 Slice 8 — structural validation for the static curriculum (plan doc
@@ -121,4 +121,12 @@ test("isValidSkillForPath: rejects an unknown skill_key, accepts a real one", ()
   assert.equal(isValidSkillForPath("a2-b1", "grammar.articles"), true);
   assert.equal(isValidSkillForPath("a2-b1", "grammar.made_up_skill"), false);
   assert.equal(isValidSkillForPath("a2-b1", "grammar.present_perfect"), false); // that's a b1-b2 skill
+});
+
+test("getPath/isValidSkillForPath: ключи прототипа и мусор — не путь (slug приходит от клиента)", () => {
+  for (const slug of ["constructor", "__proto__", "toString", "hasOwnProperty", "", "A2-B1", "a2-b1 "]) {
+    assert.equal(getPath(slug), null, slug);
+    assert.equal(isValidSkillForPath(slug, "grammar.present_simple"), false, slug);
+  }
+  assert.ok(getPath("a2-b1"));
 });

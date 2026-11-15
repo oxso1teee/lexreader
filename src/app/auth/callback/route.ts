@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { safeNextPath } from "@/lib/auth/safe-next";
 import { siteUrl } from "@/lib/site-url";
 
 // Обмен PKCE-кода из письма (сброс пароля, будущий OAuth) на сессию —
@@ -21,13 +22,30 @@ import { siteUrl } from "@/lib/site-url";
 // ${siteUrl()}${next} и так не даёт увести на чужой хост в обычном случае,
 // allow-list — простая защита в глубину от абсолютных/protocol-relative
 // значений next (например next=//evil.com).
-const ALLOWED_NEXT_PATHS = ["/home", "/reset-password/confirm"];
+//
+// Вход по ссылке из письма возвращает человека туда, откуда он пришёл
+// (?next=/read/…), поэтому точный список из двух путей заменён проверкой
+// safeNextPath — только внутренние пути, никаких чужих хостов и служебных
+// страниц. /reset-password/confirm — единственный служебный путь, который
+// письмо сброса пароля вправе открыть (safeNextPath блокирует /reset-password*).
+const RESET_CONFIRM_PATH = "/reset-password/confirm";
+
+function resolveNext(raw: string | null): string {
+  if (raw === RESET_CONFIRM_PATH) return raw;
+  return safeNextPath(raw) ?? "/home";
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawNext = searchParams.get("next") ?? "/home";
-  const next = ALLOWED_NEXT_PATHS.includes(rawNext) ? rawNext : "/home";
+  const next = resolveNext(searchParams.get("next"));
+
+  // Ссылка не сработала (устарела, уже использована, открыта в другом
+  // браузере — PKCE ищет cookie там, где её запрашивали). Раньше человека
+  // молча отправляли дальше, и он видел онбординг или форму без единого
+  // объяснения; теперь — туда, где можно запросить новую, с понятным текстом.
+  const failure = () =>
+    NextResponse.redirect(`${siteUrl()}${next === RESET_CONFIRM_PATH ? "/reset-password" : "/login"}?error=link`);
 
   const response = NextResponse.redirect(`${siteUrl()}${next}`);
 
@@ -46,7 +64,11 @@ export async function GET(request: NextRequest) {
         },
       },
     );
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) return failure();
+  } else {
+    // Ни кода, ни сессии: в GoTrue-ссылке была ошибка (otp_expired и т. п.).
+    return failure();
   }
 
   return response;

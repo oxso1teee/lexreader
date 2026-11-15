@@ -4,7 +4,11 @@
 @import "../styles/card.css";
 @import "../styles/ui.css";
 @import "../styles/layout.css";
+@import "../styles/dashboard.css";
+@import "../styles/learning-path.css";
+@import "../styles/lesson.css";
 @import "../styles/mascot.css";
+@import "../styles/lex.css";
 @import "../styles/cover.css";
 @import "../styles/reader.css";
 @import "../styles/moments.css";

@@ -52,7 +52,8 @@ export function ComboBanner({ combo, xpAwarded }: { combo: number; xpAwarded: nu
           <div className="mo-disp" style={{ fontSize: 19, fontWeight: 900, lineHeight: 1.1 }}>
             {combo} верных подряд!
           </div>
-          <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2 }}>+{xpAwarded} XP</div>
+          {/* Дневной лимит серии исчерпан или блок уже оплачен — «+0 XP» не показываем */}
+          {xpAwarded > 0 && <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2 }}>+{xpAwarded} XP</div>}
         </div>
         {!reduceMotion && <Confetti seed={combo} count={14} delay={0.15} reach={[70, 60]} fall={30} style={{ left: 36, top: 24 }} />}
       </div>

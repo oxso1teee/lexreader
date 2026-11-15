@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 // Phase 1 — библиотека src/components/ui на справочнике /dev/ui: рендер,
 // props/состояния, клавиатура, a11y (axe) в светлой и тёмной теме, адаптив.
@@ -19,7 +19,7 @@ async function open(page: Page, theme: "light" | "dark" = "light") {
 test.describe("рендер и состояния", () => {
   test("все секции справочника на месте", async ({ page }) => {
     await open(page);
-    for (const name of ["Кнопки", "Карточки", "Поля", "Выбор", "Метки и аватары", "Вкладки, меню, слои", "Прогресс и загрузка", "Сообщения и уведомления", "Состояния экрана"]) {
+    for (const name of ["Кнопки", "Карточки", "Поля", "Поле пароля", "Lex", "Выбор", "Плитки с вариантами", "Метки и аватары", "Вкладки, меню, слои", "Прогресс и загрузка", "Сообщения и уведомления", "Состояния экрана"]) {
       await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
     }
   });
@@ -90,7 +90,8 @@ test.describe("поля и выбор", () => {
     await expect(email).toHaveAccessibleDescription("Пришлём ссылку для входа");
     await expect(email).not.toHaveAttribute("aria-invalid", "true");
 
-    const password = page.getByLabel("Пароль");
+    // exact: в справочнике есть и «Новый пароль», и кнопка «Показать пароль».
+    const password = page.getByLabel("Пароль", { exact: true });
     await expect(password).toHaveAttribute("aria-invalid", "true");
     await expect(password).toHaveAccessibleDescription("Неверный email или пароль");
     await expect(page.getByLabel("Недоступное")).toBeDisabled();
@@ -364,6 +365,161 @@ test.describe("темы", () => {
     const d = await read();
     expect(new Set(d).size).toBe(4);
     for (let i = 0; i < 4; i++) expect(d[i]).not.toBe(l[i]);
+  });
+});
+
+test.describe("Lex и поле пароля (Phase 2, экраны входа)", () => {
+  // Клиентские поля приходят в HTML раньше, чем React их подключил: ввод до
+  // гидратации не обновил бы шкалу и чеклист (тот же приём, что в e2e/helpers).
+  const hydrated = (locator: Locator) =>
+    expect.poll(() => locator.evaluate((el) => Object.keys(el).some((key) => key.startsWith("__reactProps")))).toBe(true);
+
+  test("Lex: 8 настроений, декоративный, «призрак» всегда спит", async ({ page }) => {
+    await open(page);
+    const lex = page.getByRole("region", { name: "Lex" });
+    for (const mood of ["happy", "wink", "joy", "sad", "sleep", "think", "wow", "cool"]) {
+      const svg = lex.locator(`svg.lex[data-lex-mood="${mood}"]`).first();
+      await expect(svg).toBeVisible();
+      await expect(svg).toHaveAttribute("aria-hidden", "true");
+    }
+    await expect(lex.locator("svg.lex-ghost")).toHaveAttribute("data-lex-mood", "sleep");
+  });
+
+  test("Lex: цвета фиксированы и от темы не зависят (живот остаётся светлым в тёмной)", async ({ page }) => {
+    await open(page);
+    const readBelly = () =>
+      page.locator("svg.lex").first().evaluate((el) => getComputedStyle(el).getPropertyValue("--lex-belly").trim());
+    const light = await readBelly();
+    await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"));
+    expect(await readBelly()).toBe(light);
+    expect(light).not.toBe("");
+  });
+
+  test("PasswordField: «Показать» меняет type и подпись кнопки, значение не теряется", async ({ page }) => {
+    await open(page);
+    const field = page.getByLabel("Новый пароль", { exact: true });
+    await hydrated(field);
+    await field.fill("lighthouse2026");
+    await expect(field).toHaveAttribute("type", "password");
+
+    await page.getByRole("button", { name: "Показать пароль" }).first().click();
+    await expect(field).toHaveAttribute("type", "text");
+    await expect(field).toHaveValue("lighthouse2026");
+
+    await page.getByRole("button", { name: "Скрыть пароль" }).click();
+    await expect(field).toHaveAttribute("type", "password");
+    await expect(field).toHaveValue("lighthouse2026");
+  });
+
+  test("PasswordField: шкала и подсказка меняются по мере ввода и описывают поле", async ({ page }) => {
+    await open(page);
+    const field = page.getByLabel("Новый пароль", { exact: true });
+    await hydrated(field);
+    await expect(page.getByRole("img", { name: "Надёжность пароля: пароль пока не введён" })).toBeVisible();
+
+    await field.fill("abc");
+    await expect(page.getByRole("img", { name: "Надёжность пароля: слабый" })).toBeVisible();
+    await expect(page.getByText("Слабый — добавь ещё 5 символов и цифру")).toBeVisible();
+
+    await field.fill("abcdefg1");
+    await expect(page.getByRole("img", { name: "Надёжность пароля: средний" })).toBeVisible();
+
+    await field.fill("lighthouse2026");
+    await expect(page.getByRole("img", { name: "Надёжность пароля: надёжный" })).toBeVisible();
+    await expect(field).toHaveAccessibleDescription(/Такой пароль сложно подобрать/);
+  });
+
+  test("PasswordRequirements: чеклист отмечает длину, цифру и совпадение", async ({ page }) => {
+    await open(page);
+    const items = page.getByRole("region", { name: "Требования к паролю" }).getByRole("listitem");
+    await hydrated(page.getByLabel("Новый пароль", { exact: true }));
+    await expect(items).toHaveText([
+      "Не выполнено: Не меньше 8 символов",
+      "Не выполнено: Хотя бы одна цифра",
+      "Не выполнено: Пароли совпадают — повтори пароль во втором поле",
+    ]);
+
+    await page.getByLabel("Новый пароль", { exact: true }).fill("lighthouse2026");
+    await page.getByLabel("Повтори пароль", { exact: true }).fill("lighthouse2025");
+    await expect(items).toHaveText([
+      "Выполнено: Не меньше 8 символов",
+      "Выполнено: Хотя бы одна цифра",
+      "Не выполнено: Пароли пока не совпадают",
+    ]);
+
+    await page.getByLabel("Повтори пароль", { exact: true }).fill("lighthouse2026");
+    await expect(items.nth(2)).toHaveText("Выполнено: Пароли совпадают");
+  });
+
+  test("поле с иконкой: текст не заезжает под иконку и кнопку, зона кнопки не меньше 44px", async ({ page }) => {
+    await open(page);
+    const field = page.getByLabel("Новый пароль", { exact: true });
+    const paddings = await field.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { left: parseFloat(style.paddingLeft), right: parseFloat(style.paddingRight) };
+    });
+    expect(paddings.left).toBeGreaterThanOrEqual(40);
+    expect(paddings.right).toBeGreaterThanOrEqual(48);
+    const box = await page.getByRole("button", { name: "Показать пароль" }).first().boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  });
+});
+
+test.describe("ChoiceGroup (Phase 2, онбординг)", () => {
+  test("радио-семантика: группа с вопросом, короткое имя карточки, описание отдельно, выбор кликом и стрелками", async ({ page }) => {
+    await open(page);
+    const group = page.getByRole("group", { name: "Цель занятий" });
+    const travel = group.getByRole("radio", { name: "Путешествия" });
+
+    await expect(travel).toBeChecked();
+    // Имя карточки — только подпись; описание подключено отдельно (aria-describedby).
+    await expect(travel).toHaveAccessibleName("Путешествия");
+    await expect(travel).toHaveAccessibleDescription("Отели, кафе, дорога");
+
+    await group.getByRole("radio", { name: "Работа и карьера" }).click();
+    await expect(group.getByRole("radio", { name: "Работа и карьера" })).toBeChecked();
+    await expect(travel).not.toBeChecked();
+
+    await page.keyboard.press("ArrowDown"); // нативное поведение radio
+    await expect(group.getByRole("radio", { name: "Для себя" })).toBeChecked();
+  });
+
+  test("numbered: цифры выбирают вариант только пока фокус в группе; недоступный вариант не выбирается", async ({ page }) => {
+    await open(page);
+    const group = page.getByRole("group", { name: "Какой вариант подходит?" });
+    await expect(group.locator(".choice-card-key")).toHaveText(["1", "2", "3", "4"]);
+
+    // Вне группы одиночные клавиши ничего не делают (WCAG 2.1.4).
+    await page.locator("body").press("2");
+    await expect(group.getByRole("radio", { checked: true })).toHaveCount(0);
+
+    await group.getByRole("radio", { name: "lived", exact: true }).focus();
+    await page.keyboard.press("3");
+    const haveLived = group.getByRole("radio", { name: "have lived", exact: true });
+    await expect(haveLived).toBeChecked();
+    await expect(haveLived).toBeFocused();
+
+    await page.keyboard.press("4"); // «live» недоступен
+    await expect(haveLived).toBeChecked();
+    await expect(group.getByRole("radio", { name: "live", exact: true })).toBeDisabled();
+  });
+
+  test("две колонки: недоступная карточка не получает фокус и не выбирается", async ({ page }) => {
+    await open(page);
+    const group = page.getByRole("group", { name: "Язык для перевода" });
+    await expect(group.getByRole("radio", { name: "Испанский" })).toBeChecked();
+    await group.getByRole("radio", { name: "Немецкий" }).click();
+    await expect(group.getByRole("radio", { name: "Немецкий" })).toBeChecked();
+    await expect(group.getByRole("radio", { name: "Итальянский" })).toBeDisabled();
+    // У fieldset Chrome отдаёт grid-template-columns как заданную строку, а не как
+    // пиксели, поэтому колонки проверяем по положению карточек: 2 в ряд.
+    const boxes = await group
+      .locator("label.choice-card")
+      .evaluateAll((cards) => cards.map((card) => ({ x: Math.round(card.getBoundingClientRect().x), y: Math.round(card.getBoundingClientRect().y) })));
+    expect(boxes[0].y).toBe(boxes[1].y);
+    expect(boxes[2].y).toBeGreaterThan(boxes[0].y);
+    expect(boxes[2].x).toBe(boxes[0].x);
   });
 });
 

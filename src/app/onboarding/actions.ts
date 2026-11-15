@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import type { AuthError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { isAuthAttemptAllowed, logAuthAttempt } from "@/lib/auth-rate-limit";
+import { validatePassword } from "@/lib/auth/password-policy";
 import { log } from "@/lib/log";
 
 export interface OnboardingState {
@@ -51,6 +52,12 @@ export async function completeOnboarding(
   if (targetLanguage === nativeLanguage) {
     return { error: "Изучаемый и родной язык должны отличаться." };
   }
+  // Единая политика пароля (lib/auth/password-policy.ts) — та же, что рисует
+  // шкалу и чеклист в форме и проверяет новый пароль при сбросе.
+  const passwordCheck = validatePassword(password);
+  if (!passwordCheck.ok) {
+    return { error: passwordCheck.error };
+  }
 
   // P0-АУДИТ 3.8: регистрация раньше не имела рейт-лимита вообще (в отличие
   // от входа/сброса пароля) — можно было скриптовать массовую регистрацию.
@@ -80,7 +87,7 @@ export async function completeOnboarding(
       await logAuthAttempt("signup", [email, ip]);
       return {
         error:
-          "Не удалось создать аккаунт. Проверь email и пароль (минимум 6 символов) — если аккаунт уже есть, попробуй войти.",
+          "Не удалось создать аккаунт. Проверь email и пароль (минимум 8 символов, с цифрой) — если аккаунт уже есть, попробуй войти.",
       };
     }
     const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });

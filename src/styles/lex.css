@@ -1,0 +1,50 @@
+/* Lex — маскот LexReader из Ultimate Design System (design/ultimate/tools/
+   build_ds.py → «fixed brand colours; works on any surface»).
+
+   Цвета ФИКСИРОВАНЫ и от темы не зависят. Значения совпадают со светлой
+   палитрой токенов (--leaf #2b820f, --leaf-tint #e3f6d3, --leaf-edge
+   #1c540a, --ember #ff9500, --sun #ffc700), но на токены не ссылаются
+   намеренно: в тёмной теме --leaf-tint становится тёмной подложкой, а
+   живот Lex должен остаться светлым — иначе на тёмном фоне пропадает лицо.
+   Компонент — src/components/product/mascot/lex.tsx. Не путать с
+   ReadingCompanion (mascot.css): тот остаётся «искрой» экрана чтения. */
+@layer components {
+  .lex {
+    --lex-body: #2b820f;
+    --lex-belly: #e3f6d3;
+    --lex-ink: #1c540a;
+    --lex-bean: #ff9500;
+    --lex-bean-hi: #ffc700;
+    --lex-shadow: rgb(0 0 0 / 0.1);
+    display: inline-block;
+    flex: none;
+    overflow: visible;
+  }
+  /* «Бледный» Lex — для заглушек и фоновых мест, где яркий зелёный отвлекает. */
+  .lex-pale {
+    --lex-body: #e3f6d3;
+    --lex-belly: #ffffff;
+  }
+  /* «Призрак» — выключенное состояние (серый, спит). */
+  .lex-ghost {
+    --lex-body: #b9b3a6;
+    --lex-belly: #e9e4da;
+    --lex-ink: #5c5648;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .lex-bob {
+      animation: lex-bob 2.4s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes lex-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}

@@ -175,6 +175,37 @@
   .field-hint-error {
     color: var(--danger-text);
   }
+  /* Поле с иконкой слева и/или кнопкой справа (пароль: «показать»). Текст не
+     заезжает под иконки за счёт padding; кнопка справа — зона 44px. */
+  .field-adorned {
+    position: relative;
+  }
+  .field-icon {
+    position: absolute;
+    inset-block: 0;
+    left: 0.875rem;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    color: var(--text-tertiary);
+  }
+  .field-icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .field-control-icon {
+    padding-left: 2.75rem;
+  }
+  .field-adornment {
+    position: absolute;
+    inset-block: 0;
+    right: 0.25rem;
+    display: flex;
+    align-items: center;
+  }
+  .field-control-adorned {
+    padding-right: 3.25rem;
+  }
 
   /* ---------- Checkbox / Radio / Switch ---------- */
   .choice {
@@ -705,6 +736,198 @@
     50% {
       opacity: 1;
     }
+  }
+
+  /* ---------- Choice card (ChoiceGroup / ChoiceCard) ----------
+     Карточка с нативным радио внутри (макеты .opt): невидимый input лежит
+     поверх всей карточки, поэтому клик и фокус — на нём, а вид — на :has(). */
+  .choice-group {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+  .choice-group-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .choice-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    min-height: 3.5rem;
+    padding: 0.625rem 0.875rem;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-btn);
+    background-color: var(--surface);
+    box-shadow: 0 3px 0 0 var(--border-strong);
+    color: var(--foreground);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) ease-out,
+      background-color var(--dur-fast) ease-out;
+  }
+  .choice-card:not(.choice-card-static):hover:not(:has(:disabled)) {
+    border-color: var(--sky);
+  }
+  .choice-card:has(.choice-card-input:checked) {
+    border-color: var(--sky);
+    background-color: var(--sky-tint);
+    box-shadow: 0 3px 0 0 color-mix(in oklab, var(--sky-fill) 40%, transparent);
+  }
+  .choice-card:has(.choice-card-input:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .choice-card:has(.choice-card-input:disabled) {
+    opacity: 0.55;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .choice-card-static {
+    box-shadow: none;
+    cursor: default;
+  }
+  .choice-card-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+  .choice-card-swatch {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.375rem;
+    height: 2.375rem;
+    border-radius: 0.75rem;
+    background-color: var(--surface-sunken);
+    color: var(--text-secondary);
+  }
+  .choice-card-swatch svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .choice-swatch-leaf {
+    background-color: var(--leaf-tint);
+    color: var(--leaf-text);
+  }
+  .choice-swatch-sky {
+    background-color: var(--sky-tint);
+    color: var(--sky-text);
+  }
+  .choice-swatch-sun {
+    background-color: var(--sun-tint);
+    color: var(--sun-text);
+  }
+  .choice-swatch-ember {
+    background-color: var(--ember-tint);
+    color: var(--ember-text);
+  }
+  .choice-swatch-danger {
+    background-color: var(--danger-tint);
+    color: var(--danger-text);
+  }
+  /* У выбранной карточки подложка уже цветная — плитку иконки делаем светлой. */
+  .choice-card:has(.choice-card-input:checked) .choice-card-swatch {
+    background-color: var(--surface);
+  }
+  .choice-card-key {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    border: 2px solid var(--border-strong);
+    border-radius: 0.5rem;
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .choice-card:has(.choice-card-input:checked) .choice-card-key {
+    border-color: var(--sky-fill);
+    background-color: var(--sky-fill);
+    color: #fff;
+  }
+  .choice-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .choice-card-label {
+    overflow-wrap: anywhere;
+  }
+  .choice-card-desc {
+    margin-top: 0.0625rem;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .choice-card-check {
+    display: none;
+    flex: none;
+    width: 1.375rem;
+    height: 1.375rem;
+    color: var(--sky-text);
+  }
+  .choice-card:has(.choice-card-input:checked) .choice-card-check {
+    display: block;
+  }
+
+  /* Результат проверки (ChoiceOption.state): отвеченный вопрос урока. Выбранная
+     карточка после ответа остаётся "checked", поэтому состояние перекрывает и
+     её вид, и приглушение disabled. Класс удвоен намеренно: исходные правила
+     :has(.choice-card-input:checked|:disabled) весят (0,3,0), и без этого
+     состояние проигрывало бы им. */
+  .choice-card.choice-card[data-state="correct"],
+  .choice-card.choice-card[data-state="incorrect"] {
+    opacity: 1;
+    cursor: default;
+  }
+  .choice-card.choice-card[data-state="correct"] {
+    border-color: var(--leaf);
+    background-color: var(--leaf-tint);
+    box-shadow: 0 3px 0 0 var(--leaf-edge);
+  }
+  .choice-card.choice-card[data-state="incorrect"] {
+    border-color: var(--danger);
+    background-color: var(--danger-tint);
+    box-shadow: 0 3px 0 0 var(--danger-edge);
+  }
+  .choice-card.choice-card[data-state] .choice-card-key {
+    border-color: currentColor;
+    background-color: transparent;
+    color: var(--text-secondary);
+  }
+  .choice-card-state {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .choice-card[data-state="correct"] .choice-card-state {
+    color: var(--leaf-text);
+  }
+  .choice-card[data-state="incorrect"] .choice-card-state {
+    color: var(--danger-text);
   }
 
   /* ---------- Alert ---------- */

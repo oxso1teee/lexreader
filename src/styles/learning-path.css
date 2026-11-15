@@ -1,0 +1,438 @@
+/* Учебный путь (Phase 2, WP5: макеты Curriculum / Unit-overview, урок и
+   закрытый урок). Здесь только то, что неудобно выражать утилитами Tailwind:
+   зелёный и ember hero, номера разделов, цепочка уроков с пунктирной линией,
+   полоска шагов. Цвета — только токены: обе темы получаются из них; белый
+   текст — только на --leaf и --ember-fill (контраст проверен для .dash-hero и
+   тот же). Состояния несут и иконка, и подпись — не один цвет.
+
+   Раскладка решается шириной САМОГО экрана (container query), а не вьюпорта:
+   боковая панель забирает 240px от брейкпоинта md.
+     < 36rem   одна колонка, hero без маскота (телефон, планшет в портрете)
+     ≥ 36rem   крупнее hero и номера разделов, показывается маскот */
+@layer components {
+  .lp {
+    container-type: inline-size;
+    container-name: lp;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Hero. tone=leaf — прогресс всего пути; tone=ember — раздел. */
+  .lp-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    border-radius: 24px;
+    background: var(--leaf);
+    color: #fff;
+    box-shadow: inset 0 -6px 0 0 var(--leaf-edge);
+  }
+  .lp-hero[data-tone="ember"] {
+    background: var(--ember-fill);
+    box-shadow: inset 0 -6px 0 0 var(--ember-fill-edge);
+  }
+  .lp-hero-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .lp-hero-lex {
+    display: none;
+    flex: none;
+  }
+  .lp-eyebrow {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  /* Заголовок секции на странице (не в hero): «Разделы», «Примеры»… */
+  .lp-section-title {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .lp-hero-num {
+    margin: 0;
+    font-family: var(--font-unbounded), var(--font-onest), sans-serif;
+    font-size: 2.75rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .lp-hero-title {
+    margin: 0;
+    font-family: var(--font-unbounded), var(--font-onest), sans-serif;
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  .lp-hero-sub {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+  .lp-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.875rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .lp-bar {
+    height: 1rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.28);
+  }
+  .lp-bar > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #fff;
+  }
+
+  /* Белая карточка «Следующий шаг» внутри hero: свой фон и свой цвет текста,
+     иначе она унаследовала бы белый текст зелёной подложки. */
+  .lp-next {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    border-color: transparent;
+    color: var(--foreground);
+  }
+  .lp-next-body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .lp-next-body > p {
+    margin: 0;
+  }
+
+  /* Раздел на карте: номер/галочка/замок слева, текст справа. */
+  .lp-units,
+  .lp-path,
+  .lp-modules {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lp-units {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .lp-unit {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .lp-unit-no {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 2px solid var(--border-strong);
+    color: var(--text-secondary);
+    font-family: var(--font-unbounded), var(--font-onest), sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .lp-unit[data-state="done"] .lp-unit-no {
+    border-color: var(--leaf);
+    background: var(--leaf);
+    color: #fff;
+  }
+  .lp-unit[data-state="current"] {
+    border-color: var(--ember-fill);
+    box-shadow: 0 4px 0 0 var(--ember-tint);
+  }
+  .lp-unit[data-state="current"] .lp-unit-no {
+    border-color: var(--ember-fill);
+    background: var(--ember-fill);
+    color: #fff;
+    box-shadow: 0 0 0 4px var(--ember-tint);
+  }
+  .lp-unit[data-state="locked"] {
+    border-color: transparent;
+    background: var(--surface-sunken);
+    color: var(--text-secondary);
+  }
+  .lp-unit-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 0;
+  }
+  .lp-unit-body > p {
+    margin: 0;
+  }
+  .lp-unit-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .lp-unit-title {
+    margin: 0;
+    font-family: var(--font-unbounded), var(--font-onest), sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .lp-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Цепочка уроков раздела: карточки соединяет пунктирная линия. Линия
+     лежит под карточками (у них сплошной фон) и видна только в промежутках. */
+  .lp-modules {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .lp-module-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0 0 0.5rem;
+  }
+  .lp-module-title {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .lp-path {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+  .lp-path::before {
+    content: "";
+    position: absolute;
+    top: 1.5rem;
+    bottom: 1.5rem;
+    left: calc(2px + 1rem + 1.25rem - 1.5px);
+    border-left: 3px dotted var(--border-strong);
+  }
+  .lp-lesson {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .lp-lesson[data-state="current"] {
+    flex-wrap: wrap;
+    border-color: var(--ember-fill);
+    box-shadow: 0 4px 0 0 var(--ember-tint);
+  }
+  .lp-lesson[data-state="current"] .lp-lesson-body {
+    flex-basis: 9rem;
+  }
+  .lp-lesson[data-state="locked"] {
+    border-color: transparent;
+    background: var(--surface-sunken);
+    color: var(--text-secondary);
+  }
+  .lp-lesson-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+  .lp-lesson-body > p {
+    margin: 0;
+  }
+  .lp-lesson-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  .lp-lesson-sub {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+  .lp-lesson-end {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+  }
+  .lp-sw {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
+    background: var(--leaf-tint);
+    color: var(--leaf-text);
+  }
+  .lp-lesson[data-state="current"] .lp-sw {
+    background: var(--ember-tint);
+    color: var(--ember-text);
+  }
+  .lp-lesson[data-state="locked"] .lp-sw {
+    background: var(--surface);
+    color: var(--text-secondary);
+  }
+  .lp-sw[data-tone="ember"] {
+    background: var(--ember-tint);
+    color: var(--ember-text);
+  }
+  .lp-done-mark {
+    color: var(--leaf-text);
+  }
+
+  /* Белая кнопка на зелёном hero: та же механика, что у .btn. Подпись —
+     --leaf-edge (тёмно-зелёный), а не --leaf-text: в тёмной теме тот
+     светло-зелёный и на белой кнопке не читается (см. .dash-hero-cta). */
+  .lp-hero-cta {
+    --btn-fill: #fff;
+    --btn-edge: var(--leaf-tint-strong);
+    --btn-label: var(--leaf-edge);
+    align-self: flex-start;
+    min-height: 3.25rem;
+    margin-top: 0.5rem;
+    padding-inline: 1.5rem;
+    font-size: 1rem;
+  }
+
+  /* Полоска шагов раздела на странице урока. */
+  .lp-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lp-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    border: 2px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .lp-step[data-state="done"] {
+    border-color: var(--leaf);
+    background: var(--leaf);
+    color: #fff;
+  }
+  .lp-step[data-state="current"] {
+    border-color: var(--ember-fill);
+    background: var(--ember-tint);
+    color: var(--ember-text);
+  }
+  .lp-step[data-state="locked"] {
+    border-color: transparent;
+    background: var(--surface-sunken);
+  }
+  .lp-step[aria-current="step"] {
+    outline: 3px solid var(--sky);
+    outline-offset: 2px;
+  }
+
+  /* Переход к соседним урокам. */
+  .lp-nav {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .lp-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.5rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .lp-nav-link[data-disabled="true"] {
+    border-color: transparent;
+    background: var(--surface-sunken);
+    color: var(--text-secondary);
+  }
+  .lp-nav-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .lp-nav-text > span:first-child {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+  .lp-nav-text > span:last-child {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  .lp-nav-next {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  @container lp (min-width: 36rem) {
+    .lp {
+      gap: 1.25rem;
+    }
+    .lp-hero {
+      padding: 1.75rem 2rem;
+    }
+    .lp-hero-lex {
+      display: block;
+    }
+    .lp-hero-title {
+      font-size: 1.625rem;
+    }
+    .lp-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .lp-nav > .lp-nav-next:only-child {
+      grid-column: 2;
+    }
+  }
+}
