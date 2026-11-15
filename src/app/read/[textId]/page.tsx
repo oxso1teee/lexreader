@@ -5,6 +5,9 @@ import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
 import type { LearningState } from "@/lib/vocabulary-list";
 import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
+import { createFormIndex } from "@/lib/lemma";
+import { estimateTextDifficulty } from "@/lib/reading/difficulty";
+import { knownFormIndex } from "@/lib/vocabulary/text-familiarity";
 import { hasSavedReaderPrefs, parseReaderPrefs } from "./reader-prefs";
 import Reader from "./reader";
 
@@ -136,14 +139,25 @@ export default async function ReadPage({
   let statsLearning = 0;
   let statsFamiliar = 0;
   let statsKnown = 0;
+  // Reading Engine R1: словоформы («walked») считаются по сохранённому слову («walk»).
+  const formIndex = createFormIndex(wordLevels, text.language);
   for (const word of uniqueTokens) {
-    const saved = wordLevels[word];
+    const saved = formIndex.find(word)?.value;
     if (!saved) continue;
     if (saved.level >= 4) statsKnown++;
     else if (saved.level === 3) statsFamiliar++;
     else if (saved.level >= 1) statsLearning++;
     else statsNew++;
   }
+
+  // Reading Engine R2: оценка сложности (видео не оцениваем — субтитры искажают длину предложений).
+  const difficulty = text.youtube_video_id
+    ? null
+    : estimateTextDifficulty(
+        text.body,
+        knownFormIndex((savedWords ?? []).map((w) => w.headword), text.language),
+        text.language,
+      );
 
   const initialServerPrefs = hasSavedReaderPrefs(profile.reader_settings)
     ? parseReaderPrefs(profile.reader_settings)
@@ -163,6 +177,7 @@ export default async function ReadPage({
         initialServerPrefs={initialServerPrefs}
         chapter={chapter}
         isVideo={Boolean(text.youtube_video_id)}
+        difficulty={difficulty}
         stats={{
           unique: uniqueTokens.size,
           new: statsNew,

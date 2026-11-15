@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Check, Keyboard, X } from "lucide-react";
 import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
+import { createFormIndex } from "@/lib/lemma";
+import type { TextDifficulty } from "@/lib/reading/difficulty";
 import { WORD_LEVELS } from "@/lib/types";
 import { log } from "@/lib/log";
 import { track } from "@/lib/posthog-client";
@@ -108,6 +110,7 @@ export default function Reader({
   wordLevels,
   wordCount,
   stats,
+  difficulty = null,
   initialPageIndex = 0,
   initialServerPrefs,
   chapter,
@@ -126,6 +129,7 @@ export default function Reader({
    *  верхней панели, без новых запросов к БД. */
   wordCount: number;
   stats: Stats;
+  difficulty?: TextDifficulty | null;
   initialPageIndex?: number;
   initialServerPrefs: ReaderPrefs | null;
   chapter: ChapterInfo | null;
@@ -137,6 +141,9 @@ export default function Reader({
 
   const [levels, setLevels] = useState(wordLevels);
   const lookupMemoRef = useRef(new Map<string, { wordTranslation: string; sentenceTranslation: string | null }>());
+  // Reading Engine R1: подсветка по словоформе — «walked» берёт уровень сохранённого «walk»,
+  // а точное совпадение (если слово сохранено именно в этой форме) всегда приоритетнее.
+  const formIndex = useMemo(() => createFormIndex(levels, sourceLang), [levels, sourceLang]);
   const [pageIndex, setPageIndex] = useState(() =>
     Math.min(Math.max(initialPageIndex, 0), pages.length - 1),
   );
@@ -769,6 +776,13 @@ export default function Reader({
                 </div>
               </section>
 
+              {difficulty && (
+                // Reading Engine R2: оценка, а не сертификация (см. src/lib/reading/difficulty.ts).
+                <p className="-mt-2 mb-4 px-1 text-xs text-[var(--text-secondary)]" data-testid="reader-difficulty">
+                  Оценка сложности: ≈ {difficulty.cefr} · {difficulty.newWords} из {difficulty.uniqueWords} слов ещё не в твоём словаре
+                </p>
+              )}
+
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 pb-4 text-[11px] text-[var(--text-secondary)] sm:text-xs">
                 {WORD_LEVELS.map((l) => (
                   <span key={l.level} className="flex items-center gap-1.5">
@@ -849,7 +863,7 @@ export default function Reader({
                     {pageTokens[localIdx].map((tok, ti) => {
                       if (!tok.isWord) return <span key={ti}>{tok.text}</span>;
 
-                      const info = levels[tok.text.toLowerCase()];
+                      const info = formIndex.find(tok.text)?.value;
                       const levelColor = info ? WORD_LEVELS[info.level]?.color : undefined;
                       const selected = isTokenSelected(si, ti);
 
