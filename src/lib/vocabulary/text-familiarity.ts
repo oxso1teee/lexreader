@@ -31,3 +31,30 @@ export function computeTextFamiliarity(body: string, knownHeadwords: string[]): 
 
   return { uniqueWordCount, knownWordCount, newWordCount, percentFamiliar };
 }
+
+export interface ExcerptToken {
+  text: string;
+  /** Слово, которого нет в словаре пользователя (подсвечивается). */
+  isNew: boolean;
+}
+
+/** Первые предложения текста (до maxChars) с пометкой новых слов — для
+ *  превью на First-text. Подсвечиваются только первые maxMarks новых
+ *  слов длиной от 4 букв (служебные "a/the/was" не интересны). */
+export function excerptWithNewWords(body: string, knownHeadwords: string[], maxChars = 140, maxMarks = 3): ExcerptToken[] {
+  const known = new Set(knownHeadwords.map((w) => w.toLowerCase()));
+  const out: ExcerptToken[] = [];
+  let used = 0;
+  let marks = 0;
+  for (const sentence of splitIntoSentences(body)) {
+    if (used > 0 && used + sentence.length > maxChars) break;
+    if (used > 0) out.push({ text: " ", isNew: false });
+    for (const token of tokenizeSentence(sentence)) {
+      const isNew = token.isWord && token.text.length >= 4 && marks < maxMarks && !known.has(token.text.toLowerCase());
+      if (isNew) marks++;
+      out.push({ text: token.text, isNew });
+    }
+    used += sentence.length + 1;
+  }
+  return out;
+}

@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import { Flame, Trophy, Zap } from "lucide-react";
+import { Trophy } from "lucide-react";
+import { ButtonLink } from "@/components/ui/button";
 import { getLanguageTwinUpdateAction, type LanguageTwinSessionUpdate } from "./actions";
 import { completeMissionAction } from "@/app/(app)/missions/actions";
 import { track } from "@/lib/posthog-client";
 import { StatusBadge, TrendIndicator, CategoryBadge } from "@/components/product/language-twin/badges";
 import type { PatternCategory, PatternStatus, Trend } from "@/lib/language-twin/types";
 import { cardClassName } from "@/components/ui/card";
-import { ReadingCompanion } from "@/components/product/mascot/reading-companion";
 import { useMoments } from "@/components/product/moments/moment-provider";
 import type { Moment } from "@/lib/moments/types";
 
@@ -38,6 +38,16 @@ function daysWord(n: number): string {
   return "дней";
 }
 
+// Искры вокруг маскота (макет: .sp с --dx/--dy).
+const SPARKS: CSSProperties[] = [
+  ["var(--sun)", -120, -80, 0],
+  ["var(--sky)", 120, -70, 0.2],
+  ["var(--ember)", -100, 60, 0.4],
+  ["var(--leaf)", 110, 70, 0.6],
+  ["var(--danger)", 0, -120, 0.8],
+  ["var(--sun)", -40, 110, 1],
+].map(([bg, dx, dy, d]) => ({ background: bg as string, ["--dx" as string]: `${dx}px`, ["--dy" as string]: `${dy}px`, animationDelay: `${d}s` }) as CSSProperties);
+
 function formatDuration(totalSec: number): string {
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
@@ -50,7 +60,6 @@ export default function SessionComplete({
   missionId = null,
   missionCorrectCount = 0,
   missionIncorrectCount = 0,
-  cards = [],
   xpEarned = 0,
   newWordsCount = 0,
   durationSec = 0,
@@ -67,10 +76,6 @@ export default function SessionComplete({
   missionId?: string | null;
   missionCorrectCount?: number;
   missionIncorrectCount?: number;
-  // Review mockup alignment — реальные слова этой сессии, переданные
-  // review-session.tsx (прямой родитель, cards уже было в его состоянии).
-  // front — язык изучения, back — родной (см. speak() в review-session.tsx).
-  cards?: { front: string; back: string }[];
   /** Сумма реально начисленного addXp() за сессию (review-session.tsx). */
   xpEarned?: number;
   /** Карточек, пройденных в первый раз (wasNew), за эту сессию. */
@@ -119,93 +124,93 @@ export default function SessionComplete({
   const streakUpMoment = queuedMoments.find((m): m is Moment & { kind: "streak_up" } => m.kind === "streak_up");
 
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center gap-3 px-5 text-center">
-      <div style={{ marginTop: -24 }}>
-        <ReadingCompanion size={120} withHalo={false} autoExcite={!reduceMotion} />
+    // Эталон: docs/moments/mockups/Result.dc.html.
+    <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col" style={{ paddingBottom: 120 }}>
+      <div style={{ position: "relative", height: 270, marginTop: 30, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {SPARKS.map((sp, i) => (
+          <span key={i} className="rs-sp" style={sp} aria-hidden="true" />
+        ))}
+        <div className="mo-rise">
+          <div className="rs-bob">
+            <svg viewBox="0 0 128 150" width="170" height="200" aria-hidden="true">
+              <ellipse cx="64" cy="128" rx="34" ry="9" fill="rgba(0,0,0,0.06)" />
+              <path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="var(--leaf)" />
+              <path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="var(--leaf-tint)" opacity="0.9" />
+              <ellipse cx="90" cy="100" rx="19" ry="12" fill="var(--ember)" transform="rotate(-28 90 100)" />
+              <ellipse cx="94" cy="96" rx="8" ry="5" fill="var(--sun)" transform="rotate(-28 94 96)" opacity="0.85" />
+            </svg>
+          </div>
+        </div>
       </div>
-      <motion.h1
-        initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", stiffness: 320, damping: 18 }}
-        className="font-display text-[22px] font-bold text-[var(--sun-text)]"
-      >
-        Занятие завершено!
-      </motion.h1>
-      <p className="text-[13px] text-[var(--text-secondary)]">
-        {newWordsCount > 0
-          ? `${wordCountLabel(newWordsCount)} ушли в повторение`
-          : `Ты повторил ${wordCountLabel(count)}`}
-      </p>
-      {newRecord && (
-        <p className="flex items-center gap-1.5 font-medium text-[var(--color-forest-text)]">
-          <Trophy aria-hidden="true" className="h-4 w-4" />
-          Новый личный рекорд сессии!
-        </p>
-      )}
 
-      {/* docs/moments/mockups/Result.dc.html — три плитки реальной статистики
-          сессии: Опыт (сумма addXp), Точность (из тэлли), Время (клиентский
-          таймер review-session.tsx). */}
-      <div className="mt-1 grid w-full max-w-sm grid-cols-3 gap-2">
-        <div className="overflow-hidden rounded-2xl border-2 border-[var(--sun)] bg-[var(--surface)] text-center">
-          <div className="bg-[var(--sun)] py-1.5 text-[11px] font-bold tracking-wide text-foreground uppercase">Опыт</div>
-          <div className="flex items-center justify-center gap-1 py-3 font-display text-lg font-bold text-[var(--sun-text)]">
-            <Zap aria-hidden="true" className="h-4 w-4" />
+      <div style={{ textAlign: "center", padding: "0 24px" }}>
+        <motion.h1
+          initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", stiffness: 320, damping: 18 }}
+          className="mo-disp"
+          style={{ margin: 0, fontSize: 28, lineHeight: 1.15, fontWeight: 900, color: "var(--sun-text)" }}
+        >
+          Занятие завершено!
+        </motion.h1>
+        <p className="mo-muted" style={{ margin: "8px 0 0", fontSize: 15 }}>
+          {newWordsCount > 0 ? `${wordCountLabel(newWordsCount)} ушли в повторение` : `Ты повторил ${wordCountLabel(count)}`}
+        </p>
+        {newRecord && (
+          <p className="mt-2 flex items-center justify-center gap-1.5 font-medium text-[var(--color-forest-text)]">
+            <Trophy aria-hidden="true" className="h-4 w-4" />
+            Новый личный рекорд сессии!
+          </p>
+        )}
+      </div>
+
+      {/* Три плитки реальной статистики сессии: Опыт (сумма addXp),
+          Точность (из тэлли), Время (клиентский таймер review-session.tsx). */}
+      <div style={{ display: "flex", gap: 10, padding: "24px 16px 0" }}>
+        <div className="rs-stat" style={{ ["--c" as string]: "var(--sun)", ["--t" as string]: "#1a1a1a", ["--v" as string]: "var(--sun-text)" } as CSSProperties}>
+          <div className="rs-stat-h">Опыт</div>
+          <div className="rs-stat-v">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="var(--sun)" stroke="var(--sun-edge)" strokeWidth="1.5" strokeLinejoin="round" />
+            </svg>
             {xpEarned}
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border-2 border-[var(--leaf)] bg-[var(--surface)] text-center">
-          <div className="bg-[var(--leaf)] py-1.5 text-[11px] font-bold tracking-wide text-white uppercase">Точность</div>
-          <div className="py-3 font-display text-lg font-bold text-[var(--color-forest-text)]">{accuracyPercent}%</div>
+        <div className="rs-stat" style={{ ["--c" as string]: "var(--leaf)", ["--t" as string]: "#fff", ["--v" as string]: "var(--leaf-text)" } as CSSProperties}>
+          <div className="rs-stat-h">Точность</div>
+          <div className="rs-stat-v">{accuracyPercent}%</div>
         </div>
-        <div className="overflow-hidden rounded-2xl border-2 border-[var(--sky)] bg-[var(--surface)] text-center">
-          <div className="bg-[var(--sky)] py-1.5 text-[11px] font-bold tracking-wide text-white uppercase">Время</div>
-          <div className="py-3 font-display text-lg font-bold text-[var(--sky-text)]">{formatDuration(durationSec)}</div>
+        <div className="rs-stat" style={{ ["--c" as string]: "#0b79b0", ["--t" as string]: "#fff", ["--v" as string]: "var(--sky-text)" } as CSSProperties}>
+          <div className="rs-stat-h">Время</div>
+          <div className="rs-stat-v">{formatDuration(durationSec)}</div>
         </div>
       </div>
 
       {/* Только когда серия действительно выросла за эту сессию (streak_up
-          среди собранных moments) — не декоративная карточка "на всякий
-          случай", как и остальные условные блоки на этом экране. */}
+          среди собранных moments). */}
       {streakUpMoment && (
-        <div
-          className={cardClassName({
-            className: "mt-1 flex w-full max-w-sm items-center gap-3 p-3 text-left",
-          })}
-          style={{ background: "var(--ember-tint)", borderColor: "var(--ember)" }}
-        >
-          <Flame aria-hidden="true" className="h-9 w-9 flex-none text-[var(--ember)]" />
+        <div className="mo-card" style={{ margin: "14px 16px 0", padding: "14px 16px", display: "flex", alignItems: "center", gap: 14, background: "var(--ember-tint)", borderColor: "var(--ember)" }}>
+          <div className="rs-flick" style={{ flex: "none" }}>
+            <svg viewBox="0 0 24 24" width="44" height="44" aria-hidden="true">
+              <path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 2 1 3 2 3 0-3-1-5 1-8z" fill="var(--ember)" />
+              <path d="M12 12c.6 2 3 3 3 5.5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3.5.2 1 .7 1.5 1.2 1.5 0-1.5-.4-2.5.3-3.5z" fill="var(--sun)" />
+            </svg>
+          </div>
           <div>
-            <p className="font-display text-base font-bold text-[var(--ember-text)]">
+            <div className="mo-disp" style={{ fontSize: 18, fontWeight: 700, color: "var(--ember-text)" }}>
               {streakUpMoment.streak} {daysWord(streakUpMoment.streak)} подряд
-            </p>
-            <p className="text-sm text-[var(--ember-text)]">
+            </div>
+            <div style={{ fontSize: 14, color: "var(--ember-text)", marginTop: 2 }}>
               {streakLongest > streakUpMoment.streak
                 ? `Стрик продлён. До рекорда ${streakLongest - streakUpMoment.streak} ${daysWord(streakLongest - streakUpMoment.streak)}`
                 : "Стрик продлён. Новый личный рекорд!"}
-            </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Review mockup alignment — список слов сессии (новый элемент). Все
-          переданные cards — то есть все реально оценённые в этой сессии
-          карточки (review-session.tsx передаёт ровно свой массив cards),
-          без выдумывания и без обрезки. max-h + overflow — просто защита от
-          неограниченно длинной страницы на большой сессии (20+ карточек),
-          не про данные. */}
-      {cards.length > 0 && (
-        <div className="mt-1 flex max-h-64 w-full max-w-sm flex-col gap-1.5 overflow-y-auto">
-          {cards.map((c, i) => (
-            <div key={i} className={cardClassName({ className: "rounded-xl px-3 py-2 text-left" })}>
-              <p className="text-[12.5px] font-bold">{c.front}</p>
-              <p className="text-[10.5px] text-[var(--text-secondary)]">{c.back}</p>
-            </div>
-          ))}
-        </div>
-      )}
       {twinUpdate && (
-        <div className={cardClassName({ className: "mt-1 flex flex-col items-center gap-1.5 p-3" })}>
+        <div className={cardClassName({ className: "mx-4 mt-3.5 flex flex-col items-center gap-1.5 p-3 text-center" })}>
           <p className="text-sm font-semibold">Мой английский обновлён</p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <CategoryBadge category={twinUpdate.category} />
@@ -216,26 +221,20 @@ export default function SessionComplete({
         </div>
       )}
       {missionId && missionDone && (
-        <Link
-          href={`/missions/${missionId}`}
-          className="mt-2 rounded-full border border-[var(--border-strong)] px-5 py-3 font-medium text-[var(--text-secondary)] hover:border-[var(--sky)]"
-        >
-          Посмотреть результат миссии →
+        <Link href={`/missions/${missionId}`} className="mo-link2">
+          Посмотреть результат миссии
         </Link>
       )}
-      {/* docs/moments/mockups/Result.dc.html — "Продолжить": собранные за
-          сессию moments уходят в общую очередь (MomentProvider, корневой
-          layout) прямо здесь, до навигации — очередь переживает переход на
-          /brain (портал рендерится на уровне layout, не этой страницы) и
-          доигрывает Perfect/Goal-done/Streak-up/... поверх уже открытого
-          /brain, как и задумано порядком показа в ROADMAP.md. */}
-      <Link
-        href="/brain"
-        onClick={() => pushMoments(queuedMoments)}
-        className="mt-4 rounded-full bg-[var(--color-forest)] px-5 py-3 font-medium text-white"
-      >
-        Продолжить
-      </Link>
+
+      {/* "Продолжить": собранные за сессию moments уходят в общую очередь
+          (MomentProvider, корневой layout) прямо здесь, до навигации —
+          очередь переживает переход на /brain и доигрывает Perfect/
+          Goal-done/Streak-up/... поверх уже открытого /brain. */}
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-5 pb-[calc(34px+env(safe-area-inset-bottom))] pt-[18px]" style={{ background: "var(--background)" }}>
+        <ButtonLink href="/brain" onClick={() => pushMoments(queuedMoments)} className="mo-cta">
+          Продолжить
+        </ButtonLink>
+      </div>
     </div>
   );
 }

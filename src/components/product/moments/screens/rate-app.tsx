@@ -9,6 +9,8 @@ import FeedbackForm from "@/app/(app)/settings/feedback-form";
 // (гейт в moment-provider.tsx) — 4-5 звёзд открывают нативный диалог
 // магазина (@capacitor-community/in-app-review), 1-3 — существующая
 // FeedbackForm (settings/feedback-form.tsx), без нового канала.
+const MOUTHS = ["M54 72q6 5 12 0", "M53 76q7-7 14 0", "M54 75q6-4 12 0", "M54 73h12", "M54 72q6 5 12 0", "M52 70q8 10 16 0"];
+
 const SAYS = [
   "Ты занимаешься уже 2 недели. Скажи честно",
   "Ой. Расскажи, что не так, мы исправим",
@@ -34,22 +36,27 @@ export function RateAppScreen({ onClose }: { moment: RateAppMoment; onClose: () 
   }
 
   return (
-    <MomentScreen title="Оцени LexReader" background="var(--surface)" foreground="var(--text-primary)" haptic="light" onClose={onClose} footer={null}>
-      <div className="mo-bob mx-auto w-fit">
+    <MomentScreen variant="sheet" title="Оцени LexReader" haptic="light" onClose={onClose} footerDelay={0} footer={null}>
+      {/* Эталон: docs/moments/mockups/Rate-app.dc.html — нижняя шторка поверх
+          приложения, маскот реагирует на каждую звезду. */}
+      <div className="na-bob" style={{ width: "fit-content", margin: "0 auto" }}>
+        <div key={n} className={n ? "ra-react" : undefined}>
         <svg viewBox="0 0 128 150" width={90} height={105} aria-hidden="true">
           <path d="M64 8C78 26 100 44 92 72C87 92 66 104 48 90C32 78 32 54 48 40C58 31 60 20 64 8Z" fill="var(--leaf)" />
           <path d="M60 46C70 58 76 68 68 82C63 90 50 90 44 81C39 73 43 61 51 53C55 50 57 48 60 46Z" fill="var(--leaf-tint)" opacity="0.9" />
           <ellipse cx="54" cy="62" rx="3.2" ry={n === 1 ? 3 : n === 5 ? 2.2 : 4.4} fill="var(--leaf-deep)" />
           <ellipse cx="66" cy="62" rx="3.2" ry={n === 1 ? 3 : n === 5 ? 2.2 : 4.4} fill="var(--leaf-deep)" />
+          <path d={MOUTHS[n]} fill="none" stroke="var(--leaf-deep)" strokeWidth="2.4" strokeLinecap="round" />
           <ellipse cx="90" cy="100" rx="19" ry="12" fill="var(--ember)" transform="rotate(-28 90 100)" />
           <ellipse cx="94" cy="96" rx="8" ry="5" fill="var(--sun)" transform="rotate(-28 94 96)" opacity="0.85" />
         </svg>
+        </div>
       </div>
-      <h1 className="mt-2 text-center text-[23px] font-black leading-tight">Как тебе LexReader?</h1>
-      <p className="mt-2 min-h-[22px] text-center text-[15px] text-[var(--text-secondary)]" aria-live="polite">
+      <h2 className="mo-disp" style={{ margin: "10px 0 0", textAlign: "center", fontSize: 23, lineHeight: 1.2, fontWeight: 900 }}>Как тебе LexReader?</h2>
+      <p className="mo-muted" style={{ margin: "8px 0 0", textAlign: "center", fontSize: 15, minHeight: 22 }} aria-live="polite">
         {SAYS[n]}
       </p>
-      <div className="mt-3 flex justify-center gap-1" role="radiogroup" aria-label="Оценка от 1 до 5">
+      <div className="mt-[14px] flex justify-center gap-1" role="radiogroup" aria-label="Оценка от 1 до 5">
         {[1, 2, 3, 4, 5].map((k) => (
           <button
             key={k}
@@ -60,10 +67,10 @@ export function RateAppScreen({ onClose }: { moment: RateAppMoment; onClose: () 
             onClick={() => setN(k)}
             className="flex h-[52px] w-[52px] items-center justify-center"
           >
-            <svg viewBox="0 0 24 24" width={46} height={46} aria-hidden="true">
+            <svg key={k <= n ? `on-${n}` : "off"} className={k <= n ? "ra-spop" : undefined} viewBox="0 0 24 24" width={46} height={46} aria-hidden="true">
               <path
                 d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5L2.6 9.3l6.5-.9z"
-                fill={k <= n ? "var(--sun)" : "#fff"}
+                fill={k <= n ? "var(--sun)" : "var(--surface)"}
                 stroke={k <= n ? "var(--sun-edge)" : "var(--border-strong)"}
                 strokeWidth={1.6}
                 strokeLinejoin="round"
@@ -75,7 +82,7 @@ export function RateAppScreen({ onClose }: { moment: RateAppMoment; onClose: () 
 
       <div className="mt-4">
         {n === 0 && (
-          <button type="button" disabled className="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-[var(--surface-muted)] px-5 font-bold text-[var(--text-secondary)]">
+          <button type="button" disabled className="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-[var(--surface-muted)] px-5 font-bold text-[var(--text-secondary)]" style={{ boxShadow: "inset 0 -4px 0 0 #d6cfc3" }}>
             Выбери оценку
           </button>
         )}
@@ -90,7 +97,7 @@ export function RateAppScreen({ onClose }: { moment: RateAppMoment; onClose: () 
             </button>
           ))}
         {n > 0 && n < 4 && <FeedbackForm />}
-        <button type="button" onClick={onClose} className="mt-3 block w-full text-center text-sm font-semibold text-[var(--text-secondary)] underline">
+        <button type="button" onClick={onClose} className="mo-link2">
           Не сейчас
         </button>
       </div>

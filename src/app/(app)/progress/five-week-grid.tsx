@@ -9,10 +9,11 @@ function isoDate(d: Date): string {
 }
 
 function levelClass(count: number): string {
+  // 5 ступеней, как в макете: пусто → светло-зелёный → … → тёмно-зелёный.
   if (count === 0) return "bg-[var(--surface-muted)]";
-  if (count <= 2) return "bg-[var(--color-forest-tint)]";
-  if (count <= 5) return "bg-[var(--color-forest-tint-strong)]";
-  return "bg-[var(--color-forest)]";
+  if (count <= 2) return "bg-[var(--leaf-tint-strong)]";
+  if (count <= 5) return "bg-[var(--leaf)]";
+  return "bg-[var(--leaf-edge)]";
 }
 
 export default function FiveWeekGrid({ counts }: { counts: Record<string, number> }) {
@@ -30,7 +31,7 @@ export default function FiveWeekGrid({ counts }: { counts: Record<string, number
     d.setUTCDate(d.getUTCDate() - (34 - i));
     const key = isoDate(d);
     const isFuture = d > todayUTC;
-    return { key, count: isFuture ? 0 : counts[key] ?? 0, isFuture };
+    return { key, count: isFuture ? 0 : counts[key] ?? 0, isFuture, isToday: d.getTime() === todayUTC.getTime() };
   });
 
   return (
@@ -40,7 +41,7 @@ export default function FiveWeekGrid({ counts }: { counts: Record<string, number
           <div
             key={cell.key}
             title={`${cell.key}: ${cell.count}`}
-            className={`h-[22px] rounded-[6px] ${cell.isFuture ? "border border-dashed border-[var(--border)]" : levelClass(cell.count)}`}
+            className={`h-[26px] rounded-[7px] ${cell.isToday && cell.count === 0 ? "border-2 border-dashed border-[var(--ember)]" : levelClass(cell.count)}`}
           />
         ))}
       </div>

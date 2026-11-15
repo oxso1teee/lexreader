@@ -72,7 +72,7 @@ export function AchievementScreen({ moment, onClose }: { moment: AchievementMome
                 position: "absolute",
                 inset: 0,
                 clipPath: "polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)",
-                background: "var(--sky-edge)",
+                background: "#075a85",
               }}
             />
             <div
@@ -80,7 +80,7 @@ export function AchievementScreen({ moment, onClose }: { moment: AchievementMome
                 position: "absolute",
                 inset: "10px 9px",
                 clipPath: "polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)",
-                background: "var(--sky)",
+                background: "#0b79b0",
                 overflow: "hidden",
                 display: "flex",
                 alignItems: "center",

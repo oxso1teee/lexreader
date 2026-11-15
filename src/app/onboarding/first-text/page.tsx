@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { computeTextFamiliarity } from "@/lib/vocabulary/text-familiarity";
+import { computeTextFamiliarity, excerptWithNewWords } from "@/lib/vocabulary/text-familiarity";
 import FirstTextView from "./first-text-view";
 
 // docs/moments/ROADMAP.md, этап 7 — First-text. Если для языка пользователя
@@ -28,10 +28,9 @@ export default async function FirstTextPage() {
     .eq("owner_id", profile.id)
     .eq("language", profile.target_language);
 
-  const familiarity = computeTextFamiliarity(
-    starterText.body,
-    (knownWords ?? []).map((w) => w.headword as string),
-  );
+  const headwords = (knownWords ?? []).map((w) => w.headword as string);
+  const familiarity = computeTextFamiliarity(starterText.body, headwords);
+  const excerpt = excerptWithNewWords(starterText.body, headwords);
 
   return (
     <FirstTextView
@@ -40,6 +39,7 @@ export default async function FirstTextPage() {
       levelTag={starterText.level_tag}
       wordCount={starterText.word_count}
       familiarity={familiarity}
+      excerpt={excerpt}
     />
   );
 }

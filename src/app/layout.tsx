@@ -52,6 +52,17 @@ const onest = localFont({
   display: "swap",
 });
 
+// Шрифт чтения (Source Serif 4, подмножество «Reading Serif 4» — см. src/app/fonts/README.md) —
+// глобально: макеты v7 используют его не только в читалке, но и в занятии,
+// карточках слов, моментах (docs/moments).
+const readingSerif = localFont({
+  src: "./fonts/ReadingSerif4-Variable.woff2",
+  weight: "200 900",
+  variable: "--font-reading",
+  display: "swap",
+  adjustFontFallback: "Times New Roman",
+});
+
 export const metadata: Metadata = {
   // Без metadataBase Next.js резолвит og:image/twitter:image относительно
   // http://localhost:3000 в прод-сборке (warning при build) — расшаренная
@@ -108,7 +119,7 @@ export default function RootLayout({
       // React ругался бы на расхождение серверного/клиентского HTML на
       // каждой загрузке (сервер не знает выбор темы устройства).
       suppressHydrationWarning
-      className={`${unbounded.variable} ${onest.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${unbounded.variable} ${onest.variable} ${readingSerif.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <Script id="theme-init" strategy="beforeInteractive">
