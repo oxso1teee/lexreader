@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { translateText } from "@/lib/translate";
+import { lookupCachedTranslation, normalizeTranslationKey } from "@/lib/translation-cache";
 import type { SupabaseServerClient } from "@/lib/supabase/server";
 import { captureServerException } from "@/lib/posthog-server";
 
@@ -31,33 +32,58 @@ export async function checkRateLimit(userId: string): Promise<boolean> {
   return data === true;
 }
 
+/**
+ * Только чтение кэша (без обращения к внешнему сервису и без rate-limit). Reading Engine R3:
+ * ключ нормализуется (см. translation-cache.ts), старые записи с точным текстом находятся как раньше.
+ */
+export async function peekCachedTranslation(
+  supabase: SupabaseServerClient,
+  text: string,
+  sourceLang: string,
+  targetLang: string,
+): Promise<string | null> {
+  return lookupCachedTranslation(text, async (sourceText) => {
+    const { data } = await supabase
+      .from("translations_cache")
+      .select("translation")
+      .eq("source_text", sourceText)
+      .eq("source_lang", sourceLang)
+      .eq("target_lang", targetLang)
+      .maybeSingle();
+    return data ? data.translation : null;
+  });
+}
+
+/** Как cachedTranslate, но сообщает, был ли ответ взят из кэша (для метрик попаданий). */
+export async function cachedTranslateWithStatus(
+  supabase: SupabaseServerClient,
+  text: string,
+  sourceLang: string,
+  targetLang: string,
+): Promise<{ translation: string; hit: boolean }> {
+  const cached = await peekCachedTranslation(supabase, text, sourceLang, targetLang);
+  if (cached !== null) return { translation: cached, hit: true };
+
+  const translation = await translateText(text, sourceLang, targetLang);
+
+  // P0-АУДИТ 3.1: запись в общий кэш переводов только через service_role —
+  // обычный пользователь не может вставить туда произвольный "перевод"
+  // напрямую через REST API. Ключ — нормализованный (R3), чтобы «Walked» и «walked» делили запись.
+  await createServiceClient()
+    .from("translations_cache")
+    .upsert(
+      { source_text: normalizeTranslationKey(text), source_lang: sourceLang, target_lang: targetLang, translation },
+      { onConflict: "source_text,source_lang,target_lang", ignoreDuplicates: true },
+    );
+
+  return { translation, hit: false };
+}
+
 export async function cachedTranslate(
   supabase: SupabaseServerClient,
   text: string,
   sourceLang: string,
   targetLang: string,
 ): Promise<string> {
-  const { data: cached } = await supabase
-    .from("translations_cache")
-    .select("translation")
-    .eq("source_text", text)
-    .eq("source_lang", sourceLang)
-    .eq("target_lang", targetLang)
-    .maybeSingle();
-
-  if (cached) return cached.translation;
-
-  const translation = await translateText(text, sourceLang, targetLang);
-
-  // P0-АУДИТ 3.1: запись в общий кэш переводов только через service_role —
-  // обычный пользователь не может вставить туда произвольный "перевод"
-  // напрямую через REST API.
-  await createServiceClient()
-    .from("translations_cache")
-    .upsert(
-      { source_text: text, source_lang: sourceLang, target_lang: targetLang, translation },
-      { onConflict: "source_text,source_lang,target_lang", ignoreDuplicates: true },
-    );
-
-  return translation;
+  return (await cachedTranslateWithStatus(supabase, text, sourceLang, targetLang)).translation;
 }
