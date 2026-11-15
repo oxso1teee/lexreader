@@ -7,7 +7,10 @@ export default defineConfig({
   reporter: [["list"]],
   globalSetup: "./e2e/global-setup.ts",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    // E2E_BASE_URL — прогон против изолированной сборки на другом порту
+    // (scripts/isolated-build.sh --start, по умолчанию :3200); без переменной —
+    // как раньше и как в CI: :3000.
+    baseURL: process.env.E2E_BASE_URL ?? "http://127.0.0.1:3000",
     trace: "retain-on-failure",
     // feat/page-transitions (PR #35) wraps every (app) route in a
     // fade+8px motion.div (src/app/(app)/template.tsx, 0.2s). An axe scan

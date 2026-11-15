@@ -1,0 +1,17 @@
+▸ Playwright (workers=1 из конфигурации) против http://127.0.0.1:3200
+[ensureDueCard] reused existing 'birds' flashcard 8a0b9a2e-c079-4df2-b12b-19cf600eac07
+
+Running 10 tests using 1 worker
+
+  ✓   1 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (21.3s)
+  ✓   2 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (29.0s)
+  ✓   3 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (27.3s)
+  ✓   4 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (33.3s)
+  ✓   5 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (21.8s)
+  ✓   6 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (14.3s)
+  ✓   7 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (27.9s)
+  ✓   8 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (19.2s)
+  ✓   9 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (24.6s)
+  ✓  10 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (17.4s)
+
+  10 passed (4.3m)

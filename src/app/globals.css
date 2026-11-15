@@ -2,6 +2,8 @@
 @import "../styles/tokens.css";
 @import "../styles/button.css";
 @import "../styles/card.css";
+@import "../styles/ui.css";
+@import "../styles/layout.css";
 @import "../styles/mascot.css";
 @import "../styles/cover.css";
 @import "../styles/reader.css";
@@ -53,9 +55,9 @@
 }
 
 :root[data-theme="dark"] {
-  --background: #14120f;
-  --foreground: #f0ece3;
-  --card: #201d29;
+  --background: #131316;
+  --foreground: #f3f1ec;
+  --card: #1c1c20;
 }
 
 body {

@@ -12,6 +12,9 @@ import { collectMoments } from "@/lib/moments/collect";
 import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
 import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import { awardPerfectWeekIfEligible } from "@/lib/moments/perfect-week-award";
+import { checkOvertaken } from "@/lib/moments/overtaken";
+import { maybeFirstWinMoments } from "@/lib/moments/first-win";
+import { checkChapterDone } from "@/lib/moments/chapter-done";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
 import type { ReaderPrefs } from "./reader-prefs";
@@ -216,6 +219,7 @@ export async function finishReading(input: {
   const goalWeek = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
   const streakWeek = streakTransition ? await fetchStreakWeekMarks(supabase, user.id) : [];
   const perfectWeek = xpResult ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
+  const overtaken = xpResult ? await checkOvertaken(supabase, user.id) : [];
   const moments = collectMoments({
     xp: xpResult
       ? {
@@ -233,7 +237,23 @@ export async function finishReading(input: {
     today: todayUtcIso(),
   });
 
-  return { moments: [...moments, ...perfectWeek.moments] };
+  // docs/moments/ROADMAP.md, этап 6 — Friend-streak, см. комментарий в
+  // review/actions.ts::reviewWord().
+  const firstWin = await maybeFirstWinMoments(supabase, user.id);
+  // docs/moments/ROADMAP.md, этап 4 — Chapter-done. Проверяется после
+  // updateTextProgress() уже отметил percent_read=100 (клиент читалки
+  // вызывает её на каждой смене страницы, раньше finishReading()).
+  const chapterDone = await checkChapterDone(supabase, user.id, input.textId, startedAt, endedAt);
+  return {
+    moments: [
+      ...moments,
+      ...perfectWeek.moments,
+      ...(streakTransition?.friendStreaks ?? []),
+      ...overtaken,
+      ...firstWin,
+      ...(chapterDone ? [chapterDone] : []),
+    ],
+  };
 }
 
 // M3 Slice 3 §8: profiles.reader_settings — account-synced on top of the

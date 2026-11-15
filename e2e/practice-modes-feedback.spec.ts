@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { login } from "./helpers";
+import { login, waitForHydration } from "./helpers";
 
 // M3 Slice 4.1: Choice/Type/Match used to signal correct/incorrect purely
 // via border/background color (an a11y gap — color-blind or screen-reader
@@ -135,6 +135,8 @@ test("Match mode: mismatched pairs differ by more than color (icon + aria-live)"
     const wordButtons = page.locator(".grid.flex-1.grid-cols-2 > div:nth-child(1) > button");
     const translationButtons = page.locator(".grid.flex-1.grid-cols-2 > div:nth-child(2) > button");
     await expect(wordButtons.first()).toBeVisible({ timeout: 10_000 });
+    // SSR отдаёт кнопки раньше гидратации; клик до неё теряется без следа.
+    await waitForHydration(wordButtons);
 
     const liveRegion = page.locator('[role="status"][aria-live="polite"]');
 

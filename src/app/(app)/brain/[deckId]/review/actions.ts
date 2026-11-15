@@ -21,6 +21,8 @@ import { collectMoments, type CollectMomentsInput } from "@/lib/moments/collect"
 import { fetchGoalWeekMarks } from "@/lib/moments/week-query";
 import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import { awardPerfectWeekIfEligible } from "@/lib/moments/perfect-week-award";
+import { checkOvertaken } from "@/lib/moments/overtaken";
+import { maybeFirstWinMoments } from "@/lib/moments/first-win";
 import { minutesHintForGoal } from "@/lib/daily-goal";
 import type { Moment } from "@/lib/moments/types";
 // docs/moments/mockups/Perfect.dc.html — "+10 XP бонус за чистое занятие".
@@ -251,6 +253,7 @@ export async function reviewWord(
   const goalWeek = xpResult ? await fetchGoalWeekMarks(supabase, user.id) : [];
   const streakWeek = streakTransition ? await fetchStreakWeekMarks(supabase, user.id) : [];
   const perfectWeek = xpResult ? await awardPerfectWeekIfEligible(supabase, user.id) : { moments: [] };
+  const overtaken = xpResult ? await checkOvertaken(supabase, user.id) : [];
 
   let wordMastered: CollectMomentsInput["wordMastered"] = null;
   if (learningTransition && learningTransition.before !== "maintenance" && learningTransition.after === "maintenance") {
@@ -296,7 +299,14 @@ export async function reviewWord(
     today: todayUtcIso(),
   });
 
-  return { reviewLogId: logRow?.id ?? null, moments: [...moments, ...perfectWeek.moments], xpAwarded: xpResult ? 1 : 0, isNewCard: wasNew };
+  return {
+    reviewLogId: logRow?.id ?? null,
+    // docs/moments/ROADMAP.md, этап 6 — Friend-streak уже полностью собран
+    // в touchStreak() (нужен RPC-вызов, не влезает в чистую collectMoments).
+    moments: [...moments, ...perfectWeek.moments, ...(streakTransition?.friendStreaks ?? []), ...overtaken, ...(await maybeFirstWinMoments(supabase, user.id))],
+    xpAwarded: xpResult?.awarded ?? 0,
+    isNewCard: wasNew,
+  };
 }
 
 export async function awardPerfectBonus(cardCount: number, durationSec: number): Promise<{ moments: Moment[] }> {
@@ -332,7 +342,7 @@ export async function awardPerfectBonus(cardCount: number, durationSec: number):
     id: `perfect:${Date.now()}`,
     cardCount,
     durationSec,
-    bonusXp: PERFECT_SESSION_BONUS_XP,
+    bonusXp: xpResult.awarded,
   };
 
   return { moments: [perfectMoment, ...extraMoments] };
@@ -372,7 +382,7 @@ export async function awardComboBonus(): Promise<{ xpAwarded: number; moments: M
     today: todayUtcIso(),
   });
 
-  return { xpAwarded: COMBO_BONUS_XP, moments };
+  return { xpAwarded: xpResult.awarded, moments };
 }
 
 export async function getStreakInfo(): Promise<{ current: number; longest: number }> {

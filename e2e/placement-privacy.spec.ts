@@ -20,7 +20,6 @@ test("analytics: Onboarding + Placement v2 track()/captureServerEvent() calls ne
     "src/app/onboarding/placement/actions.ts",
     "src/app/onboarding/placement/page.tsx",
     "src/app/onboarding/result/result-view.tsx",
-    "src/app/onboarding/result/actions.ts",
     "src/app/(app)/learning-paths/actions.ts",
   ];
 

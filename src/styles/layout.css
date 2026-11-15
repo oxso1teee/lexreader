@@ -1,0 +1,84 @@
+/* Phase 1 — адаптивная основа. Точки перехода — стандартные брейкпоинты
+   Tailwind (изменять их нельзя: на них завязан app-shell и e2e):
+
+     mobile   < 768px   нижняя навигация, одна колонка, шиты снизу
+     tablet   768–1023  боковая навигация (md:), 1–2 колонки
+     desktop  ≥ 1024    боковая навигация, до 3 колонок, диалоги по центру
+
+   Ширина контента задаётся ролью, а не числом: page-reading (формы,
+   настройки, читалка — одна колонка), page-content (списки, дашборды
+   средней плотности), page-wide (--container-dashboard, многоколоночные
+   экраны вроде desktop-«Сегодня»). Внутренние горизонтальные поля —
+   16px на mobile, 24px на tablet+, нижний отступ учитывает safe-area. */
+@layer components {
+  .page-reading,
+  .page-content,
+  .page-wide {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: 1rem;
+    padding-block: 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 768px) {
+    .page-reading,
+    .page-content,
+    .page-wide {
+      padding-inline: 1.5rem;
+      padding-block: 1.5rem 2rem;
+    }
+  }
+
+  .page-reading {
+    max-width: var(--container-reading);
+  }
+  .page-content {
+    max-width: var(--container-content);
+  }
+  .page-wide {
+    max-width: var(--container-dashboard);
+  }
+
+  /* Сетка карточек: количество колонок определяет ширина контейнера, а не
+     брейкпоинт — одинаково работает и в основной колонке, и в боковой
+     панели. --cards-min — минимальная ширина карточки. */
+  .cards-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--cards-min, 16rem)), 1fr));
+  }
+
+  /* Основная колонка + боковая панель: на mobile/tablet — стопкой, на
+     desktop — 2:1 (desktop-макеты D-Today, D-Progress, D-Practice). */
+  .split-main-aside {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .split-main-aside {
+      grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
+      gap: 1.5rem;
+    }
+  }
+
+  /* Закреплённая панель главного действия (dock макетов): кнопка у
+     большого пальца. На tablet+ действия выравниваются вправо в строку. */
+  .action-dock {
+    position: sticky;
+    bottom: 0;
+    z-index: var(--z-nav);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: var(--background);
+    border-top: 1px solid var(--border);
+  }
+  @media (min-width: 768px) {
+    .action-dock {
+      flex-direction: row;
+      justify-content: flex-end;
+      padding-bottom: 0.75rem;
+    }
+  }
+}

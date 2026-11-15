@@ -14,6 +14,9 @@ import { weekMarks } from "@/lib/week-marks";
 import { fetchStreakWeekMarks } from "@/lib/moments/streak-week-query";
 import TodayView from "@/components/product/today/v7/today-view";
 import TodayEveningGate from "@/components/product/today/v7/today-evening-gate";
+import { getDailyQuestsSnapshot } from "@/lib/daily-quests";
+import { DailyQuestsCard } from "@/components/product/quests/daily-quests-card";
+import { DoubleXpChip } from "@/components/product/quests/double-xp-chip";
 import InstallBanner from "./install-banner";
 import TodayAnalytics from "./today-analytics";
 import type { MissionRow, MissionType } from "@/lib/missions/types";
@@ -109,6 +112,7 @@ export default async function HomePage() {
     { data: activityReviews },
     { data: activityDayToday },
     activePathState,
+    dailyQuestsSnapshot,
   ] = await Promise.all([
     getDueCount(supabase, profile.id, profile.target_language),
     supabase
@@ -143,6 +147,7 @@ export default async function HomePage() {
     // (activity_days), не в новых словах (vocabulary_items).
     supabase.from("activity_days").select("xp").eq("user_id", profile.id).eq("day", todayStartUtc().slice(0, 10)).maybeSingle(),
     getActivePathStateAction(),
+    getDailyQuestsSnapshot(supabase, profile.id, profile.target_language),
   ]);
 
   const continuingRow = continueRows?.[0] as
@@ -324,6 +329,21 @@ export default async function HomePage() {
       reviewHref={heroCardData.href}
       reviewMinutesHint={extractMinutesHint(heroCardData.meta)}
     >
+      {profile.xp_boost_until && (
+        <div className="mx-auto flex max-w-md justify-end px-5 pt-3">
+          <DoubleXpChip boostUntil={profile.xp_boost_until} />
+        </div>
+      )}
+      {!(dailyQuestsSnapshot.allComplete && dailyQuestsSnapshot.chestClaimedToday) && (
+        <div className="mx-auto w-full max-w-md px-5 pt-3">
+          <DailyQuestsCard
+            defs={dailyQuestsSnapshot.defs}
+            progress={dailyQuestsSnapshot.progress}
+            allComplete={dailyQuestsSnapshot.allComplete}
+            chestClaimedToday={dailyQuestsSnapshot.chestClaimedToday}
+          />
+        </div>
+      )}
       <TodayView
         analytics={
           <TodayAnalytics

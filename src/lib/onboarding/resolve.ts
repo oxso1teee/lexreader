@@ -29,6 +29,7 @@ export async function resolveOnboardingUrl(supabase: SupabaseServerClient, profi
       : null,
     hasActiveEnrollment: activeEnrollment !== null,
     completedFirstWin: false,
+    streakGoalSet: profile.streak_goal_days !== null,
   });
 
   switch (derived.step) {
@@ -41,6 +42,8 @@ export async function resolveOnboardingUrl(supabase: SupabaseServerClient, profi
       return "/onboarding/placement";
     case "result":
       return "/onboarding/result";
+    case "first_text":
+      return "/onboarding/first-text";
     case "first_action": {
       if (!activeEnrollment) return "/onboarding/result"; // defensive, shouldn't happen
       const path = getPath(activeEnrollment.path_slug);

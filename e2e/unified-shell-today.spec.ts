@@ -12,10 +12,11 @@ test("navigation: active route gets aria-current, others do not", async ({ page 
 
   const todayLinks = page.locator('a[href="/home"][aria-current="page"]');
   await expect(todayLinks.first()).toBeVisible();
-  await expect(page.locator('a[href="/library"][aria-current="page"]')).toHaveCount(0);
+  await expect(page.locator('a[href="/progress"][aria-current="page"]')).toHaveCount(0);
 
-  await page.goto("/library");
-  await expect(page.locator('a[href="/library"][aria-current="page"]').first()).toBeVisible();
+  // /library больше не пункт навигации (stage 8: Сегодня/Учиться/Практика/Прогресс/Профиль).
+  await page.goto("/progress");
+  await expect(page.locator('a[href="/progress"][aria-current="page"]').first()).toBeVisible();
   await expect(page.locator('a[href="/home"][aria-current="page"]')).toHaveCount(0);
 });
 

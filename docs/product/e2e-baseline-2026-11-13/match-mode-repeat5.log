@@ -1,0 +1,12 @@
+▸ Playwright (workers=1 из конфигурации) против http://127.0.0.1:3200
+[ensureDueCard] reused existing 'birds' flashcard 9fcb33cc-8072-491c-83e7-e5817b9108b1
+
+Running 5 tests using 1 worker
+
+  ✓  1 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (4.7s)
+  ✓  2 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (5.2s)
+  ✓  3 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (5.1s)
+  ✓  4 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (4.6s)
+  ✓  5 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (5.0s)
+
+  5 passed (29.5s)

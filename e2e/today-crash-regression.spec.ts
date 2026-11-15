@@ -54,11 +54,9 @@ test("Today renders successfully for an authenticated user with no Learning Path
   // any CI run landing between 00:00-04:59 UTC failed here on a real
   // "Доброй ночи!" greeting the test simply never recognized as valid.
   await expect(
-    page
-      .getByText("Добрый день!")
-      .or(page.getByText("Доброе утро!"))
-      .or(page.getByText("Добрый вечер!"))
-      .or(page.getByText("Доброй ночи!")),
+    // Только заголовок: getByText ловит ещё и route announcer (role="alert")
+    // с тем же текстом — strict mode violation.
+    page.getByRole("heading", { name: /^(Добрый день|Доброе утро|Добрый вечер|Доброй ночи)!$/ }),
   ).toBeVisible();
 });
 

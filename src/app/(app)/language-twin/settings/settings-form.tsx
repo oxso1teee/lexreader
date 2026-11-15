@@ -6,6 +6,7 @@ import { RotateCw, Compass, Download, Trash2 } from "lucide-react";
 import { track } from "@/lib/posthog-client";
 import { Button, ButtonLink, buttonClassName } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { toast } from "@/lib/ui/toast";
 import Dialog from "@/components/product/language-twin/dialog";
 import type { LanguageTwinSettings } from "@/lib/language-twin/types";
 import { resetLanguageTwinAction, updateSettingsAction, recomputeAction } from "../actions";
@@ -38,7 +39,6 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirmingReset, setConfirmingReset] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
 
   function toggleEnabled(v: boolean) {
     track(v ? "language_twin_enabled" : "language_twin_disabled", {});
@@ -50,7 +50,7 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
   function handleRecompute() {
     startTransition(async () => {
       const res = await recomputeAction();
-      setToast(res.ok ? "Профиль пересчитан" : (res.error ?? "Ошибка"));
+      toast.fromResult(res, { success: "Профиль пересчитан", fallbackError: "Не удалось пересчитать профиль" });
     });
   }
   function handleReset() {
@@ -134,11 +134,6 @@ export default function SettingsForm({ settings }: { settings: LanguageTwinSetti
             Сбросить Language Twin
           </Button>
         </div>
-        {toast && (
-          <p role="status" className="mt-2 text-xs text-[var(--text-secondary)]">
-            {toast}
-          </p>
-        )}
       </Card>
 
       {confirmingReset && (

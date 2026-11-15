@@ -1,0 +1,199 @@
+▸ Playwright (workers=1 из конфигурации) против http://127.0.0.1:3200
+[ensureDueCard] created new 'birds' flashcard 9fcb33cc-8072-491c-83e7-e5817b9108b1
+
+Running 115 tests using 1 worker
+
+  ✓    1 [chromium] › e2e/account-delete-export.spec.ts:69:5 › deleting an account cascades across every user-owned table, not just auth.users (14.3s)
+  ✓    2 [chromium] › e2e/account-delete-export.spec.ts:194:5 › /api/export/data and /api/export/vocabulary return only the requesting user's own data (7.4s)
+  ✓    3 [chromium] › e2e/account-delete-export.spec.ts:280:5 › /api/export/data and /api/export/vocabulary reject an unauthenticated request (184ms)
+  ✓    4 [chromium] › e2e/add-material.spec.ts:15:5 › Add Material: text tab creates a real material and redirects to the Reader (2.8s)
+  ✓    5 [chromium] › e2e/add-material.spec.ts:34:5 › Add Material: text tab rejects an empty and a too-short body honestly (2.1s)
+  ✓    6 [chromium] › e2e/add-material.spec.ts:46:5 › Add Material: URL tab rejects a malformed URL without a server round trip (1.6s)
+  ✓    7 [chromium] › e2e/add-material.spec.ts:56:5 › Add Material: submit button disables while pending, preventing a duplicate submit (2.0s)
+  ✓    8 [chromium] › e2e/add-material.spec.ts:68:5 › Add Material: all 5 tabs from the approved artifact are present and switchable (2.1s)
+  ✓    9 [chromium] › e2e/add-material.spec.ts:77:5 › Add Material: Файл tab offers PDF/Фото sub-choice, both honestly labeled (2.3s)
+  ✓   10 [chromium] › e2e/auth.spec.ts:4:5 › login with correct credentials redirects to home (1.4s)
+  ✓   11 [chromium] › e2e/auth.spec.ts:9:5 › login with wrong password shows a generic error (648ms)
+  ✓   12 [chromium] › e2e/auth.spec.ts:17:5 › login with non-existent email shows the same generic error (no user enumeration) (445ms)
+  ✓   13 [chromium] › e2e/auth.spec.ts:27:5 › password reset request shows a generic confirmation message (537ms)
+  ✓   14 [chromium] › e2e/auth.spec.ts:42:5 › a failed login attempt does not consume the password-reset bucket for the same email (941ms)
+  ✓   15 [chromium] › e2e/auth.spec.ts:66:5 › password reset completion: follow real link, set new password, log in with it (4.7s)
+  ✓   16 [chromium] › e2e/brain-notebook.spec.ts:4:5 › brain flow: create deck, add flashcard manually (2.2s)
+  ✓   17 [chromium] › e2e/brain-notebook.spec.ts:40:5 › notebook flow: manually add a word without a source text (1.7s)
+  ✓   18 [chromium] › e2e/brain-undo-rename.spec.ts:11:5 › Undo restores the previous grade and returns to a question screen (2.1s)
+  ✓   19 [chromium] › e2e/brain-undo-rename.spec.ts:36:5 › Deck rename persists and default/starter decks hide the delete button (3.6s)
+  ✓   20 [chromium] › e2e/duel-privacy.spec.ts:30:5 › vocabulary duels: correct_answer is masked until resolved, timing is server-enforced, only participants can act (4.6s)
+  ✓   21 [chromium] › e2e/extension-translate-and-save.spec.ts:21:5 › api/extension/translate-and-save: full round trip — create token via /settings UI, tap-translate-save a real word, verify it lands tagged 'extension' with its context (4.4s)
+  ✓   22 [chromium] › e2e/language-twin-privacy.spec.ts:13:5 › analytics: Language Twin track() calls never pass sentence/word/evidence content, only enums/counts/booleans (21ms)
+  ✓   23 [chromium] › e2e/language-twin-privacy.spec.ts:54:7 › /language-twin has no serious/critical axe violations (2.8s)
+  ✓   24 [chromium] › e2e/language-twin-privacy.spec.ts:54:7 › /language-twin/patterns has no serious/critical axe violations (2.5s)
+  ✓   25 [chromium] › e2e/language-twin-privacy.spec.ts:54:7 › /language-twin/evidence has no serious/critical axe violations (2.1s)
+  ✓   26 [chromium] › e2e/language-twin-privacy.spec.ts:54:7 › /language-twin/recommendations has no serious/critical axe violations (2.5s)
+  ✓   27 [chromium] › e2e/language-twin-privacy.spec.ts:54:7 › /language-twin/correction has no serious/critical axe violations (2.1s)
+  ✓   28 [chromium] › e2e/language-twin-privacy.spec.ts:54:7 › /language-twin/diagnostic has no serious/critical axe violations (2.1s)
+  ✓   29 [chromium] › e2e/language-twin-privacy.spec.ts:54:7 › /language-twin/settings has no serious/critical axe violations (2.5s)
+  ✓   30 [chromium] › e2e/leaderboard-privacy.spec.ts:39:5 › weekly leaderboard: opt-in is required to appear, only initials+aggregates ever leak, opting out removes you (3.0s)
+  ✓   31 [chromium] › e2e/learning-paths-privacy.spec.ts:18:5 › analytics: Learning Paths track()/captureServerEvent() calls never pass lesson/question/evidence content, only enums/counts/booleans (10ms)
+  ✓   32 [chromium] › e2e/learning-paths-privacy.spec.ts:39:5 › analytics: LearningPathsViewTracker props never pass lesson content, only enums (8ms)
+  ✓   33 [chromium] › e2e/learning-paths-privacy.spec.ts:65:7 › /learning-paths has no serious/critical axe violations (2.9s)
+  ✓   34 [chromium] › e2e/learning-paths-privacy.spec.ts:65:7 › /learning-paths/a2-b1 has no serious/critical axe violations (2.2s)
+  ✓   35 [chromium] › e2e/library.spec.ts:9:5 › Library search filters the real grid and updates the URL, without sending the query to PostHog (2.0s)
+  ✓   36 [chromium] › e2e/library.spec.ts:28:5 › Library search with no matches shows the honest no-results state (1.5s)
+  ✓   37 [chromium] › e2e/library.spec.ts:35:5 › Library filters map onto real fields: Видео shows only youtube materials, Завершённые only percent_read>=100 (3.1s)
+  ✓   38 [chromium] › e2e/library.spec.ts:51:5 › Library material count in the header reflects real data, not a placeholder (1.3s)
+  ✓   39 [chromium] › e2e/library.spec.ts:57:5 › YouTube material renders a real thumbnail image, not just a gradient placeholder (1.3s)
+  ✓   40 [chromium] › e2e/library.spec.ts:68:5 › no horizontal overflow on Library at 360px (1.0s)
+  ✓   41 [chromium] › e2e/missions-privacy.spec.ts:13:5 › analytics: Missions track() calls never pass mission/question/word content, only enums/counts/booleans (18ms)
+  ✓   42 [chromium] › e2e/missions-privacy.spec.ts:41:7 › /missions has no serious/critical axe violations (2.5s)
+  ✓   43 [chromium] › e2e/missions-privacy.spec.ts:41:7 › /missions/history has no serious/critical axe violations (2.1s)
+  ✓   44 [chromium] › e2e/onboarding-orphan-recovery.spec.ts:15:5 › orphaned auth user (no profiles row) recovers via the onboarding form instead of looping (1.3s)
+  ✓   45 [chromium] › e2e/payment.spec.ts:9:5 › pricing page shows plans and local dev fallback works without Stripe keys (2.4s)
+  -   46 [chromium] › e2e/payment.spec.ts:44:5 › real Stripe checkout session redirects to Stripe (requires STRIPE_SECRET_KEY)
+  ✘   47 [chromium] › e2e/pdf-import.spec.ts:63:5 › PDF import: a real PDF with a text layer is extracted, saved as a texts row, and opens in the Reader (10.4s)
+  ✓   48 [chromium] › e2e/pdf-import.spec.ts:122:5 › PDF import: a file that is not a real PDF is rejected client-side and nothing is saved (2.5s)
+  ✓   49 [chromium] › e2e/placement-privacy.spec.ts:17:5 › analytics: Onboarding + Placement v2 track()/captureServerEvent() calls never pass question/answer content, only enums/counts/booleans (29ms)
+  ✓   50 [chromium] › e2e/practice-brain-a11y.spec.ts:22:5 › Practice Home has no serious/critical axe violations on desktop (2.8s)
+  ✓   51 [chromium] › e2e/practice-brain-a11y.spec.ts:31:5 › Practice Home has no serious/critical axe violations on mobile (390px) (2.5s)
+  ✓   52 [chromium] › e2e/practice-brain-a11y.spec.ts:40:5 › Vocabulary (Words tab) has no serious/critical axe violations on desktop (2.5s)
+  ✓   53 [chromium] › e2e/practice-brain-a11y.spec.ts:49:5 › Vocabulary (Decks tab) has no serious/critical axe violations, incl. the New Deck modal (3.1s)
+  ✓   54 [chromium] › e2e/practice-brain-a11y.spec.ts:65:5 › Vocabulary has no serious/critical axe violations on mobile (390px) (3.1s)
+  ✓   55 [chromium] › e2e/practice-brain-a11y.spec.ts:74:5 › Word/Phrase Detail page has no serious/critical axe violations (2.3s)
+  ✓   56 [chromium] › e2e/practice-brain-a11y.spec.ts:91:5 › Review Session has no serious/critical axe violations on desktop, question and revealed states (3.3s)
+  ✓   57 [chromium] › e2e/practice-brain-a11y.spec.ts:123:5 › Review Session has no serious/critical axe violations on mobile (390px) (2.5s)
+  ✓   58 [chromium] › e2e/practice-brain-a11y.spec.ts:134:5 › Review Session is keyboard-navigable: Space reveals, Escape with nothing graded exits without a confirm (1.7s)
+  ✓   59 [chromium] › e2e/practice-brain-a11y.spec.ts:160:5 › Review Session keyboard shortcuts don't fire while editing a card (1.8s)
+  ✓   60 [chromium] › e2e/practice-brain-a11y.spec.ts:176:5 › Deck Details page has no serious/critical axe violations (2.9s)
+  ✓   61 [chromium] › e2e/practice-brain-a11y.spec.ts:188:5 › analytics: Slice 4 Practice/Brain/Review track() calls never pass user content, only enums/routes/booleans (21ms)
+  ✓   62 [chromium] › e2e/practice-modes-feedback.spec.ts:48:5 › Choice mode: correct/incorrect differ by more than color (icon, label, aria-live) (4.3s)
+  ✓   63 [chromium] › e2e/practice-modes-feedback.spec.ts:101:5 › Type mode: correct/incorrect differ by more than color (icon, label, aria-live) (4.5s)
+  ✓   64 [chromium] › e2e/practice-modes-feedback.spec.ts:126:5 › Match mode: mismatched pairs differ by more than color (icon + aria-live) (4.4s)
+  ✓   65 [chromium] › e2e/reader-library-a11y.spec.ts:9:5 › Library has no serious/critical axe violations on desktop (2.7s)
+  ✓   66 [chromium] › e2e/reader-library-a11y.spec.ts:19:5 › Library has no serious/critical axe violations on mobile (390px) (2.2s)
+  ✓   67 [chromium] › e2e/reader-library-a11y.spec.ts:29:5 › Reader has no serious/critical axe violations on desktop, with the word panel open (4.7s)
+  ✓   68 [chromium] › e2e/reader-library-a11y.spec.ts:42:5 › Reader has no serious/critical axe violations on mobile (390px), with the bottom sheet open (3.0s)
+  ✓   69 [chromium] › e2e/reader-library-a11y.spec.ts:58:5 › Reader is keyboard-navigable and Escape closes the word panel (2.3s)
+  -   70 [chromium] › e2e/reader-library-a11y.spec.ts:69:5 › Reader keyboard shortcuts don't fire while typing in the manual-translation input
+  ✓   71 [chromium] › e2e/reader-library-a11y.spec.ts:86:5 › analytics: Reader/Library track() calls never pass user content, only enums/routes/booleans (31ms)
+  ✓   72 [chromium] › e2e/reader-practice-bridge.spec.ts:10:5 › Practice Bridge: saving a word reveals a real learning-state chip and a working Practice CTA (2.7s)
+  ✓   73 [chromium] › e2e/reader-practice-bridge.spec.ts:36:5 › Reader word lookup is keyboard-accessible (Enter opens the panel, not just a pointer tap) (3.3s)
+  ✓   74 [chromium] › e2e/reading.spec.ts:4:5 › reading flow: open text, tap word, translate, change level, finish (3.0s)
+  ✓   75 [chromium] › e2e/review-session-persistence.spec.ts:37:5 › review 'cards' mode: grading a due card persists srs_state + review_log and removes it from the queue (3.1s)
+  ✓   76 [chromium] › e2e/rls-cross-user-isolation.spec.ts:60:5 › a second user cannot read or write another user's subscriptions/texts/vocabulary_items/decks/flashcards via a direct Supabase client (3.2s)
+  ✓   77 [chromium] › e2e/rls-cross-user-isolation.spec.ts:186:5 › free user deck limit enforced at DB level via direct PostgREST (1.5s)
+  ✓   78 [chromium] › e2e/rls-cross-user-isolation.spec.ts:227:5 › free user flashcard limit enforced at DB level via direct PostgREST (1.7s)
+  ✓   79 [chromium] › e2e/rls-cross-user-isolation.spec.ts:316:5 › update triggers for free tier limits: is_starter and owner_id changes (2.6s)
+  ✓   80 [chromium] › e2e/rls-cross-user-isolation.spec.ts:458:5 › premium user unlimited via direct PostgREST (2.0s)
+  ✓   81 [chromium] › e2e/today-crash-regression.spec.ts:42:5 › Today renders successfully for an authenticated user with no Learning Paths enrollment (empty state) (864ms)
+
+  ✓   82 [chromium] › e2e/today-crash-regression.spec.ts:63:5 › Today renders successfully for an authenticated user with a real active Mission (hero slot) (1.5s)
+  ✓   83 [chromium] › e2e/translate-rate-limit-race.spec.ts:25:5 › check_translate_rate_limit allows exactly the limit — never more — under real concurrent load (157ms)
+  ✓   84 [chromium] › e2e/unified-shell-a11y.spec.ts:7:5 › Today has no serious/critical axe violations on desktop (2.3s)
+  ✓   85 [chromium] › e2e/unified-shell-a11y.spec.ts:17:5 › Today has no serious/critical axe violations on mobile (390px) (2.3s)
+  ✓   86 [chromium] › e2e/unified-shell-a11y.spec.ts:27:5 › Today is keyboard-navigable: Tab reaches the primary CTA and nav links (2.1s)
+  ✓   87 [chromium] › e2e/unified-shell-a11y.spec.ts:46:5 › visible focus outline is applied on nav links via real keyboard navigation (1.2s)
+  ✓   88 [chromium] › e2e/unified-shell-a11y.spec.ts:65:5 › analytics: track() calls added in this slice never pass user content, only enums/routes/booleans (24ms)
+  ✓   89 [chromium] › e2e/unified-shell-progress-settings.spec.ts:5:5 › Progress with a brand-new account shows honest zero/empty state, no fake CEFR levels (1.9s)
+  ✓   90 [chromium] › e2e/unified-shell-progress-settings.spec.ts:20:5 › Progress with real review/material history shows the due-reviews insight and non-zero metrics (3.0s)
+  ✓   91 [chromium] › e2e/unified-shell-progress-settings.spec.ts:57:5 › Settings profile section renders real fields: email, languages, goal, plan (1.4s)
+  ✓   92 [chromium] › e2e/unified-shell-progress-settings.spec.ts:67:5 › Settings: learning preferences save shows success confirmation (1.3s)
+  ✓   93 [chromium] › e2e/unified-shell-progress-settings.spec.ts:78:5 › Settings: subscription section never shows a renewal date for the free plan (1.2s)
+  ✓   94 [chromium] › e2e/unified-shell-progress-settings.spec.ts:86:5 › Settings: password-reset link opens the existing reset-password flow (1.4s)
+  ✓   95 [chromium] › e2e/unified-shell-progress-settings.spec.ts:94:5 › mobile navigation is visible and desktop sidebar is hidden on /progress and /settings at 390px (2.5s)
+  ✓   96 [chromium] › e2e/unified-shell-progress-settings.spec.ts:107:5 › desktop sidebar is visible on /progress and /settings at 1280px (1.7s)
+  ✓   97 [chromium] › e2e/unified-shell-progress-settings.spec.ts:117:5 › no horizontal overflow on /progress or /settings at 360px (1.4s)
+  ✓   98 [chromium] › e2e/unified-shell-progress-settings.spec.ts:130:5 › /progress has no serious/critical axe violations on desktop or mobile (6.0s)
+  ✓   99 [chromium] › e2e/unified-shell-progress-settings.spec.ts:156:5 › /settings has no serious/critical axe violations on desktop or mobile (3.6s)
+  ✓  100 [chromium] › e2e/unified-shell-today.spec.ts:9:5 › navigation: active route gets aria-current, others do not (2.2s)
+  ✓  101 [chromium] › e2e/unified-shell-today.spec.ts:23:5 › Today primary CTA shows review action once a due flashcard exists (2.6s)
+  ✓  102 [chromium] › e2e/unified-shell-today.spec.ts:71:5 › Today shows the add-material empty state for a brand-new account (no reviews, no material) (2.1s)
+  ✓  103 [chromium] › e2e/unified-shell-today.spec.ts:82:5 › mobile navigation is visible and desktop sidebar is hidden at 390px (1.7s)
+  ✓  104 [chromium] › e2e/unified-shell-today.spec.ts:91:5 › desktop sidebar is visible at 1280px (1.6s)
+  ✓  105 [chromium] › e2e/unified-shell-today.spec.ts:99:5 › no horizontal overflow on Today at 360px (1.4s)
+  ✓  106 [chromium] › e2e/unified-shell-today.spec.ts:108:5 › existing Library route still opens inside the new shell (1.3s)
+  ✓  107 [chromium] › e2e/unified-shell-today.spec.ts:114:5 › existing Progress route still opens inside the new shell (1.6s)
+  ✓  108 [chromium] › e2e/unified-shell-today.spec.ts:120:5 › existing Review route still opens inside the new shell (1.4s)
+  ✓  109 [chromium] › e2e/vocabulary-privacy.spec.ts:13:5 › analytics: Vocabulary track() calls never pass word/phrase/context content, only enums/counts/booleans (13ms)
+  ✓  110 [chromium] › e2e/vocabulary-privacy.spec.ts:38:5 › analytics: Context Gap mode fires no track() calls of its own (1ms)
+  ✓  111 [chromium] › e2e/vocabulary-privacy.spec.ts:51:7 › /brain/vocabulary has no serious/critical axe violations (2.5s)
+  ✓  112 [chromium] › e2e/vocabulary-privacy.spec.ts:51:7 › /brain/all/review?mode=context has no serious/critical axe violations (2.0s)
+  ✓  113 [chromium] › e2e/vocabulary-privacy.spec.ts:51:7 › /progress has no serious/critical axe violations (3.3s)
+  ✘  114 [chromium] › e2e/youtube-import.spec.ts:104:5 › YouTube import: bridge transcript -> real server pipeline -> texts + caption_segments -> Watch Mode (11.7s)
+  ✓  115 [chromium] › e2e/youtube-import.spec.ts:195:5 › YouTube import: a malformed transcript from the bridge is rejected and nothing is persisted (2.2s)
+
+
+  1) [chromium] › e2e/pdf-import.spec.ts:63:5 › PDF import: a real PDF with a text layer is extracted, saved as a texts row, and opens in the Reader 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('body')
+    Expected substring: "404"
+    Received string:    "Такой страницы нетВозможно, ссылка устарела или в адресе опечатка. Вернись на главную — всё твоё на месте.На главную"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('body')
+        14 × locator resolved to <body class="min-h-full flex flex-col">…</body>
+           - unexpected value "Такой страницы нетВозможно, ссылка устарела или в адресе опечатка. Вернись на главную — всё твоё на месте.На главную"
+
+
+      111 |       // Reader page hits notFound() — the imported content never renders.
+      112 |       await expect(otherPage.getByText("quick brown fox")).toHaveCount(0);
+    > 113 |       await expect(otherPage.locator("body")).toContainText("404");
+          |                                               ^
+      114 |     } finally {
+      115 |       await otherContext.close();
+      116 |     }
+        at ~/Документы/projects/English_teacher_AI/e2e/pdf-import.spec.ts:113:47
+
+    Error Context: test-results/pdf-import-PDF-import-a-re-9c5c7-row-and-opens-in-the-Reader-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/pdf-import-PDF-import-a-re-9c5c7-row-and-opens-in-the-Reader-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/pdf-import-PDF-import-a-re-9c5c7-row-and-opens-in-the-Reader-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › e2e/youtube-import.spec.ts:104:5 › YouTube import: bridge transcript -> real server pipeline -> texts + caption_segments -> Watch Mode 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('body')
+    Expected substring: "404"
+    Received string:    "Такой страницы нетВозможно, ссылка устарела или в адресе опечатка. Вернись на главную — всё твоё на месте.На главную"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('body')
+        14 × locator resolved to <body class="min-h-full flex flex-col">…</body>
+           - unexpected value "Такой страницы нетВозможно, ссылка устарела или в адресе опечатка. Вернись на главную — всё твоё на месте.На главную"
+
+
+      184 |       await otherPage.goto(`/watch/${textId}`);
+      185 |       await expect(otherPage.getByText("really long trunks")).toHaveCount(0);
+    > 186 |       await expect(otherPage.locator("body")).toContainText("404");
+          |                                               ^
+      187 |     } finally {
+      188 |       await otherContext.close();
+      189 |     }
+        at ~/Документы/projects/English_teacher_AI/e2e/youtube-import.spec.ts:186:47
+
+    Error Context: test-results/youtube-import-YouTube-imp-4e0c2-ption-segments---Watch-Mode-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/youtube-import-YouTube-imp-4e0c2-ption-segments---Watch-Mode-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/youtube-import-YouTube-imp-4e0c2-ption-segments---Watch-Mode-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [chromium] › e2e/pdf-import.spec.ts:63:5 › PDF import: a real PDF with a text layer is extracted, saved as a texts row, and opens in the Reader 
+    [chromium] › e2e/youtube-import.spec.ts:104:5 › YouTube import: bridge transcript -> real server pipeline -> texts + caption_segments -> Watch Mode 
+  2 skipped
+  111 passed (5.5m)
+EXIT=1

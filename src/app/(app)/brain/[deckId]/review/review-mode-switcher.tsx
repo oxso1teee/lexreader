@@ -8,13 +8,19 @@ import MultipleChoiceMode from "./multiple-choice-mode";
 import TypeWordMode from "./type-word-mode";
 import MatchPairsMode from "./match-pairs-mode";
 import ContextGapMode from "./context-gap-mode";
+import LessonBuildMode from "./lesson-build-mode";
+import LessonListenMode from "./lesson-listen-mode";
 
+// docs/moments/ROADMAP.md, этап 8 — Lesson-build/Lesson-listen: два новых
+// пункта рядом с уже существующими 5.
 const MODES = [
   { value: "cards", label: "Карточки" },
   { value: "choice", label: "Выбор" },
   { value: "type", label: "Напечатать" },
   { value: "match", label: "Пары" },
   { value: "context", label: "Контекст" },
+  { value: "build", label: "Собери фразу" },
+  { value: "listen", label: "На слух" },
 ] as const;
 
 type Mode = (typeof MODES)[number]["value"];
@@ -152,6 +158,10 @@ export default function ReviewModeSwitcher({
       )}
       {mode === "match" && <MatchPairsMode key="match" cards={cards} missionId={missionId} />}
       {mode === "context" && <ContextGapMode key="context" cards={cards} missionId={missionId} />}
+      {mode === "build" && <LessonBuildMode key="build" cards={cards} missionId={missionId} />}
+      {mode === "listen" && (
+        <LessonListenMode key="listen" cards={cards} targetLanguage={targetLanguage} missionId={missionId} />
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deriveOnboardingStep } from "./state.ts";
 
-const BASE = { hasProfile: false, latestAttempt: null, hasActiveEnrollment: false, completedFirstWin: false };
+const BASE = { hasProfile: false, latestAttempt: null, hasActiveEnrollment: false, completedFirstWin: false, streakGoalSet: false };
 
 test("no auth/profile at all -> no_account", () => {
   assert.equal(deriveOnboardingStep(BASE).step, "no_account");
@@ -22,6 +22,7 @@ test("existing-user grandfathering: completed_first_win=true wins even if a stra
     latestAttempt: { status: "in_progress", answeredCount: 3 },
     hasActiveEnrollment: true,
     completedFirstWin: true,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "complete");
 });
@@ -37,6 +38,7 @@ test("placement attempt in progress at question 6/10 -> placement_question, resu
     latestAttempt: { status: "in_progress", answeredCount: 6 },
     hasActiveEnrollment: false,
     completedFirstWin: false,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "placement_question");
   assert.equal(result.resumeQuestionIndex, 6);
@@ -48,6 +50,7 @@ test("placement attempt just started (0 answered) -> placement_question, resumeQ
     latestAttempt: { status: "in_progress", answeredCount: 0 },
     hasActiveEnrollment: false,
     completedFirstWin: false,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "placement_question");
   assert.equal(result.resumeQuestionIndex, 0);
@@ -59,6 +62,7 @@ test("placement completed, no active enrollment yet -> result", () => {
     latestAttempt: { status: "completed", answeredCount: 10 },
     hasActiveEnrollment: false,
     completedFirstWin: false,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "result");
 });
@@ -69,6 +73,7 @@ test("placement skipped, no active enrollment yet -> result (still shows a preli
     latestAttempt: { status: "skipped", answeredCount: 0 },
     hasActiveEnrollment: false,
     completedFirstWin: false,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "result");
 });
@@ -79,6 +84,7 @@ test("path selected, first action not completed -> first_action", () => {
     latestAttempt: { status: "completed", answeredCount: 10 },
     hasActiveEnrollment: true,
     completedFirstWin: false,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "first_action");
 });
@@ -89,6 +95,7 @@ test("active enrollment present even with no placement attempt at all -> first_a
     latestAttempt: null,
     hasActiveEnrollment: true,
     completedFirstWin: false,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "first_action");
 });
@@ -99,6 +106,7 @@ test("ambiguous edge: active enrollment AND an in-progress retest attempt -> fir
     latestAttempt: { status: "in_progress", answeredCount: 4 },
     hasActiveEnrollment: true,
     completedFirstWin: false,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "first_action");
 });
@@ -109,6 +117,29 @@ test("first win completed -> complete", () => {
     latestAttempt: { status: "completed", answeredCount: 10 },
     hasActiveEnrollment: true,
     completedFirstWin: true,
+    streakGoalSet: false,
   });
   assert.equal(result.step, "complete");
+});
+
+test("docs/moments/ROADMAP.md stage 7: placement done, no enrollment, streak goal already set -> first_text", () => {
+  const result = deriveOnboardingStep({
+    hasProfile: true,
+    latestAttempt: { status: "completed", answeredCount: 10 },
+    hasActiveEnrollment: false,
+    completedFirstWin: false,
+    streakGoalSet: true,
+  });
+  assert.equal(result.step, "first_text");
+});
+
+test("docs/moments/ROADMAP.md stage 7: streak goal set but a legacy active enrollment still wins (first_action)", () => {
+  const result = deriveOnboardingStep({
+    hasProfile: true,
+    latestAttempt: { status: "completed", answeredCount: 10 },
+    hasActiveEnrollment: true,
+    completedFirstWin: false,
+    streakGoalSet: true,
+  });
+  assert.equal(result.step, "first_action");
 });
