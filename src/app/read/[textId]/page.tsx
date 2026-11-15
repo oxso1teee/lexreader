@@ -6,6 +6,8 @@ import type { TextRow } from "@/lib/types";
 import type { LearningState } from "@/lib/vocabulary-list";
 import { tokenizeSentence, splitIntoSentences } from "@/lib/tokenize";
 import { createFormIndex } from "@/lib/lemma";
+import { estimateTextDifficulty } from "@/lib/reading/difficulty";
+import { knownFormIndex } from "@/lib/vocabulary/text-familiarity";
 import { hasSavedReaderPrefs, parseReaderPrefs } from "./reader-prefs";
 import Reader from "./reader";
 
@@ -148,6 +150,15 @@ export default async function ReadPage({
     else statsNew++;
   }
 
+  // Reading Engine R2: оценка сложности (видео не оцениваем — субтитры искажают длину предложений).
+  const difficulty = text.youtube_video_id
+    ? null
+    : estimateTextDifficulty(
+        text.body,
+        knownFormIndex((savedWords ?? []).map((w) => w.headword), text.language),
+        text.language,
+      );
+
   const initialServerPrefs = hasSavedReaderPrefs(profile.reader_settings)
     ? parseReaderPrefs(profile.reader_settings)
     : null;
@@ -166,6 +177,7 @@ export default async function ReadPage({
         initialServerPrefs={initialServerPrefs}
         chapter={chapter}
         isVideo={Boolean(text.youtube_video_id)}
+        difficulty={difficulty}
         stats={{
           unique: uniqueTokens.size,
           new: statsNew,

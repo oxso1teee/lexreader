@@ -6,6 +6,7 @@ import Link from "next/link";
 import { BookOpen, Check, Keyboard, X } from "lucide-react";
 import { splitIntoSentences, tokenizeSentence } from "@/lib/tokenize";
 import { createFormIndex } from "@/lib/lemma";
+import type { TextDifficulty } from "@/lib/reading/difficulty";
 import { WORD_LEVELS } from "@/lib/types";
 import { log } from "@/lib/log";
 import { track } from "@/lib/posthog-client";
@@ -109,6 +110,7 @@ export default function Reader({
   wordLevels,
   wordCount,
   stats,
+  difficulty = null,
   initialPageIndex = 0,
   initialServerPrefs,
   chapter,
@@ -127,6 +129,7 @@ export default function Reader({
    *  верхней панели, без новых запросов к БД. */
   wordCount: number;
   stats: Stats;
+  difficulty?: TextDifficulty | null;
   initialPageIndex?: number;
   initialServerPrefs: ReaderPrefs | null;
   chapter: ChapterInfo | null;
@@ -763,6 +766,13 @@ export default function Reader({
                   <p className="mt-0.5 text-[10px] uppercase tracking-wide text-[var(--text-secondary)] sm:text-xs">Знаю</p>
                 </div>
               </section>
+
+              {difficulty && (
+                // Reading Engine R2: оценка, а не сертификация (см. src/lib/reading/difficulty.ts).
+                <p className="-mt-2 mb-4 px-1 text-xs text-[var(--text-secondary)]" data-testid="reader-difficulty">
+                  Оценка сложности: ≈ {difficulty.cefr} · {difficulty.newWords} из {difficulty.uniqueWords} слов ещё не в твоём словаре
+                </p>
+              )}
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 pb-4 text-[11px] text-[var(--text-secondary)] sm:text-xs">
                 {WORD_LEVELS.map((l) => (

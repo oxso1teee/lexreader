@@ -13,7 +13,7 @@ export interface TextFamiliarity {
 }
 
 /** Словарь известных слов с учётом словоформ (Reading Engine R1: «walked» знакомо, если есть «walk»). */
-function knownFormIndex(knownHeadwords: string[], language: string) {
+export function knownFormIndex(knownHeadwords: string[], language: string) {
   return createFormIndex(Object.fromEntries(knownHeadwords.map((w) => [w.toLowerCase(), true])), language);
 }
 
