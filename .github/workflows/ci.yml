@@ -16,6 +16,10 @@ env:
   VAPID_PRIVATE_KEY: placeholder_not_a_real_key
   VAPID_CONTACT_EMAIL: ci@example.com
   CRON_SECRET: ci-test-secret
+  # TD-1: переводчик в E2E — детерминированная заглушка (src/lib/translate-stub.ts), а не MyMemory:
+  # CI не зависит от внешних сервисов. Работает только вне Vercel production. Блок env: читают
+  # и scripts/isolated-build.sh / e2e-isolated.sh, так что локальные изолированные прогоны тоже на заглушке.
+  E2E_TRANSLATE_STUB: "1"
   HEALTH_CHECK_SECRET: ci-test-secret
 
 jobs:
@@ -81,7 +85,9 @@ jobs:
       - run: npm ci
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Явная версия, а не latest: "latest" разрешается запросом к GitHub API без токена и
+          # периодически падает с "rate limit exceeded" (красный e2e без изменений в коде).
+          version: 3.1.0
       - name: Start local Supabase (Postgres + Auth + Storage)
         run: supabase start
       - name: Apply migrations
