@@ -11,6 +11,7 @@ import SessionComplete from "@/app/(app)/brain/[deckId]/review/session-complete"
 import MultipleChoiceMode from "@/app/(app)/brain/[deckId]/review/multiple-choice-mode";
 import { ComboBanner } from "@/app/(app)/brain/[deckId]/review/screens/combo-banner";
 import { DailyQuestsCard } from "@/components/product/quests/daily-quests-card";
+import { buildQuestItems } from "@/lib/daily-quests-model";
 import { ChestScreen } from "@/components/product/quests/chest-screen";
 import { DoubleXpScreen } from "@/components/product/quests/double-xp-screen";
 import ResultView from "@/app/onboarding/result/result-view";
@@ -53,12 +54,15 @@ export function Stage9GalleryScreen({ s }: { s: string }) {
     return (
       <main className="min-h-dvh bg-background p-5 pt-16">
         <DailyQuestsCard
-          defs={[
-            { questType: "read_minutes", target: 10 },
-            { questType: "review_words", target: 15 },
-            { questType: "combo_streak", target: 5 },
-          ]}
-          progress={{ read_minutes: 10, review_words: 15, combo_streak: 5 }}
+          items={buildQuestItems(
+            [
+              { questType: "read_minutes", target: 10 },
+              { questType: "review_words", target: 15 },
+              { questType: "combo_streak", target: 5 },
+            ],
+            { read_minutes: 10, review_words: 15, combo_streak: 5 },
+            { day: "2026-11-15", today: "2026-11-15", claimed: false },
+          )}
           allComplete
           chestClaimedToday={false}
         />

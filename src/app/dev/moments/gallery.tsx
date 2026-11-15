@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MOMENT_FIXTURES } from "@/lib/moments/fixtures";
 import { renderMoment } from "@/components/product/moments/moment-provider";
-import TodayView from "@/components/product/today/v7/today-view";
-import { TODAY_FIXTURE } from "@/lib/screen-fixtures";
+import AppShell from "@/components/product/app-shell/app-shell";
+import DashboardView from "@/components/product/dashboard/dashboard-view";
+import { DASHBOARD_REGULAR_FIXTURE } from "@/lib/screen-fixtures";
 
 export default function MomentsGallery({ names, open }: { names: string[]; open: string | null }) {
   const router = useRouter();
@@ -14,7 +15,9 @@ export default function MomentsGallery({ names, open }: { names: string[]; open:
     // (Review-due, Rate-app) затемняют его, полноэкранные — закрывают.
     return (
       <>
-        <TodayView {...TODAY_FIXTURE} />
+        <AppShell planLabel={null}>
+          <DashboardView {...DASHBOARD_REGULAR_FIXTURE} />
+        </AppShell>
         {renderMoment(MOMENT_FIXTURES[open], () => router.push("/dev/moments"))}
       </>
     );
