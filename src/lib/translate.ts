@@ -7,6 +7,8 @@
  * или платный DeepL — сигнатура translate() рассчитана на такую замену.
  */
 
+import { createStubTranslator, isTranslateStubEnabled } from "./translate-stub.ts";
+
 export interface TranslationResult {
   wordTranslation: string;
   sentenceTranslation: string | null;
@@ -76,11 +78,21 @@ async function fetchMyMemory(text: string, sourceLang: string, targetLang: strin
   return data;
 }
 
+// TD-1: в E2E (E2E_TRANSLATE_STUB=1, никогда в production) внешний сервис не вызывается вообще.
+const stubTranslator = createStubTranslator();
+
 export async function translateText(
   text: string,
   sourceLang: string,
   targetLang: string,
 ): Promise<string> {
+  if (isTranslateStubEnabled(process.env)) {
+    const result = stubTranslator.next(text);
+    if (result.kind === "quota") throw new TranslationQuotaError();
+    if (result.kind === "error") throw new Error("stub translation failure");
+    return result.translation;
+  }
+
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {

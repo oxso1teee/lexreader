@@ -47,9 +47,9 @@ test("reading flow: open text, tap word, translate, change level, finish", async
   // Playwright's getByText/getByRole матчат оба DOM-узла независимо от
   // видимости — поэтому здесь и ниже скоупим локаторы на <aside>, как это
   // реально видит десктопный пользователь (дефолтный вьюпорт теста).
-  // /api/translate calls MyMemory (free third-party API) — CI's shared
-  // egress IP can see slower/rate-limited responses than a residential IP,
-  // so this needs more headroom than the in-app assertions above.
+  // /api/translate в E2E отвечает детерминированной заглушкой (E2E_TRANSLATE_STUB=1,
+  // src/lib/translate-stub.ts), а не MyMemory, поэтому от внешних сервисов тест не зависит.
+  // Запас по времени оставлен: панель ждёт ещё и серверный upsert слова в БД.
   const panel = page.locator("aside");
   await page.getByRole("button", { name: "birds", exact: true }).click();
   await expect(panel.getByText("Уровень знания")).toBeVisible({ timeout: 20_000 });
