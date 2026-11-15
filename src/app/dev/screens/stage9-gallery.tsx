@@ -60,7 +60,7 @@ export function Stage9GalleryScreen({ s }: { s: string }) {
               { questType: "review_words", target: 15 },
               { questType: "combo_streak", target: 5 },
             ],
-            { read_minutes: 10, review_words: 15, combo_streak: 5 },
+            { read_minutes: 10, review_words: 15, combo_streak: 5, earn_xp: 0, complete_lessons: 0, answer_exercises: 0 },
             { day: "2026-11-15", today: "2026-11-15", claimed: false },
           )}
           allComplete
