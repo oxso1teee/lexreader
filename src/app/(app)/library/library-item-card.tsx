@@ -64,6 +64,17 @@ export default function LibraryItemCard({ item }: { item: LibraryItem }) {
         <p className="relative line-clamp-2 text-[10.5px] font-bold leading-tight">{item.title}</p>
       </Link>
 
+      {item.difficulty && (
+        // Reading Engine R2: оценка (не сертификация) — «≈ B1 · 12% новых». Не интерактивна,
+        // поверх ссылки-плитки; полная расшифровка — в title.
+        <span
+          title={`Оценка сложности: ≈ ${item.difficulty.cefr}; слов из частотного списка NGSL: ${item.difficulty.ngslCoverage}%; новых для тебя слов: ${item.difficulty.newWords} из ${item.difficulty.uniqueWords}`}
+          className="pointer-events-none absolute left-2 top-2 z-10 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-bold leading-tight text-white backdrop-blur-sm"
+        >
+          ≈ {item.difficulty.cefr} · {item.difficulty.percentNew}% новых
+        </span>
+      )}
+
       {item.canDelete && (
         <button
           type="button"

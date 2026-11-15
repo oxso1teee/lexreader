@@ -3,6 +3,8 @@ import { Plus, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import type { TextRow } from "@/lib/types";
+import { estimateTextDifficulty } from "@/lib/reading/difficulty";
+import { knownFormIndex } from "@/lib/vocabulary/text-familiarity";
 import LibraryBrowser from "./library-browser";
 import { materialsCountLabel, type LibraryItem } from "./library-item";
 
@@ -10,7 +12,14 @@ export default async function LibraryPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  const [{ data: texts }, { data: progressRows }, { data: collectionRows }, { data: vocabRows }, { data: cardRows }] =
+  const [
+    { data: texts },
+    { data: progressRows },
+    { data: collectionRows },
+    { data: vocabRows },
+    { data: cardRows },
+    { data: headwordRows },
+  ] =
     await Promise.all([
       supabase
         .from("texts")
@@ -38,7 +47,19 @@ export default async function LibraryPage() {
         .eq("owner_id", profile.id)
         .eq("language", profile.target_language)
         .not("source_text_id", "is", null),
+      // Reading Engine R2: сохранённые слова — для «N новых слов» в оценке сложности текста.
+      supabase
+        .from("vocabulary_items")
+        .select("headword")
+        .eq("owner_id", profile.id)
+        .eq("language", profile.target_language)
+        .range(0, 4999),
     ]);
+
+  const knownWords = knownFormIndex(
+    (headwordRows ?? []).map((r) => r.headword as string),
+    profile.target_language,
+  );
 
   const progressByTextId = new Map(
     (progressRows ?? []).map((p) => [p.text_id, { percentRead: p.percent_read, lastReadAt: p.last_read_at }]),
@@ -109,6 +130,8 @@ export default async function LibraryPage() {
       savedWordsCount: wordCountByTextId.get(t.id) ?? 0,
       savedPhrasesCount: phraseCountByTextId.get(t.id) ?? 0,
       partCount: null,
+      // Видео (транскрипты) не оцениваем: субтитры без пунктуации искажают среднюю длину предложения.
+      difficulty: t.youtube_video_id ? null : estimateTextDifficulty(t.body, knownWords, t.language),
     };
   }
 

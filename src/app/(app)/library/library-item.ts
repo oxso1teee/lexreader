@@ -1,6 +1,8 @@
 // Shared shape for the unified Library grid (M3 Slice 3) — one normalized
 // type for both standalone texts and collections, computed server-side in
 // page.tsx from real Supabase rows only (docs/ui/m3-slice3-library-reader-plan.md).
+import type { TextDifficulty } from "@/lib/reading/difficulty";
+
 export type LibraryItemKind = "text" | "collection";
 export type LibraryTypeFilter = "all" | "text" | "video" | "collection" | "completed";
 
@@ -19,6 +21,8 @@ export interface LibraryItem {
   savedWordsCount: number;
   savedPhrasesCount: number;
   partCount: number | null;
+  /** Reading Engine R2: оценка сложности текста (только для английских текстов; null/нет — не показываем). */
+  difficulty?: TextDifficulty | null;
 }
 
 // "Книги"/"Видео"/"Тексты" map onto real fields with zero schema change —
